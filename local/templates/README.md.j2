@@ -1,0 +1,13 @@
+{{python_readme_header_md}}
+{% if "help" in global %}
+
+# Command-line Options
+
+```
+$ {{" ".join(help["args"])}}
+
+{{help["stdout"]}}
+```
+{% endif %}
+
+{{python_readme_dep_graph_md}}

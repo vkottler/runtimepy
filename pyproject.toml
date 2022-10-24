@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools-wrapper", "trove-classifiers"]
+build-backend = "setuptools.build_meta:__legacy__"
+
+[project]
+name = "runtimepy"
+version = "0.1.0"
+description = "A framework for implementing Python services."
+readme = "README.md"
+requires-python = ">=3.7"
+authors = [
+  {name = "Vaughn Kottler", email = "vaughnkottler@gmail.com"}
+]
+maintainers = [
+  {name = "Vaughn Kottler", email = "vaughnkottler@gmail.com"}
+]
+classifiers = [
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Operating System :: Microsoft :: Windows",
+  "Operating System :: MacOS",
+  "Operating System :: POSIX :: Linux",
+  "Operating System :: Unix",
+  "Development Status :: 5 - Production/Stable",
+  "License :: OSI Approved :: MIT License"
+]
+
+[project.optional-dependencies]
+test = [
+  "pylint",
+  "flake8",
+  "pytest",
+  "pytest-cov",
+  "mypy",
+  "black",
+  "isort",
+  "setuptools-wrapper",
+  "vcorelib",
+  "types-setuptools"
+]
+
+[project.scripts]
+runtimepy = "runtimepy.entry:main"
