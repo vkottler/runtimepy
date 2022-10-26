@@ -33,3 +33,24 @@ def test_enum_registry_basic():
         "int2", {"id": 1, "type": "int", "items": {}}
     )
     assert not enums.register_dict("!@#$", {})
+
+    assert enums.register_dict(
+        "int2",
+        {"type": "int", "items": {"on": 1, "off": 0}},
+    )
+
+    assert enums.register_dict("bool3", {"type": "bool", "items": {}})
+    assert enums["bool3"].register_bool("open", False)
+    assert enums["bool3"].register_bool("closed", True)
+    assert not enums["bool3"].register_bool("on", True)
+
+    assert enums["bool3"].as_str(False) == "open"
+    assert enums["bool3"].as_bool("closed") is True
+
+    enums["bool3"].type.validate(True)
+    with raises(ValueError):
+        enums["bool3"].type.validate(1)
+
+    assert enums["int1"].as_str(1) == "a"
+    assert enums["int1"].as_int("a") == 1
+    assert enums["int1"].register_int("d") is not None

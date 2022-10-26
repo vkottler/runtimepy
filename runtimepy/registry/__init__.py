@@ -20,7 +20,7 @@ from vcorelib.schemas.base import SchemaMap as _SchemaMap
 
 # internal
 from runtimepy.registry.item import RegistryItem as _RegistryItem
-from runtimepy.registry.name import NameRegistry
+from runtimepy.registry.name import NameRegistry as _NameRegistry
 from runtimepy.registry.name import RegistryKey as _RegistryKey
 from runtimepy.schemas import json_schemas as _json_schemas
 
@@ -31,6 +31,7 @@ class Registry(_DictCodec, _Generic[T]):
     """A base class for a generic registry."""
 
     default_schemas: _Optional[_SchemaMap] = _json_schemas()
+    name_registry: _Type[_NameRegistry] = _NameRegistry
 
     @property
     @_abstractmethod
@@ -47,7 +48,7 @@ class Registry(_DictCodec, _Generic[T]):
         }
 
         # Create the name registry.
-        self.names = NameRegistry(
+        self.names = self.name_registry(
             reverse={name: item.id for name, item in self.items.items()}
         )
 
