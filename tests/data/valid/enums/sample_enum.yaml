@@ -1,0 +1,15 @@
+---
+int1:
+  id: 1
+  type: int
+  items:
+    a: 1
+    b: 2
+    c: 3
+
+bool1:
+  id: 2
+  type: bool
+  items:
+    valve_open: true
+    valve_closed: false

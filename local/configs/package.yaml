@@ -3,8 +3,8 @@ name: runtimepy
 version: "{{major}}.{{minor}}.{{patch}}"
 description: A framework for implementing Python services.
 entry: {{entry}}
-requirements: []
+requirements:
+  - vcorelib
 dev_requirements:
   - setuptools-wrapper
-  - vcorelib
   - types-setuptools

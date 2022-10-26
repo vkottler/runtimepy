@@ -26,6 +26,9 @@ classifiers = [
   "Development Status :: 5 - Production/Stable",
   "License :: OSI Approved :: MIT License"
 ]
+dependencies = [
+  "vcorelib"
+]
 
 [project.optional-dependencies]
 test = [
@@ -37,7 +40,6 @@ test = [
   "black",
   "isort",
   "setuptools-wrapper",
-  "vcorelib",
   "types-setuptools"
 ]
 
