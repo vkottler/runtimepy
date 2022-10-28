@@ -34,6 +34,32 @@ def verify_values(env: ChannelEnvironment) -> None:
     assert env.get_int("int.2")[0].is_enum
 
 
+def verify_missing_keys(env: ChannelEnvironment) -> None:
+    """Verify behavior when using incorrect registry keys."""
+
+    int_chan, enum = env.get_int("int.2")
+    assert int_chan
+    assert enum is not None
+
+    with raises(KeyError):
+        assert enum.get_str(10)
+    with raises(KeyError):
+        assert enum.get_int("bad")
+
+    with raises(ValueError):
+        env.set("int.1", "off")
+
+    with raises(KeyError):
+        assert env["bad_channel"]
+
+    with raises(KeyError):
+        assert env.get_int("bool.1")
+    with raises(KeyError):
+        assert env.get_float("bool.1")
+    with raises(KeyError):
+        assert env.get_bool("int.1")
+
+
 def test_channel_environment_basic():
     """Test basic interactions with a channel environment."""
 
@@ -97,24 +123,4 @@ def test_channel_environment_basic():
     assert env.get_int("int.1") is not None
     assert env.get_int(4) is not None
 
-    int_chan, enum = env.get_int("int.2")
-    assert int_chan
-    assert enum is not None
-
-    with raises(KeyError):
-        assert enum.get_str(10)
-    with raises(KeyError):
-        assert enum.get_int("bad")
-
-    with raises(ValueError):
-        env.set("int.1", "off")
-
-    with raises(KeyError):
-        assert env["bad_channel"]
-
-    with raises(KeyError):
-        assert env.get_int("bool.1")
-    with raises(KeyError):
-        assert env.get_float("bool.1")
-    with raises(KeyError):
-        assert env.get_bool("int.1")
+    verify_missing_keys(env)
