@@ -4,6 +4,7 @@ Test the 'enum.registry' module.
 
 # third-party
 from pytest import raises
+from vcorelib.paths.context import tempfile
 
 # module under test
 from runtimepy.enum.registry import EnumRegistry
@@ -25,21 +26,30 @@ def test_enum_registry_basic():
     with raises(KeyError):
         assert enums["bool2"]
 
-    assert enums.register_dict(
-        "bool2",
-        {"type": "bool", "items": {"on": True, "off": False}},
+    assert (
+        enums.register_dict(
+            "bool2",
+            {"type": "bool", "items": {"on": True, "off": False}},
+        )
+        is not None
     )
-    assert not enums.register_dict(
-        "int2", {"id": 1, "type": "int", "items": {}}
+    assert (
+        enums.register_dict("int2", {"id": 1, "type": "int", "items": {}})
+        is None
     )
-    assert not enums.register_dict("!@#$", {})
+    assert enums.register_dict("!@#$", {}) is None
 
-    assert enums.register_dict(
-        "int2",
-        {"type": "int", "items": {"on": 1, "off": 0}},
+    assert (
+        enums.register_dict(
+            "int2",
+            {"type": "int", "items": {"on": 1, "off": 2}},
+        )
+        is not None
     )
 
-    assert enums.register_dict("bool3", {"type": "bool", "items": {}})
+    assert (
+        enums.register_dict("bool3", {"type": "bool", "items": {}}) is not None
+    )
     assert enums["bool3"].register_bool("open", False)
     assert enums["bool3"].register_bool("closed", True)
     assert not enums["bool3"].register_bool("on", True)
@@ -54,3 +64,21 @@ def test_enum_registry_basic():
     assert enums["int1"].as_str(1) == "a"
     assert enums["int1"].as_int("a") == 1
     assert enums["int1"].register_int("d") is not None
+
+    # Test an invalid name.
+    assert (
+        enums.register_dict("My Boolean", {"type": "bool", "items": {}})
+        is None
+    )
+
+    # Test registering an enumeration with no items.
+    enum = enums.register_dict("bool4", {"type": "bool"})
+    assert enum is not None
+    assert enum.register_bool("on", True)
+    assert enum.register_bool("off", False)
+
+    # Test that we can encode and decode the updated registry.
+    with tempfile(suffix=".json") as tmp:
+        enums.encode(tmp)
+        new_enums = EnumRegistry.decode(tmp)
+        assert enums == new_enums

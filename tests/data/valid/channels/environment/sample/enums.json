@@ -1,0 +1,12 @@
+{
+    "ValveState": {
+        "id": 1,
+        "type": "bool",
+        "items": {"on": true, "off": false}
+    },
+    "ProgramState": {
+        "id": 2,
+        "type": "int",
+        "items": {"wait": 1, "error": 2, "idle": 3, "running": 4}
+    }
+}

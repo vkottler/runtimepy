@@ -71,17 +71,19 @@ class Registry(_DictCodec, _Generic[T]):
             added = True
         return added
 
-    def register_dict(self, name: str, data: _JsonObject) -> bool:
+    def register_dict(self, name: str, data: _JsonObject) -> _Optional[T]:
         """Register a new item from dictionary data."""
 
         # Inject an identifier into the data if one's not present.
         if "id" not in data:
             identifier = self.names.register_name(name)
             if identifier is None:
-                return False
+                return None
             data["id"] = identifier
 
-        return self.register(name, self.kind(data))
+        item = self.kind(data)
+        result = self.register(name, item)
+        return item if result else None
 
     def get(self, key: _RegistryKey) -> _Optional[T]:
         """Attempt to get an item from a registry key."""

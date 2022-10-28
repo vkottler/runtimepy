@@ -52,7 +52,7 @@ class Primitive(_Generic[T]):
 
     def __str__(self) -> str:
         """Get this primitive's value as a string."""
-        return str(self.value)
+        return f"{self.value} ({self.kind})"
 
     def __eq__(self, other) -> bool:
         """

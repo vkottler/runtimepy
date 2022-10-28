@@ -61,6 +61,9 @@ class RuntimeEnum(_RegistryItem):
         self._ints: _Optional[_NameRegistry] = None
         self._bools: _Optional[_BooleanRegistry] = None
 
+        # It's not required for an enumeration to start with entries.
+        data.setdefault("items", {})
+
         if self.type is _EnumType.INT:
             self._ints = _NameRegistry.int_from_dict(
                 _cast(_IntMappingData, data["items"])
@@ -92,13 +95,37 @@ class RuntimeEnum(_RegistryItem):
 
         return result
 
+    def get_str(self, value: _Union[str, bool, int]) -> str:
+        """Get an enumeration string."""
+
+        result = self.as_str(value)
+        if result is None:
+            raise KeyError(f"No enum entry for '{value}'")
+        return result
+
     def as_int(self, value: _Union[str, int]) -> _Optional[int]:
         """Attempt to get an enumeration integer."""
         return self.ints.identifier(value)
 
+    def get_int(self, value: _Union[str, int]) -> int:
+        """Get an enumeration integer."""
+
+        result = self.as_int(value)
+        if result is None:
+            raise KeyError(f"No enum entry for '{value}'")
+        return result
+
     def as_bool(self, value: _Union[str, bool]) -> _Optional[bool]:
         """Attempt to get an enumeration boolean."""
         return self.bools.identifier(value)
+
+    def get_bool(self, value: _Union[str, bool]) -> bool:
+        """Get an enumeration boolean."""
+
+        result = self.as_bool(value)
+        if result is None:
+            raise KeyError(f"No enum entry for '{value}'")
+        return result
 
     def register_int(self, name: str) -> _Optional[int]:
         """Register an integer enumeration."""

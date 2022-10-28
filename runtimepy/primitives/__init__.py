@@ -5,6 +5,7 @@ A module implementing a primitive-type storage entity.
 # built-in
 from typing import Dict as _Dict
 from typing import Type as _Type
+from typing import TypeVar as _TypeVar
 from typing import Union as _Union
 
 # internal
@@ -35,6 +36,22 @@ AnyPrimitive = _Union[
     Bool,
 ]
 
+# A type variable for class definitions.
+T = _TypeVar(
+    "T",
+    Int8,
+    Int16,
+    Int32,
+    Int64,
+    Uint8,
+    Uint16,
+    Uint32,
+    Uint64,
+    Float,
+    Double,
+    Bool,
+)
+
 Primitives: _Dict[str, _Type[AnyPrimitive]] = {
     Int8().kind.name: Int8,
     Int16().kind.name: Int16,
@@ -56,6 +73,7 @@ def normalize(value: Primitivelike) -> _Type[AnyPrimitive]:
     """Normalize a type of primitive or a string into a type of primitive."""
 
     if isinstance(value, str):
+        value = value.lower()
         assert value in Primitives, f"No primitive '{value}'!"
         value = Primitives[value]
     return value

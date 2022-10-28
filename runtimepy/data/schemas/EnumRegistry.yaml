@@ -4,7 +4,7 @@ additionalProperties: false
 patternProperties:
   "^\\w+$":
     type: object
-    required: [id, type, items]
+    required: [id, type]
     additionalProperties: false
     properties:
       id:

@@ -1,0 +1,12 @@
+{
+    "bool.1": {"id": 1, "type": "bool"},
+    "bool.2": {"id": 2, "type": "bool", "enum": "ValveState"},
+    "bool.3": {"id": 3, "type": "bool", "enum": 1},
+
+    "int.1": {"id": 4, "type": "int32"},
+    "int.2": {"id": 5, "type": "uint8", "enum": "ProgramState"},
+    "int.3": {"id": 6, "type": "uint8", "enum": 2},
+
+    "float.1": {"id": 7, "type": "float"},
+    "float.2": {"id": 8, "type": "double"}
+}
