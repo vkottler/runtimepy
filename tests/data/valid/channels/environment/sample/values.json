@@ -1,0 +1,9 @@
+{
+    "bool.1": true,
+    "bool.2": "on",
+    "bool.3": false,
+    "int.1": 5,
+    "int.2": "running",
+    "int.3": 2,
+    "float.2": 1.0
+}

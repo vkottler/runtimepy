@@ -1,0 +1,24 @@
+---
+test.bool:
+  id: 1
+  type: bool
+  enum: "ValveState"
+
+test.float:
+  id: 2
+  type: float
+  commandable: true
+
+test.double:
+  id: 3
+  type: double
+
+test.int:
+  id: 4
+  type: int32
+  commandable: true
+  enum: 2
+
+test.new_int:
+  id: 5
+  type: int32

@@ -1,7 +1,7 @@
 # =====================================
 # generator=datazen
 # version=3.1.0
-# hash=f598c9fe4466fb8a6b0ef2ed72b415ff
+# hash=85c13921101f9e8588ec35153ed9573e
 # =====================================
 
 """
@@ -10,4 +10,4 @@ Useful defaults and other package metadata.
 
 DESCRIPTION = "A framework for implementing Python services."
 PKG_NAME = "runtimepy"
-VERSION = "0.1.0"
+VERSION = "0.2.0"
