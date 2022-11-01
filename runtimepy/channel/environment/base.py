@@ -10,6 +10,9 @@ from typing import Tuple as _Tuple
 from typing import Union as _Union
 from typing import cast as _cast
 
+# third-party
+from vcorelib.namespace import NamespaceMixin as _NamespaceMixin
+
 # internal
 from runtimepy.channel import AnyChannel as _AnyChannel
 from runtimepy.channel import BoolChannel as _BoolChannel
@@ -28,7 +31,7 @@ BoolChannelResult = _Tuple[_BoolChannel, _Optional[_RuntimeEnum]]
 IntChannelResult = _Tuple[_IntChannel, _Optional[_RuntimeEnum]]
 
 
-class BaseChannelEnvironment:
+class BaseChannelEnvironment(_NamespaceMixin):
     """A class integrating channel and enumeration registries."""
 
     def __init__(
@@ -38,6 +41,8 @@ class BaseChannelEnvironment:
         values: ValueMap = None,
     ) -> None:
         """Initialize this channel environment."""
+
+        super().__init__()
 
         if channels is None:
             channels = _ChannelRegistry()
