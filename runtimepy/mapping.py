@@ -26,6 +26,12 @@ BoolMapping = _TypeVar("BoolMapping", bound="TwoWayNameMapping[bool]")
 
 IntMappingData = _MutableMapping[MappingKey[int], MappingKey[int]]
 BoolMappingData = _MutableMapping[MappingKey[bool], MappingKey[bool]]
+EnumMappingData = _Union[
+    IntMappingData,
+    BoolMappingData,
+    _MutableMapping[str, bool],
+    _MutableMapping[str, int],
+]
 
 
 class TwoWayNameMapping(_RegexMixin, _Generic[T]):

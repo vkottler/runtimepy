@@ -65,6 +65,7 @@ class PrimitiveType(_Generic[T]):
         # unfortunately no obvious (or via public interfaces) way to just
         # obtain the intended struct formatter for each ctype.
         self.size = _calcsize(self.format)
+        self.bits = self.size * 8
         c_type_size = _ctypes.sizeof(self.c_type)
         assert self.size == c_type_size, "{self.size} != {c_type_size}!"
 
