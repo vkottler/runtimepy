@@ -2,6 +2,9 @@
 A module implementing an integer-primitive interface.
 """
 
+# built-in
+from typing import Union as _Union
+
 # internal
 from runtimepy.primitives.base import Primitive as _Primitive
 from runtimepy.primitives.type.int import Int8 as _Int8
@@ -100,3 +103,4 @@ class Uint64Primitive(_Primitive[int]):
 
 
 Uint64 = Uint64Primitive
+UnsignedInt = _Union[Uint8, Uint16, Uint32, Uint64]
