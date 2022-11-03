@@ -1,0 +1,34 @@
+---
+type: object
+required: [type, fields]
+additionalProperties: false
+
+properties:
+  type:
+    enum:
+      - uint8
+      - uint16
+      - uint32
+      - uint64
+
+  fields:
+    type: array
+    items:
+      type: object
+      required: [index]
+      additionalProperties: false
+
+      properties:
+        index:
+          type: integer
+          minimum: 0
+
+        width:
+          type: integer
+          minimum: 1
+          default: 1
+
+        value:
+          type: integer
+          minimum: 0
+          default: 0

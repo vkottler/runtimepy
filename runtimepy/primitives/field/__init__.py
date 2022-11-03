@@ -5,6 +5,9 @@ A module implementing bit flags and fields.
 # built-in
 from typing import cast as _cast
 
+# third-party
+from vcorelib.io.types import JsonObject as _JsonObject
+
 # internal
 from runtimepy.primitives.int import UnsignedInt as _UnsignedInt
 
@@ -30,8 +33,13 @@ class BitField:
         self.index = index
 
         # Compute a bit-mask for this field.
-        self.mask = (2**width) - 1
+        self.width = width
+        self.mask = (2**self.width) - 1
         self.shifted_mask = self.mask << self.index
+
+    def asdict(self) -> _JsonObject:
+        """Get this field as a dictionary."""
+        return {"index": self.index, "width": self.width, "value": self()}
 
     def __call__(self, val: int = None) -> int:
         """
