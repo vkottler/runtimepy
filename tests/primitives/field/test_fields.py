@@ -2,6 +2,9 @@
 Test the 'primitives.field.fields' module.
 """
 
+# third-party
+from pytest import raises
+
 # module under test
 from runtimepy.primitives.field.fields import BitFields
 
@@ -14,8 +17,8 @@ def test_bit_fields_basic():
 
     byte = BitFields.new()
 
-    flag1 = byte.flag()
-    flag2 = byte.flag()
+    flag1 = byte.flag("flag1")
+    flag2 = byte.flag("flag2")
 
     flag1.set()
     assert byte.raw.value == 1
@@ -29,7 +32,7 @@ def test_bit_fields_basic():
     assert flag2.get() is True
     assert flag1.get() is False
 
-    field1 = byte.field(2)
+    field1 = byte.field("field1", 2)
     assert field1(val=7) == 3
 
     assert byte.raw.value == 14
@@ -41,10 +44,18 @@ def test_bit_fields_load():
     word = BitFields.decode(resource("fields", "sample_fields.yaml"))
 
     # Set some values.
-    assert word.flags[0].get()
-    assert word.fields[4]() == 1
+    assert word.get_flag(0).get()
+    assert word[4]() == 1
 
     assert word.raw == 17
 
     # Verify the underlying value.
-    assert word.flag().index == 12
+    assert word.flag("new_flag").index == 12
+
+    with raises(KeyError):
+        assert word[30]
+
+    assert word.get_field("field0")
+
+    with raises(KeyError):
+        assert word.get_flag("field4")

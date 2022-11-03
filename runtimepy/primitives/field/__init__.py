@@ -9,13 +9,19 @@ from typing import cast as _cast
 from vcorelib.io.types import JsonObject as _JsonObject
 
 # internal
+from runtimepy.mixins.regex import CHANNEL_PATTERN as _CHANNEL_PATTERN
+from runtimepy.mixins.regex import RegexMixin as _RegexMixin
 from runtimepy.primitives.int import UnsignedInt as _UnsignedInt
 
 
-class BitField:
+class BitField(_RegexMixin):
     """A class managing a portion of an unsigned-integer primitive."""
 
-    def __init__(self, raw: _UnsignedInt, index: int, width: int) -> None:
+    name_regex = _CHANNEL_PATTERN
+
+    def __init__(
+        self, name: str, raw: _UnsignedInt, index: int, width: int
+    ) -> None:
         """Initialize this bit-field."""
 
         # Verify bit-field parameters.
@@ -29,6 +35,8 @@ class BitField:
             width <= raw.kind.bits
         ), f"Field can't be {width}-bits wide for {raw.kind}!"
 
+        assert self.validate_name(name), f"Invalid name '{name}'!"
+        self.name = name
         self.raw = raw
         self.index = index
 
@@ -39,7 +47,12 @@ class BitField:
 
     def asdict(self) -> _JsonObject:
         """Get this field as a dictionary."""
-        return {"index": self.index, "width": self.width, "value": self()}
+        return {
+            "name": self.name,
+            "index": self.index,
+            "width": self.width,
+            "value": self(),
+        }
 
     def __call__(self, val: int = None) -> int:
         """
@@ -67,9 +80,9 @@ class BitField:
 class BitFlag(BitField):
     """A bit field that is always a single bit."""
 
-    def __init__(self, raw: _UnsignedInt, index: int) -> None:
+    def __init__(self, name: str, raw: _UnsignedInt, index: int) -> None:
         """Initialize this bit flag."""
-        super().__init__(raw, index, 1)
+        super().__init__(name, raw, index, 1)
 
     def clear(self) -> None:
         """Clear this field."""

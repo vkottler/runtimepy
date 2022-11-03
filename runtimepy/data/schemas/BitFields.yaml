@@ -15,10 +15,14 @@ properties:
     type: array
     items:
       type: object
-      required: [index]
+      required: [index, name]
       additionalProperties: false
 
       properties:
+        name:
+          type: string
+          pattern: "^[a-z0-9_.]+$"
+
         index:
           type: integer
           minimum: 0
