@@ -44,7 +44,6 @@ def test_bit_fields_load():
     word = BitFields.decode(resource("fields", "sample_fields.yaml"))
 
     # Set some values.
-    assert word.get_flag(0).get()
     assert word[4]() == 1
 
     assert word.raw == 17
@@ -57,5 +56,4 @@ def test_bit_fields_load():
 
     assert word.get_field("field0")
 
-    with raises(KeyError):
-        assert word.get_flag("field4")
+    word.finalize()

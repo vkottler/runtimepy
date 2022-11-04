@@ -30,6 +30,7 @@ class BitFields(_RuntimepyDictCodec):
     """A class for managing bit fields and flags from dictionary data."""
 
     curr_index: int
+    _finalized: bool
 
     def init(self, data: _JsonObject) -> None:
         """Perform implementation-specific initialization."""
@@ -43,6 +44,7 @@ class BitFields(_RuntimepyDictCodec):
         self.bits_available = set(range(self.raw.kind.bits))
         self.fields: _Dict[str, _BitField] = {}
         self.by_index: _Dict[int, _BitField] = {}
+        self._finalized: bool = _cast(bool, data["finalized"])
 
         # Load initial fields and flags.
         for item in _cast(_List[_Dict[str, int]], data["fields"]):
@@ -50,11 +52,16 @@ class BitFields(_RuntimepyDictCodec):
             index: int = item["index"]
             width: int = item["width"]
             value: int = item["value"]
+            enum = item.get("enum")
 
             if width == 1:
-                self.flag(name, index=index)(value)
+                self.flag(name, index=index, enum=enum)(value)
             else:
-                self.field(name, width, index=index)(value)
+                self.field(name, width, index=index, enum=enum)(value)
+
+    def finalize(self) -> None:
+        """Finalize the fields so that new fields can't be added."""
+        self._finalized = True
 
     def asdict(self) -> _JsonObject:
         """Get these bit fields as a dictionary."""
@@ -64,6 +71,7 @@ class BitFields(_RuntimepyDictCodec):
             "fields": _cast(
                 _JsonValue, [x.asdict() for x in self.fields.values()]
             ),
+            "finalized": self._finalized,
         }
 
     def get_field(self, key: _RegistryKey) -> _Optional[_BitField]:
@@ -81,17 +89,12 @@ class BitFields(_RuntimepyDictCodec):
             raise KeyError(f"No field '{key}'!")
         return result
 
-    def get_flag(self, key: _RegistryKey) -> _BitFlag:
-        """Get a bit-flag."""
-
-        result = self[key]
-        if result.width != 1:
-            raise KeyError(f"Field '{key}' isn't a bit-flag!")
-        assert isinstance(result, _BitFlag)
-        return result
-
-    def flag(self, name: str, index: int = None) -> _BitFlag:
+    def flag(
+        self, name: str, index: int = None, enum: _RegistryKey = None
+    ) -> _BitFlag:
         """Create a new bit flag."""
+
+        assert not self._finalized, "Can't add any more fields!"
 
         if index is None:
             index = self.curr_index
@@ -102,7 +105,7 @@ class BitFields(_RuntimepyDictCodec):
 
         self.bits_available.remove(index)
 
-        result = _BitFlag(name, self.raw, index)
+        result = _BitFlag(name, self.raw, index, enum=enum)
 
         # Advance the current index if this index is the same or larger.
         if index >= self.curr_index:
@@ -112,10 +115,17 @@ class BitFields(_RuntimepyDictCodec):
         self.by_index[index] = result
         return result
 
-    def field(self, name: str, width: int, index: int = None) -> _BitField:
+    def field(
+        self,
+        name: str,
+        width: int,
+        index: int = None,
+        enum: _RegistryKey = None,
+    ) -> _BitField:
         """Create a new bit field."""
 
         assert width != 1, "Use bit-flags for single-width fields!"
+        assert not self._finalized, "Can't add any more fields!"
 
         if index is None:
             index = self.curr_index
@@ -130,7 +140,7 @@ class BitFields(_RuntimepyDictCodec):
         # Allocate bits.
         self.bits_available -= bits
 
-        result = _BitField(name, self.raw, index, width)
+        result = _BitField(name, self.raw, index, width, enum=enum)
 
         # Advance the current index if this index is the same or larger.
         if index >= self.curr_index:
@@ -144,4 +154,6 @@ class BitFields(_RuntimepyDictCodec):
     def new(cls: _Type[T], value: _Primitivelike = "uint8") -> T:
         """Create a new bit-field storage entity."""
 
-        return cls.create({"type": _cast(str, value), "fields": []})
+        return cls.create(
+            {"type": _cast(str, value), "fields": [], "finalized": False}
+        )

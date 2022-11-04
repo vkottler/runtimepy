@@ -107,13 +107,21 @@ class RuntimeEnum(_RegistryItem):
         """Attempt to get an enumeration integer."""
         return self.ints.identifier(value)
 
-    def get_int(self, value: _Union[str, int]) -> int:
+    def get_int(self, value: _Union[str, int, bool]) -> int:
         """Get an enumeration integer."""
 
-        result = self.as_int(value)
+        result: _Union[int, bool, None] = None
+        if self._ints is not None:
+            result = self.as_int(value)
+
+        # Allow a boolean enumeration to also resolve integer values.
+        if self._bools is not None:
+            result = self.as_bool(_cast(bool, value))
+
         if result is None:
             raise KeyError(f"No enum entry for '{value}'")
-        return result
+
+        return int(result)
 
     def as_bool(self, value: _Union[str, bool]) -> _Optional[bool]:
         """Attempt to get an enumeration boolean."""

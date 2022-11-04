@@ -4,6 +4,7 @@ fields:
   - name: field0
     index: 0
     value: 1
+    enum: "FieldEnum"
 
   - name: field1
     index: 1
