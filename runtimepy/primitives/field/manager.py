@@ -8,6 +8,13 @@ from typing import Iterable as _Iterable
 from typing import List as _List
 from typing import Optional as _Optional
 from typing import Union as _Union
+from typing import cast as _cast
+
+# third-party
+from vcorelib.io import ARBITER as _ARBITER
+from vcorelib.io.types import EncodeResult as _EncodeResult
+from vcorelib.io.types import JsonObject as _JsonObject
+from vcorelib.paths import Pathlike as _Pathlike
 
 # internal
 from runtimepy.enum import RuntimeEnum as _RuntimeEnum
@@ -17,6 +24,30 @@ from runtimepy.primitives.field import BitFlag as _BitFlag
 from runtimepy.primitives.field.fields import BitFields as _BitFields
 from runtimepy.registry.name import NameRegistry as _NameRegistry
 from runtimepy.registry.name import RegistryKey as _RegistryKey
+
+
+def fields_to_file(
+    path: _Pathlike, fields: _Iterable[_BitFields], **kwargs
+) -> _EncodeResult:
+    """Write bit-fields to a file."""
+
+    return _ARBITER.encode(
+        path,
+        {"items": [_cast(str, x.asdict()) for x in fields]},
+        **kwargs,
+    )
+
+
+def fields_from_file(path: _Pathlike) -> _Iterable[_BitFields]:
+    """Load bit-fields from a file."""
+
+    return [
+        _BitFields.create(x)
+        for x in _cast(
+            _Iterable[_JsonObject],
+            _ARBITER.decode(path, require_success=True).data["items"],
+        )
+    ]
 
 
 class BitFieldsManager:
@@ -44,6 +75,10 @@ class BitFieldsManager:
         # Add initial fields.
         for field in fields:
             self.add(field)
+
+    def encode(self, path: _Pathlike, **kwargs) -> _EncodeResult:
+        """Encode this bit-fields manager to a file."""
+        return fields_to_file(path, self.fields, **kwargs)
 
     def add(self, fields: _BitFields) -> None:
         """Add new bit-fields to manage."""

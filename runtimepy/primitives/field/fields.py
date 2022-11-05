@@ -44,20 +44,24 @@ class BitFields(_RuntimepyDictCodec):
         self.bits_available = set(range(self.raw.kind.bits))
         self.fields: _Dict[str, _BitField] = {}
         self.by_index: _Dict[int, _BitField] = {}
-        self._finalized: bool = _cast(bool, data["finalized"])
+
+        # Set this initially false while we're initializing.
+        self._finalized: bool = False
 
         # Load initial fields and flags.
         for item in _cast(_List[_Dict[str, int]], data["fields"]):
             name: str = _cast(str, item["name"])
             index: int = item["index"]
             width: int = item["width"]
-            value: int = item["value"]
+            value: int = int(item["value"])
             enum = item.get("enum")
 
             if width == 1:
                 self.flag(name, index=index, enum=enum)(value)
             else:
                 self.field(name, width, index=index, enum=enum)(value)
+
+        self._finalized: bool = _cast(bool, data["finalized"])
 
     def finalize(self) -> None:
         """Finalize the fields so that new fields can't be added."""

@@ -37,8 +37,10 @@ properties:
           default: 1
 
         value:
-          type: integer
-          minimum: 0
+          oneOf:
+            - type: integer
+              minimum: 0
+            - type: boolean
           default: 0
 
         enum:

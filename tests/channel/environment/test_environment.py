@@ -31,7 +31,20 @@ def verify_values(env: ChannelEnvironment) -> None:
     assert env.value("float.1") == 0.0
     assert env.value("float.2") == 1.0
 
+    env.set("bool.2", 0)
+    assert env.value("bool.2") == "off"
+    env.set("bool.2", 1)
+    assert env.value("bool.2") == "on"
+
     assert env.get_int("int.2")[0].is_enum
+
+    assert env.value("field4") == "wait"
+
+    assert env.value("field0") == 1
+
+    assert env.value("field1") == "off"
+    env.set("field1", 1)
+    assert env.value("field1") == "on"
 
 
 def verify_missing_keys(env: ChannelEnvironment) -> None:
@@ -60,6 +73,20 @@ def verify_missing_keys(env: ChannelEnvironment) -> None:
         assert env.get_bool("int.1")
 
 
+def verify_bitfields(env: ChannelEnvironment) -> None:
+    """Verify behavior of the bit-fields manager."""
+
+    assert env.fields.values()["field4"] == "wait"
+
+    with raises(KeyError):
+        assert env.fields["field5"]
+
+    with raises(KeyError):
+        assert env.fields.get_flag("field4")
+
+    assert env.fields.get_flag("field1").get() is True
+
+
 def test_channel_environment_basic():
     """Test basic interactions with a channel environment."""
 
@@ -68,6 +95,7 @@ def test_channel_environment_basic():
         resource("channels", "environment", "sample")
     )
     verify_values(env)
+    verify_bitfields(env)
 
     # Verify exporting and re-importing the environment.
     with TemporaryDirectory() as tmpdir:

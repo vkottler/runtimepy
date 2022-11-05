@@ -21,6 +21,9 @@ from runtimepy.channel.environment.base import (
 from runtimepy.channel.environment.base import ValueMap as _ValueMap
 from runtimepy.channel.registry import ChannelRegistry as _ChannelRegistry
 from runtimepy.enum.registry import EnumRegistry as _EnumRegistry
+from runtimepy.primitives.field.manager import (
+    fields_from_file as _fields_from_file,
+)
 
 T = _TypeVar("T", bound="FileChannelEnvironment")
 CHANNELS_FILE = "channels.json"
@@ -45,9 +48,7 @@ class FileChannelEnvironment(_BaseChannelEnvironment):
 
         self.channels.encode(channels, **kwargs)
         self.enums.encode(enums, **kwargs)
-
-        # Need to write field manager to file.
-        print(fields)
+        self.fields.encode(fields, **kwargs)
 
         _ARBITER.encode(
             values,
@@ -90,14 +91,11 @@ class FileChannelEnvironment(_BaseChannelEnvironment):
                 _ValueMap, _ARBITER.decode(values, require_success=True).data
             )
 
-        # Load fields from file.
-        print(fields)
-
         return cls(
             channels=_ChannelRegistry.decode(channels),
             enums=_EnumRegistry.decode(enums),
             values=value_map,
-            fields=None,
+            fields=_fields_from_file(fields),
         )
 
     @classmethod
