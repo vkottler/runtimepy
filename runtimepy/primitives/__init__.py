@@ -77,3 +77,8 @@ def normalize(value: Primitivelike) -> _Type[AnyPrimitive]:
         assert value in Primitives, f"No primitive '{value}'!"
         value = Primitives[value]
     return value
+
+
+def create(value: Primitivelike) -> AnyPrimitive:
+    """Create an instance of a primitive."""
+    return normalize(value)()

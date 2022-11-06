@@ -6,7 +6,6 @@ A module for implementing arrays of arbitrary primitives.
 from struct import pack as _pack
 from struct import unpack as _unpack
 from typing import BinaryIO as _BinaryIO
-from typing import Iterable as _Iterable
 from typing import List as _List
 
 # internal
@@ -19,7 +18,7 @@ class PrimitiveArray:
 
     def __init__(
         self,
-        primitives: _Iterable[_AnyPrimitive] = None,
+        *primitives: _AnyPrimitive,
         byte_order: str = _NETWORK_BYTE_ORDER,
     ) -> None:
         """Initialize this primitive array."""
@@ -29,9 +28,12 @@ class PrimitiveArray:
         self.size: int = 0
 
         # Add initial items.
-        if primitives is not None:
-            for item in primitives:
-                self.add(item)
+        for item in primitives:
+            self.add(item)
+
+    def __getitem__(self, index: int) -> _AnyPrimitive:
+        """Access underlying primitives by index."""
+        return self._primitives[index]
 
     def add(self, primitive: _AnyPrimitive) -> int:
         """Add another primitive to manage."""
@@ -44,7 +46,7 @@ class PrimitiveArray:
     def __bytes__(self) -> bytes:
         """Get this primitive array as a bytes instance."""
 
-        return _pack(self._format, (x.value for x in self._primitives))
+        return _pack(self._format, *(x.value for x in self._primitives))
 
     def to_stream(self, stream: _BinaryIO) -> int:
         """Write this array to a stream."""
