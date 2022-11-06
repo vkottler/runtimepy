@@ -1,15 +1,18 @@
 ---
 type: object
 additionalProperties: false
+
 patternProperties:
   "^[a-z0-9_.]+$":
     type: object
     required: [id, type]
     additionalProperties: false
+
     properties:
       id:
         type: integer
         minimum: 1
+
       type:
         enum:
           - bool
@@ -23,9 +26,11 @@ patternProperties:
           - uint16
           - uint32
           - uint64
+
       commandable:
         type: boolean
         default: false
+
       enum:
         oneOf:
           - type: integer

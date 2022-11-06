@@ -4,7 +4,6 @@ A module implementing a basic channel interface.
 
 # built-in
 from typing import Generic as _Generic
-from typing import Optional as _Optional
 from typing import Union as _Union
 from typing import cast as _cast
 
@@ -12,6 +11,7 @@ from typing import cast as _cast
 from vcorelib.io.types import JsonObject as _JsonObject
 
 # internal
+from runtimepy.mixins.enum import EnumMixin as _EnumMixin
 from runtimepy.primitives import T as _T
 from runtimepy.primitives import normalize as _normalize
 from runtimepy.primitives.bool import Bool as _Bool
@@ -26,10 +26,9 @@ from runtimepy.primitives.int import Uint16 as _Uint16
 from runtimepy.primitives.int import Uint32 as _Uint32
 from runtimepy.primitives.int import Uint64 as _Uint64
 from runtimepy.registry.item import RegistryItem as _RegistryItem
-from runtimepy.registry.name import RegistryKey as _RegistryKey
 
 
-class Channel(_RegistryItem, _Generic[_T]):
+class Channel(_RegistryItem, _EnumMixin, _Generic[_T]):
     """An interface for an individual channel."""
 
     def __str__(self) -> str:
@@ -58,18 +57,7 @@ class Channel(_RegistryItem, _Generic[_T]):
         self.commandable: bool = _cast(bool, data["commandable"])
 
         # A key to this channel's enumeration in the enumeration registry.
-        self._enum: _Optional[_RegistryKey] = _cast(str, data.get("enum"))
-
-    @property
-    def is_enum(self) -> bool:
-        """Determine if this channel has an associated enumeration."""
-        return self._enum is not None
-
-    @property
-    def enum(self) -> _RegistryKey:
-        """Get the enum-registry key for this channel."""
-        assert self._enum is not None
-        return self._enum
+        self._enum = _cast(str, data.get("enum"))
 
     def asdict(self) -> _JsonObject:
         """Obtain a dictionary representing this instance."""

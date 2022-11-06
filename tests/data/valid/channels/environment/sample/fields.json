@@ -1,0 +1,20 @@
+{
+    "items": [
+        {
+            "type": "uint32",
+            "fields": [
+                {"name": "field0", "index": 0, "value": true},
+                {"name": "field1", "index": 1, "enum": "ValveState"},
+                {"name": "field2", "index": 2},
+                {"name": "field3", "index": 3},
+                {
+                    "name": "field4",
+                    "index": 4,
+                    "width": 8,
+                    "value": 1,
+                    "enum": "ProgramState"
+                }
+            ]
+        }
+    ]
+}

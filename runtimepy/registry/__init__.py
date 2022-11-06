@@ -13,24 +13,21 @@ from typing import TypeVar as _TypeVar
 from typing import cast as _cast
 
 # third-party
-from vcorelib.dict.codec import DictCodec as _DictCodec
 from vcorelib.io.types import JsonObject as _JsonObject
 from vcorelib.io.types import JsonValue as _JsonValue
-from vcorelib.schemas.base import SchemaMap as _SchemaMap
 
 # internal
 from runtimepy.registry.item import RegistryItem as _RegistryItem
 from runtimepy.registry.name import NameRegistry as _NameRegistry
 from runtimepy.registry.name import RegistryKey as _RegistryKey
-from runtimepy.schemas import json_schemas as _json_schemas
+from runtimepy.schemas import RuntimepyDictCodec as _RuntimepyDictCodec
 
 T = _TypeVar("T", bound=_RegistryItem)
 
 
-class Registry(_DictCodec, _Generic[T]):
+class Registry(_RuntimepyDictCodec, _Generic[T]):
     """A base class for a generic registry."""
 
-    default_schemas: _Optional[_SchemaMap] = _json_schemas()
     name_registry: _Type[_NameRegistry] = _NameRegistry
 
     @property

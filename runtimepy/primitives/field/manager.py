@@ -1,77 +1,169 @@
 """
-A bit-field manager.
+A management entity for bit-fields.
 """
 
 # built-in
-from typing import Type as _Type
-from typing import TypeVar as _TypeVar
+from typing import Dict as _Dict
+from typing import Iterable as _Iterable
+from typing import List as _List
+from typing import Optional as _Optional
+from typing import Union as _Union
 from typing import cast as _cast
 
+# third-party
+from vcorelib.io import ARBITER as _ARBITER
+from vcorelib.io.types import EncodeResult as _EncodeResult
+from vcorelib.io.types import JsonObject as _JsonObject
+from vcorelib.paths import Pathlike as _Pathlike
+
 # internal
-from runtimepy.primitives import Primitivelike as _Primitivelike
-from runtimepy.primitives import normalize as _normalize
+from runtimepy.enum import RuntimeEnum as _RuntimeEnum
+from runtimepy.enum.registry import EnumRegistry as _EnumRegistry
 from runtimepy.primitives.field import BitField as _BitField
 from runtimepy.primitives.field import BitFlag as _BitFlag
-from runtimepy.primitives.int import UnsignedInt as _UnsignedInt
+from runtimepy.primitives.field.fields import BitFields as _BitFields
+from runtimepy.registry.name import NameRegistry as _NameRegistry
+from runtimepy.registry.name import RegistryKey as _RegistryKey
 
-T = _TypeVar("T", bound="BitFieldManager")
+
+def fields_to_file(
+    path: _Pathlike, fields: _Iterable[_BitFields], **kwargs
+) -> _EncodeResult:
+    """Write bit-fields to a file."""
+
+    return _ARBITER.encode(
+        path,
+        {"items": [_cast(str, x.asdict()) for x in fields]},
+        **kwargs,
+    )
 
 
-class BitFieldManager:
-    """
-    A class for managing multiple bit-fields belonging to a single, primitive
-    integer.
-    """
+def fields_from_file(path: _Pathlike) -> _Iterable[_BitFields]:
+    """Load bit-fields from a file."""
 
-    def __init__(self, raw: _UnsignedInt) -> None:
-        """Initialize this bit-field manager."""
+    return [
+        _BitFields.create(x)
+        for x in _cast(
+            _Iterable[_JsonObject],
+            _ARBITER.decode(path, require_success=True).data["items"],
+        )
+    ]
 
-        self.raw = raw
-        self.curr_index = 0
-        self.bits_available = set(range(self.raw.kind.bits))
 
-    def flag(self, index: int = None) -> _BitFlag:
-        """Create a new bit flag."""
+class BitFieldsManager:
+    """A class for managing multiple bit-fields objects."""
 
-        idx = index if index is not None else self.curr_index
+    def __init__(
+        self,
+        registry: _NameRegistry,
+        enums: _EnumRegistry,
+        fields: _Iterable[_BitFields] = None,
+    ) -> None:
+        """Initialize this bit-fields manager."""
 
-        assert (
-            idx in self.bits_available
-        ), f"Bit at index {idx} is already allocated!"
+        # Use a channel registry to register field names to.
+        self.registry = registry
+        self.enums = enums
 
-        self.bits_available.remove(idx)
+        if fields is None:
+            fields = []
 
-        # Advance the current index if it was used for this flag.
-        if index is None:
-            self.curr_index += 1
+        self.fields: _List[_BitFields] = []
+        self.lookup: _Dict[str, int] = {}
+        self.enum_lookup: _Dict[str, _RuntimeEnum] = {}
 
-        return _BitFlag(self.raw, idx)
+        # Add initial fields.
+        for field in fields:
+            self.add(field)
 
-    def field(self, width: int, index: int = None) -> _BitField:
-        """Create a new bit field."""
+    def encode(self, path: _Pathlike, **kwargs) -> _EncodeResult:
+        """Encode this bit-fields manager to a file."""
+        return fields_to_file(path, self.fields, **kwargs)
 
-        assert width != 1, "Use bit-flags for single-width fields!"
+    def add(self, fields: _BitFields) -> None:
+        """Add new bit-fields to manage."""
 
-        idx = index if index is not None else self.curr_index
+        # Ensure that new fields can't be added after the current fields
+        # are snapshotted.
+        fields.finalize()
 
-        # Ensure that all bits for this field are available.
-        bits = set(x + idx for x in range(width))
-        for bit in bits:
-            assert (
-                bit in self.bits_available
-            ), f"Bit {bit} is already allocated!"
+        index = len(self.fields)
+        self.fields.append(fields)
 
-        # Allocate bits.
-        self.bits_available -= bits
+        # Register fields into the lookup structure.
+        for name, field in fields.fields.items():
+            ident = self.registry.register_name(name)
+            assert ident is not None, "Couldn't register bit-field '{name}'!"
+            self.lookup[name] = index
 
-        # Advance the current index if it was used for this field.
-        if index is None:
-            self.curr_index += width
+            # Also store the enum mapping.
+            if field.is_enum:
+                self.enum_lookup[name] = self.enums[field.enum]
 
-        return _BitField(self.raw, idx, width)
+    def set(self, key: _RegistryKey, value: _Union[int, bool, str]) -> None:
+        """Set a value of a field."""
 
-    @classmethod
-    def create(cls: _Type[T], value: _Primitivelike = "uint8") -> T:
-        """Create a new bit-field manager."""
+        field = self[key]
 
-        return cls(_cast(_UnsignedInt, _normalize(value)()))
+        if isinstance(value, str):
+            value = self.enum_lookup[field.name].get_int(value)
+
+        # Update the value.
+        field(int(value))
+
+    def get(
+        self, key: _RegistryKey, resolve_enum: bool = True
+    ) -> _Union[int, str]:
+        """Get the value of a field."""
+
+        field = self[key]
+        value: _Union[int, str] = field()
+
+        if field.is_enum and resolve_enum:
+            value = self.enum_lookup[field.name].get_str(value)
+
+        return value
+
+    def values(
+        self, resolve_enum: bool = True
+    ) -> _Dict[str, _Union[str, int]]:
+        """Get a new dictionary of current field values."""
+
+        return {
+            name: self.get(name, resolve_enum=resolve_enum)
+            for name in self.lookup
+        }
+
+    def has_field(self, key: _RegistryKey) -> bool:
+        """Determine if this manager has a field with this key."""
+
+        name = self.registry.name(key)
+        return name is not None and name in self.lookup
+
+    def get_field(self, key: _RegistryKey) -> _Optional[_BitField]:
+        """Attempt to get a bit-field."""
+
+        result = None
+        name = self.registry.name(key)
+
+        if name is not None and name in self.lookup:
+            result = self.fields[self.lookup[name]][name]
+
+        return result
+
+    def __getitem__(self, key: _RegistryKey) -> _BitField:
+        """Attempt to get a bit-field."""
+
+        result = self.get_field(key)
+        if result is None:
+            raise KeyError(f"No field '{key}'!")
+        return result
+
+    def get_flag(self, key: _RegistryKey) -> _BitFlag:
+        """Attempt to lookup a bit-flag."""
+
+        result = self[key]
+        if result.width != 1:
+            raise KeyError(f"Field '{key}' isn't a bit-flag!")
+        assert isinstance(result, _BitFlag)
+        return result

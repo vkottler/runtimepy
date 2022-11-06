@@ -5,14 +5,30 @@ A module implementing bit flags and fields.
 # built-in
 from typing import cast as _cast
 
+# third-party
+from vcorelib.io.types import JsonObject as _JsonObject
+
 # internal
+from runtimepy.mixins.enum import EnumMixin as _EnumMixin
+from runtimepy.mixins.regex import CHANNEL_PATTERN as _CHANNEL_PATTERN
+from runtimepy.mixins.regex import RegexMixin as _RegexMixin
 from runtimepy.primitives.int import UnsignedInt as _UnsignedInt
+from runtimepy.registry.name import RegistryKey as _RegistryKey
 
 
-class BitField:
+class BitField(_RegexMixin, _EnumMixin):
     """A class managing a portion of an unsigned-integer primitive."""
 
-    def __init__(self, raw: _UnsignedInt, index: int, width: int) -> None:
+    name_regex = _CHANNEL_PATTERN
+
+    def __init__(
+        self,
+        name: str,
+        raw: _UnsignedInt,
+        index: int,
+        width: int,
+        enum: _RegistryKey = None,
+    ) -> None:
         """Initialize this bit-field."""
 
         # Verify bit-field parameters.
@@ -26,12 +42,29 @@ class BitField:
             width <= raw.kind.bits
         ), f"Field can't be {width}-bits wide for {raw.kind}!"
 
+        assert self.validate_name(name), f"Invalid name '{name}'!"
+        self.name = name
         self.raw = raw
         self.index = index
+        self._enum = enum
 
         # Compute a bit-mask for this field.
-        self.mask = (2**width) - 1
+        self.width = width
+        self.mask = (2**self.width) - 1
         self.shifted_mask = self.mask << self.index
+
+    def asdict(self) -> _JsonObject:
+        """Get this field as a dictionary."""
+
+        result: _JsonObject = {
+            "name": self.name,
+            "index": self.index,
+            "width": self.width,
+            "value": self(),
+        }
+        if self.is_enum:
+            result["enum"] = self.enum
+        return result
 
     def __call__(self, val: int = None) -> int:
         """
@@ -59,9 +92,15 @@ class BitField:
 class BitFlag(BitField):
     """A bit field that is always a single bit."""
 
-    def __init__(self, raw: _UnsignedInt, index: int) -> None:
+    def __init__(
+        self,
+        name: str,
+        raw: _UnsignedInt,
+        index: int,
+        enum: _RegistryKey = None,
+    ) -> None:
         """Initialize this bit flag."""
-        super().__init__(raw, index, 1)
+        super().__init__(name, raw, index, 1, enum=enum)
 
     def clear(self) -> None:
         """Clear this field."""

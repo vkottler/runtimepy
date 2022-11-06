@@ -4,6 +4,7 @@ A module implementing a generic, two-way mapping interface.
 
 # built-in
 from typing import Generic as _Generic
+from typing import Iterator as _Iterator
 from typing import MutableMapping as _MutableMapping
 from typing import Optional as _Optional
 from typing import Type as _Type
@@ -90,6 +91,12 @@ class TwoWayNameMapping(_RegexMixin, _Generic[T]):
                 return key
 
         return self._mapping.get(_cast(T, key))
+
+    @property
+    def names(self) -> _Iterator[str]:
+        """Iterate over names."""
+        for name in self._reverse:
+            yield name
 
     def asdict(self) -> NameToKey[T]:
         """Provide a dictionary representation."""

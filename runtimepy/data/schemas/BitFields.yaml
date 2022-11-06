@@ -1,0 +1,51 @@
+---
+type: object
+required: [type, fields]
+additionalProperties: false
+
+properties:
+  finalized:
+    type: boolean
+    default: false
+
+  type:
+    enum:
+      - uint8
+      - uint16
+      - uint32
+      - uint64
+
+  fields:
+    type: array
+    items:
+      type: object
+      required: [index, name]
+      additionalProperties: false
+
+      properties:
+        name:
+          type: string
+          pattern: "^[a-z0-9_.]+$"
+
+        index:
+          type: integer
+          minimum: 0
+
+        width:
+          type: integer
+          minimum: 1
+          default: 1
+
+        value:
+          oneOf:
+            - type: integer
+              minimum: 0
+            - type: boolean
+          default: 0
+
+        enum:
+          oneOf:
+            - type: integer
+              minimum: 1
+            - type: string
+              pattern: "^\\w+$"

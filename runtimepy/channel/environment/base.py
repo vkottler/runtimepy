@@ -4,6 +4,7 @@ A module implementing a base channel environment.
 
 # built-in
 from typing import Dict as _Dict
+from typing import Iterable as _Iterable
 from typing import Optional as _Optional
 from typing import Set as _Set
 from typing import Tuple as _Tuple
@@ -21,12 +22,18 @@ from runtimepy.channel import IntChannel as _IntChannel
 from runtimepy.channel.registry import ChannelRegistry as _ChannelRegistry
 from runtimepy.enum import RuntimeEnum as _RuntimeEnum
 from runtimepy.enum.registry import EnumRegistry as _EnumRegistry
+from runtimepy.primitives.field import BitField as _BitField
+from runtimepy.primitives.field.fields import BitFields as _BitFields
+from runtimepy.primitives.field.manager import (
+    BitFieldsManager as _BitFieldsManager,
+)
 from runtimepy.registry.name import RegistryKey as _RegistryKey
 
 ChannelValue = _Union[bool, int, float, str]
 ValueMap = _Dict[_RegistryKey, ChannelValue]
 
 ChannelResult = _Tuple[_AnyChannel, _Optional[_RuntimeEnum]]
+BitfieldResult = _Tuple[_BitField, _Optional[_RuntimeEnum]]
 BoolChannelResult = _Tuple[_BoolChannel, _Optional[_RuntimeEnum]]
 IntChannelResult = _Tuple[_IntChannel, _Optional[_RuntimeEnum]]
 
@@ -39,6 +46,7 @@ class BaseChannelEnvironment(_NamespaceMixin):
         channels: _ChannelRegistry = None,
         enums: _EnumRegistry = None,
         values: ValueMap = None,
+        fields: _Iterable[_BitFields] = None,
     ) -> None:
         """Initialize this channel environment."""
 
@@ -51,6 +59,7 @@ class BaseChannelEnvironment(_NamespaceMixin):
 
         self.channels = channels
         self.enums = enums
+        self.fields = _BitFieldsManager(channels.names, enums, fields=fields)
 
         # Keep a mapping of each channel's name and integer identifier to the
         # underlying enumeration.
@@ -81,6 +90,12 @@ class BaseChannelEnvironment(_NamespaceMixin):
 
     def set(self, key: _RegistryKey, value: ChannelValue) -> None:
         """Attempt to set an arbitrary channel value."""
+
+        # Set a field value if this key maps to a bit-field.
+        if self.fields.has_field(key):
+            assert not isinstance(value, float)
+            self.fields.set(key, value)
+            return
 
         chan, enum = self[key]
 
@@ -115,13 +130,17 @@ class BaseChannelEnvironment(_NamespaceMixin):
 
         return {
             name: self.value(name, resolve_enum=resolve_enum)
-            for name in self.channels.items
+            for name in self.channels.names.names
         }
 
     def value(
         self, key: _RegistryKey, resolve_enum: bool = True
     ) -> ChannelValue:
         """Attempt to get a channel's current value."""
+
+        # Get the value from a field if this key points to a bit-field.
+        if self.fields.has_field(key):
+            return self.fields.get(key, resolve_enum=resolve_enum)
 
         chan, enum = self[key]
 
