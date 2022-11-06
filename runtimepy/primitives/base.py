@@ -16,13 +16,14 @@ from runtimepy.primitives.type import PrimitiveTypelike as _PrimitiveTypelike
 from runtimepy.primitives.type import normalize as _normalize
 
 T = _TypeVar("T", bool, int, float)
+NETWORK_BYTE_ORDER = "!"
 
 
 class Primitive(_Generic[T]):
     """A simple class for storing and underlying primitive value."""
 
     # Use network byte-order by default.
-    byte_order = "!"
+    byte_order = NETWORK_BYTE_ORDER
 
     def __init__(self, kind: _PrimitiveTypelike, value: T = None) -> None:
         """Initialize this primitive."""
