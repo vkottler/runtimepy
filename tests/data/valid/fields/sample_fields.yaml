@@ -17,3 +17,5 @@ fields:
     index: 4
     width: 8
     value: 1
+
+  - {}

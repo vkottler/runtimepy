@@ -19,7 +19,7 @@ properties:
     type: array
     items:
       type: object
-      required: [index, name]
+      required: []
       additionalProperties: false
 
       properties:

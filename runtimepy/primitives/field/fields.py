@@ -6,8 +6,10 @@ A module implementing a data structure for managing multiple bit fields.
 from typing import Dict as _Dict
 from typing import List as _List
 from typing import Optional as _Optional
+from typing import Tuple as _Tuple
 from typing import Type as _Type
 from typing import TypeVar as _TypeVar
+from typing import Union as _Union
 from typing import cast as _cast
 
 # third-party
@@ -18,6 +20,7 @@ from vcorelib.io.types import JsonValue as _JsonValue
 from runtimepy.primitives import Primitivelike as _Primitivelike
 from runtimepy.primitives import normalize as _normalize
 from runtimepy.primitives.field import BitField as _BitField
+from runtimepy.primitives.field import BitFieldBase as _BitFieldBase
 from runtimepy.primitives.field import BitFlag as _BitFlag
 from runtimepy.primitives.int import UnsignedInt as _UnsignedInt
 from runtimepy.registry.name import RegistryKey as _RegistryKey
@@ -43,18 +46,25 @@ class BitFields(_RuntimepyDictCodec):
         self.curr_index = 0
         self.bits_available = set(range(self.raw.kind.bits))
         self.fields: _Dict[str, _BitField] = {}
-        self.by_index: _Dict[int, _BitField] = {}
+        self.by_index: _Dict[int, _Union[_BitField, _Tuple[int, int]]] = {}
 
         # Set this initially false while we're initializing.
         self._finalized: bool = False
 
         # Load initial fields and flags.
         for item in _cast(_List[_Dict[str, int]], data["fields"]):
-            name: str = _cast(str, item["name"])
-            index: int = item["index"]
+            name: str = _cast(str, item.get("name", ""))
+            index: _Optional[int] = item.get("index")
             width: int = item["width"]
             value: int = int(item["value"])
             enum = item.get("enum")
+
+            # Fields without names are considered padding.
+            if not name:
+                assert value == 0, "Can't set padding to non-zero value!"
+                assert enum is None, f"Enum '{enum}' specified for padding!"
+                item["index"] = self.pad(width=width, index=index)
+                continue
 
             if width == 1:
                 self.flag(name, index=index, enum=enum)(value)
@@ -70,11 +80,20 @@ class BitFields(_RuntimepyDictCodec):
     def asdict(self) -> _JsonObject:
         """Get these bit fields as a dictionary."""
 
+        fields: _List[_Dict[str, _Union[str, int]]] = []
+
+        # Ensure both real fields and padding are encoded.
+        for index, item in self.by_index.items():
+            if isinstance(item, tuple):
+                fields.append(
+                    {"index": index, "width": item[0], "value": item[1]}
+                )
+            else:
+                fields.append(item.asdict())  # type: ignore
+
         return {
             "type": str(self.raw.kind),
-            "fields": _cast(
-                _JsonValue, [x.asdict() for x in self.fields.values()]
-            ),
+            "fields": _cast(_JsonValue, fields),
             "finalized": self._finalized,
         }
 
@@ -83,7 +102,10 @@ class BitFields(_RuntimepyDictCodec):
 
         if isinstance(key, str):
             return self.fields.get(key)
-        return self.by_index.get(key)
+
+        result = self.by_index.get(key)
+        assert not isinstance(result, tuple), f"Field at '{key}' is padding!"
+        return result
 
     def __getitem__(self, key: _RegistryKey) -> _BitField:
         """Obtain a bit-field."""
@@ -98,38 +120,18 @@ class BitFields(_RuntimepyDictCodec):
     ) -> _BitFlag:
         """Create a new bit flag."""
 
-        assert not self._finalized, "Can't add any more fields!"
-
-        if index is None:
-            index = self.curr_index
-
-        assert (
-            index in self.bits_available
-        ), f"Bit at index {index} is already allocated!"
-
-        self.bits_available.remove(index)
+        index = self._claim_bits(1, index=index)
 
         result = _BitFlag(name, self.raw, index, enum=enum)
-
-        # Advance the current index if this index is the same or larger.
-        if index >= self.curr_index:
-            self.curr_index = index + 1
 
         self.fields[name] = result
         self.by_index[index] = result
         return result
 
-    def field(
-        self,
-        name: str,
-        width: int,
-        index: int = None,
-        enum: _RegistryKey = None,
-    ) -> _BitField:
-        """Create a new bit field."""
+    def _claim_bits(self, width: int, index: int = None) -> int:
+        """Allocate bits within this primitive."""
 
-        assert width != 1, "Use bit-flags for single-width fields!"
-        assert not self._finalized, "Can't add any more fields!"
+        assert not self._finalized, "Can't add any more bits!"
 
         if index is None:
             index = self.curr_index
@@ -144,11 +146,37 @@ class BitFields(_RuntimepyDictCodec):
         # Allocate bits.
         self.bits_available -= bits
 
-        result = _BitField(name, self.raw, index, width, enum=enum)
-
         # Advance the current index if this index is the same or larger.
         if index >= self.curr_index:
             self.curr_index = index + width
+
+        return index
+
+    def pad(self, width: int = 1, index: int = None, val: int = 0) -> int:
+        """Pad bits in this primitive so they can't be allocated."""
+
+        result = self._claim_bits(width, index=index)
+
+        # Ensure the padded field is still set to the correct value.
+        _BitFieldBase(self.raw, result, width)(val=val)
+
+        self.by_index[result] = (width, val)
+        return result
+
+    def field(
+        self,
+        name: str,
+        width: int,
+        index: int = None,
+        enum: _RegistryKey = None,
+    ) -> _BitField:
+        """Create a new bit field."""
+
+        assert width != 1, "Use bit-flags for single-width fields!"
+
+        index = self._claim_bits(width, index=index)
+
+        result = _BitField(name, self.raw, index, width, enum=enum)
 
         self.fields[name] = result
         self.by_index[index] = result
