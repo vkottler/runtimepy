@@ -49,7 +49,7 @@ def test_bit_fields_load():
     assert word.raw == 17
 
     # Verify the underlying value.
-    assert word.flag("new_flag").index == 12
+    assert word.flag("new_flag").index == 13
 
     with raises(KeyError):
         assert word[30]

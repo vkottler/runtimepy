@@ -134,12 +134,6 @@ class BitFieldsManager:
             for name in self.lookup
         }
 
-    def has_field(self, key: _RegistryKey) -> bool:
-        """Determine if this manager has a field with this key."""
-
-        name = self.registry.name(key)
-        return name is not None and name in self.lookup
-
     def get_field(self, key: _RegistryKey) -> _Optional[_BitField]:
         """Attempt to get a bit-field."""
 
@@ -151,14 +145,6 @@ class BitFieldsManager:
 
         return result
 
-    def __getitem__(self, key: _RegistryKey) -> _BitField:
-        """Attempt to get a bit-field."""
-
-        result = self.get_field(key)
-        if result is None:
-            raise KeyError(f"No field '{key}'!")
-        return result
-
     def get_flag(self, key: _RegistryKey) -> _BitFlag:
         """Attempt to lookup a bit-flag."""
 
@@ -166,4 +152,18 @@ class BitFieldsManager:
         if result.width != 1:
             raise KeyError(f"Field '{key}' isn't a bit-flag!")
         assert isinstance(result, _BitFlag)
+        return result
+
+    def has_field(self, key: _RegistryKey) -> bool:
+        """Determine if this manager has a field with this key."""
+
+        name = self.registry.name(key)
+        return name is not None and name in self.lookup
+
+    def __getitem__(self, key: _RegistryKey) -> _BitField:
+        """Attempt to get a bit-field."""
+
+        result = self.get_field(key)
+        if result is None:
+            raise KeyError(f"No field '{key}'!")
         return result

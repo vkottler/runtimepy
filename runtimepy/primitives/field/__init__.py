@@ -16,55 +16,19 @@ from runtimepy.primitives.int import UnsignedInt as _UnsignedInt
 from runtimepy.registry.name import RegistryKey as _RegistryKey
 
 
-class BitField(_RegexMixin, _EnumMixin):
-    """A class managing a portion of an unsigned-integer primitive."""
+class BitFieldBase:
+    """A simple bit-field implementation."""
 
-    name_regex = _CHANNEL_PATTERN
-
-    def __init__(
-        self,
-        name: str,
-        raw: _UnsignedInt,
-        index: int,
-        width: int,
-        enum: _RegistryKey = None,
-    ) -> None:
+    def __init__(self, raw: _UnsignedInt, index: int, width: int) -> None:
         """Initialize this bit-field."""
 
-        # Verify bit-field parameters.
-        assert (
-            raw.kind.is_integer
-        ), f"Can't create a bit field with {raw.kind}!"
-        assert (
-            index < raw.kind.bits
-        ), f"Field can't start at {index} for {raw.kind}!"
-        assert (
-            width <= raw.kind.bits
-        ), f"Field can't be {width}-bits wide for {raw.kind}!"
-
-        assert self.validate_name(name), f"Invalid name '{name}'!"
-        self.name = name
         self.raw = raw
         self.index = index
-        self._enum = enum
 
         # Compute a bit-mask for this field.
         self.width = width
         self.mask = (2**self.width) - 1
         self.shifted_mask = self.mask << self.index
-
-    def asdict(self) -> _JsonObject:
-        """Get this field as a dictionary."""
-
-        result: _JsonObject = {
-            "name": self.name,
-            "index": self.index,
-            "width": self.width,
-            "value": self(),
-        }
-        if self.is_enum:
-            result["enum"] = self.enum
-        return result
 
     def __call__(self, val: int = None) -> int:
         """
@@ -86,6 +50,52 @@ class BitField(_RegexMixin, _EnumMixin):
                 int, (self.raw.value & self.shifted_mask) >> self.index
             )
 
+        return result
+
+
+class BitField(BitFieldBase, _RegexMixin, _EnumMixin):
+    """A class managing a portion of an unsigned-integer primitive."""
+
+    name_regex = _CHANNEL_PATTERN
+
+    def __init__(
+        self,
+        name: str,
+        raw: _UnsignedInt,
+        index: int,
+        width: int,
+        enum: _RegistryKey = None,
+    ) -> None:
+        """Initialize this bit-field."""
+
+        super().__init__(raw, index, width)
+
+        # Verify bit-field parameters.
+        assert (
+            raw.kind.is_integer
+        ), f"Can't create a bit field with {raw.kind}!"
+        assert (
+            index < raw.kind.bits
+        ), f"Field can't start at {index} for {raw.kind}!"
+        assert (
+            width <= raw.kind.bits
+        ), f"Field can't be {width}-bits wide for {raw.kind}!"
+
+        assert self.validate_name(name), f"Invalid name '{name}'!"
+        self.name = name
+        self._enum = enum
+
+    def asdict(self) -> _JsonObject:
+        """Get this field as a dictionary."""
+
+        result: _JsonObject = {
+            "name": self.name,
+            "index": self.index,
+            "width": self.width,
+            "value": self(),
+        }
+        if self.is_enum:
+            result["enum"] = self.enum
         return result
 
 
