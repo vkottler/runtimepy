@@ -2,7 +2,7 @@
     =====================================
     generator=datazen
     version=3.1.0
-    hash=ed454cdc85ee548a868622c9e18de2af
+    hash=5e1eb17ebb3155920170a5cb5f5872e6
     =====================================
 -->
 
@@ -41,13 +41,13 @@ This package is tested on the following platforms:
 # Command-line Options
 
 ```
-$ ./venv3.8/bin/runtimepy -h
+$ ./venv3.10/bin/runtimepy -h
 
 usage: runtimepy [-h] [--version] [-v] [-C DIR]
 
 A framework for implementing Python services.
 
-optional arguments:
+options:
   -h, --help         show this help message and exit
   --version          show program's version number and exit
   -v, --verbose      set to increase logging verbosity
