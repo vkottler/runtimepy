@@ -4,6 +4,7 @@ Test the 'task.async' module.
 
 # built-in
 import asyncio
+from unittest.mock import patch
 
 # module under test
 from runtimepy.channel.environment import ChannelEnvironment
@@ -28,3 +29,8 @@ def test_async_task_basic():
 
     task = SampleTask("test", 0.01, ChannelEnvironment())
     asyncio.run(task.run())
+
+    # Cause sleep to raise a cancelled error.
+    with patch("runtimepy.task._asyncio.sleep") as mocked:
+        mocked.side_effect = asyncio.CancelledError
+        asyncio.run(task.run())

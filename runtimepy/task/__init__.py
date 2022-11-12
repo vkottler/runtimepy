@@ -38,7 +38,6 @@ class AsyncTask(_LoggerMixin):
         with env.names_pushed(name):
             # Track whether or not this task is currently enabled.
             self.enabled = env.bool_channel("enabled", commandable=True)[0]
-            self.enabled.raw.value = True
 
             # Keep track of the time between task iterations in seconds.
             self.period_s = env.float_channel("period_s", commandable=True)
@@ -92,6 +91,14 @@ class AsyncTask(_LoggerMixin):
         """Get this periodic's rate as a string."""
         return f"{1.0 / self.period_s.raw.value:0.3f} Hz"
 
+    def enable(self) -> None:
+        """Enable this task."""
+        self.enabled.raw.value = True
+
+    def disable(self) -> None:
+        """Disable this task."""
+        self.enabled.raw.value = False
+
     async def run(self) -> None:
         """Run this task while it's enabled."""
 
@@ -101,6 +108,8 @@ class AsyncTask(_LoggerMixin):
 
         self.reset_metrics()
 
+        # Always re-enable the task if this is called.
+        self.enable()
         while self.enabled:
             # Keep track of the rate that this task is running at.
             start = eloop.time()
@@ -121,7 +130,8 @@ class AsyncTask(_LoggerMixin):
                         max(self.period_s.raw.value - exec_time, 0)
                     )
                 except _asyncio.CancelledError:
-                    self.enabled.raw.value = False
+                    self.logger.warning("Task '%s' was cancelled!", self.name)
+                    self.disable()
 
         self.logger.info("Task '%s' stopped.", self.name)
         self.log_metrics()
