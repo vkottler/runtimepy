@@ -87,7 +87,7 @@ class Registry(_RuntimepyDictCodec, _Generic[T]):
 
         result = None
         name = self.names.name(key)
-        if name is not None:
+        if name is not None and name in self.items:
             result = self.items[name]
         return result
 

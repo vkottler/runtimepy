@@ -72,6 +72,8 @@ def verify_missing_keys(env: ChannelEnvironment) -> None:
     with raises(KeyError):
         assert env.get_bool("int.1")
 
+    assert env.get("field0") is None
+
 
 def verify_bitfields(env: ChannelEnvironment) -> None:
     """Verify behavior of the bit-fields manager."""
@@ -79,7 +81,7 @@ def verify_bitfields(env: ChannelEnvironment) -> None:
     assert env.fields.values()["field4"] == "wait"
 
     with raises(KeyError):
-        assert env.fields["field5"]
+        assert env.fields["field99"]
 
     with raises(KeyError):
         assert env.fields.get_flag("field4")
