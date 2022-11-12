@@ -1,5 +1,6 @@
 [DESIGN]
 max-args=7
+max-attributes=10
 
 [MESSAGES CONTROL]
 disable=too-few-public-methods
