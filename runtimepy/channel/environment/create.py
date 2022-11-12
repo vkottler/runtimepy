@@ -4,13 +4,22 @@ A module for creating channels at runtime.
 
 # built-in
 from typing import Union as _Union
+from typing import cast as _cast
 
 # third-party
 from vcorelib.namespace import Namespace as _Namespace
 
+from runtimepy.channel import FloatChannel as _FloatChannel
+
 # internal
 from runtimepy.channel.environment.base import (
     BaseChannelEnvironment as _BaseChannelEnvironment,
+)
+from runtimepy.channel.environment.base import (
+    BoolChannelResult as _BoolChannelResult,
+)
+from runtimepy.channel.environment.base import (
+    IntChannelResult as _IntChannelResult,
 )
 from runtimepy.channel.environment.base import ChannelResult as _ChannelResult
 from runtimepy.enum import RuntimeEnum as _RuntimeEnum
@@ -46,6 +55,53 @@ class CreateChannelEnvironment(_BaseChannelEnvironment):
         )
         assert result is not None, f"Can't create channel '{name}'!"
         return self[name]
+
+    def int_channel(
+        self,
+        name: str,
+        kind: _Primitivelike = "uint32",
+        commandable: bool = False,
+        enum: _Union[_RegistryKey, _RuntimeEnum] = None,
+        namespace: _Namespace = None,
+    ) -> _IntChannelResult:
+        """Create an integer channel."""
+
+        result = self.channel(
+            name, kind, commandable=commandable, enum=enum, namespace=namespace
+        )
+        assert result[0].raw.kind.is_integer
+        return _cast(_IntChannelResult, result)
+
+    def bool_channel(
+        self,
+        name: str,
+        kind: _Primitivelike = "bool",
+        commandable: bool = False,
+        enum: _Union[_RegistryKey, _RuntimeEnum] = None,
+        namespace: _Namespace = None,
+    ) -> _BoolChannelResult:
+        """Create a boolean channel."""
+
+        result = self.channel(
+            name, kind, commandable=commandable, enum=enum, namespace=namespace
+        )
+        assert result[0].raw.kind.is_boolean
+        return _cast(_BoolChannelResult, result)
+
+    def float_channel(
+        self,
+        name: str,
+        kind: _Primitivelike = "float",
+        commandable: bool = False,
+        namespace: _Namespace = None,
+    ) -> _FloatChannel:
+        """Create a floating-point channel."""
+
+        result = self.channel(
+            name, kind, commandable=commandable, namespace=namespace
+        )[0]
+        assert result.raw.kind.is_float
+        return _cast(_FloatChannel, result)
 
     def enum(
         self,
