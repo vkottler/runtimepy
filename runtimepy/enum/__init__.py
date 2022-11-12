@@ -24,11 +24,6 @@ class RuntimeEnum(_RegistryItem):
     """A class implementing a runtime enumeration."""
 
     @property
-    def id(self) -> int:
-        """Get this registry item's identifier."""
-        return self._id
-
-    @property
     def is_boolean(self) -> bool:
         """Determine if this is a boolean enumeration."""
         return self._bools is not None
@@ -53,7 +48,8 @@ class RuntimeEnum(_RegistryItem):
     def init(self, data: _JsonObject) -> None:
         """Perform implementation-specific initialization."""
 
-        self._id = int(_cast(int, data["id"]))
+        super().init(data)
+
         self.type = _EnumType.normalize(str(data["type"]))
 
         # Use distinct storage attributes for each kind of underlying
@@ -76,7 +72,7 @@ class RuntimeEnum(_RegistryItem):
     def asdict(self) -> _JsonObject:
         """Obtain a dictionary representing this instance."""
 
-        result: _JsonObject = {"id": self._id, "type": str(self.type)}
+        result: _JsonObject = {"id": self.id, "type": str(self.type)}
         if self.is_integer:
             result["items"] = _cast(_JsonValue, self.ints.asdict())
         else:

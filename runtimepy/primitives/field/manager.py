@@ -134,14 +134,27 @@ class BitFieldsManager:
             for name in self.lookup
         }
 
+    def get_fields(self, key: _RegistryKey) -> _Optional[_BitFields]:
+        """Attempt to get a bit-fields object from a registry key."""
+
+        result = None
+        name = self.registry.name(key)
+
+        if name is not None and name in self.lookup:
+            result = self.fields[self.lookup[name]]
+
+        return result
+
     def get_field(self, key: _RegistryKey) -> _Optional[_BitField]:
         """Attempt to get a bit-field."""
 
         result = None
         name = self.registry.name(key)
 
-        if name is not None and name in self.lookup:
-            result = self.fields[self.lookup[name]][name]
+        if name is not None:
+            fields = self.get_fields(name)
+            if fields is not None:
+                result = fields[name]
 
         return result
 

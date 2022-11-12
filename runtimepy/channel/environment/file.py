@@ -21,6 +21,7 @@ from runtimepy.channel.environment.base import (
 from runtimepy.channel.environment.base import ValueMap as _ValueMap
 from runtimepy.channel.registry import ChannelRegistry as _ChannelRegistry
 from runtimepy.enum.registry import EnumRegistry as _EnumRegistry
+from runtimepy.mapping import NameToKey as _NameToKey
 from runtimepy.primitives.field.manager import (
     fields_from_file as _fields_from_file,
 )
@@ -30,6 +31,7 @@ CHANNELS_FILE = "channels.json"
 ENUMS_FILE = "enums.json"
 VALUES_FILE = "values.json"
 FIELDS_FILE = "fields.json"
+NAMES_FILE = "names.json"
 
 
 class FileChannelEnvironment(_BaseChannelEnvironment):
@@ -41,6 +43,7 @@ class FileChannelEnvironment(_BaseChannelEnvironment):
         enums: _Pathlike = ENUMS_FILE,
         values: _Pathlike = VALUES_FILE,
         fields: _Pathlike = FIELDS_FILE,
+        names: _Pathlike = NAMES_FILE,
         resolve_enum: bool = True,
         **kwargs,
     ) -> None:
@@ -49,6 +52,19 @@ class FileChannelEnvironment(_BaseChannelEnvironment):
         self.channels.encode(channels, **kwargs)
         self.enums.encode(enums, **kwargs)
         self.fields.encode(fields, **kwargs)
+
+        # Keep track of name-to-identifier mappings for all such mappings.
+        _ARBITER.encode(
+            names,
+            _cast(
+                _JsonObject,
+                {
+                    "channels": self.channels.names.asdict(),
+                    "enums": self.enums.names.asdict(),
+                },
+            ),
+            **kwargs,
+        )
 
         _ARBITER.encode(
             values,
@@ -68,6 +84,7 @@ class FileChannelEnvironment(_BaseChannelEnvironment):
             enums=path.joinpath(ENUMS_FILE),
             values=path.joinpath(VALUES_FILE),
             fields=path.joinpath(FIELDS_FILE),
+            names=path.joinpath(NAMES_FILE),
             resolve_enum=resolve_enum,
             **kwargs,
         )
@@ -79,6 +96,7 @@ class FileChannelEnvironment(_BaseChannelEnvironment):
         enums: _Pathlike = ENUMS_FILE,
         values: _Pathlike = VALUES_FILE,
         fields: _Pathlike = FIELDS_FILE,
+        names: _Pathlike = NAMES_FILE,
     ) -> T:
         """Load a channel environment from a pair of files."""
 
@@ -91,9 +109,22 @@ class FileChannelEnvironment(_BaseChannelEnvironment):
                 _ValueMap, _ARBITER.decode(values, require_success=True).data
             )
 
+        chan_reg = _ChannelRegistry.decode(channels)
+        enum_reg = _EnumRegistry.decode(enums)
+
+        # Load name-to-identifier mapping data and initialize (or update)
+        # name registries.
+        name_data = _ARBITER.decode(names, require_success=True).data
+        chan_reg.names.load_name_to_key(
+            _cast(_NameToKey[int], name_data["channels"])
+        )
+        enum_reg.names.load_name_to_key(
+            _cast(_NameToKey[int], name_data["enums"])
+        )
+
         return cls(
-            channels=_ChannelRegistry.decode(channels),
-            enums=_EnumRegistry.decode(enums),
+            channels=chan_reg,
+            enums=enum_reg,
             values=value_map,
             fields=_fields_from_file(fields),
         )
@@ -109,4 +140,5 @@ class FileChannelEnvironment(_BaseChannelEnvironment):
             enums=path.joinpath(ENUMS_FILE),
             values=path.joinpath(VALUES_FILE),
             fields=path.joinpath(FIELDS_FILE),
+            names=path.joinpath(NAMES_FILE),
         )

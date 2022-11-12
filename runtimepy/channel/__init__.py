@@ -39,15 +39,10 @@ class Channel(_RegistryItem, _EnumMixin, _Generic[_T]):
         """Get this channel as a boolean."""
         return bool(self.raw)
 
-    @property
-    def id(self) -> int:
-        """Get this registry item's identifier."""
-        return self._id
-
     def init(self, data: _JsonObject) -> None:
         """Perform implementation-specific initialization."""
 
-        self._id = int(_cast(int, data["id"]))
+        super().init(data)
 
         # This is the underlying storage entity for this channel.
         self.raw: _T = _cast(_T, _normalize(_cast(str, data["type"]))())

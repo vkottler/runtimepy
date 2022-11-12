@@ -3,19 +3,15 @@ A module implementing an interface for items that can belong to registries.
 """
 
 # built-in
-from abc import abstractmethod as _abstractmethod
+from typing import cast as _cast
 
 # third-party
 from vcorelib.dict.codec import DictCodec as _DictCodec
+from vcorelib.io.types import JsonObject as _JsonObject
 
 
 class RegistryItem(_DictCodec):
     """A class interface for items that can be managed via a registry."""
-
-    @property
-    @_abstractmethod
-    def id(self) -> int:
-        """Get this registry item's identifier."""
 
     def __hash__(self) -> int:
         """Get a suitable hash for this registry item."""
@@ -24,3 +20,7 @@ class RegistryItem(_DictCodec):
     def __eq__(self, other) -> bool:
         """Use the integer identifier to determine equivalence."""
         return bool(self.id == getattr(other, "id", other["id"]))
+
+    def init(self, data: _JsonObject) -> None:
+        """Perform implementation-specific initialization."""
+        self.id: int = int(_cast(int, data["id"]))

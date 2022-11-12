@@ -1,5 +1,5 @@
 [DESIGN]
-max-args=6
+max-args=7
 
 [MESSAGES CONTROL]
 disable=too-few-public-methods

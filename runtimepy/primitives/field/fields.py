@@ -4,6 +4,7 @@ A module implementing a data structure for managing multiple bit fields.
 
 # built-in
 from typing import Dict as _Dict
+from typing import Iterator as _Iterator
 from typing import List as _List
 from typing import Optional as _Optional
 from typing import Tuple as _Tuple
@@ -67,11 +68,20 @@ class BitFields(_RuntimepyDictCodec):
                 continue
 
             if width == 1:
-                self.flag(name, index=index, enum=enum)(value)
+                flag = self.flag(name, index=index, enum=enum)
+                flag(value)
+                item["index"] = flag.index
             else:
-                self.field(name, width, index=index, enum=enum)(value)
+                field = self.field(name, width, index=index, enum=enum)
+                field(value)
+                item["index"] = field.index
 
         self._finalized: bool = _cast(bool, data["finalized"])
+
+    @property
+    def names(self) -> _Iterator[str]:
+        """Iterate over names mapping to individual fields."""
+        yield from self.fields
 
     def finalize(self) -> None:
         """Finalize the fields so that new fields can't be added."""

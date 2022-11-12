@@ -15,6 +15,13 @@
                     "enum": "ProgramState"
                 }
             ]
+        },
+        {
+            "type": "uint8",
+            "fields": [
+                {"name": "field5"},
+                {"name": "field6"}
+            ]
         }
     ]
 }
