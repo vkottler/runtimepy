@@ -86,6 +86,8 @@ def verify_bitfields(env: ChannelEnvironment) -> None:
 
     assert env.fields.get_flag("field1").get() is True
 
+    assert env.fields[20].name == "field4"
+
 
 def test_channel_environment_basic():
     """Test basic interactions with a channel environment."""

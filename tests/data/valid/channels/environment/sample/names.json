@@ -1,0 +1,22 @@
+{
+    "channels": {
+        "bool.1": 1,
+        "bool.2": 2,
+        "bool.3": 3,
+        "int.1": 4,
+        "int.2": 5,
+        "int.3": 6,
+        "float.1": 7,
+        "float.2": 8,
+        "field0": 9,
+        "field1": 10,
+        "field2": 11,
+        "field3": 12,
+        "field4": 20
+    },
+    "enums": {
+        "ValveState": 1,
+        "ProgramState": 2
+
+    }
+}

@@ -45,33 +45,42 @@ class TwoWayNameMapping(_RegexMixin, _Generic[T]):
     ) -> None:
         """Initialize this name registry."""
 
-        if mapping is None:
-            mapping = {}
-        if reverse is None:
-            reverse = {}
+        self._mapping: KeyToName[T] = {}
+        self._reverse: NameToKey[T] = {}
 
-        self._mapping: KeyToName[T] = mapping
-        self._reverse: NameToKey[T] = reverse
+        if mapping is not None:
+            self.load_key_to_name(mapping)
+        if reverse is not None:
+            self.load_name_to_key(reverse)
 
-        # Populate the reverse mapping.
-        for key, name in self._mapping.items():
-            if name not in self._reverse:
-                self._reverse[name] = key
-            else:
-                # Ensure the mappings are consistent.
-                assert self._reverse[name] == key
+    def _set(self, key: T, name: str) -> None:
+        """Set a key<->name pairing."""
 
-        # Populate the forward mapping.
-        for name, key in self._reverse.items():
-            if key not in self._mapping:
-                self._mapping[key] = name
-            else:
-                # Ensure the mappings are consistent.
-                assert self._mapping[key] == name
+        assert self.validate_name(name), f"Invalid name '{name}'!"
 
-        # Validate names.
-        for name in self._reverse:
-            assert self.validate_name(name), f"Invalid name '{name}'!"
+        # Add to the key->name mapping.
+        if key not in self._mapping:
+            self._mapping[key] = name
+        else:
+            # Ensure the mappings are consistent.
+            assert self._mapping[key] == name
+
+        # Add to the name->key mapping.
+        if name not in self._reverse:
+            self._reverse[name] = key
+        else:
+            # Ensure the mappings are consistent.
+            assert self._reverse[name] == key
+
+    def load_key_to_name(self, mapping: KeyToName[T]) -> None:
+        """Load a key-to-name mapping."""
+        for key, name in mapping.items():
+            self._set(key, name)
+
+    def load_name_to_key(self, reverse: NameToKey[T]) -> None:
+        """Load a name-to-key mapping."""
+        for name, key in reverse.items():
+            self._set(key, name)
 
     def identifier(self, key: MappingKey[T]) -> _Optional[T]:
         """Get the integer identifier associated with a registry key."""
