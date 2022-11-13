@@ -6,6 +6,7 @@ entry: {{entry}}
 
 requirements:
   - vcorelib
+  - "windows-curses; sys_platform == 'win32'"
 
 dev_requirements:
   - setuptools-wrapper

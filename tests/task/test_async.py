@@ -27,7 +27,7 @@ class SampleTask(AsyncTask):
 def test_async_task_basic():
     """Test that a basic task can run."""
 
-    task = SampleTask("test", 0.01, ChannelEnvironment())
+    task = SampleTask("test", 0.02, ChannelEnvironment())
     asyncio.run(task.run())
 
     # Cause sleep to raise a cancelled error.

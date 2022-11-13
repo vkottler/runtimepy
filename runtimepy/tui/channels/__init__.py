@@ -4,12 +4,16 @@ A module implementing a channel-environment user interface.
 
 # built-in
 import curses as _curses
+from typing import Any as _Any
 from typing import Optional as _Optional
 
 # internal
 from runtimepy.channel.environment import (
     ChannelEnvironment as _ChannelEnvironment,
 )
+
+# Typing for something like '_curses.window' isn't supported yet.
+CursesWindow = _Any
 
 
 class ChannelTui:
@@ -20,9 +24,10 @@ class ChannelTui:
     def __init__(self, env: _ChannelEnvironment) -> None:
         """Initialize this text user-interface for a channel environment."""
 
-        self._window: _Optional[_curses.window] = None
+        self._window: _Optional[CursesWindow] = None
 
-        _curses.use_default_colors()
+        # _curses.use_default_colors()
+        getattr(_curses, "use_default_colors")()
 
         # Initialize channels for the window width and height.
         with env.names_pushed("ui"):
@@ -31,12 +36,12 @@ class ChannelTui:
                 self.window_height = env.int_channel("height", "uint16")[0]
 
     @property
-    def window(self) -> _curses.window:
+    def window(self) -> CursesWindow:
         """Get this interface's window."""
         assert self._window is not None
         return self._window
 
-    async def init(self, window: _curses.window) -> bool:
+    async def init(self, window: CursesWindow) -> bool:
         """Initialize this interface's window."""
 
         assert self._window is None, "Already initialized!"
@@ -76,7 +81,7 @@ class ChannelTui:
         """
 
         if char != -1:
-            if char == _curses.KEY_RESIZE:
+            if char == getattr(_curses, "KEY_RESIZE"):
                 await self.update_dimensions()
 
             self.window.addstr(2, 1, str(char))

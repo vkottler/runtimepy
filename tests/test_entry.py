@@ -4,8 +4,9 @@ runtimepy - Test the program's entry-point.
 
 # built-in
 import curses
+from os import environ
 from subprocess import check_output
-from sys import executable
+from sys import executable, platform
 from unittest.mock import patch
 
 # module under test
@@ -32,15 +33,20 @@ def test_package_entry():
 def wrapper_mock(*args, **kwargs) -> None:
     """Create a virtual window."""
 
+    if platform in ["linux", "darwin"]:
+        environ["TERM"] = "linux"
+        environ["TERMINFO"] = "/etc/terminfo"
+
     # Initialize the library (else curses won't work at all).
-    curses.initscr()
-    curses.start_color()
+    getattr(curses, "initscr")()  # curses.initscr()
+    getattr(curses, "start_color")()  # curses.start_color()
 
     # Send a re-size event.
-    curses.ungetch(curses.KEY_RESIZE)
+    # curses.ungetch(curses.KEY_RESIZE)
+    getattr(curses, "ungetch")(getattr(curses, "KEY_RESIZE"))
 
     # Create a virtual window for the application to use.
-    window = curses.newwin(24, 80)
+    window = getattr(curses, "newwin")(24, 80)  # curses.newwin(24, 80)
 
     args[0](window, *args[1:], **kwargs)
 

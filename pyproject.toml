@@ -27,7 +27,7 @@ classifiers = [
   "License :: OSI Approved :: MIT License"
 ]
 dependencies = [
-  "vcorelib"
+  "vcorelib",
 ]
 
 [project.optional-dependencies]

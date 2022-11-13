@@ -12,19 +12,22 @@ import curses as _curses
 from vcorelib.args import CommandFunction as _CommandFunction
 from vcorelib.asyncio import run_handle_interrupt as _run_handle_interrupt
 
+# internal
 from runtimepy.channel.environment import (
     ChannelEnvironment as _ChannelEnvironment,
 )
-
-# internal
+from runtimepy.tui.channels import CursesWindow as _CursesWindow
 from runtimepy.tui.task import TuiTask as _TuiTask
 
 
-def start(window: _curses.window, args: _Namespace) -> None:
+def start(window: _CursesWindow, args: _Namespace) -> None:
     """Start the user interface."""
 
     task = _TuiTask(
-        "ui", 0.01, _ChannelEnvironment(), max_iterations=args.iterations
+        "ui",
+        1 / args.rate,
+        _ChannelEnvironment(),
+        max_iterations=args.iterations,
     )
 
     eloop = _asyncio.new_event_loop()
@@ -35,7 +38,7 @@ def start(window: _curses.window, args: _Namespace) -> None:
 def tui_cmd(args: _Namespace) -> int:
     """Execute the tui command."""
 
-    _curses.wrapper(start, args)
+    getattr(_curses, "wrapper")(start, args)
     return 0
 
 
@@ -47,6 +50,19 @@ def add_tui_cmd(parser: _ArgumentParser) -> _CommandFunction:
         "--iterations",
         type=int,
         default=0,
-        help="maximum number of program iterations (if greater than zero)",
+        help=(
+            "maximum number of program iterations (if greater "
+            "than zero, default: %(default)s)"
+        ),
+    )
+    parser.add_argument(
+        "-r",
+        "--rate",
+        type=float,
+        default=60.0,
+        help=(
+            "frequency (in Hz) to run the interface "
+            "(default: %(default)s Hz)"
+        ),
     )
     return tui_cmd

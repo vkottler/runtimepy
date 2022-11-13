@@ -2,15 +2,13 @@
 A task entry-point for a text user-interface.
 """
 
-# built-in
-import curses as _curses
-
 # internal
 from runtimepy.channel.environment import (
     ChannelEnvironment as _ChannelEnvironment,
 )
 from runtimepy.task import AsyncTask as _AsyncTask
 from runtimepy.tui.channels import ChannelTui as _ChannelTui
+from runtimepy.tui.channels import CursesWindow as _CursesWindow
 
 
 class TuiTask(_AsyncTask):
@@ -26,7 +24,7 @@ class TuiTask(_AsyncTask):
         """Initialize this task."""
 
         # Initialize the interface.
-        window: _curses.window = args[0]
+        window: _CursesWindow = args[0]
         return await self.tui.init(window)
 
     async def dispatch(self, *_, **__) -> bool:
