@@ -3,6 +3,7 @@ runtimepy - Test the program's entry-point.
 """
 
 # built-in
+import curses
 from subprocess import check_output
 from sys import executable
 from unittest.mock import patch
@@ -28,7 +29,25 @@ def test_package_entry():
     check_output([executable, "-m", "runtimepy", "-h"])
 
 
+def wrapper_mock(*args, **kwargs) -> None:
+    """Create a virtual window."""
+
+    # Initialize the library (else curses won't work at all).
+    curses.initscr()
+    curses.start_color()
+
+    # Send a re-size event.
+    curses.ungetch(curses.KEY_RESIZE)
+
+    # Create a virtual window for the application to use.
+    window = curses.newwin(24, 80)
+
+    args[0](window, *args[1:], **kwargs)
+
+
 def test_entry_tui_cmd():
     """Test basic usages of the 'tui' command."""
 
-    assert runtimepy_main([PKG_NAME, "tui"]) == 0
+    with patch("runtimepy.commands.tui._curses.wrapper", new=wrapper_mock):
+        # Only run 20 iterations.
+        assert runtimepy_main([PKG_NAME, "tui", "-i", "20"]) == 0

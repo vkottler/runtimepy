@@ -71,12 +71,15 @@ class ChannelTui:
         window.box()
 
     async def handle_char(self, char: int) -> None:
-        """Handle character input."""
+        """
+        Handle character input.
+        """
 
-        if char == _curses.KEY_RESIZE:
-            await self.update_dimensions()
+        if char != -1:
+            if char == _curses.KEY_RESIZE:
+                await self.update_dimensions()
 
-        self.window.addstr(2, 1, str(char))
+            self.window.addstr(2, 1, str(char))
 
     async def dispatch(self) -> bool:
         """Dispatch this user interface."""

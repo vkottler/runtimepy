@@ -20,6 +20,12 @@ def test_primitive_array_basic():
     bool1: Bool = cast(Bool, create("bool"))
     bool2: Bool = cast(Bool, create("bool"))
 
+    def bool_changed(curr: bool, new: bool) -> None:
+        """A sample value-change callback."""
+        assert curr != new
+
+    bool1.register_callback(bool_changed, once=True)
+
     int1: Int32 = cast(Int32, create("int32"))
     int2: Int32 = cast(Int32, create("int32"))
 

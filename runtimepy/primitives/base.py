@@ -20,6 +20,8 @@ from runtimepy.primitives.type import normalize as _normalize
 
 T = _TypeVar("T", bool, int, float)
 NETWORK_BYTE_ORDER = "!"
+
+# Current value first, new value next.
 PrimitiveChangeCallaback = _Callable[[T, T], None]
 
 
@@ -42,7 +44,7 @@ class Primitive(_Generic[T]):
         self(value=value)
 
     def register_callback(
-        self, callback: PrimitiveChangeCallaback[T], once: bool = True
+        self, callback: PrimitiveChangeCallaback[T], once: bool = False
     ) -> int:
         """Register a callback and return an identifier for it."""
 
@@ -72,10 +74,15 @@ class Primitive(_Generic[T]):
 
         # Call callbacks if the value has changed.
         if curr != value and self.callbacks:
+            to_remove = []
             for ident, (callback, once) in self.callbacks.items():
                 callback(curr, value)
                 if once:
-                    self.remove_callback(ident)
+                    to_remove.append(ident)
+
+            # Remove one-time callbacks.
+            for item in to_remove:
+                self.remove_callback(item)
 
         self.raw.value = value
 

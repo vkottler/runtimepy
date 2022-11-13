@@ -26,6 +26,7 @@ class AsyncTask(_LoggerMixin):
         period_s: float,
         env: _ChannelEnvironment,
         average_depth: int = 10,
+        max_iterations: int = 0,
     ) -> None:
         """Initialize this asynchronous task."""
 
@@ -42,6 +43,12 @@ class AsyncTask(_LoggerMixin):
             # Keep track of the time between task iterations in seconds.
             self.period_s = env.float_channel("period_s", commandable=True)
             self.period_s.raw.value = period_s
+
+            # Allow commanding a maximum number of iterations.
+            self.max_iterations = env.int_channel(
+                "max_iterations", commandable=True
+            )[0]
+            self.max_iterations.raw.value = max_iterations
 
             with env.names_pushed("metrics"):
                 # Track the number of times this task has been dispatched.
@@ -146,6 +153,14 @@ class AsyncTask(_LoggerMixin):
             self.average_s.raw.value = self.dispatch_time(exec_time)
             self.max_s.raw.value = self.dispatch_time.max
             self.min_s.raw.value = self.dispatch_time.min
+
+            # Check if we've performed the maximum specified number of
+            # dispatches.
+            if (
+                self.max_iterations.raw.value > 0
+                and self.dispatches.raw.value >= self.max_iterations.raw.value
+            ):
+                self.disable()
 
             if self.enabled:
                 try:

@@ -35,9 +35,7 @@ class TuiTask(_AsyncTask):
         window = self.tui.window
 
         # Check if we have input waiting.
-        new = window.getch()
-        if new != -1:
-            await self.tui.handle_char(new)
+        await self.tui.handle_char(window.getch())
 
         # Remove this eventually.
         self.tui.window.addstr(1, 1, str(self.dispatches.raw.value))
