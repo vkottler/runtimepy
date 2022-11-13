@@ -33,9 +33,12 @@ def test_package_entry():
 def wrapper_mock(*args, **kwargs) -> None:
     """Create a virtual window."""
 
+    # Set some environment variables if they're not set.
     if platform in ["linux", "darwin"]:
-        environ["TERM"] = "linux"
-        environ["TERMINFO"] = "/etc/terminfo"
+        if "TERM" not in environ:
+            environ["TERM"] = "linux"
+        if "TERMINFO" not in environ:
+            environ["TERMINFO"] = "/etc/terminfo"
 
     # Initialize the library (else curses won't work at all).
     getattr(curses, "initscr")()  # curses.initscr()

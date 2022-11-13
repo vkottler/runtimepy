@@ -25,9 +25,14 @@ class ChannelTui:
         """Initialize this text user-interface for a channel environment."""
 
         self._window: _Optional[CursesWindow] = None
+        self._header: _Optional[CursesWindow] = None
+        self._body: _Optional[CursesWindow] = None
 
         # _curses.use_default_colors()
         getattr(_curses, "use_default_colors")()
+
+        # _curses.curs_set(0)
+        getattr(_curses, "curs_set")(0)
 
         # Initialize channels for the window width and height.
         with env.names_pushed("ui"):
@@ -35,11 +40,25 @@ class ChannelTui:
                 self.window_width = env.int_channel("width", "uint16")[0]
                 self.window_height = env.int_channel("height", "uint16")[0]
 
+        self.env = env
+
     @property
     def window(self) -> CursesWindow:
         """Get this interface's window."""
         assert self._window is not None
         return self._window
+
+    @property
+    def header(self) -> CursesWindow:
+        """Get this interface's header window."""
+        assert self._header is not None
+        return self._header
+
+    @property
+    def body(self) -> CursesWindow:
+        """Get this interface's body window."""
+        assert self._body is not None
+        return self._body
 
     async def init(self, window: CursesWindow) -> bool:
         """Initialize this interface's window."""
@@ -52,7 +71,6 @@ class ChannelTui:
 
         # Initialize the window dimensions.
         await self.update_dimensions()
-        window.refresh()
         return True
 
     async def update_dimensions(self) -> None:
@@ -74,6 +92,24 @@ class ChannelTui:
         # Clear screen content and draw a box.
         window.clear()
         window.box()
+        window.addstr(1, 1, "Channel Environment User Interface")
+
+        # Create the header box.
+        header_height = 5
+        header = window.subwin(
+            header_height, self.window_width.raw.value - 2, 2, 1
+        )
+        header.clear()
+        header.box()
+        self._header = header
+
+        # Create the body box.
+        body_lines = self.window_height.raw.value - 2 - header_height - 1
+        body_cols = self.window_width.raw.value - 2
+        body = window.subwin(body_lines, body_cols, 2 + header_height, 1)
+        body.clear()
+        body.box()
+        self._body = body
 
     async def handle_char(self, char: int) -> None:
         """
@@ -84,14 +120,32 @@ class ChannelTui:
             if char == getattr(_curses, "KEY_RESIZE"):
                 await self.update_dimensions()
 
-            self.window.addstr(2, 1, str(char))
+            key_str = "'" + _curses.keyname(char).decode() + "'"
+
+            self.header.addstr(3, 1, f"key: {char:4} {key_str:12}")
+
+    async def update_header(self) -> None:
+        """Update the header portion of the interface."""
+
+        window = self.header
+        window.addstr(1, 1, f"width:  {self.window_width.raw.value:4}")
+        window.addstr(2, 1, f"height: {self.window_height.raw.value:4}")
+        window.noutrefresh()
+
+    async def update_body(self) -> None:
+        """Update the body portion of the interface."""
+
+        window = self.body
+        window.addstr(1, 1, "test")
+        window.noutrefresh()
 
     async def dispatch(self) -> bool:
         """Dispatch this user interface."""
 
-        window = self.window
+        # Update window states.
+        await self.update_header()
+        await self.update_body()
 
-        window.addstr(3, 1, f"width: {self.window_width.raw.value}")
-        window.addstr(4, 1, f"height: {self.window_height.raw.value}")
-
+        # Re-draw the screen.
+        getattr(_curses, "doupdate")()
         return True

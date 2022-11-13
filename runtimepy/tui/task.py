@@ -36,7 +36,8 @@ class TuiTask(_AsyncTask):
         await self.tui.handle_char(window.getch())
 
         # Remove this eventually.
-        self.tui.window.addstr(1, 1, str(self.dispatches.raw.value))
+        self.tui.window.addstr(1, 40, f"{self.dispatches.raw.value:3}")
+        self.tui.window.noutrefresh()
 
         # Dispatch the interface.
         return await self.tui.dispatch()
