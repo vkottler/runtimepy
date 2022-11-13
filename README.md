@@ -2,11 +2,11 @@
     =====================================
     generator=datazen
     version=3.1.0
-    hash=b184d36f6fd0f473871b03ed208b7848
+    hash=f4605d229f9f19edeb8146e64b060d29
     =====================================
 -->
 
-# runtimepy ([0.7.0](https://pypi.org/project/runtimepy/))
+# runtimepy ([0.8.0](https://pypi.org/project/runtimepy/))
 
 [![python](https://img.shields.io/pypi/pyversions/runtimepy.svg)](https://pypi.org/project/runtimepy/)
 ![Build Status](https://github.com/vkottler/runtimepy/workflows/Python%20Package/badge.svg)
@@ -43,7 +43,7 @@ This package is tested on the following platforms:
 ```
 $ ./venv3.10/bin/runtimepy -h
 
-usage: runtimepy [-h] [--version] [-v] [-C DIR]
+usage: runtimepy [-h] [--version] [-v] [-C DIR] {tui,noop} ...
 
 A framework for implementing Python services.
 
@@ -52,6 +52,11 @@ options:
   --version          show program's version number and exit
   -v, --verbose      set to increase logging verbosity
   -C DIR, --dir DIR  execute from a specific directory
+
+commands:
+  {tui,noop}         set of available commands
+    tui              run a terminal interface for the channel environment
+    noop             command stub (does nothing)
 
 ```
 

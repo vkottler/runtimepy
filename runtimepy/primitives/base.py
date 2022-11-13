@@ -8,7 +8,10 @@ from math import isclose as _isclose
 from struct import pack as _pack
 from struct import unpack as _unpack
 from typing import BinaryIO as _BinaryIO
+from typing import Callable as _Callable
+from typing import Dict as _Dict
 from typing import Generic as _Generic
+from typing import Tuple as _Tuple
 from typing import TypeVar as _TypeVar
 
 # internal
@@ -17,6 +20,9 @@ from runtimepy.primitives.type import normalize as _normalize
 
 T = _TypeVar("T", bool, int, float)
 NETWORK_BYTE_ORDER = "!"
+
+# Current value first, new value next.
+PrimitiveChangeCallaback = _Callable[[T, T], None]
 
 
 class Primitive(_Generic[T]):
@@ -31,7 +37,29 @@ class Primitive(_Generic[T]):
         assert kind is not None
         self.kind = _normalize(kind)
         self.raw = self.kind.instance()
+        self.curr_callback: int = 0
+        self.callbacks: _Dict[
+            int, _Tuple[PrimitiveChangeCallaback[T], bool]
+        ] = {}
         self(value=value)
+
+    def register_callback(
+        self, callback: PrimitiveChangeCallaback[T], once: bool = False
+    ) -> int:
+        """Register a callback and return an identifier for it."""
+
+        callback_id = self.curr_callback
+        self.curr_callback += 1
+        self.callbacks[callback_id] = callback, once
+        return callback_id
+
+    def remove_callback(self, callback_id: int) -> bool:
+        """Remove a callback if one is registered with this identifier."""
+
+        result = callback_id in self.callbacks
+        if result:
+            del self.callbacks[callback_id]
+        return result
 
     @property
     def value(self) -> T:
@@ -41,6 +69,21 @@ class Primitive(_Generic[T]):
     @value.setter
     def value(self, value: T) -> None:
         """Obtain the underlying value."""
+
+        curr: T = self.raw.value  # type: ignore
+
+        # Call callbacks if the value has changed.
+        if curr != value and self.callbacks:
+            to_remove = []
+            for ident, (callback, once) in self.callbacks.items():
+                callback(curr, value)
+                if once:
+                    to_remove.append(ident)
+
+            # Remove one-time callbacks.
+            for item in to_remove:
+                self.remove_callback(item)
+
         self.raw.value = value
 
     def __call__(self, value: T = None) -> T:

@@ -1,9 +1,9 @@
 [DESIGN]
 max-args=7
-max-attributes=10
+max-attributes=12
 
 [MESSAGES CONTROL]
 disable=too-few-public-methods
 
 [FORMAT]
-good-names=id
+good-names=id,x,y
