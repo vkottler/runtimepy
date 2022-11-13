@@ -43,16 +43,31 @@ class AsyncTask(_LoggerMixin):
             self.period_s = env.float_channel("period_s", commandable=True)
             self.period_s.raw.value = period_s
 
-            # Track the number of times this task has been dispatched.
-            self.dispatches = env.int_channel("dispatches", kind="uint8")[0]
+            with env.names_pushed("metrics"):
+                # Track the number of times this task has been dispatched.
+                self.dispatches = env.int_channel("dispatches", kind="uint8")[
+                    0
+                ]
 
-            # Track metrics for how long this task takes to execute.
-            self.rate_hz = env.float_channel("rate_hz")
-            self.average_s = env.float_channel("average_s")
-            self.max_s = env.float_channel("max_s")
-            self.min_s = env.float_channel("min_s")
+                # Track metrics for how long this task takes to execute.
+                self.rate_hz = env.float_channel("rate_hz")
+                self.average_s = env.float_channel("average_s")
+                self.max_s = env.float_channel("max_s")
+                self.min_s = env.float_channel("min_s")
 
-    async def dispatch(self) -> bool:
+            # Initialize task-specific channels.
+            self.init_channels(env)
+
+        self.env = env
+
+    def init_channels(self, env: _ChannelEnvironment) -> None:
+        """Initialize task-specific channels."""
+
+    async def init(self, *_, **__) -> bool:
+        """Initialize this task."""
+        return True
+
+    async def dispatch(self, *_, **__) -> bool:
         """Dispatch this task."""
         return True
 
@@ -99,7 +114,7 @@ class AsyncTask(_LoggerMixin):
         """Disable this task."""
         self.enabled.raw.value = False
 
-    async def run(self) -> None:
+    async def run(self, *args, **kwargs) -> None:
         """Run this task while it's enabled."""
 
         eloop = _asyncio.get_running_loop()
@@ -110,12 +125,20 @@ class AsyncTask(_LoggerMixin):
 
         # Always re-enable the task if this is called.
         self.enable()
+
+        # Run this task's initialization.
+        self.enabled.raw.value &= await _asyncio.shield(
+            self.init(*args, **kwargs)
+        )
+
         while self.enabled:
             # Keep track of the rate that this task is running at.
             start = eloop.time()
             self.rate_hz.raw.value = self.dispatch_rate(int(start * 1e9))
 
-            self.enabled.raw.value &= await _asyncio.shield(self.dispatch())
+            self.enabled.raw.value &= await _asyncio.shield(
+                self.dispatch(*args, **kwargs)
+            )
             exec_time = eloop.time() - start
 
             # Update runtime metrics.

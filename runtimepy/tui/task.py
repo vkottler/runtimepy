@@ -1,0 +1,46 @@
+"""
+A task entry-point for a text user-interface.
+"""
+
+# built-in
+import curses as _curses
+
+# internal
+from runtimepy.channel.environment import (
+    ChannelEnvironment as _ChannelEnvironment,
+)
+from runtimepy.task import AsyncTask as _AsyncTask
+from runtimepy.tui.channels import ChannelTui as _ChannelTui
+
+
+class TuiTask(_AsyncTask):
+    """A task implementation for a text user-interface."""
+
+    def init_channels(self, env: _ChannelEnvironment) -> None:
+        """Initialize task-specific channels."""
+
+        # Create the user interface.
+        self.tui = _ChannelTui(env)
+
+    async def init(self, *args, **__) -> bool:
+        """Initialize this task."""
+
+        # Initialize the interface.
+        window: _curses.window = args[0]
+        return await self.tui.init(window)
+
+    async def dispatch(self, *_, **__) -> bool:
+        """Dispatch this task."""
+
+        window = self.tui.window
+
+        # Check if we have input waiting.
+        new = window.getch()
+        if new != -1:
+            await self.tui.handle_char(new)
+
+        # Remove this eventually.
+        self.tui.window.addstr(1, 1, str(self.dispatches.raw.value))
+
+        # Dispatch the interface.
+        return await self.tui.dispatch()
