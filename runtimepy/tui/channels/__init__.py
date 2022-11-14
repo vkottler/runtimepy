@@ -140,7 +140,7 @@ class ChannelTui:
             if char == getattr(_curses, "KEY_RESIZE"):
                 await self.update_dimensions()
 
-            key_str = "'" + _curses.keyname(char).decode() + "'"
+            key_str = "'" + getattr(_curses, "keyname")(char).decode() + "'"
 
             self.header.addstr(3, 1, f"key: {char:4} {key_str:12}")
 
