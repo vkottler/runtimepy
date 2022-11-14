@@ -28,6 +28,7 @@ classifiers = [
 ]
 dependencies = [
   "vcorelib",
+  "websockets",
 ]
 
 [project.optional-dependencies]
@@ -39,6 +40,7 @@ test = [
   "mypy",
   "black",
   "isort",
+  "pytest-asyncio",
   "setuptools-wrapper",
   "types-setuptools"
 ]
