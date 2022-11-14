@@ -12,11 +12,15 @@ from runtimepy.channel.environment.create import (
 from runtimepy.channel.environment.file import (
     FileChannelEnvironment as _FileChannelEnvironment,
 )
+from runtimepy.channel.environment.names import (
+    ChannelNameEnvironment as _ChannelNameEnvironment,
+)
 
 
 class ChannelEnvironment(
     _ArrayChannelEnvironment,
     _FileChannelEnvironment,
     _CreateChannelEnvironment,
+    _ChannelNameEnvironment,
 ):
     """A class integrating channel and enumeration registries."""

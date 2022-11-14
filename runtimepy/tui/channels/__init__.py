@@ -5,6 +5,7 @@ A module implementing a channel-environment user interface.
 # built-in
 import curses as _curses
 from typing import Any as _Any
+from typing import List as _List
 from typing import Optional as _Optional
 
 # internal
@@ -41,6 +42,8 @@ class ChannelTui:
                 self.window_height = env.int_channel("height", "uint16")[0]
 
         self.env = env
+        self.channel_names: _List[str] = []
+        self.value_col: int = 0
 
     @property
     def window(self) -> CursesWindow:
@@ -71,6 +74,17 @@ class ChannelTui:
 
         # Initialize the window dimensions.
         await self.update_dimensions()
+
+        # Collect channel names from the environment.
+        self.channel_names = sorted(self.env.names)
+        window = self.body
+
+        # Initialize channel names.
+        for idx, item in enumerate(self.channel_names):
+            window.addstr(1 + idx, 1, item)
+            self.value_col = max(self.value_col, len(item))
+        self.value_col += 2
+
         return True
 
     async def update_dimensions(self) -> None:
@@ -136,7 +150,17 @@ class ChannelTui:
         """Update the body portion of the interface."""
 
         window = self.body
-        window.addstr(1, 1, "test")
+
+        for idx, item in enumerate(self.channel_names):
+            val = self.env.value(item)
+
+            if isinstance(val, float):
+                val_str = f"{val:5.6f}"
+            elif isinstance(val, int):
+                val_str = f"{val:<5d}"
+
+            window.addstr(1 + idx, self.value_col, val_str)
+
         window.noutrefresh()
 
     async def dispatch(self) -> bool:

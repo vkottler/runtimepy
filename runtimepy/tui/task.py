@@ -35,9 +35,5 @@ class TuiTask(_AsyncTask):
         # Check if we have input waiting.
         await self.tui.handle_char(window.getch())
 
-        # Remove this eventually.
-        self.tui.window.addstr(1, 40, f"{self.dispatches.raw.value:3}")
-        self.tui.window.noutrefresh()
-
         # Dispatch the interface.
         return await self.tui.dispatch()
