@@ -9,6 +9,8 @@ from typing import List as _List
 from typing import Optional as _Optional
 
 # internal
+from runtimepy import PKG_NAME as _PKG_NAME
+from runtimepy import VERSION as _VERSION
 from runtimepy.channel.environment import (
     ChannelEnvironment as _ChannelEnvironment,
 )
@@ -106,7 +108,11 @@ class ChannelTui:
         # Clear screen content and draw a box.
         window.clear()
         window.box()
-        window.addstr(1, 1, "Channel Environment User Interface")
+        window.addstr(
+            1,
+            1,
+            f"Channel Environment User Interface ({_PKG_NAME}-{_VERSION})",
+        )
 
         # Create the header box.
         header_height = 5
