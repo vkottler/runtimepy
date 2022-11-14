@@ -1,5 +1,5 @@
 """
-Test the 'net.websocket.server' implementation.
+Test the 'net.websocket.connection' implementation.
 """
 
 # third-party
@@ -7,25 +7,25 @@ from pytest import mark
 import websockets
 
 # module under test
-from runtimepy.net.websocket.server import WebsocketServer
+from runtimepy.net.websocket.connection import (
+    WebsocketConnection,
+    server_handler,
+)
 
 
 @mark.asyncio
 async def test_websocket_server_basic():
     """Test basic interactions with a websocket server."""
 
-    async def handler(
-        protocol: websockets.server.WebSocketServerProtocol,
-    ) -> None:
+    async def server_init(conn: WebsocketConnection) -> bool:
         """A sample handler."""
 
-        server = WebsocketServer(protocol)
-        server.send_text("Hello, World!")
-        server.send_binary("Hello, World!".encode())
-        await server.process()
+        conn.send_text("Hello, World!")
+        conn.send_binary("Hello, World!".encode())
+        return True
 
     async with websockets.server.serve(
-        handler, host="0.0.0.0", port=0
+        server_handler(server_init), host="0.0.0.0", port=0
     ) as server:
         host = list(server.sockets)[0].getsockname()
 
