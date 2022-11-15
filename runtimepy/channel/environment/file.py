@@ -3,6 +3,7 @@ A channel-environment extension for loading and saving files.
 """
 
 # built-in
+from typing import Dict as _Dict
 from typing import Optional as _Optional
 from typing import Type as _Type
 from typing import TypeVar as _TypeVar
@@ -11,6 +12,7 @@ from typing import cast as _cast
 # third-party
 from vcorelib.io import ARBITER as _ARBITER
 from vcorelib.io.types import JsonObject as _JsonObject
+from vcorelib.io.types import JsonValue as _JsonValue
 from vcorelib.paths import Pathlike as _Pathlike
 from vcorelib.paths import normalize as _normalize
 
@@ -23,19 +25,45 @@ from runtimepy.channel.registry import ChannelRegistry as _ChannelRegistry
 from runtimepy.enum.registry import EnumRegistry as _EnumRegistry
 from runtimepy.mapping import NameToKey as _NameToKey
 from runtimepy.primitives.field.manager import (
+    fields_from_dict as _fields_from_dict,
+)
+from runtimepy.primitives.field.manager import (
     fields_from_file as _fields_from_file,
 )
 
 T = _TypeVar("T", bound="FileChannelEnvironment")
-CHANNELS_FILE = "channels.json"
-ENUMS_FILE = "enums.json"
-VALUES_FILE = "values.json"
-FIELDS_FILE = "fields.json"
-NAMES_FILE = "names.json"
+CHANNELS_KEY = "channels"
+CHANNELS_FILE = f"{CHANNELS_KEY}.json"
+ENUMS_KEY = "enums"
+ENUMS_FILE = f"{ENUMS_KEY}.json"
+VALUES_KEY = "values"
+VALUES_FILE = f"{VALUES_KEY}.json"
+FIELDS_KEY = "fields"
+FIELDS_FILE = f"{FIELDS_KEY}.json"
+NAMES_KEY = "names"
+NAMES_FILE = f"{NAMES_KEY}.json"
 
 
 class FileChannelEnvironment(_BaseChannelEnvironment):
     """A class integrating file-system operations with channel environments."""
+
+    def export_json(
+        self, resolve_enum: bool = True
+    ) -> _Dict[str, _JsonObject]:
+        """Get this channel environment as a single dictionary."""
+
+        return {
+            CHANNELS_KEY: self.channels.asdict(),
+            ENUMS_KEY: self.enums.asdict(),
+            FIELDS_KEY: self.fields.asdict(),
+            NAMES_KEY: {
+                CHANNELS_KEY: _cast(_JsonValue, self.channels.names.asdict()),
+                ENUMS_KEY: _cast(_JsonValue, self.enums.names.asdict()),
+            },
+            VALUES_KEY: _cast(
+                _JsonObject, self.values(resolve_enum=resolve_enum)
+            ),
+        }
 
     def export(
         self,
@@ -59,8 +87,8 @@ class FileChannelEnvironment(_BaseChannelEnvironment):
             _cast(
                 _JsonObject,
                 {
-                    "channels": self.channels.names.asdict(),
-                    "enums": self.enums.names.asdict(),
+                    CHANNELS_KEY: self.channels.names.asdict(),
+                    ENUMS_KEY: self.enums.names.asdict(),
                 },
             ),
             **kwargs,
@@ -90,6 +118,28 @@ class FileChannelEnvironment(_BaseChannelEnvironment):
         )
 
     @classmethod
+    def load_json(cls: _Type[T], data: _Dict[str, _JsonObject]) -> T:
+        """Load a channel environment from JSON data."""
+
+        chan_reg = _ChannelRegistry.create(data[CHANNELS_KEY])
+        enum_reg = _EnumRegistry.create(data[ENUMS_KEY])
+
+        # Handle name data.
+        chan_reg.names.load_name_to_key(
+            _cast(_NameToKey[int], data[NAMES_KEY][CHANNELS_KEY])
+        )
+        enum_reg.names.load_name_to_key(
+            _cast(_NameToKey[int], data[NAMES_KEY][ENUMS_KEY])
+        )
+
+        return cls(
+            channels=chan_reg,
+            enums=enum_reg,
+            values=_cast(_Optional[_ValueMap], data.get(VALUES_KEY)),
+            fields=_fields_from_dict(data[FIELDS_KEY]),
+        )
+
+    @classmethod
     def load(
         cls: _Type[T],
         channels: _Pathlike = CHANNELS_FILE,
@@ -116,10 +166,10 @@ class FileChannelEnvironment(_BaseChannelEnvironment):
         # name registries.
         name_data = _ARBITER.decode(names, require_success=True).data
         chan_reg.names.load_name_to_key(
-            _cast(_NameToKey[int], name_data["channels"])
+            _cast(_NameToKey[int], name_data[CHANNELS_KEY])
         )
         enum_reg.names.load_name_to_key(
-            _cast(_NameToKey[int], name_data["enums"])
+            _cast(_NameToKey[int], name_data[ENUMS_KEY])
         )
 
         return cls(

@@ -26,28 +26,31 @@ from runtimepy.registry.name import NameRegistry as _NameRegistry
 from runtimepy.registry.name import RegistryKey as _RegistryKey
 
 
+def fields_to_dict(fields: _Iterable[_BitFields]) -> _JsonObject:
+    """Organize a bit-fields iterable into a JSON object."""
+    return {"items": [_cast(str, x.asdict()) for x in fields]}
+
+
 def fields_to_file(
     path: _Pathlike, fields: _Iterable[_BitFields], **kwargs
 ) -> _EncodeResult:
     """Write bit-fields to a file."""
+    return _ARBITER.encode(path, fields_to_dict(fields), **kwargs)
 
-    return _ARBITER.encode(
-        path,
-        {"items": [_cast(str, x.asdict()) for x in fields]},
-        **kwargs,
-    )
+
+def fields_from_dict(data: _JsonObject) -> _Iterable[_BitFields]:
+    """Load bit-fields from JSON data."""
+
+    return [
+        _BitFields.create(x)
+        for x in _cast(_Iterable[_JsonObject], data["items"])
+    ]
 
 
 def fields_from_file(path: _Pathlike) -> _Iterable[_BitFields]:
     """Load bit-fields from a file."""
 
-    return [
-        _BitFields.create(x)
-        for x in _cast(
-            _Iterable[_JsonObject],
-            _ARBITER.decode(path, require_success=True).data["items"],
-        )
-    ]
+    return fields_from_dict(_ARBITER.decode(path, require_success=True).data)
 
 
 class BitFieldsManager:
@@ -75,6 +78,10 @@ class BitFieldsManager:
         # Add initial fields.
         for field in fields:
             self.add(field)
+
+    def asdict(self) -> _JsonObject:
+        """Get this bit-fields manager as a JSON object."""
+        return fields_to_dict(self.fields)
 
     def encode(self, path: _Pathlike, **kwargs) -> _EncodeResult:
         """Encode this bit-fields manager to a file."""
