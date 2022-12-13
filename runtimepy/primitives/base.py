@@ -3,6 +3,7 @@ A module implementing a base, primitive-type storage entity.
 """
 
 # built-in
+from copy import copy as _copy
 from io import BytesIO as _BytesIO
 from math import isclose as _isclose
 from struct import pack as _pack
@@ -42,6 +43,14 @@ class Primitive(_Generic[T]):
             int, _Tuple[PrimitiveChangeCallaback[T], bool]
         ] = {}
         self(value=value)
+
+    def __copy__(self) -> "Primitive[T]":
+        """Make a copy of this primitive."""
+        return type(self)(self.kind, value=self.value)
+
+    def copy(self) -> "Primitive[T]":
+        """A simple wrapper for copy."""
+        return _copy(self)
 
     def register_callback(
         self, callback: PrimitiveChangeCallaback[T], once: bool = False

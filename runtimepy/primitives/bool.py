@@ -10,7 +10,7 @@ from runtimepy.primitives.type.bool import Bool as _Bool
 class BooleanPrimitive(_Primitive[bool]):
     """A simple primitive class for booleans."""
 
-    def __init__(self, value: bool = False) -> None:
+    def __init__(self, *_, value: bool = False) -> None:
         """Initialize this boolean primitive."""
         super().__init__(_Bool, value=value)
 

@@ -65,3 +65,7 @@ def test_primitive_array_basic():
     assert int2 == -2
     assert float1 == -1.0
     assert float2 == 2.0
+
+    copied = array.copy()
+    assert copied[0]() is True
+    assert copied[1]() is False

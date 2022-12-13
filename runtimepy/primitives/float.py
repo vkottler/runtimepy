@@ -11,7 +11,7 @@ from runtimepy.primitives.type.float import Float as _Float
 class FloatPrimitive(_Primitive[float]):
     """A simple primitive class for single-precision floating-point."""
 
-    def __init__(self, value: float = 0.0) -> None:
+    def __init__(self, *_, value: float = 0.0) -> None:
         """Initialize this floating-point primitive."""
         super().__init__(_Float, value=value)
 
@@ -22,7 +22,7 @@ Float = FloatPrimitive
 class DoublePrimitive(_Primitive[float]):
     """A simple primitive class for double-precision floating-point."""
 
-    def __init__(self, value: float = 0.0) -> None:
+    def __init__(self, *_, value: float = 0.0) -> None:
         """Initialize this floating-point primitive."""
         super().__init__(_Double, value=value)
 
