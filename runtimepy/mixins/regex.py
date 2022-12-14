@@ -8,7 +8,7 @@ from re import Pattern as _Pattern
 from re import compile as _compile
 
 DEFAULT_PATTERN = _compile("^\\w+$")
-CHANNEL_PATTERN = _compile("^[a-z0-9_.]+$")
+CHANNEL_PATTERN = _compile("^[a-z0-9-_.]+$")
 
 
 class RegexMixin:
