@@ -3,10 +3,12 @@ A module for implementing arrays of arbitrary primitives.
 """
 
 # built-in
+from copy import copy as _copy
 from struct import pack as _pack
 from struct import unpack as _unpack
 from typing import BinaryIO as _BinaryIO
 from typing import List as _List
+from typing import cast as _cast
 
 # internal
 from runtimepy.primitives import AnyPrimitive as _AnyPrimitive
@@ -30,6 +32,18 @@ class PrimitiveArray:
         # Add initial items.
         for item in primitives:
             self.add(item)
+
+    def __copy__(self) -> "PrimitiveArray":
+        """Make a copy of this primitive array."""
+
+        return PrimitiveArray(
+            *[_cast(_AnyPrimitive, x.copy()) for x in self._primitives],
+            byte_order=self._format,
+        )
+
+    def copy(self) -> "PrimitiveArray":
+        """A simple wrapper for copy."""
+        return _copy(self)
 
     def __getitem__(self, index: int) -> _AnyPrimitive:
         """Access underlying primitives by index."""

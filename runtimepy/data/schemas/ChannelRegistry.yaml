@@ -3,7 +3,7 @@ type: object
 additionalProperties: false
 
 patternProperties:
-  "^[a-z0-9_.]+$":
+  "^[a-z0-9-_.]+$":
     type: object
     required: [id, type]
     additionalProperties: false
