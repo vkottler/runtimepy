@@ -38,7 +38,7 @@ class PrimitiveArray:
 
         return PrimitiveArray(
             *[_cast(_AnyPrimitive, x.copy()) for x in self._primitives],
-            byte_order=self._format,
+            byte_order=self._format[0],
         )
 
     def copy(self) -> "PrimitiveArray":
