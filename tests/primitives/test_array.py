@@ -112,8 +112,10 @@ def test_primitive_array_fragmenting_basic():
     """Test interactions with array fragments."""
 
     array = sample_array()
+    assert array.num_fragments == 0
 
     idx = array.fragment_from_indices(0, 1)
+    assert array.num_fragments == 1
 
     assert array.fragment(idx).size == 1
 

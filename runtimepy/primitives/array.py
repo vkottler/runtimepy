@@ -59,6 +59,11 @@ class PrimitiveArray:
         for spec in fragments:
             self._add_fragment(spec)
 
+    @property
+    def num_fragments(self) -> int:
+        """Get the number of fragments belonging to this array."""
+        return len(self._fragments)
+
     def fragment(self, index: int) -> "PrimitiveArray":
         """A simple accessor for fragments."""
         return self._fragments[index]
