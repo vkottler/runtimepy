@@ -4,7 +4,6 @@ A module implementing a base, primitive-type storage entity.
 
 # built-in
 from copy import copy as _copy
-from io import BytesIO as _BytesIO
 from math import isclose as _isclose
 from struct import pack as _pack
 from struct import unpack as _unpack
@@ -129,29 +128,32 @@ class Primitive(_Generic[T]):
         """Use the underlying value for boolean evaluation."""
         return bool(self.raw)
 
+    def binary(self, byte_order: str = None) -> bytes:
+        """Convert this instance to a byte array."""
+        if byte_order is None:
+            byte_order = self.byte_order
+        return _pack(byte_order + self.kind.format, self.value)
+
     def __bytes__(self) -> bytes:
         """Convert this instance to a byte array."""
-
-        with _BytesIO() as stream:
-            self.to_stream(stream)
-            return stream.getvalue()
+        return self.binary()
 
     def to_stream(self, stream: _BinaryIO, byte_order: str = None) -> int:
         """Write this primitive to a stream."""
 
+        stream.write(self.binary(byte_order=byte_order))
+        return self.kind.size
+
+    def update(self, data: bytes, byte_order: str = None) -> T:
+        """Update this primitive from a bytes object."""
+
         if byte_order is None:
             byte_order = self.byte_order
 
-        stream.write(_pack(byte_order + self.kind.format, self.value))
-        return self.kind.size
+        self.value = _unpack(byte_order + self.kind.format, data)[0]
+        return self.value
 
     def from_stream(self, stream: _BinaryIO, byte_order: str = None) -> T:
         """Update this primitive from a stream and return the new value."""
 
-        if byte_order is None:
-            byte_order = self.byte_order
-
-        self.value = _unpack(
-            byte_order + self.kind.format, stream.read(self.kind.size)
-        )[0]
-        return self.value
+        return self.update(stream.read(self.kind.size), byte_order=byte_order)

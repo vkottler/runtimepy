@@ -13,6 +13,8 @@ from runtimepy.primitives.type.float import (
     DoubleType,
     Float,
     FloatType,
+    Half,
+    HalfType,
 )
 from runtimepy.primitives.type.int import (
     Int8,
@@ -42,6 +44,7 @@ AnyPrimitive = _Union[
     Uint16Type,
     Uint32Type,
     Uint64Type,
+    HalfType,
     FloatType,
     DoubleType,
     BooleanType,
@@ -58,6 +61,7 @@ PrimitiveTypes: _Dict[str, AnyPrimitive] = {
     Uint32.name: Uint32,
     Uint64.name: Uint64,
     # Floating-point types.
+    Half.name: Half,
     Float.name: Float,
     Double.name: Double,
     # Boolean type.
