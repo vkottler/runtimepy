@@ -67,7 +67,10 @@ class PrimitiveType(_Generic[T]):
         self.size = _calcsize(self.format)
         self.bits = self.size * 8
         c_type_size = _ctypes.sizeof(self.c_type)
-        assert self.size == c_type_size, "{self.size} != {c_type_size}!"
+
+        # This won't match for half-precision floating-point.
+        if self.format != "e":
+            assert self.size == c_type_size, "{self.size} != {c_type_size}!"
 
         # Convenient attributes to determine if this type is which one of
         # Python's primitive types.

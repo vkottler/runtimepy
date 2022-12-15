@@ -8,6 +8,23 @@ from runtimepy.primitives.type.base import FloatCtype as _FloatCtype
 from runtimepy.primitives.type.base import PrimitiveType as _PrimitiveType
 
 
+class HalfType(_PrimitiveType[_FloatCtype]):
+    """A simple type interface for single-precision floating-point."""
+
+    name = "half"
+
+    # There's no half-precision floating-point ctypes equivalent.
+    c_type = _FloatCtype
+
+    def __init__(self) -> None:
+        """Initialize this type."""
+        super().__init__("e")
+        assert self.is_float
+
+
+Half = HalfType()
+
+
 class FloatType(_PrimitiveType[_FloatCtype]):
     """A simple type interface for single-precision floating-point."""
 

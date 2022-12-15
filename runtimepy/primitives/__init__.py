@@ -10,7 +10,7 @@ from typing import Union as _Union
 
 # internal
 from runtimepy.primitives.bool import Bool
-from runtimepy.primitives.float import Double, Float
+from runtimepy.primitives.float import Double, Float, Half
 from runtimepy.primitives.int import (
     Int8,
     Int16,
@@ -31,6 +31,7 @@ AnyPrimitive = _Union[
     Uint16,
     Uint32,
     Uint64,
+    Half,
     Float,
     Double,
     Bool,
@@ -47,6 +48,7 @@ T = _TypeVar(
     Uint16,
     Uint32,
     Uint64,
+    Half,
     Float,
     Double,
     Bool,
@@ -61,6 +63,7 @@ Primitives: _Dict[str, _Type[AnyPrimitive]] = {
     Uint16().kind.name: Uint16,
     Uint32().kind.name: Uint32,
     Uint64().kind.name: Uint64,
+    Half().kind.name: Half,
     Float().kind.name: Float,
     Double().kind.name: Double,
     Bool().kind.name: Bool,
