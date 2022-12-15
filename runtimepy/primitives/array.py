@@ -7,6 +7,7 @@ from copy import copy as _copy
 from struct import pack as _pack
 from struct import unpack as _unpack
 from typing import BinaryIO as _BinaryIO
+from typing import Dict as _Dict
 from typing import List as _List
 from typing import NamedTuple
 from typing import cast as _cast
@@ -39,6 +40,11 @@ class PrimitiveArray:
         self._primitives: _List[_AnyPrimitive] = []
         self._format: str = byte_order
         self.size: int = 0
+
+        # Keep track of a quick lookup for converting between element indices
+        # and byte indices.
+        self._bytes_to_index: _Dict[int, int] = {0: 0}
+        self._index_to_bytes: _Dict[int, int] = {0: 0}
 
         # Add initial items.
         for item in primitives:
@@ -128,38 +134,11 @@ class PrimitiveArray:
         This can also be thought of as the size of the array leading up to
         the element at this index.
         """
-
-        # Validate the index.
-        assert len(self._primitives) >= index >= 0
-
-        size = 0
-        for idx in range(index):
-            size += self[idx].size
-        return size
+        return self._index_to_bytes[index]
 
     def index_at_byte(self, count: int) -> int:
         """Determine the array index that a byte index lands on."""
-
-        # Validate the byte count.
-        assert self.size >= count >= 0
-
-        # Base case.
-        index = 0
-        size = 0
-
-        while size < count:
-            index += 1
-            size = self.byte_at_index(index)
-
-            # The current index is a match.
-            if size == count:
-                break
-
-            # Ensure that we didn't pass the desired byte. This means that the
-            # provided size is in the middle of an element.
-            assert size < count, f"No array element aligned to {count} bytes!"
-
-        return index
+        return self._bytes_to_index[count]
 
     def __copy__(self) -> "PrimitiveArray":
         """Make a copy of this primitive array."""
@@ -184,6 +163,12 @@ class PrimitiveArray:
         self._primitives.append(primitive)
         self._format += primitive.kind.format
         self.size += primitive.size
+
+        # Add tracking information for the current tail.
+        curr_idx = len(self._primitives)
+        self._bytes_to_index[self.size] = curr_idx
+        self._index_to_bytes[curr_idx] = self.size
+
         return self.size
 
     def __bytes__(self) -> bytes:
