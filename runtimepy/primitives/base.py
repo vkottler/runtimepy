@@ -44,6 +44,11 @@ class Primitive(_Generic[T]):
         ] = {}
         self(value=value)
 
+    @property
+    def size(self) -> int:
+        """Get the size of this primitive."""
+        return self.kind.size
+
     def __copy__(self) -> "Primitive[T]":
         """Make a copy of this primitive."""
         return type(self)(self.kind, value=self.value)
