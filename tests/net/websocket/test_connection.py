@@ -13,11 +13,25 @@ from runtimepy.net.websocket.connection import (
 )
 
 
+class SampleConnection(WebsocketConnection):
+    """A sample connection class."""
+
+    async def process_text(self, data: str) -> bool:
+        """Process a text frame."""
+        del data
+        return True
+
+    async def process_binary(self, data: bytes) -> bool:
+        """Process a binary frame."""
+        del data
+        return True
+
+
 @mark.asyncio
 async def test_websocket_server_basic():
     """Test basic interactions with a websocket server."""
 
-    async def server_init(conn: WebsocketConnection) -> bool:
+    async def server_init(conn: SampleConnection) -> bool:
         """A sample handler."""
 
         conn.send_text("Hello, World!")
@@ -25,7 +39,7 @@ async def test_websocket_server_basic():
         return True
 
     async with websockets.server.serve(
-        server_handler(server_init), host="0.0.0.0", port=0
+        server_handler(server_init, SampleConnection), host="0.0.0.0", port=0
     ) as server:
         host = list(server.sockets)[0].getsockname()
 
