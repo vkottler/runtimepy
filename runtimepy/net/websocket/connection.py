@@ -5,9 +5,11 @@ A module implementing a WebSocket connection interface.
 from __future__ import annotations
 
 # built-in
-import asyncio as _asyncio
 from typing import Awaitable as _Awaitable
 from typing import Callable as _Callable
+from typing import Optional as _Optional
+from typing import Type as _Type
+from typing import TypeVar as _TypeVar
 from typing import Union as _Union
 
 # third-party
@@ -19,11 +21,14 @@ from websockets.server import (
     WebSocketServerProtocol as _WebSocketServerProtocol,
 )
 
-BinaryMessage = _Union[bytes, bytearray, memoryview]
-ConnectionInit = _Callable[["WebsocketConnection"], _Awaitable[bool]]
+# internal
+from runtimepy.net.connection import BinaryMessage, Connection
+
+T = _TypeVar("T", bound="WebsocketConnection")
+ConnectionInit = _Callable[[T], _Awaitable[bool]]
 
 
-class WebsocketConnection:
+class WebsocketConnection(Connection):
     """A simple websocket connection interface."""
 
     def __init__(
@@ -33,90 +38,34 @@ class WebsocketConnection:
         """Initialize this connection."""
 
         self.protocol = protocol
-        self.enabled = True
-        self.text_messages: _asyncio.Queue[str] = _asyncio.Queue()
-        self.binary_messages: _asyncio.Queue[BinaryMessage] = _asyncio.Queue()
+        super().__init__(self.protocol.logger)
 
-    def send_text(self, data: str) -> None:
-        """Enqueue a text message to send."""
-        self.text_messages.put_nowait(data)
+    async def _await_message(self) -> _Optional[_Union[BinaryMessage, str]]:
+        """Await the next message. Return None on error or failure."""
 
-    def send_binary(self, data: BinaryMessage) -> None:
-        """Enqueue a binary message tos end."""
-        self.binary_messages.put_nowait(data)
+        try:
+            message = await self.protocol.recv()
+        except _ConnectionClosed:
+            self._logger.info("Connection closed.")
+            message = None
 
-    async def process_text(self, data: str) -> bool:
-        """Process a text frame."""
-        del data
-        return True
+        return message
 
-    async def process_binary(self, data: bytes) -> bool:
-        """Process a binary frame."""
-        del data
-        return True
+    async def _send_text_message(self, data: str) -> None:
+        """Send a text message."""
+        await self.protocol.send(data)
 
-    async def _process_read(self) -> None:
-        """Process incoming messages while this connection is active."""
+    async def _send_binay_message(self, data: BinaryMessage) -> None:
+        """Send a binary message."""
+        await self.protocol.send(data)
 
-        while self.enabled:
-            try:
-                message = await self.protocol.recv()
-
-                if isinstance(message, str):
-                    self.enabled = await _asyncio.shield(
-                        self.process_text(message)
-                    )
-                else:
-                    self.enabled = await _asyncio.shield(
-                        self.process_binary(message)
-                    )
-            except (_ConnectionClosed, _asyncio.CancelledError):
-                self.enabled = False
-
-    async def _process_write_text(self) -> None:
-        """Process outgoing text messages."""
-
-        while self.enabled:
-            try:
-                await self.protocol.send(await self.text_messages.get())
-                self.text_messages.task_done()
-            except _asyncio.CancelledError:
-                self.enabled = False
-
-    async def _process_write_binary(self) -> None:
-        """Process outgoing binary messages."""
-
-        while self.enabled:
-            try:
-                await self.protocol.send(await self.binary_messages.get())
-                self.binary_messages.task_done()
-            except _asyncio.CancelledError:
-                self.enabled = False
-
-    async def process(self) -> None:
-        """
-        Process tasks for this connection while the connection is active.
-        """
-
-        _, pending = await _asyncio.wait(
-            [
-                _asyncio.create_task(self._process_read()),
-                _asyncio.create_task(self._process_write_text()),
-                _asyncio.create_task(self._process_write_binary()),
-            ],
-            return_when=_asyncio.FIRST_COMPLETED,
-        )
-
-        self.enabled = False
-        for task in pending:
-            task.cancel()
-            await task
-
+    async def close(self) -> None:
+        """Close this connection."""
         await self.protocol.close()
 
 
 def server_handler(
-    init: ConnectionInit,
+    init: ConnectionInit[T], cls: _Type[T]
 ) -> _Callable[[_WebSocketServerProtocol], _Awaitable[None]]:
     """
     A wrapper for passing in a websocket handler and initializing a connection.
@@ -124,7 +73,7 @@ def server_handler(
 
     async def _handler(protocol: _WebSocketServerProtocol) -> None:
         """A handler that runs the callers initialization function."""
-        conn = WebsocketConnection(protocol)
+        conn = cls(protocol)
         if await init(conn):
             await conn.process()
 
