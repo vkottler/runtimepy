@@ -6,12 +6,15 @@ A module implementing a UDP connection interface.
 import asyncio as _asyncio
 from asyncio import DatagramProtocol, DatagramTransport
 from logging import getLogger
+import socket as _socket
 from typing import Optional as _Optional
+from typing import Tuple as _Tuple
 from typing import Type as _Type
 from typing import TypeVar as _TypeVar
 from typing import Union as _Union
 
 # internal
+from runtimepy.net import get_free_socket_name
 from runtimepy.net.connection import BinaryMessage, Connection
 
 LOG = getLogger(__name__)
@@ -78,11 +81,28 @@ class UdpConnection(Connection):
     async def create_connection(cls: _Type[T], **kwargs) -> T:
         """Create a UDP connection."""
 
+        eloop = _asyncio.get_event_loop()
+
         transport: DatagramTransport
         (
             transport,
             protocol,
-        ) = await _asyncio.get_event_loop().create_connection(  # type: ignore
+        ) = await eloop.create_datagram_endpoint(  # type: ignore
             UdpQueueProtocol, **kwargs
         )
         return cls(transport, protocol)
+
+    @classmethod
+    async def create_pair(cls: _Type[T]) -> _Tuple[T, T]:
+        """Create a connection pair."""
+
+        addr1 = get_free_socket_name(kind=_socket.SOCK_DGRAM)
+        addr2 = get_free_socket_name(kind=_socket.SOCK_DGRAM)
+
+        conn1 = await cls.create_connection(
+            local_addr=addr1, remote_addr=addr2
+        )
+        conn2 = await cls.create_connection(
+            local_addr=addr2, remote_addr=addr1
+        )
+        return conn1, conn2
