@@ -7,6 +7,7 @@ import asyncio as _asyncio
 from asyncio import DatagramProtocol, DatagramTransport
 from logging import getLogger
 import socket as _socket
+from typing import Any as _Any
 from typing import Optional as _Optional
 from typing import Tuple as _Tuple
 from typing import Type as _Type
@@ -63,6 +64,10 @@ class UdpConnection(Connection):
     async def close(self) -> None:
         """Close this connection."""
         self._transport.close()
+
+    def sendto(self, data: bytes, addr: _Any) -> None:
+        """Send to a specific address."""
+        self._transport.sendto(data, addr=addr)
 
     async def _send_text_message(self, data: str) -> None:
         """Send a text message."""

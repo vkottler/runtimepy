@@ -76,3 +76,4 @@ async def test_udp_connection_basic():
         local_addr=("localhost", 0)
     )
     assert conn4.remote_address is None
+    conn4.sendto("Hello!".encode(), conn4.local_address)
