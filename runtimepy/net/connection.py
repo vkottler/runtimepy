@@ -6,28 +6,31 @@ A module implementing a network-connection interface.
 from abc import ABC as _ABC
 from abc import abstractmethod as _abstractmethod
 import asyncio as _asyncio
-from logging import Logger as _Logger
-from logging import LoggerAdapter as _LoggerAdapter
 from typing import Awaitable as _Awaitable
+from typing import List as _List
 from typing import Optional as _Optional
 from typing import TypeVar as _TypeVar
 from typing import Union as _Union
 
-LoggerType = _Union[_Logger, _LoggerAdapter]
+# third-party
+from vcorelib.logging import LoggerMixin as _LoggerMixin
+from vcorelib.logging import LoggerType as _LoggerType
+
 BinaryMessage = _Union[bytes, bytearray, memoryview]
 T = _TypeVar("T")
 
 
-class Connection(_ABC):
+class Connection(_LoggerMixin, _ABC):
     """A connection interface."""
 
-    def __init__(self, logger: LoggerType) -> None:
+    def __init__(self, logger: _LoggerType) -> None:
         """Initialize this connection."""
 
-        self._logger = logger
+        super().__init__(logger=logger)
         self._enabled = True
         self._text_messages: _asyncio.Queue[str] = _asyncio.Queue()
         self._binary_messages: _asyncio.Queue[BinaryMessage] = _asyncio.Queue()
+        self._tasks: _List[_asyncio.Task[None]] = []
 
     @_abstractmethod
     async def process_text(self, data: str) -> bool:
@@ -64,28 +67,25 @@ class Connection(_ABC):
         """Disable this connection."""
 
         if self._enabled:
-            self._logger.info("Disabling connection: '%s'.", reason)
+            self.logger.info("Disabling connection: '%s'.", reason)
             self._enabled = False
+
+            # Cancel tasks.
+            for task in self._tasks:
+                if not task.done():
+                    task.cancel()
 
     async def process(self) -> None:
         """
         Process tasks for this connection while the connection is active.
         """
 
-        _, pending = await _asyncio.wait(
-            [
-                _asyncio.create_task(self._process_read()),
-                _asyncio.create_task(self._process_write_text()),
-                _asyncio.create_task(self._process_write_binary()),
-            ],
-            return_when=_asyncio.FIRST_COMPLETED,
-        )
-
-        self.disable("task exited")
-        for task in pending:
-            task.cancel()
-            await task
-
+        self._tasks = [
+            _asyncio.create_task(self._process_read()),
+            _asyncio.create_task(self._process_write_text()),
+            _asyncio.create_task(self._process_write_binary()),
+        ]
+        await _asyncio.wait(self._tasks, return_when=_asyncio.ALL_COMPLETED)
         await self.close()
 
     async def _process_read(self) -> None:
