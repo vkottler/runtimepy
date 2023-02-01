@@ -9,7 +9,7 @@ from typing import Union as _Union
 
 
 class IPv4Host(NamedTuple):
-    """See: https://docs.python.org/3/library/socket.html#socket-families.."""
+    """See: https://docs.python.org/3/library/socket.html#socket-families."""
 
     name: str = ""
     port: int = 0
