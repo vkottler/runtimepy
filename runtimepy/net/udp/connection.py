@@ -18,7 +18,7 @@ from typing import Union as _Union
 from vcorelib.logging import LoggerType as _LoggerType
 
 # internal
-from runtimepy.net import get_free_socket
+from runtimepy.net import IpHost, get_free_socket, normalize_host
 from runtimepy.net.connection import BinaryMessage, Connection
 
 LOG = getLogger(__name__)
@@ -58,13 +58,19 @@ class UdpConnection(Connection):
 
         self._transport = transport
         self._protocol = protocol
-        super().__init__(getLogger(self._logger_name()))
-        self._protocol.logger = self.logger
+
+        # Get the local address of this connection.
+        self.local_address = normalize_host(
+            *self._transport.get_extra_info("sockname")
+        )
 
         # A bug in the Windows implementation causes the 'addr' argument of
         # sendto to be required. Save a copy of the remote address (may be
         # None).
-        self._remote_addr = self.remote_address
+        self.remote_address = self._remote_address()
+
+        super().__init__(getLogger(self._logger_name()))
+        self._protocol.logger = self.logger
 
     async def close(self) -> None:
         """Close this connection."""
@@ -76,11 +82,11 @@ class UdpConnection(Connection):
 
     async def _send_text_message(self, data: str) -> None:
         """Send a text message."""
-        self._transport.sendto(data.encode(), addr=self._remote_addr)
+        self._transport.sendto(data.encode(), addr=self.remote_address)
 
     async def _send_binay_message(self, data: BinaryMessage) -> None:
         """Send a binary message."""
-        self._transport.sendto(data, addr=self._remote_addr)
+        self._transport.sendto(data, addr=self.remote_address)
 
     async def _await_message(self) -> _Optional[_Union[BinaryMessage, str]]:
         """Await the next message. Return None on error or failure."""
@@ -122,24 +128,19 @@ class UdpConnection(Connection):
 
         return conn1, conn2
 
-    @property
-    def local_address(self) -> _Tuple[str, int]:
-        """Get the local address of this connection."""
-
-        return self._transport.get_extra_info("sockname")  # type: ignore
-
-    @property
-    def remote_address(self) -> _Optional[_Tuple[str, int]]:
+    def _remote_address(self) -> _Optional[IpHost]:
         """Get a possible remote address for this connection."""
 
-        return self._transport.get_extra_info("peername")  # type: ignore
+        result = self._transport.get_extra_info("peername")
+        addr = None
+        if result is not None:
+            addr = normalize_host(*result)
+        return addr
 
     def _logger_name(self) -> str:
         """Get a logger name for this connection."""
 
-        local = self.local_address
-        name = f"{local[0]}:{local[1]}"
-        remote = self.remote_address
-        if remote is not None:
-            name += f" -> {remote[0]}:{remote[1]}"
+        name = str(self.local_address)
+        if self.remote_address is not None:
+            name += f" -> {self.remote_address}"
         return name
