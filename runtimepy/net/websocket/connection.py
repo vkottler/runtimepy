@@ -46,7 +46,7 @@ class WebsocketConnection(Connection):
         try:
             message = await self.protocol.recv()
         except _ConnectionClosed:
-            self._logger.info("Connection closed.")
+            self.logger.info("Connection closed.")
             message = None
 
         return message

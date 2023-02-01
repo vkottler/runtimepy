@@ -43,12 +43,13 @@ async def test_websocket_server_basic():
     ) as server:
         host = list(server.sockets)[0].getsockname()
 
-        # pylint: disable=no-member
-        async with websockets.connect(  # type: ignore
-            f"ws://localhost:{host[1]}"
-        ) as client:
-            # pylint: enable=no-member
+        for _ in range(5):
+            # pylint: disable=no-member
+            async with websockets.connect(  # type: ignore
+                f"ws://localhost:{host[1]}"
+            ) as client:
+                # pylint: enable=no-member
 
-            # Confirm that we receive two messages.
-            await client.send(await client.recv())
-            await client.send(await client.recv())
+                # Confirm that we receive two messages.
+                await client.send(await client.recv())
+                await client.send(await client.recv())
