@@ -18,13 +18,11 @@ class SampleConnection(WebsocketConnection):
 
     async def process_text(self, data: str) -> bool:
         """Process a text frame."""
-        del data
-        return True
+        return data != "stop"
 
     async def process_binary(self, data: bytes) -> bool:
         """Process a binary frame."""
-        del data
-        return True
+        return await self.process_text(data.decode())
 
 
 @mark.asyncio
