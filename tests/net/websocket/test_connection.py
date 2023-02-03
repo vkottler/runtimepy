@@ -2,15 +2,15 @@
 Test the 'net.websocket.connection' implementation.
 """
 
+# built-in
+import asyncio
+
 # third-party
 from pytest import mark
 import websockets
 
 # module under test
-from runtimepy.net.websocket.connection import (
-    WebsocketConnection,
-    server_handler,
-)
+from runtimepy.net.websocket.connection import WebsocketConnection
 
 
 class SampleConnection(WebsocketConnection):
@@ -37,17 +37,32 @@ async def test_websocket_server_basic():
         return True
 
     async with websockets.server.serve(
-        server_handler(server_init, SampleConnection), host="0.0.0.0", port=0
+        SampleConnection.server_handler(server_init), host="0.0.0.0", port=0
     ) as server:
         host = list(server.sockets)[0].getsockname()
 
         for _ in range(5):
-            # pylint: disable=no-member
-            async with websockets.connect(  # type: ignore
+            async with SampleConnection.client(
                 f"ws://localhost:{host[1]}"
             ) as client:
-                # pylint: enable=no-member
-
                 # Confirm that we receive two messages.
-                await client.send(await client.recv())
-                await client.send(await client.recv())
+                await client.protocol.send(await client.protocol.recv())
+                await client.protocol.send(await client.protocol.recv())
+
+
+@mark.asyncio
+async def test_websocket_connected_pair():
+    """Test that we can create a connected pair."""
+
+    async with SampleConnection.create_pair() as (conn1, conn2):
+        conn1.send_text("Hello, World!")
+        conn2.send_text("Hello, World!")
+        conn1.send_text("stop")
+
+        await asyncio.wait(
+            [
+                asyncio.create_task(conn1.process()),
+                asyncio.create_task(conn2.process()),
+            ],
+            return_when=asyncio.ALL_COMPLETED,
+        )
