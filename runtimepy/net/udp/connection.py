@@ -27,8 +27,6 @@ from runtimepy.net.mixin import (
 )
 from runtimepy.net.mixin import TransportMixin as _TransportMixin
 
-LOG = getLogger(__name__)
-
 
 class UdpQueueProtocol(_BinaryMessageQueueMixin, _DatagramProtocol):
     """A simple UDP protocol that populates a message queue."""
