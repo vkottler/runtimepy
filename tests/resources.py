@@ -9,6 +9,9 @@ from pathlib import Path
 # third-party
 import pkg_resources
 
+# internal
+from runtimepy.net.connection import Connection
+
 
 def resource(
     resource_name: str, *parts: str, valid: bool = True, pkg: str = __name__
@@ -23,3 +26,23 @@ def resource(
             ),
         )
     )
+
+
+class SampleConnectionMixin(Connection):
+    """A sample connection class."""
+
+    async def process_text(self, data: str) -> bool:
+        """Process a text frame."""
+
+        stop_found = False
+        for item in data.split():
+            self.logger.info("'%s'", item)
+            stop_found = "stop" in item
+            if stop_found:
+                break
+
+        return not stop_found
+
+    async def process_binary(self, data: bytes) -> bool:
+        """Process a binary frame."""
+        return await self.process_text(data.decode())

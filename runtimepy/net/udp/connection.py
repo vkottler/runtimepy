@@ -4,7 +4,8 @@ A module implementing a UDP connection interface.
 
 # built-in
 import asyncio as _asyncio
-from asyncio import DatagramProtocol, DatagramTransport
+from asyncio import DatagramProtocol as _DatagramProtocol
+from asyncio import DatagramTransport as _DatagramTransport
 from logging import getLogger
 import socket as _socket
 from typing import Any as _Any
@@ -18,23 +19,19 @@ from typing import Union as _Union
 from vcorelib.logging import LoggerType as _LoggerType
 
 # internal
-from runtimepy.net import IpHost, get_free_socket, normalize_host
-from runtimepy.net.connection import BinaryMessage, Connection
+from runtimepy.net import get_free_socket
+from runtimepy.net.connection import BinaryMessage as _BinaryMessage
+from runtimepy.net.connection import Connection as _Connection
+from runtimepy.net.mixin import (
+    BinaryMessageQueueMixin as _BinaryMessageQueueMixin,
+)
+from runtimepy.net.mixin import TransportMixin as _TransportMixin
 
-LOG = getLogger(__name__)
 
-
-class UdpQueueProtocol(DatagramProtocol):
+class UdpQueueProtocol(_BinaryMessageQueueMixin, _DatagramProtocol):
     """A simple UDP protocol that populates a message queue."""
 
     logger: _LoggerType
-
-    def __init__(self) -> None:
-        """Initialize this protocol."""
-
-        self.queue: _asyncio.Queue[  # pylint: disable=unsubscriptable-object
-            BinaryMessage
-        ] = _asyncio.Queue()
 
     def datagram_received(self, data, addr) -> None:
         """Handle incoming data."""
@@ -48,33 +45,22 @@ class UdpQueueProtocol(DatagramProtocol):
 T = _TypeVar("T", bound="UdpConnection")
 
 
-class UdpConnection(Connection):
+class UdpConnection(_Connection, _TransportMixin):
     """A UDP connection interface."""
 
     def __init__(
-        self, transport: DatagramTransport, protocol: UdpQueueProtocol
+        self, transport: _DatagramTransport, protocol: UdpQueueProtocol
     ) -> None:
         """Initialize this UDP connection."""
 
-        self._transport = transport
+        _TransportMixin.__init__(self, transport)
+
+        # Re-assign with updated type information.
+        self._transport: _DatagramTransport = transport
+
         self._protocol = protocol
-
-        # Get the local address of this connection.
-        self.local_address = normalize_host(
-            *self._transport.get_extra_info("sockname")
-        )
-
-        # A bug in the Windows implementation causes the 'addr' argument of
-        # sendto to be required. Save a copy of the remote address (may be
-        # None).
-        self.remote_address = self._remote_address()
-
         super().__init__(getLogger(self._logger_name()))
         self._protocol.logger = self.logger
-
-    async def close(self) -> None:
-        """Close this connection."""
-        self._transport.close()
 
     def sendto(self, data: bytes, addr: _Any) -> None:
         """Send to a specific address."""
@@ -84,11 +70,11 @@ class UdpConnection(Connection):
         """Send a text message."""
         self._transport.sendto(data.encode(), addr=self.remote_address)
 
-    async def _send_binay_message(self, data: BinaryMessage) -> None:
+    async def _send_binay_message(self, data: _BinaryMessage) -> None:
         """Send a binary message."""
         self._transport.sendto(data, addr=self.remote_address)
 
-    async def _await_message(self) -> _Optional[_Union[BinaryMessage, str]]:
+    async def _await_message(self) -> _Optional[_Union[_BinaryMessage, str]]:
         """Await the next message. Return None on error or failure."""
         return await self._protocol.queue.get()
 
@@ -98,7 +84,7 @@ class UdpConnection(Connection):
 
         eloop = _asyncio.get_event_loop()
 
-        transport: DatagramTransport
+        transport: _DatagramTransport
         (
             transport,
             protocol,
@@ -128,19 +114,6 @@ class UdpConnection(Connection):
 
         return conn1, conn2
 
-    def _remote_address(self) -> _Optional[IpHost]:
-        """Get a possible remote address for this connection."""
-
-        result = self._transport.get_extra_info("peername")
-        addr = None
-        if result is not None:
-            addr = normalize_host(*result)
-        return addr
-
-    def _logger_name(self) -> str:
-        """Get a logger name for this connection."""
-
-        name = str(self.local_address)
-        if self.remote_address is not None:
-            name += f" -> {self.remote_address}"
-        return name
+    async def close(self) -> None:
+        """Close this connection."""
+        self._transport.close()
