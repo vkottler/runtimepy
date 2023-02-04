@@ -14,19 +14,12 @@ from runtimepy.net import get_free_socket
 from runtimepy.net.connection import Connection
 from runtimepy.net.udp.connection import UdpConnection
 
+# internal
+from tests.resources import SampleConnectionMixin
 
-class SampleConnection(UdpConnection):
+
+class SampleConnection(UdpConnection, SampleConnectionMixin):
     """A sample connection class."""
-
-    async def process_text(self, data: str) -> bool:
-        """Process a text frame."""
-
-        self.logger.info(data)
-        return data != "stop"
-
-    async def process_binary(self, data: bytes) -> bool:
-        """Process a binary frame."""
-        return await self.process_text(data.decode())
 
 
 async def close_after(conn: Connection, time: float) -> None:
@@ -40,8 +33,6 @@ async def test_udp_connection_basic():
     """Test basic interactions with a UDP connection."""
 
     conn1, conn2 = await SampleConnection.create_pair()
-    assert conn1
-    assert conn2
 
     conn1.send_text("Hello!")
     conn2.send_text("Hello!")

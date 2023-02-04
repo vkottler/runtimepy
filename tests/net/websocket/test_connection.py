@@ -12,17 +12,12 @@ import websockets
 # module under test
 from runtimepy.net.websocket.connection import WebsocketConnection
 
+# internal
+from tests.resources import SampleConnectionMixin
 
-class SampleConnection(WebsocketConnection):
+
+class SampleConnection(WebsocketConnection, SampleConnectionMixin):
     """A sample connection class."""
-
-    async def process_text(self, data: str) -> bool:
-        """Process a text frame."""
-        return data != "stop"
-
-    async def process_binary(self, data: bytes) -> bool:
-        """Process a binary frame."""
-        return await self.process_text(data.decode())
 
 
 @mark.asyncio

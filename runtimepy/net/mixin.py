@@ -59,7 +59,3 @@ class TransportMixin:
         if self.remote_address is not None:
             name += f" -> {self.remote_address}"
         return name
-
-    async def close(self) -> None:
-        """Close this connection."""
-        self._transport.close()

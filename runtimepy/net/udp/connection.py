@@ -115,3 +115,7 @@ class UdpConnection(_Connection, _TransportMixin):
         assert conn2.remote_address is not None
 
         return conn1, conn2
+
+    async def close(self) -> None:
+        """Close this connection."""
+        self._transport.close()
