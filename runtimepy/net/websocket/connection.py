@@ -24,6 +24,7 @@ from websockets.exceptions import ConnectionClosed as _ConnectionClosed
 from websockets.server import (
     WebSocketServerProtocol as _WebSocketServerProtocol,
 )
+from websockets.server import WebSocketServer as _WebSocketServer
 from websockets.server import serve as _serve
 
 # internal
@@ -122,3 +123,13 @@ class WebsocketConnection(Connection):
             async with cls.client(f"ws://localhost:{host[1]}") as client_conn:
                 assert server_conn is not None
                 yield server_conn, client_conn
+
+    @classmethod
+    @_asynccontextmanager
+    async def serve(
+        cls: _Type[T], init: ConnectionInit[T], **kwargs
+    ) -> _AsyncIterator[_WebSocketServer]:
+        """Serve a WebSocket server."""
+
+        async with _serve(cls.server_handler(init), **kwargs) as server:
+            yield server

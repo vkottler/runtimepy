@@ -7,8 +7,12 @@ from asyncio import Protocol as _Protocol
 from asyncio import Semaphore as _Semaphore
 from asyncio import Transport as _Transport
 from asyncio import get_event_loop as _get_event_loop
+from contextlib import asynccontextmanager as _asynccontextmanager
 from logging import getLogger as _getLogger
 import socket as _socket
+from typing import Any as _Any
+from typing import AsyncIterator as _AsyncIterator
+from typing import Callable as _Callable
 from typing import Optional as _Optional
 from typing import Tuple as _Tuple
 from typing import Type as _Type
@@ -33,6 +37,7 @@ class QueueProtocol(_BinaryMessageQueueMixin, _Protocol):
 
 
 T = _TypeVar("T", bound="TcpConnection")
+ConnectionCallback = _Callable[[T], None]
 
 
 class TcpConnection(_Connection, _TransportMixin):
@@ -74,44 +79,49 @@ class TcpConnection(_Connection, _TransportMixin):
         return cls(transport, protocol)
 
     @classmethod
-    async def create_pair(cls: _Type[T]) -> _Tuple[T, T]:
-        """Create a connection pair."""
+    @_asynccontextmanager
+    async def serve(
+        cls: _Type[T], callback: ConnectionCallback[T], **kwargs
+    ) -> _AsyncIterator[_Any]:
+        """Serve incoming connections."""
 
-        _transport: _Optional[_Transport] = None
-        protocol: _Optional[QueueProtocol] = None
-
-        cond = _Semaphore(0)
-
-        class SingleConnProtocol(QueueProtocol):
-            """
-            A protocol implementation that provides a reference to itself and
-            its underlying transport to its outer scope.
-            """
+        class CallbackProtocol(QueueProtocol):
+            """Protocol that calls the provided callback."""
 
             def connection_made(self, transport) -> None:
                 """Save the transport reference and notify."""
-
-                nonlocal _transport
-                _transport = transport
-
-                nonlocal protocol
-                protocol = self
-                cond.release()
+                callback(
+                    cls(  # pylint: disable=abstract-class-instantiated
+                        transport, self
+                    )
+                )
 
         eloop = _get_event_loop()
-
         server = await eloop.create_server(
-            SingleConnProtocol, family=_socket.AF_INET, port=0
+            CallbackProtocol, family=_socket.AF_INET, **kwargs
         )
         async with server:
+            yield server
+
+    @classmethod
+    async def create_pair(cls: _Type[T]) -> _Tuple[T, T]:
+        """Create a connection pair."""
+
+        cond = _Semaphore(0)
+        conn1: _Optional[T] = None
+
+        def callback(conn: T) -> None:
+            """Signal the semaphore."""
+            nonlocal conn1
+            conn1 = conn
+            cond.release()
+
+        async with cls.serve(callback, port=0, backlog=1) as server:
             host = server.sockets[0].getsockname()
-            conn1 = await cls.create_connection(host="localhost", port=host[1])
-
+            conn2 = await cls.create_connection(host="localhost", port=host[1])
             await cond.acquire()
-            assert _transport is not None
-            assert protocol is not None
-            conn2 = cls(_transport, protocol)
 
+        assert conn1 is not None
         return conn1, conn2
 
     async def close(self) -> None:
