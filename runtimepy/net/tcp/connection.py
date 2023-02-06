@@ -3,6 +3,7 @@ A module implementing a TCP connection interface.
 """
 
 # built-in
+from asyncio import BaseTransport as _BaseTransport
 from asyncio import Protocol as _Protocol
 from asyncio import Semaphore as _Semaphore
 from asyncio import Transport as _Transport
@@ -19,6 +20,9 @@ from typing import Type as _Type
 from typing import TypeVar as _TypeVar
 from typing import Union as _Union
 
+# third-party
+from vcorelib.logging import LoggerType as _LoggerType
+
 # internal
 from runtimepy.net.connection import BinaryMessage as _BinaryMessage
 from runtimepy.net.connection import Connection as _Connection
@@ -31,9 +35,21 @@ from runtimepy.net.mixin import TransportMixin as _TransportMixin
 class QueueProtocol(_BinaryMessageQueueMixin, _Protocol):
     """A simple streaming protocol that populates a message queue."""
 
+    logger: _LoggerType
+
     def data_received(self, data) -> None:
         """Handle incoming data."""
         self.queue.put_nowait(data)
+
+    def connection_made(self, transport: _BaseTransport) -> None:
+        """Log the connection establishment."""
+        self.logger = _getLogger(_TransportMixin(transport).logger_name())
+        self.logger.info("Connected.")
+
+    def connection_lost(self, exc: _Optional[Exception]) -> None:
+        """Log the disconnection."""
+        msg = "Disconnected." if exc is None else f"Disconnected: '{exc}'."
+        self.logger.info(msg)
 
 
 T = _TypeVar("T", bound="TcpConnection")
@@ -52,7 +68,7 @@ class TcpConnection(_Connection, _TransportMixin):
         self._transport: _Transport = transport
 
         self._protocol = protocol
-        super().__init__(_getLogger(self._logger_name()))
+        super().__init__(_getLogger(self.logger_name()))
 
     async def _await_message(self) -> _Optional[_Union[_BinaryMessage, str]]:
         """Await the next message. Return None on error or failure."""
@@ -90,6 +106,7 @@ class TcpConnection(_Connection, _TransportMixin):
 
             def connection_made(self, transport) -> None:
                 """Save the transport reference and notify."""
+                super().connection_made(transport)
                 callback(
                     cls(  # pylint: disable=abstract-class-instantiated
                         transport, self
