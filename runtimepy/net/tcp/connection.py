@@ -3,8 +3,10 @@ A module implementing a TCP connection interface.
 """
 
 # built-in
+import asyncio as _asyncio
 from asyncio import BaseTransport as _BaseTransport
 from asyncio import Protocol as _Protocol
+from asyncio import Queue as _Queue
 from asyncio import Semaphore as _Semaphore
 from asyncio import Transport as _Transport
 from asyncio import get_event_loop as _get_event_loop
@@ -14,6 +16,7 @@ import socket as _socket
 from typing import Any as _Any
 from typing import AsyncIterator as _AsyncIterator
 from typing import Callable as _Callable
+from typing import List as _List
 from typing import Optional as _Optional
 from typing import Tuple as _Tuple
 from typing import Type as _Type
@@ -24,12 +27,15 @@ from typing import Union as _Union
 from vcorelib.logging import LoggerType as _LoggerType
 
 # internal
+from runtimepy.net import sockname as _sockname
 from runtimepy.net.connection import BinaryMessage as _BinaryMessage
 from runtimepy.net.connection import Connection as _Connection
 from runtimepy.net.mixin import (
     BinaryMessageQueueMixin as _BinaryMessageQueueMixin,
 )
 from runtimepy.net.mixin import TransportMixin as _TransportMixin
+
+LOG = _getLogger(__name__)
 
 
 class QueueProtocol(_BinaryMessageQueueMixin, _Protocol):
@@ -118,7 +124,73 @@ class TcpConnection(_Connection, _TransportMixin):
             CallbackProtocol, family=_socket.AF_INET, **kwargs
         )
         async with server:
+            for socket in server.sockets:
+                LOG.info(
+                    "Started server listening on '%s'.", _sockname(socket)
+                )
             yield server
+
+    @classmethod
+    async def app(
+        cls: _Type[T],
+        stop_sig: _asyncio.Event,
+        callback: ConnectionCallback[T] = None,
+        **kwargs,
+    ) -> None:
+        """Run an application that serves new connections."""
+
+        conn_queue: _Queue[T] = _Queue()
+
+        def app_cb(conn: T) -> None:
+            """Call the appication callback and enqueue the new connection."""
+            if callback is not None:
+                callback(conn)
+            conn_queue.put_nowait(conn)
+
+        stop_sig_task = _asyncio.create_task(stop_sig.wait())
+        tasks: _List[_asyncio.Task[None]] = []
+        conns: _List[T] = []
+        new_conn_task: _Optional[_asyncio.Task[T]] = None
+
+        async with cls.serve(app_cb, **kwargs):
+            while not stop_sig.is_set():
+                # Create a new-connection handler.
+                if new_conn_task is None:
+                    # Wait for a connection to be established.
+                    new_conn_task = _asyncio.create_task(conn_queue.get())
+
+                # Wait for any task to complete.
+                await _asyncio.wait(
+                    [stop_sig_task, new_conn_task] + tasks,  # type: ignore
+                    return_when=_asyncio.FIRST_COMPLETED,
+                )
+
+                # Filter completed tasks out of the working set.
+                next_tasks = [x for x in tasks if not x.done()]
+
+                # Filter out disabled connections.
+                conns = [x for x in conns if not x.disabled]
+
+                # If the stop signal was sent, cancel existing connections.
+                if stop_sig.is_set():
+                    for conn in conns:
+                        conn.disable("application stop")
+
+                    # Allow existing tasks to clean up.
+                    new_conn_task.cancel()
+                    await new_conn_task
+                    for task in next_tasks:
+                        await task
+
+                # If a new connection was made, register a task for processing
+                # it.
+                elif new_conn_task.done():
+                    new_conn = new_conn_task.result()
+                    conns.append(new_conn)
+                    next_tasks.append(_asyncio.create_task(new_conn.process()))
+                    new_conn_task = None
+
+                tasks = next_tasks
 
     @classmethod
     async def create_pair(cls: _Type[T]) -> _Tuple[T, T]:

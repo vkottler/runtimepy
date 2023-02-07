@@ -40,3 +40,23 @@ async def test_tcp_connection_basic():
         ],
         return_when=asyncio.ALL_COMPLETED,
     )
+
+
+async def release_after(sig: asyncio.Event, time: float) -> None:
+    """Disable a connection after a delay."""
+    await asyncio.sleep(time)
+    sig.set()
+
+
+@mark.asyncio
+async def test_tcp_connection_app():
+    """Test the TCP connection's application interface."""
+
+    sig = asyncio.Event()
+
+    # Continue making connections with the server and stop after some time, or
+    # some number of connections?
+    await asyncio.wait(
+        [release_after(sig, 0.01), SampleConnection.app(sig, port=0)],
+        return_when=asyncio.ALL_COMPLETED,
+    )
