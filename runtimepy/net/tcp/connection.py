@@ -16,7 +16,6 @@ import socket as _socket
 from typing import Any as _Any
 from typing import AsyncIterator as _AsyncIterator
 from typing import Callable as _Callable
-from typing import List as _List
 from typing import Optional as _Optional
 from typing import Tuple as _Tuple
 from typing import Type as _Type
@@ -30,6 +29,7 @@ from vcorelib.logging import LoggerType as _LoggerType
 from runtimepy.net import sockname as _sockname
 from runtimepy.net.connection import BinaryMessage as _BinaryMessage
 from runtimepy.net.connection import Connection as _Connection
+from runtimepy.net.manager import manage_connections as _manage_connections
 from runtimepy.net.mixin import (
     BinaryMessageQueueMixin as _BinaryMessageQueueMixin,
 )
@@ -135,7 +135,7 @@ class TcpConnection(_Connection, _TransportMixin):
             yield server
 
     @classmethod
-    async def app(  # pylint: disable=too-many-locals
+    async def app(
         cls: _Type[T],
         stop_sig: _asyncio.Event,
         callback: ConnectionCallback[T] = None,
@@ -152,57 +152,14 @@ class TcpConnection(_Connection, _TransportMixin):
                 callback(conn)
             conn_queue.put_nowait(conn)
 
-        stop_sig_task = _asyncio.create_task(stop_sig.wait())
-        tasks: _List[_asyncio.Task[None]] = []
-        conns: _List[T] = []
-        new_conn_task: _Optional[_asyncio.Task[T]] = None
-
         async with cls.serve(app_cb, **kwargs) as server:
             if serving_callback is not None:
                 serving_callback(server)
 
             LOG.info("Application starting.")
-
-            while not stop_sig.is_set():
-                # Create a new-connection handler.
-                if new_conn_task is None:
-                    # Wait for a connection to be established.
-                    new_conn_task = _asyncio.create_task(conn_queue.get())
-
-                # Wait for any task to complete.
-                await _asyncio.wait(
-                    [stop_sig_task, new_conn_task] + tasks,  # type: ignore
-                    return_when=_asyncio.FIRST_COMPLETED,
-                )
-
-                # Filter completed tasks out of the working set.
-                next_tasks = [x for x in tasks if not x.done()]
-
-                # Filter out disabled connections.
-                conns = [x for x in conns if not x.disabled]
-
-                # If a new connection was made, register a task for processing
-                # it.
-                if new_conn_task.done():
-                    new_conn = new_conn_task.result()
-                    conns.append(new_conn)
-                    next_tasks.append(_asyncio.create_task(new_conn.process()))
-                    new_conn_task = None
-
-                # If the stop signal was sent, cancel existing connections.
-                if stop_sig.is_set():
-                    for conn in conns:
-                        conn.disable("application stop")
-
-                    # Allow existing tasks to clean up.
-                    if new_conn_task is not None:
-                        new_conn_task.cancel()
-                    for task in next_tasks:
-                        await task
-
-                tasks = next_tasks
-
+            await _manage_connections(conn_queue, stop_sig)
             LOG.info("Application stopped.")
+
         LOG.info("Server closed.")
 
     @classmethod
