@@ -42,6 +42,7 @@ class QueueProtocol(_BinaryMessageQueueMixin, _Protocol):
     """A simple streaming protocol that populates a message queue."""
 
     logger: _LoggerType
+    conn: _Connection
 
     def data_received(self, data) -> None:
         """Handle incoming data."""
@@ -56,6 +57,7 @@ class QueueProtocol(_BinaryMessageQueueMixin, _Protocol):
         """Log the disconnection."""
         msg = "Disconnected." if exc is None else f"Disconnected: '{exc}'."
         self.logger.info(msg)
+        self.conn.disable("disconnected")
 
 
 T = _TypeVar("T", bound="TcpConnection")
@@ -74,6 +76,7 @@ class TcpConnection(_Connection, _TransportMixin):
         self._transport: _Transport = transport
 
         self._protocol = protocol
+        self._protocol.conn = self
         super().__init__(_getLogger(self.logger_name()))
 
     async def _await_message(self) -> _Optional[_Union[_BinaryMessage, str]]:
@@ -103,7 +106,7 @@ class TcpConnection(_Connection, _TransportMixin):
     @classmethod
     @_asynccontextmanager
     async def serve(
-        cls: _Type[T], callback: ConnectionCallback[T], **kwargs
+        cls: _Type[T], callback: ConnectionCallback[T] = None, **kwargs
     ) -> _AsyncIterator[_Any]:
         """Serve incoming connections."""
 
@@ -113,11 +116,12 @@ class TcpConnection(_Connection, _TransportMixin):
             def connection_made(self, transport) -> None:
                 """Save the transport reference and notify."""
                 super().connection_made(transport)
-                callback(
-                    cls(  # pylint: disable=abstract-class-instantiated
-                        transport, self
+                if callback is not None:
+                    callback(
+                        cls(  # pylint: disable=abstract-class-instantiated
+                            transport, self
+                        )
                     )
-                )
 
         eloop = _get_event_loop()
         server = await eloop.create_server(
@@ -131,10 +135,11 @@ class TcpConnection(_Connection, _TransportMixin):
             yield server
 
     @classmethod
-    async def app(
+    async def app(  # pylint: disable=too-many-locals
         cls: _Type[T],
         stop_sig: _asyncio.Event,
         callback: ConnectionCallback[T] = None,
+        serving_callback: _Callable[[_Any], None] = None,
         **kwargs,
     ) -> None:
         """Run an application that serves new connections."""
@@ -152,7 +157,12 @@ class TcpConnection(_Connection, _TransportMixin):
         conns: _List[T] = []
         new_conn_task: _Optional[_asyncio.Task[T]] = None
 
-        async with cls.serve(app_cb, **kwargs):
+        async with cls.serve(app_cb, **kwargs) as server:
+            if serving_callback is not None:
+                serving_callback(server)
+
+            LOG.info("Application starting.")
+
             while not stop_sig.is_set():
                 # Create a new-connection handler.
                 if new_conn_task is None:
@@ -171,26 +181,29 @@ class TcpConnection(_Connection, _TransportMixin):
                 # Filter out disabled connections.
                 conns = [x for x in conns if not x.disabled]
 
+                # If a new connection was made, register a task for processing
+                # it.
+                if new_conn_task.done():
+                    new_conn = new_conn_task.result()
+                    conns.append(new_conn)
+                    next_tasks.append(_asyncio.create_task(new_conn.process()))
+                    new_conn_task = None
+
                 # If the stop signal was sent, cancel existing connections.
                 if stop_sig.is_set():
                     for conn in conns:
                         conn.disable("application stop")
 
                     # Allow existing tasks to clean up.
-                    new_conn_task.cancel()
-                    await new_conn_task
+                    if new_conn_task is not None:
+                        new_conn_task.cancel()
                     for task in next_tasks:
                         await task
 
-                # If a new connection was made, register a task for processing
-                # it.
-                elif new_conn_task.done():
-                    new_conn = new_conn_task.result()
-                    conns.append(new_conn)
-                    next_tasks.append(_asyncio.create_task(new_conn.process()))
-                    new_conn_task = None
-
                 tasks = next_tasks
+
+            LOG.info("Application stopped.")
+        LOG.info("Server closed.")
 
     @classmethod
     async def create_pair(cls: _Type[T]) -> _Tuple[T, T]:
