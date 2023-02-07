@@ -3,6 +3,7 @@ A module implementing a generic, two-way mapping interface.
 """
 
 # built-in
+from typing import Dict as _Dict
 from typing import Generic as _Generic
 from typing import Iterator as _Iterator
 from typing import MutableMapping as _MutableMapping
@@ -45,8 +46,8 @@ class TwoWayNameMapping(_RegexMixin, _Generic[T]):
     ) -> None:
         """Initialize this name registry."""
 
-        self._mapping: KeyToName[T] = {}
-        self._reverse: NameToKey[T] = {}
+        self._mapping: _Dict[T, str] = {}
+        self._reverse: _Dict[str, T] = {}
 
         if mapping is not None:
             self.load_key_to_name(mapping)
@@ -107,7 +108,7 @@ class TwoWayNameMapping(_RegexMixin, _Generic[T]):
         for name in self._reverse:
             yield name
 
-    def asdict(self) -> NameToKey[T]:
+    def asdict(self) -> _Dict[str, T]:
         """Provide a dictionary representation."""
         return self._reverse
 

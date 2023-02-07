@@ -39,3 +39,6 @@ def test_bit_fields_manager_basic():
 
     assert manager.get("field1") == "on"
     assert copied.get("field1") == "off"
+
+    new_manager = BitFieldsManager.import_json(manager.export_json())
+    assert new_manager.get("field1") == "on"

@@ -2,16 +2,19 @@
 A module implementing an interface to build communication protocols.
 """
 
-from contextlib import contextmanager
-
 # built-in
+from contextlib import contextmanager
 from copy import copy as _copy
 from typing import Dict as _Dict
 from typing import Iterator as _Iterator
 from typing import List as _List
 from typing import NamedTuple
 from typing import Optional as _Optional
+from typing import TypeVar as _TypeVar
 from typing import Union as _Union
+
+# third-party
+from vcorelib.io.types import JsonObject as _JsonObject
 
 # internal
 from runtimepy.enum import RuntimeEnum as _RuntimeEnum
@@ -29,14 +32,28 @@ ProtocolPrimitive = _Union[int, float, bool, str]
 
 
 class FieldSpec(NamedTuple):
-    """TODO."""
+    """Information specifying a protocol field."""
 
     name: str
     kind: _Primitivelike
     enum: _Optional[_RegistryKey] = None
 
+    def asdict(self) -> _JsonObject:
+        """Obtain a dictionary representing this instance."""
 
-class Protocol:
+        result: _JsonObject = {
+            "name": self.name,
+            "kind": _create(self.kind).kind.name,
+        }
+        if self.enum is not None:
+            result["enum"] = self.enum
+        return result
+
+
+T = _TypeVar("T", bound="ProtocolBase")
+
+
+class ProtocolBase:
     """A class for defining runtime communication protocols."""
 
     def __init__(
@@ -78,10 +95,10 @@ class Protocol:
                     item.name, item.kind, enum=item.enum, track=False
                 )
 
-    def __copy__(self) -> "Protocol":
+    def __copy__(self: T) -> T:
         """Create another protocol instance from this one."""
 
-        return Protocol(
+        return self.__class__(
             self._enum_registry,
             names=self._names,
             fields=_copy(self._fields),

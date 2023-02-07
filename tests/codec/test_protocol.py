@@ -7,6 +7,7 @@ from copy import copy
 
 # module under test
 from runtimepy.codec.protocol import Protocol
+from runtimepy.codec.protocol.base import FieldSpec
 from runtimepy.enum.registry import EnumRegistry
 
 # internal
@@ -46,3 +47,5 @@ def test_protocol_basic():
 
     assert proto["test1"] == 40
     assert new_proto["test1"] == 50
+
+    assert FieldSpec("test", "uint8", enum="int1").asdict()

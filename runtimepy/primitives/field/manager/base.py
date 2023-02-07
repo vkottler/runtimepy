@@ -1,5 +1,5 @@
 """
-A management entity for bit-fields.
+A base management entity for bit-fields.
 """
 
 # built-in
@@ -8,6 +8,7 @@ from typing import Dict as _Dict
 from typing import Iterable as _Iterable
 from typing import List as _List
 from typing import Optional as _Optional
+from typing import TypeVar as _TypeVar
 from typing import Union as _Union
 from typing import cast as _cast
 
@@ -39,22 +40,10 @@ def fields_to_file(
     return _ARBITER.encode(path, fields_to_dict(fields), **kwargs)
 
 
-def fields_from_dict(data: _JsonObject) -> _Iterable[_BitFields]:
-    """Load bit-fields from JSON data."""
-
-    return [
-        _BitFields.create(x)
-        for x in _cast(_Iterable[_JsonObject], data["items"])
-    ]
+T = _TypeVar("T", bound="BitFieldsManagerBase")
 
 
-def fields_from_file(path: _Pathlike) -> _Iterable[_BitFields]:
-    """Load bit-fields from a file."""
-
-    return fields_from_dict(_ARBITER.decode(path, require_success=True).data)
-
-
-class BitFieldsManager:
+class BitFieldsManagerBase:
     """A class for managing multiple bit-fields objects."""
 
     def __init__(
@@ -80,12 +69,12 @@ class BitFieldsManager:
         for field in fields:
             self.add(field)
 
-    def __copy__(self) -> "BitFieldsManager":
+    def __copy__(self: T) -> T:
         """
         Create a copy of the manager with fields that use distinct underlying
         primitives.
         """
-        return BitFieldsManager(
+        return self.__class__(
             self.registry, self.enums, fields=[_copy(x) for x in self.fields]
         )
 
