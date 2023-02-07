@@ -66,7 +66,7 @@ class ProtocolBase:
         """Initialize this protocol."""
 
         # Each instance gets its own array.
-        self._array = PrimitiveArray()
+        self.array = PrimitiveArray()
 
         self._enum_registry = enum_registry
 
@@ -119,7 +119,7 @@ class ProtocolBase:
         assert ident is not None, f"Couldn't register field '{name}'!"
 
         new = _create(kind)
-        self._array.add(new)
+        self.array.add(new)
         self._regular_fields[name] = new
         if enum is not None:
             self._enum_fields[name] = self._enum_registry[enum]
@@ -131,7 +131,7 @@ class ProtocolBase:
         """Add a bit-fields instance."""
 
         idx = self._fields.add(fields)
-        self._array.add(fields.raw)
+        self.array.add(fields.raw)
         if track:
             self._build.append(idx)
 
