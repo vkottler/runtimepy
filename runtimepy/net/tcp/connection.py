@@ -89,7 +89,7 @@ class TcpConnection(_Connection, _TransportMixin):
         eloop = _get_event_loop()
 
         transport: _Transport
-        transport, protocol = await eloop.create_connection(  # type: ignore
+        transport, protocol = await eloop.create_connection(
             QueueProtocol, **kwargs
         )
         return cls(transport, protocol)
