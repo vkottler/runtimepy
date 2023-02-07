@@ -51,9 +51,7 @@ class BitFieldsManager(BitFieldsManagerBase):
 
         # Only export names that we're using.
         names: _JsonObject = {
-            name: val
-            for name, val in self.registry.asdict().items()
-            if name in self.lookup
+            name: self.registry.identifier(name) for name in self.lookup
         }
 
         # Only export enums that we're using.

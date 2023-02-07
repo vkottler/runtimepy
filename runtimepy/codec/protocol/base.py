@@ -114,6 +114,10 @@ class ProtocolBase:
     ) -> None:
         """Add a new field to the protocol."""
 
+        # Register the field name.
+        ident = self._names.register_name(name)
+        assert ident is not None, f"Couldn't register field '{name}'!"
+
         new = _create(kind)
         self._array.add(new)
         self._regular_fields[name] = new

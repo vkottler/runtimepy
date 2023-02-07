@@ -49,3 +49,7 @@ def test_protocol_basic():
     assert new_proto["test1"] == 50
 
     assert FieldSpec("test", "uint8", enum="int1").asdict()
+
+    new_proto = Protocol.import_json(proto.export_json())
+    assert new_proto["test1"] == 40
+    assert proto["flag1"] == "valve_open"
