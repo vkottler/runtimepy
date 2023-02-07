@@ -59,7 +59,7 @@ class UdpConnection(_Connection, _TransportMixin):
         self._transport: _DatagramTransport = transport
 
         self._protocol = protocol
-        super().__init__(getLogger(self._logger_name()))
+        super().__init__(getLogger(self.logger_name()))
         self._protocol.logger = self.logger
 
     def sendto(self, data: bytes, addr: _Any) -> None:
@@ -88,9 +88,7 @@ class UdpConnection(_Connection, _TransportMixin):
         (
             transport,
             protocol,
-        ) = await eloop.create_datagram_endpoint(  # type: ignore
-            UdpQueueProtocol, **kwargs
-        )
+        ) = await eloop.create_datagram_endpoint(UdpQueueProtocol, **kwargs)
         return cls(transport, protocol)
 
     @classmethod

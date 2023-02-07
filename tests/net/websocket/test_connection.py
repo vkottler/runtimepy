@@ -7,7 +7,6 @@ import asyncio
 
 # third-party
 from pytest import mark
-import websockets
 
 # module under test
 from runtimepy.net.websocket.connection import WebsocketConnection
@@ -31,8 +30,8 @@ async def test_websocket_server_basic():
         conn.send_binary("Hello, World!".encode())
         return True
 
-    async with websockets.server.serve(
-        SampleConnection.server_handler(server_init), host="0.0.0.0", port=0
+    async with SampleConnection.serve(
+        server_init, host="0.0.0.0", port=0
     ) as server:
         host = list(server.sockets)[0].getsockname()
 

@@ -6,6 +6,7 @@ A module implementing a network-connection interface.
 from abc import ABC as _ABC
 from abc import abstractmethod as _abstractmethod
 import asyncio as _asyncio
+from contextlib import suppress
 from typing import Awaitable as _Awaitable
 from typing import List as _List
 from typing import Optional as _Optional
@@ -86,6 +87,12 @@ class Connection(_LoggerMixin, _ABC):
             _asyncio.create_task(self._process_write_binary()),
         ]
         await _asyncio.wait(self._tasks, return_when=_asyncio.ALL_COMPLETED)
+
+        # Ensure that cancelled tasks have their exceptions retrieved.
+        with suppress(_asyncio.CancelledError):
+            for task in self._tasks:
+                task.exception()
+
         await self.close()
 
     async def _process_read(self) -> None:

@@ -52,7 +52,7 @@ class TransportMixin:
             addr = _normalize_host(*result)
         return addr
 
-    def _logger_name(self) -> str:
+    def logger_name(self) -> str:
         """Get a logger name for this connection."""
 
         name = str(self.local_address)

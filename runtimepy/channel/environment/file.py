@@ -25,6 +25,12 @@ from runtimepy.channel.registry import ChannelRegistry as _ChannelRegistry
 from runtimepy.enum.registry import EnumRegistry as _EnumRegistry
 from runtimepy.mapping import NameToKey as _NameToKey
 from runtimepy.primitives.field.manager import (
+    ENUMS_KEY,
+    FIELDS_KEY,
+    NAMES_KEY,
+    VALUES_KEY,
+)
+from runtimepy.primitives.field.manager import (
     fields_from_dict as _fields_from_dict,
 )
 from runtimepy.primitives.field.manager import (
@@ -34,13 +40,9 @@ from runtimepy.primitives.field.manager import (
 T = _TypeVar("T", bound="FileChannelEnvironment")
 CHANNELS_KEY = "channels"
 CHANNELS_FILE = f"{CHANNELS_KEY}.json"
-ENUMS_KEY = "enums"
 ENUMS_FILE = f"{ENUMS_KEY}.json"
-VALUES_KEY = "values"
 VALUES_FILE = f"{VALUES_KEY}.json"
-FIELDS_KEY = "fields"
 FIELDS_FILE = f"{FIELDS_KEY}.json"
-NAMES_KEY = "names"
 NAMES_FILE = f"{NAMES_KEY}.json"
 
 

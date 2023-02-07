@@ -1,12 +1,14 @@
 """
-A management entity for bit-fields.
+A base management entity for bit-fields.
 """
 
 # built-in
+from copy import copy as _copy
 from typing import Dict as _Dict
 from typing import Iterable as _Iterable
 from typing import List as _List
 from typing import Optional as _Optional
+from typing import TypeVar as _TypeVar
 from typing import Union as _Union
 from typing import cast as _cast
 
@@ -38,22 +40,10 @@ def fields_to_file(
     return _ARBITER.encode(path, fields_to_dict(fields), **kwargs)
 
 
-def fields_from_dict(data: _JsonObject) -> _Iterable[_BitFields]:
-    """Load bit-fields from JSON data."""
-
-    return [
-        _BitFields.create(x)
-        for x in _cast(_Iterable[_JsonObject], data["items"])
-    ]
+T = _TypeVar("T", bound="BitFieldsManagerBase")
 
 
-def fields_from_file(path: _Pathlike) -> _Iterable[_BitFields]:
-    """Load bit-fields from a file."""
-
-    return fields_from_dict(_ARBITER.decode(path, require_success=True).data)
-
-
-class BitFieldsManager:
+class BitFieldsManagerBase:
     """A class for managing multiple bit-fields objects."""
 
     def __init__(
@@ -79,6 +69,15 @@ class BitFieldsManager:
         for field in fields:
             self.add(field)
 
+    def __copy__(self: T) -> T:
+        """
+        Create a copy of the manager with fields that use distinct underlying
+        primitives.
+        """
+        return self.__class__(
+            self.registry, self.enums, fields=[_copy(x) for x in self.fields]
+        )
+
     def asdict(self) -> _JsonObject:
         """Get this bit-fields manager as a JSON object."""
         return fields_to_dict(self.fields)
@@ -87,7 +86,7 @@ class BitFieldsManager:
         """Encode this bit-fields manager to a file."""
         return fields_to_file(path, self.fields, **kwargs)
 
-    def add(self, fields: _BitFields) -> None:
+    def add(self, fields: _BitFields) -> int:
         """Add new bit-fields to manage."""
 
         # Ensure that new fields can't be added after the current fields
@@ -107,6 +106,8 @@ class BitFieldsManager:
             if field.is_enum:
                 self.enum_lookup[name] = self.enums[field.enum]
 
+        return index
+
     def set(self, key: _RegistryKey, value: _Union[int, bool, str]) -> None:
         """Set a value of a field."""
 
@@ -120,7 +121,7 @@ class BitFieldsManager:
 
     def get(
         self, key: _RegistryKey, resolve_enum: bool = True
-    ) -> _Union[int, str]:
+    ) -> _Union[int, bool, str]:
         """Get the value of a field."""
 
         field = self[key]
@@ -128,6 +129,8 @@ class BitFieldsManager:
 
         if field.is_enum and resolve_enum:
             value = self.enum_lookup[field.name].get_str(value)
+        elif field.width == 1:
+            value = bool(value)
 
         return value
 
