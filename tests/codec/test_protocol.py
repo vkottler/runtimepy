@@ -2,6 +2,9 @@
 Test the 'codec.protocol' module.
 """
 
+# built-in
+from copy import copy
+
 # module under test
 from runtimepy.codec.protocol import Protocol
 from runtimepy.enum.registry import EnumRegistry
@@ -34,3 +37,12 @@ def test_protocol_basic():
 
     proto["flag2"] = True
     assert proto["flag2"] is True
+
+    new_proto = copy(proto)
+    assert new_proto
+
+    proto["test1"] = 40
+    new_proto["test1"] = 50
+
+    assert proto["test1"] == 40
+    assert new_proto["test1"] == 50

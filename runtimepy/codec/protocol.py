@@ -2,10 +2,15 @@
 A module implementing an interface to build communication protocols.
 """
 
-# built-in
 from contextlib import contextmanager
+
+# built-in
+from copy import copy as _copy
 from typing import Dict as _Dict
 from typing import Iterator as _Iterator
+from typing import List as _List
+from typing import NamedTuple
+from typing import Optional as _Optional
 from typing import Union as _Union
 
 # internal
@@ -23,29 +28,91 @@ from runtimepy.registry.name import RegistryKey as _RegistryKey
 ProtocolPrimitive = _Union[int, float, bool, str]
 
 
+class FieldSpec(NamedTuple):
+    """TODO."""
+
+    name: str
+    kind: _Primitivelike
+    enum: _Optional[_RegistryKey] = None
+
+
 class Protocol:
     """A class for defining runtime communication protocols."""
 
-    def __init__(self, enum_registry: _EnumRegistry) -> None:
+    def __init__(
+        self,
+        enum_registry: _EnumRegistry,
+        names: _NameRegistry = None,
+        fields: BitFieldsManager = None,
+        build: _List[_Union[int, FieldSpec]] = None,
+    ) -> None:
         """Initialize this protocol."""
 
-        self.array = PrimitiveArray()
-        self.enum_registry = enum_registry
-        self.names = _NameRegistry()
-        self.fields = BitFieldsManager(self.names, self.enum_registry)
-        self.regular_fields: _Dict[str, _AnyPrimitive] = {}
-        self.enum_fields: _Dict[str, _RuntimeEnum] = {}
+        # Each instance gets its own array.
+        self._array = PrimitiveArray()
+
+        self._enum_registry = enum_registry
+
+        if names is None:
+            names = _NameRegistry()
+        self._names = names
+
+        if fields is None:
+            fields = BitFieldsManager(self._names, self._enum_registry)
+        self._fields = fields
+
+        self._regular_fields: _Dict[str, _AnyPrimitive] = {}
+        self._enum_fields: _Dict[str, _RuntimeEnum] = {}
+
+        # Keep track of the order that the protocol was created.
+        if build is None:
+            build = []
+        self._build: _List[_Union[int, FieldSpec]] = build
+
+        # Add fields if necessary.
+        for item in self._build:
+            if isinstance(item, int):
+                self._add_bit_fields(self._fields.fields[item], track=False)
+            else:
+                self.add_field(
+                    item.name, item.kind, enum=item.enum, track=False
+                )
+
+    def __copy__(self) -> "Protocol":
+        """Create another protocol instance from this one."""
+
+        return Protocol(
+            self._enum_registry,
+            names=self._names,
+            fields=_copy(self._fields),
+            build=self._build,
+        )
 
     def add_field(
-        self, name: str, kind: _Primitivelike, enum: _RegistryKey = None
+        self,
+        name: str,
+        kind: _Primitivelike,
+        enum: _RegistryKey = None,
+        track: bool = True,
     ) -> None:
         """Add a new field to the protocol."""
 
         new = _create(kind)
-        self.array.add(new)
-        self.regular_fields[name] = new
+        self._array.add(new)
+        self._regular_fields[name] = new
         if enum is not None:
-            self.enum_fields[name] = self.enum_registry[enum]
+            self._enum_fields[name] = self._enum_registry[enum]
+
+        if track:
+            self._build.append(FieldSpec(name, kind, enum))
+
+    def _add_bit_fields(self, fields: _BitFields, track: bool = True) -> None:
+        """Add a bit-fields instance."""
+
+        idx = self._fields.add(fields)
+        self._array.add(fields.raw)
+        if track:
+            self._build.append(idx)
 
     @contextmanager
     def add_bit_fields(
@@ -55,33 +122,23 @@ class Protocol:
 
         new = _BitFields.new(value=kind)
         yield new
-        self.fields.add(new)
-        self.array.add(new.raw)
+        self._add_bit_fields(new)
 
     def value(self, name: str, resolve_enum: bool = True) -> ProtocolPrimitive:
         """Get the value of a field belonging to the protocol."""
 
         val: ProtocolPrimitive = 0
 
-        if name in self.regular_fields:
-            val = self.regular_fields[name].value
+        if name in self._regular_fields:
+            val = self._regular_fields[name].value
 
             # Resolve the enum value.
-            if resolve_enum and name in self.enum_fields:
-                val = self.enum_fields[name].get_str(val)  # type: ignore
+            if resolve_enum and name in self._enum_fields:
+                val = self._enum_fields[name].get_str(val)  # type: ignore
 
             return val
 
-        field = self.fields[name]
-        val = field()
-
-        # Resolve the enum value.
-        if resolve_enum and field.is_enum:
-            val = self.enum_registry[field.enum].get_str(val)
-        elif field.width == 1:
-            val = bool(val)
-
-        return val
+        return self._fields.get(name, resolve_enum=resolve_enum)
 
     def __getitem__(self, name: str) -> ProtocolPrimitive:
         """Get the value of a protocol field."""
@@ -90,16 +147,10 @@ class Protocol:
     def __setitem__(self, name: str, val: ProtocolPrimitive) -> None:
         """Set a value of a field belonging to the protocol."""
 
-        if name in self.regular_fields:
+        if name in self._regular_fields:
             # Resolve an enum value.
             if isinstance(val, str):
-                val = self.enum_fields[name].get_int(val)
-            self.regular_fields[name].value = val
+                val = self._enum_fields[name].get_int(val)
+            self._regular_fields[name].value = val
         else:
-            field = self.fields[name]
-
-            # Resolve an enum value.
-            if isinstance(val, str):
-                val = self.enum_registry[field.enum].get_int(val)
-
-            field(val=int(val))
+            self._fields.set(name, val)  # type: ignore
