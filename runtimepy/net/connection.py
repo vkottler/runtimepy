@@ -64,6 +64,11 @@ class Connection(_LoggerMixin, _ABC):
         """Enqueue a binary message tos end."""
         self._binary_messages.put_nowait(data)
 
+    @property
+    def disabled(self) -> bool:
+        """Determine if this connection is disabled."""
+        return not self._enabled
+
     def disable(self, reason: str) -> None:
         """Disable this connection."""
 

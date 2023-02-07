@@ -3,8 +3,10 @@ A module implementing a TCP connection interface.
 """
 
 # built-in
+import asyncio as _asyncio
 from asyncio import BaseTransport as _BaseTransport
 from asyncio import Protocol as _Protocol
+from asyncio import Queue as _Queue
 from asyncio import Semaphore as _Semaphore
 from asyncio import Transport as _Transport
 from asyncio import get_event_loop as _get_event_loop
@@ -24,18 +26,23 @@ from typing import Union as _Union
 from vcorelib.logging import LoggerType as _LoggerType
 
 # internal
+from runtimepy.net import sockname as _sockname
 from runtimepy.net.connection import BinaryMessage as _BinaryMessage
 from runtimepy.net.connection import Connection as _Connection
+from runtimepy.net.manager import manage_connections as _manage_connections
 from runtimepy.net.mixin import (
     BinaryMessageQueueMixin as _BinaryMessageQueueMixin,
 )
 from runtimepy.net.mixin import TransportMixin as _TransportMixin
+
+LOG = _getLogger(__name__)
 
 
 class QueueProtocol(_BinaryMessageQueueMixin, _Protocol):
     """A simple streaming protocol that populates a message queue."""
 
     logger: _LoggerType
+    conn: _Connection
 
     def data_received(self, data) -> None:
         """Handle incoming data."""
@@ -50,6 +57,7 @@ class QueueProtocol(_BinaryMessageQueueMixin, _Protocol):
         """Log the disconnection."""
         msg = "Disconnected." if exc is None else f"Disconnected: '{exc}'."
         self.logger.info(msg)
+        self.conn.disable("disconnected")
 
 
 T = _TypeVar("T", bound="TcpConnection")
@@ -68,6 +76,7 @@ class TcpConnection(_Connection, _TransportMixin):
         self._transport: _Transport = transport
 
         self._protocol = protocol
+        self._protocol.conn = self
         super().__init__(_getLogger(self.logger_name()))
 
     async def _await_message(self) -> _Optional[_Union[_BinaryMessage, str]]:
@@ -97,7 +106,7 @@ class TcpConnection(_Connection, _TransportMixin):
     @classmethod
     @_asynccontextmanager
     async def serve(
-        cls: _Type[T], callback: ConnectionCallback[T], **kwargs
+        cls: _Type[T], callback: ConnectionCallback[T] = None, **kwargs
     ) -> _AsyncIterator[_Any]:
         """Serve incoming connections."""
 
@@ -107,18 +116,51 @@ class TcpConnection(_Connection, _TransportMixin):
             def connection_made(self, transport) -> None:
                 """Save the transport reference and notify."""
                 super().connection_made(transport)
-                callback(
-                    cls(  # pylint: disable=abstract-class-instantiated
-                        transport, self
+                if callback is not None:
+                    callback(
+                        cls(  # pylint: disable=abstract-class-instantiated
+                            transport, self
+                        )
                     )
-                )
 
         eloop = _get_event_loop()
         server = await eloop.create_server(
             CallbackProtocol, family=_socket.AF_INET, **kwargs
         )
         async with server:
+            for socket in server.sockets:
+                LOG.info(
+                    "Started server listening on '%s'.", _sockname(socket)
+                )
             yield server
+
+    @classmethod
+    async def app(
+        cls: _Type[T],
+        stop_sig: _asyncio.Event,
+        callback: ConnectionCallback[T] = None,
+        serving_callback: _Callable[[_Any], None] = None,
+        **kwargs,
+    ) -> None:
+        """Run an application that serves new connections."""
+
+        conn_queue: _Queue[T] = _Queue()
+
+        def app_cb(conn: T) -> None:
+            """Call the appication callback and enqueue the new connection."""
+            if callback is not None:
+                callback(conn)
+            conn_queue.put_nowait(conn)
+
+        async with cls.serve(app_cb, **kwargs) as server:
+            if serving_callback is not None:
+                serving_callback(server)
+
+            LOG.info("Application starting.")
+            await _manage_connections(conn_queue, stop_sig)
+            LOG.info("Application stopped.")
+
+        LOG.info("Server closed.")
 
     @classmethod
     async def create_pair(cls: _Type[T]) -> _Tuple[T, T]:
