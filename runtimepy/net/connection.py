@@ -32,6 +32,10 @@ class Connection(_LoggerMixin, _ABC):
         self._text_messages: _asyncio.Queue[str] = _asyncio.Queue()
         self._binary_messages: _asyncio.Queue[BinaryMessage] = _asyncio.Queue()
         self._tasks: _List[_asyncio.Task[None]] = []
+        self.init()
+
+    def init(self) -> None:
+        """Initialize this instance."""
 
     async def process_text(self, data: str) -> bool:
         """Process a text frame."""
