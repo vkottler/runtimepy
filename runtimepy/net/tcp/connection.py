@@ -6,7 +6,6 @@ A module implementing a TCP connection interface.
 import asyncio as _asyncio
 from asyncio import BaseTransport as _BaseTransport
 from asyncio import Protocol as _Protocol
-from asyncio import Queue as _Queue
 from asyncio import Semaphore as _Semaphore
 from asyncio import Transport as _Transport
 from asyncio import get_event_loop as _get_event_loop
@@ -29,7 +28,7 @@ from vcorelib.logging import LoggerType as _LoggerType
 from runtimepy.net import sockname as _sockname
 from runtimepy.net.connection import BinaryMessage as _BinaryMessage
 from runtimepy.net.connection import Connection as _Connection
-from runtimepy.net.manager import manage_connections as _manage_connections
+from runtimepy.net.manager import ConnectionManager as _ConnectionManager
 from runtimepy.net.mixin import (
     BinaryMessageQueueMixin as _BinaryMessageQueueMixin,
 )
@@ -140,24 +139,27 @@ class TcpConnection(_Connection, _TransportMixin):
         stop_sig: _asyncio.Event,
         callback: ConnectionCallback[T] = None,
         serving_callback: _Callable[[_Any], None] = None,
+        manager: _ConnectionManager = None,
         **kwargs,
     ) -> None:
         """Run an application that serves new connections."""
 
-        conn_queue: _Queue[T] = _Queue()
+        if manager is None:
+            manager = _ConnectionManager()
 
         def app_cb(conn: T) -> None:
             """Call the appication callback and enqueue the new connection."""
             if callback is not None:
                 callback(conn)
-            conn_queue.put_nowait(conn)
+            assert manager is not None
+            manager.queue.put_nowait(conn)
 
         async with cls.serve(app_cb, **kwargs) as server:
             if serving_callback is not None:
                 serving_callback(server)
 
             LOG.info("Application starting.")
-            await _manage_connections(conn_queue, stop_sig)
+            await manager.manage(stop_sig)
             LOG.info("Application stopped.")
 
         LOG.info("Server closed.")
