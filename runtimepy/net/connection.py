@@ -33,17 +33,17 @@ class Connection(_LoggerMixin, _ABC):
         self._binary_messages: _asyncio.Queue[BinaryMessage] = _asyncio.Queue()
         self._tasks: _List[_asyncio.Task[None]] = []
 
-    @_abstractmethod
     async def process_text(self, data: str) -> bool:
         """Process a text frame."""
+        raise NotImplementedError
 
-    @_abstractmethod
     async def process_binary(self, data: bytes) -> bool:
         """Process a binary frame."""
+        raise NotImplementedError
 
-    @_abstractmethod
     async def _await_message(self) -> _Optional[_Union[BinaryMessage, str]]:
         """Await the next message. Return None on error or failure."""
+        raise NotImplementedError
 
     @_abstractmethod
     async def _send_text_message(self, data: str) -> None:
