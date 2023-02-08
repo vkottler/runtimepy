@@ -2,6 +2,8 @@
 Various networking-related class utilities.
 """
 
+from __future__ import annotations
+
 # built-in
 import asyncio as _asyncio
 from typing import Optional as _Optional
@@ -17,10 +19,7 @@ class BinaryMessageQueueMixin:
 
     def __init__(self) -> None:
         """Initialize this protocol."""
-
-        self.queue: _asyncio.Queue[  # pylint: disable=unsubscriptable-object
-            _BinaryMessage
-        ] = _asyncio.Queue()
+        self.queue: _asyncio.Queue[_BinaryMessage] = _asyncio.Queue()
 
 
 class TransportMixin:

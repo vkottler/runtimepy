@@ -5,6 +5,7 @@ Test the 'net.udp.connection' module.
 # built-in
 import asyncio
 import socket
+from typing import Tuple
 
 # third-party
 from pytest import mark
@@ -20,6 +21,12 @@ from tests.resources import SampleConnectionMixin
 
 class SampleConnection(UdpConnection, SampleConnectionMixin):
     """A sample connection class."""
+
+    async def process_datagram(
+        self, data: bytes, addr: Tuple[str, int]
+    ) -> bool:
+        """Process a datagram."""
+        return await self.process_binary(data)
 
 
 async def close_after(conn: Connection, time: float) -> None:

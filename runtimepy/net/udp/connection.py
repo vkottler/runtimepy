@@ -2,40 +2,43 @@
 A module implementing a UDP connection interface.
 """
 
+from __future__ import annotations
+
 # built-in
+from abc import abstractmethod as _abstractmethod
 import asyncio as _asyncio
 from asyncio import DatagramProtocol as _DatagramProtocol
 from asyncio import DatagramTransport as _DatagramTransport
 from logging import getLogger
 import socket as _socket
-from typing import Any as _Any
-from typing import Optional as _Optional
 from typing import Tuple as _Tuple
 from typing import Type as _Type
 from typing import TypeVar as _TypeVar
-from typing import Union as _Union
 
 # third-party
 from vcorelib.logging import LoggerType as _LoggerType
 
 # internal
-from runtimepy.net import get_free_socket
+from runtimepy.net import IpHost, get_free_socket
 from runtimepy.net.connection import BinaryMessage as _BinaryMessage
 from runtimepy.net.connection import Connection as _Connection
-from runtimepy.net.mixin import (
-    BinaryMessageQueueMixin as _BinaryMessageQueueMixin,
-)
 from runtimepy.net.mixin import TransportMixin as _TransportMixin
 
 
-class UdpQueueProtocol(_BinaryMessageQueueMixin, _DatagramProtocol):
+class UdpQueueProtocol(_DatagramProtocol):
     """A simple UDP protocol that populates a message queue."""
 
     logger: _LoggerType
 
-    def datagram_received(self, data, addr) -> None:
+    def __init__(self) -> None:
+        """Initialize this protocol."""
+        self.queue: _asyncio.Queue[
+            _Tuple[_BinaryMessage, _Tuple[str, int]]
+        ] = _asyncio.Queue()
+
+    def datagram_received(self, data: bytes, addr: _Tuple[str, int]) -> None:
         """Handle incoming data."""
-        self.queue.put_nowait(data)
+        self.queue.put_nowait((data, addr))
 
     def error_received(self, exc: Exception) -> None:
         """Log any received errors."""
@@ -62,7 +65,13 @@ class UdpConnection(_Connection, _TransportMixin):
         super().__init__(getLogger(self.logger_name()))
         self._protocol.logger = self.logger
 
-    def sendto(self, data: bytes, addr: _Any) -> None:
+    @_abstractmethod
+    async def process_datagram(
+        self, data: bytes, addr: _Tuple[str, int]
+    ) -> bool:
+        """Process a datagram."""
+
+    def sendto(self, data: bytes, addr: IpHost) -> None:
         """Send to a specific address."""
         self._transport.sendto(data, addr=addr)
 
@@ -73,10 +82,6 @@ class UdpConnection(_Connection, _TransportMixin):
     async def _send_binay_message(self, data: _BinaryMessage) -> None:
         """Send a binary message."""
         self._transport.sendto(data, addr=self.remote_address)
-
-    async def _await_message(self) -> _Optional[_Union[_BinaryMessage, str]]:
-        """Await the next message. Return None on error or failure."""
-        return await self._protocol.queue.get()
 
     @classmethod
     async def create_connection(cls: _Type[T], **kwargs) -> T:
@@ -115,3 +120,20 @@ class UdpConnection(_Connection, _TransportMixin):
     async def close(self) -> None:
         """Close this connection."""
         self._transport.close()
+
+    async def _process_read(self) -> None:
+        """Process incoming messages while this connection is active."""
+
+        while self._enabled:
+            # Attempt to get the next message.
+            message = await self._cancelled_handler(
+                self._protocol.queue.get(), "reading cancelled"
+            )
+            result = False
+
+            if message is not None:
+                result = await self.process_datagram(message[0], message[1])
+
+            # If we failed to read a message, disable.
+            if not result:
+                self.disable("read processing error")
