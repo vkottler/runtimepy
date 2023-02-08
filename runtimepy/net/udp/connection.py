@@ -14,6 +14,7 @@ import socket as _socket
 from typing import Tuple as _Tuple
 from typing import Type as _Type
 from typing import TypeVar as _TypeVar
+from typing import Union as _Union
 
 # third-party
 from vcorelib.logging import LoggerType as _LoggerType
@@ -71,7 +72,9 @@ class UdpConnection(_Connection, _TransportMixin):
     ) -> bool:
         """Process a datagram."""
 
-    def sendto(self, data: bytes, addr: IpHost) -> None:
+    def sendto(
+        self, data: bytes, addr: _Union[IpHost, _Tuple[str, int]]
+    ) -> None:
         """Send to a specific address."""
         self._transport.sendto(data, addr=addr)
 

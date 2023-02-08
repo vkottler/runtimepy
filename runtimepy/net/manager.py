@@ -8,59 +8,67 @@ from __future__ import annotations
 import asyncio as _asyncio
 from typing import List as _List
 from typing import Optional as _Optional
-from typing import TypeVar as _TypeVar
 
 # internal
 from runtimepy.net.connection import Connection as _Connection
 
-T = _TypeVar("T", bound=_Connection)
 
+class ConnectionManager:
+    """A class for managing connection processing at runtime."""
 
-async def manage_connections(
-    new_conn_queue: _asyncio.Queue[T], stop_sig: _asyncio.Event
-) -> None:
-    """Handle incoming connections until the stop signal is set."""
+    def __init__(self) -> None:
+        """Initialize this connection manager."""
+        self.queue: _asyncio.Queue[_Connection] = _asyncio.Queue()
+        self._running = False
 
-    stop_sig_task = _asyncio.create_task(stop_sig.wait())
-    tasks: _List[_asyncio.Task[None]] = []
-    conns: _List[T] = []
-    new_conn_task: _Optional[_asyncio.Task[T]] = None
+    async def manage(self, stop_sig: _asyncio.Event) -> None:
+        """Handle incoming connections until the stop signal is set."""
 
-    while not stop_sig.is_set():
-        # Create a new-connection handler.
-        if new_conn_task is None:
-            # Wait for a connection to be established.
-            new_conn_task = _asyncio.create_task(new_conn_queue.get())
+        assert not self._running
+        self._running = True
 
-        # Wait for any task to complete.
-        await _asyncio.wait(
-            [stop_sig_task, new_conn_task] + tasks,  # type: ignore
-            return_when=_asyncio.FIRST_COMPLETED,
-        )
+        stop_sig_task = _asyncio.create_task(stop_sig.wait())
+        tasks: _List[_asyncio.Task[None]] = []
+        conns: _List[_Connection] = []
+        new_conn_task: _Optional[_asyncio.Task[_Connection]] = None
 
-        # Filter completed tasks out of the working set.
-        next_tasks = [x for x in tasks if not x.done()]
+        while not stop_sig.is_set():
+            # Create a new-connection handler.
+            if new_conn_task is None:
+                # Wait for a connection to be established.
+                new_conn_task = _asyncio.create_task(self.queue.get())
 
-        # Filter out disabled connections.
-        conns = [x for x in conns if not x.disabled]
+            # Wait for any task to complete.
+            await _asyncio.wait(
+                [stop_sig_task, new_conn_task] + tasks,  # type: ignore
+                return_when=_asyncio.FIRST_COMPLETED,
+            )
 
-        # If a new connection was made, register a task for processing
-        # it.
-        if new_conn_task.done():
-            new_conn = new_conn_task.result()
-            conns.append(new_conn)
-            next_tasks.append(_asyncio.create_task(new_conn.process()))
-            new_conn_task = None
+            # Filter completed tasks out of the working set.
+            next_tasks = [x for x in tasks if not x.done()]
 
-        # If the stop signal was sent, cancel existing connections.
-        if stop_sig.is_set():
-            for conn in conns:
-                conn.disable("application stop")
+            # Filter out disabled connections.
+            conns = [x for x in conns if not x.disabled]
 
-            # Allow existing tasks to clean up.
-            if new_conn_task is not None:
-                new_conn_task.cancel()
-            for task in next_tasks:
-                await task
+            # If a new connection was made, register a task for processing
+            # it.
+            if new_conn_task.done():
+                new_conn = new_conn_task.result()
+                conns.append(new_conn)
+                next_tasks.append(_asyncio.create_task(new_conn.process()))
+                new_conn_task = None
 
-        tasks = next_tasks
+            # If the stop signal was sent, cancel existing connections.
+            if stop_sig.is_set():
+                for conn in conns:
+                    conn.disable("application stop")
+
+                # Allow existing tasks to clean up.
+                if new_conn_task is not None:
+                    new_conn_task.cancel()
+                for task in next_tasks:
+                    await task
+
+            tasks = next_tasks
+
+        self._running = False
