@@ -43,7 +43,7 @@ class QueueProtocol(_BinaryMessageQueueMixin, _Protocol):
     logger: _LoggerType
     conn: _Connection
 
-    def data_received(self, data) -> None:
+    def data_received(self, data: _BinaryMessage) -> None:
         """Handle incoming data."""
         self.queue.put_nowait(data)
 
@@ -82,12 +82,12 @@ class TcpConnection(_Connection, _TransportMixin):
         """Await the next message. Return None on error or failure."""
         return await self._protocol.queue.get()
 
-    async def _send_text_message(self, data: str) -> None:
-        """Send a text message."""
+    def send_text(self, data: str) -> None:
+        """Enqueue a text message to send."""
         self._transport.write(data.encode())
 
-    async def _send_binay_message(self, data: _BinaryMessage) -> None:
-        """Send a binary message."""
+    def send_binary(self, data: _BinaryMessage) -> None:
+        """Enqueue a binary message tos end."""
         self._transport.write(data)
 
     @classmethod

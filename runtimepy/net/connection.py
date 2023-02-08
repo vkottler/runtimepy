@@ -4,7 +4,6 @@ A module implementing a network-connection interface.
 
 # built-in
 from abc import ABC as _ABC
-from abc import abstractmethod as _abstractmethod
 import asyncio as _asyncio
 from contextlib import suppress
 from typing import Awaitable as _Awaitable
@@ -49,13 +48,13 @@ class Connection(_LoggerMixin, _ABC):
         """Await the next message. Return None on error or failure."""
         raise NotImplementedError
 
-    @_abstractmethod
     async def _send_text_message(self, data: str) -> None:
         """Send a text message."""
+        raise NotImplementedError
 
-    @_abstractmethod
     async def _send_binay_message(self, data: BinaryMessage) -> None:
         """Send a binary message."""
+        raise NotImplementedError
 
     async def close(self) -> None:
         """Close this connection."""

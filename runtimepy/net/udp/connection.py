@@ -78,12 +78,12 @@ class UdpConnection(_Connection, _TransportMixin):
         """Send to a specific address."""
         self._transport.sendto(data, addr=addr)
 
-    async def _send_text_message(self, data: str) -> None:
-        """Send a text message."""
+    def send_text(self, data: str) -> None:
+        """Enqueue a text message to send."""
         self._transport.sendto(data.encode(), addr=self.remote_address)
 
-    async def _send_binay_message(self, data: _BinaryMessage) -> None:
-        """Send a binary message."""
+    def send_binary(self, data: _BinaryMessage) -> None:
+        """Enqueue a binary message tos end."""
         self._transport.sendto(data, addr=self.remote_address)
 
     @classmethod
