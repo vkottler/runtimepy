@@ -9,26 +9,14 @@ from logging import getLogger
 from pytest import mark, raises
 
 # module under test
-from runtimepy.net.connection import BinaryMessage, Connection
-
-
-class SampleConnection(Connection):
-    """A smaple conneciton class."""
-
-    async def _send_text_message(self, data: str) -> None:
-        """Send a text message."""
-        print(data)
-
-    async def _send_binay_message(self, data: BinaryMessage) -> None:
-        """Send a binary message."""
-        print(data)
+from runtimepy.net.connection import Connection
 
 
 @mark.asyncio
 async def test_connection_basic():
     """Test basic interactions with a connection object."""
 
-    conn = SampleConnection(getLogger(__name__))
+    conn = Connection(getLogger(__name__))
     assert conn
 
     with raises(NotImplementedError):
@@ -39,3 +27,13 @@ async def test_connection_basic():
 
     with raises(NotImplementedError):
         await conn._await_message()  # pylint: disable=protected-access
+
+    with raises(NotImplementedError):
+        await conn._send_text_message(  # pylint: disable=protected-access
+            "test"
+        )
+
+    with raises(NotImplementedError):
+        await conn._send_binay_message(  # pylint: disable=protected-access
+            "test".encode()
+        )
