@@ -3,7 +3,9 @@ A module implementing a runtime enumeration interface.
 """
 
 # built-in
+from enum import IntEnum as _IntEnum
 from typing import Optional as _Optional
+from typing import Type as _Type
 from typing import Union as _Union
 from typing import cast as _cast
 
@@ -138,3 +140,20 @@ class RuntimeEnum(_RegistryItem):
     def register_bool(self, name: str, value: bool) -> bool:
         """Register a boolean enumeration."""
         return self.bools.register(name, value)
+
+    @staticmethod
+    def data_from_enum(enum: _Type[_IntEnum]) -> _JsonObject:
+        """Get JSON data from an enumeration class."""
+
+        return {
+            "type": "int",
+            "items": {x.name.lower(): x.value for x in enum},
+        }
+
+    @staticmethod
+    def from_enum(enum: _Type[_IntEnum], identifier: int) -> "RuntimeEnum":
+        """Create a runtime enumeration from an enum class."""
+
+        data = RuntimeEnum.data_from_enum(enum)
+        data["id"] = identifier
+        return RuntimeEnum.create(data)
