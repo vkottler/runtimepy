@@ -3,6 +3,8 @@ A protocol extension for importing and exporting JSON.
 """
 
 # built-in
+from json import dumps as _dumps
+from typing import BinaryIO as _BinaryIO
 from typing import Dict as _Dict
 from typing import List as _List
 from typing import Set as _Set
@@ -25,11 +27,24 @@ from runtimepy.primitives.field.manager import (
 )
 
 BUILD_KEY = "build"
+META_KEY = "meta"
 T = _TypeVar("T", bound="JsonProtocol")
 
 
 class JsonProtocol(ProtocolBase):
     """A class for defining runtime communication protocols."""
+
+    def meta_str(self, resolve_enum: bool = True) -> str:
+        """Get protocol metadata as a string.."""
+        return _dumps(self.export_json(resolve_enum=resolve_enum))
+
+    def meta_bytes(self, resolve_enum: bool = True) -> bytes:
+        """Get protocol metadata as a bytes object."""
+        return self.meta_str(resolve_enum=resolve_enum).encode()
+
+    def write_meta(self, stream: _BinaryIO, resolve_enum: bool = True) -> int:
+        """Write protocol metadata to a stream."""
+        return stream.write(self.meta_bytes(resolve_enum=resolve_enum))
 
     def export_json(
         self, resolve_enum: bool = True
@@ -37,6 +52,7 @@ class JsonProtocol(ProtocolBase):
         """Export this protocol's data to JSON."""
 
         data = self._fields.export_json(resolve_enum=resolve_enum)
+        data[META_KEY] = {"id": self.id}
 
         # Export regular-field names.
         json_obj = data[NAMES_KEY]
@@ -101,7 +117,13 @@ class JsonProtocol(ProtocolBase):
                     )
                 )
 
-        result = cls(fields.enums, fields.registry, fields=fields, build=build)
+        result = cls(
+            fields.enums,
+            fields.registry,
+            fields=fields,
+            build=build,
+            identifier=_cast(int, data[META_KEY]["id"]),
+        )
 
         # Set values.
         for name, value in values.items():

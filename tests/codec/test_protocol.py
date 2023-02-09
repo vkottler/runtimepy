@@ -4,6 +4,8 @@ Test the 'codec.protocol' module.
 
 # built-in
 from copy import copy
+from io import BytesIO
+from json import load
 
 # module under test
 from runtimepy.codec.protocol import Protocol
@@ -53,3 +55,8 @@ def test_protocol_basic():
     new_proto = Protocol.import_json(proto.export_json())
     assert new_proto["test1"] == 40
     assert proto["flag1"] == "valve_open"
+
+    with BytesIO() as stream:
+        assert proto.write_meta(stream)
+        stream.seek(0)
+        assert Protocol.import_json(load(stream))

@@ -62,8 +62,11 @@ class ProtocolBase:
         names: _NameRegistry = None,
         fields: BitFieldsManager = None,
         build: _List[_Union[int, FieldSpec]] = None,
+        identifier: int = 1,
     ) -> None:
         """Initialize this protocol."""
+
+        self.id = identifier
 
         # Each instance gets its own array.
         self.array = PrimitiveArray()
