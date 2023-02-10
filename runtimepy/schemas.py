@@ -8,8 +8,8 @@ from typing import Optional as _Optional
 
 # third-party
 from vcorelib.dict.codec import DictCodec as _DictCodec
-from vcorelib.schemas import JsonSchemaMap as _JsonSchemaMap
 from vcorelib.schemas.base import SchemaMap as _SchemaMap
+from vcorelib.schemas.json import JsonSchemaMap as _JsonSchemaMap
 
 # internal
 from runtimepy import PKG_NAME

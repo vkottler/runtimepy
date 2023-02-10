@@ -6,11 +6,13 @@ A module implementing an interface for items that can belong to registries.
 from typing import cast as _cast
 
 # third-party
-from vcorelib.dict.codec import DictCodec as _DictCodec
 from vcorelib.io.types import JsonObject as _JsonObject
 
+# internal
+from runtimepy.schemas import RuntimepyDictCodec as _RuntimepyDictCodec
 
-class RegistryItem(_DictCodec):
+
+class RegistryItem(_RuntimepyDictCodec):
     """A class interface for items that can be managed via a registry."""
 
     def __hash__(self) -> int:
