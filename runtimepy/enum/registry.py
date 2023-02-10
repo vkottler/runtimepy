@@ -3,6 +3,7 @@ A module implementing and enumeration registry.
 """
 
 # built-in
+from enum import IntEnum as _IntEnum
 from typing import Optional as _Optional
 from typing import Type as _Type
 from typing import cast as _cast
@@ -37,3 +38,25 @@ class EnumRegistry(_Registry[_RuntimeEnum]):
         if items is not None:
             data["items"] = items  # type: ignore
         return self.register_dict(name, data)
+
+
+class RuntimeIntEnum(_IntEnum):
+    """An integer enumeration extension."""
+
+    @classmethod
+    def runtime_enum(cls, identifier: int) -> _RuntimeEnum:
+        """Obtain a runtime enumeration from this class."""
+        return _RuntimeEnum.from_enum(cls, identifier)
+
+    @classmethod
+    def register_enum(
+        cls, registry: EnumRegistry, name: str = None
+    ) -> _RuntimeEnum:
+        """Register an enumeration to a registry."""
+
+        if name is None:
+            name = cls.__name__
+
+        result = registry.register_dict(name, _RuntimeEnum.data_from_enum(cls))
+        assert result is not None
+        return result
