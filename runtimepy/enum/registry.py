@@ -49,8 +49,14 @@ class RuntimeIntEnum(_IntEnum):
         return _RuntimeEnum.from_enum(cls, identifier)
 
     @classmethod
-    def register_enum(cls, name: str, registry: EnumRegistry) -> _RuntimeEnum:
+    def register_enum(
+        cls, registry: EnumRegistry, name: str = None
+    ) -> _RuntimeEnum:
         """Register an enumeration to a registry."""
+
+        if name is None:
+            name = cls.__name__
+
         result = registry.register_dict(name, _RuntimeEnum.data_from_enum(cls))
         assert result is not None
         return result

@@ -15,6 +15,7 @@ def test_message_type_basic():
     assert enum.get_int("protocol_data") == 2
 
     enum_reg = EnumRegistry({})
-    enum = MessageType.register_enum("protocol", enum_reg)
+    enum = MessageType.register_enum(enum_reg)
+    assert enum_reg["MessageType"] is enum
     assert enum.get_int("protocol_meta") == 1
     assert enum.get_int("protocol_data") == 2
