@@ -23,6 +23,7 @@ from runtimepy.primitives import AnyPrimitive as _AnyPrimitive
 from runtimepy.primitives import Primitivelike as _Primitivelike
 from runtimepy.primitives import create as _create
 from runtimepy.primitives.array import PrimitiveArray
+from runtimepy.primitives.base import NETWORK_BYTE_ORDER as _NETWORK_BYTE_ORDER
 from runtimepy.primitives.field.fields import BitFields as _BitFields
 from runtimepy.primitives.field.manager import BitFieldsManager
 from runtimepy.registry.name import NameRegistry as _NameRegistry
@@ -63,13 +64,14 @@ class ProtocolBase:
         fields: BitFieldsManager = None,
         build: _List[_Union[int, FieldSpec]] = None,
         identifier: int = 1,
+        byte_order: str = _NETWORK_BYTE_ORDER,
     ) -> None:
         """Initialize this protocol."""
 
         self.id = identifier
 
         # Each instance gets its own array.
-        self.array = PrimitiveArray()
+        self.array = PrimitiveArray(byte_order=byte_order)
 
         self._enum_registry = enum_registry
 
