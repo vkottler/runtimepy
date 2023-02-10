@@ -52,7 +52,10 @@ class JsonProtocol(ProtocolBase):
         """Export this protocol's data to JSON."""
 
         data = self._fields.export_json(resolve_enum=resolve_enum)
-        data[META_KEY] = {"id": self.id}
+        data[META_KEY] = {
+            "id": self.id,
+            "byte_order": self.array.byte_order.name.lower(),
+        }
 
         # Export regular-field names.
         json_obj = data[NAMES_KEY]
@@ -123,6 +126,7 @@ class JsonProtocol(ProtocolBase):
             fields=fields,
             build=build,
             identifier=_cast(int, data[META_KEY]["id"]),
+            byte_order=_cast(str, data[META_KEY]["byte_order"]),
         )
 
         # Set values.
