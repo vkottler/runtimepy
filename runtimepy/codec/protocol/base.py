@@ -23,6 +23,10 @@ from runtimepy.primitives import AnyPrimitive as _AnyPrimitive
 from runtimepy.primitives import Primitivelike as _Primitivelike
 from runtimepy.primitives import create as _create
 from runtimepy.primitives.array import PrimitiveArray
+from runtimepy.primitives.byte_order import (
+    DEFAULT_BYTE_ORDER as _DEFAULT_BYTE_ORDER,
+)
+from runtimepy.primitives.byte_order import ByteOrder as _ByteOrder
 from runtimepy.primitives.field.fields import BitFields as _BitFields
 from runtimepy.primitives.field.manager import BitFieldsManager
 from runtimepy.registry.name import NameRegistry as _NameRegistry
@@ -63,15 +67,23 @@ class ProtocolBase:
         fields: BitFieldsManager = None,
         build: _List[_Union[int, FieldSpec]] = None,
         identifier: int = 1,
+        byte_order: _Union[_ByteOrder, _RegistryKey] = _DEFAULT_BYTE_ORDER,
     ) -> None:
         """Initialize this protocol."""
 
         self.id = identifier
 
-        # Each instance gets its own array.
-        self.array = PrimitiveArray()
-
+        # Register the byte-order enumeration if it's not present.
         self._enum_registry = enum_registry
+        if not self._enum_registry.get("ByteOrder"):
+            _ByteOrder.register_enum(self._enum_registry)
+
+        # Each instance gets its own array.
+        if not isinstance(byte_order, _ByteOrder):
+            byte_order = _ByteOrder(
+                self._enum_registry["ByteOrder"].get_int(byte_order)
+            )
+        self.array = PrimitiveArray(byte_order=byte_order)
 
         if names is None:
             names = _NameRegistry()
@@ -106,6 +118,7 @@ class ProtocolBase:
             names=self._names,
             fields=_copy(self._fields),
             build=self._build,
+            byte_order=self.array.byte_order,
         )
 
     def add_field(

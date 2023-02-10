@@ -14,7 +14,10 @@ from typing import cast as _cast
 
 # internal
 from runtimepy.primitives import AnyPrimitive as _AnyPrimitive
-from runtimepy.primitives.base import NETWORK_BYTE_ORDER as _NETWORK_BYTE_ORDER
+from runtimepy.primitives.byte_order import (
+    DEFAULT_BYTE_ORDER as _DEFAULT_BYTE_ORDER,
+)
+from runtimepy.primitives.byte_order import ByteOrder as _ByteOrder
 
 
 class ArrayFragmentSpec(NamedTuple):
@@ -32,13 +35,14 @@ class PrimitiveArray:
     def __init__(
         self,
         *primitives: _AnyPrimitive,
-        byte_order: str = _NETWORK_BYTE_ORDER,
+        byte_order: _ByteOrder = _DEFAULT_BYTE_ORDER,
         fragments: _List[ArrayFragmentSpec] = None,
     ) -> None:
         """Initialize this primitive array."""
 
         self._primitives: _List[_AnyPrimitive] = []
-        self._format: str = byte_order
+        self.byte_order = byte_order
+        self._format: str = byte_order.fmt
         self.size: int = 0
 
         # Keep track of a quick lookup for converting between element indices
@@ -73,7 +77,7 @@ class PrimitiveArray:
 
         return PrimitiveArray(
             *self._primitives[spec.index_start : spec.index_end],
-            byte_order=self._format[0],
+            byte_order=self.byte_order,
         )
 
     def _index_fragment_spec(
@@ -150,7 +154,7 @@ class PrimitiveArray:
 
         return PrimitiveArray(
             *[_cast(_AnyPrimitive, x.copy()) for x in self._primitives],
-            byte_order=self._format[0],
+            byte_order=self.byte_order,
             fragments=_copy(self._fragment_specs),
         )
 

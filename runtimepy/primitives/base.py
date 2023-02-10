@@ -15,11 +15,14 @@ from typing import Tuple as _Tuple
 from typing import TypeVar as _TypeVar
 
 # internal
+from runtimepy.primitives.byte_order import (
+    DEFAULT_BYTE_ORDER as _DEFAULT_BYTE_ORDER,
+)
+from runtimepy.primitives.byte_order import ByteOrder as _ByteOrder
 from runtimepy.primitives.type import PrimitiveTypelike as _PrimitiveTypelike
 from runtimepy.primitives.type import normalize as _normalize
 
 T = _TypeVar("T", bool, int, float)
-NETWORK_BYTE_ORDER = "!"
 
 # Current value first, new value next.
 PrimitiveChangeCallaback = _Callable[[T, T], None]
@@ -29,7 +32,7 @@ class Primitive(_Generic[T]):
     """A simple class for storing and underlying primitive value."""
 
     # Use network byte-order by default.
-    byte_order = NETWORK_BYTE_ORDER
+    byte_order: _ByteOrder = _DEFAULT_BYTE_ORDER
 
     def __init__(self, kind: _PrimitiveTypelike, value: T = None) -> None:
         """Initialize this primitive."""
@@ -128,32 +131,36 @@ class Primitive(_Generic[T]):
         """Use the underlying value for boolean evaluation."""
         return bool(self.raw)
 
-    def binary(self, byte_order: str = None) -> bytes:
+    def binary(self, byte_order: _ByteOrder = None) -> bytes:
         """Convert this instance to a byte array."""
         if byte_order is None:
             byte_order = self.byte_order
-        return _pack(byte_order + self.kind.format, self.value)
+        return _pack(byte_order.fmt + self.kind.format, self.value)
 
     def __bytes__(self) -> bytes:
         """Convert this instance to a byte array."""
         return self.binary()
 
-    def to_stream(self, stream: _BinaryIO, byte_order: str = None) -> int:
+    def to_stream(
+        self, stream: _BinaryIO, byte_order: _ByteOrder = None
+    ) -> int:
         """Write this primitive to a stream."""
 
         stream.write(self.binary(byte_order=byte_order))
         return self.kind.size
 
-    def update(self, data: bytes, byte_order: str = None) -> T:
+    def update(self, data: bytes, byte_order: _ByteOrder = None) -> T:
         """Update this primitive from a bytes object."""
 
         if byte_order is None:
             byte_order = self.byte_order
 
-        self.value = _unpack(byte_order + self.kind.format, data)[0]
+        self.value = _unpack(byte_order.fmt + self.kind.format, data)[0]
         return self.value
 
-    def from_stream(self, stream: _BinaryIO, byte_order: str = None) -> T:
+    def from_stream(
+        self, stream: _BinaryIO, byte_order: _ByteOrder = None
+    ) -> T:
         """Update this primitive from a stream and return the new value."""
 
         return self.update(stream.read(self.kind.size), byte_order=byte_order)
