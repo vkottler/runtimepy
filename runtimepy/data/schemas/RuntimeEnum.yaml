@@ -1,0 +1,23 @@
+---
+type: object
+required: [id, type]
+additionalProperties: false
+
+properties:
+  id:
+    type: integer
+    minimum: 1
+
+  type:
+    enum: [bool, int]
+
+  items:
+    type: object
+    additionalProperties: false
+
+    patternProperties:
+      "^\\w+$":
+        oneOf:
+          - type: integer
+            minimum: 1
+          - type: boolean

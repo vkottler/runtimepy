@@ -1,0 +1,34 @@
+---
+type: object
+required: [id, type]
+additionalProperties: false
+
+properties:
+  id:
+    type: integer
+    minimum: 1
+
+  type:
+    enum:
+      - bool
+      - float
+      - double
+      - int8
+      - int16
+      - int32
+      - int64
+      - uint8
+      - uint16
+      - uint32
+      - uint64
+
+  commandable:
+    type: boolean
+    default: false
+
+  enum:
+    oneOf:
+      - type: integer
+        minimum: 1
+      - type: string
+        pattern: "^\\w+$"
