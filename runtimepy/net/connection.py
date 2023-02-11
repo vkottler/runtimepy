@@ -84,7 +84,12 @@ class Connection(_LoggerMixin, _ABC):
                 if not task.done():
                     task.cancel()
 
-    async def process(self) -> None:
+    async def _wait_sig(self, stop_sig: _asyncio.Event) -> None:
+        """Disable the connection if a stop signal gets set."""
+        await stop_sig.wait()
+        self.disable("stop signal")
+
+    async def process(self, stop_sig: _asyncio.Event = None) -> None:
         """
         Process tasks for this connection while the connection is active.
         """
@@ -94,6 +99,11 @@ class Connection(_LoggerMixin, _ABC):
             _asyncio.create_task(self._process_write_text()),
             _asyncio.create_task(self._process_write_binary()),
         ]
+
+        # Allow a stop signal to also disable the connection.
+        if stop_sig is not None:
+            self._tasks.append(_asyncio.create_task(self._wait_sig(stop_sig)))
+
         await _asyncio.wait(self._tasks, return_when=_asyncio.ALL_COMPLETED)
 
         # Ensure that cancelled tasks have their exceptions retrieved.

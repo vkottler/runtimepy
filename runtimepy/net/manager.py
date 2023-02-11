@@ -55,14 +55,13 @@ class ConnectionManager:
             if new_conn_task.done():
                 new_conn = new_conn_task.result()
                 conns.append(new_conn)
-                next_tasks.append(_asyncio.create_task(new_conn.process()))
+                next_tasks.append(
+                    _asyncio.create_task(new_conn.process(stop_sig=stop_sig))
+                )
                 new_conn_task = None
 
             # If the stop signal was sent, cancel existing connections.
             if stop_sig.is_set():
-                for conn in conns:
-                    conn.disable("application stop")
-
                 # Allow existing tasks to clean up.
                 if new_conn_task is not None:
                     new_conn_task.cancel()

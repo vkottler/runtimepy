@@ -5,6 +5,7 @@ A module implementing a WebSocket connection interface.
 from __future__ import annotations
 
 # built-in
+import asyncio as _asyncio
 from contextlib import asynccontextmanager as _asynccontextmanager
 from typing import AsyncIterator as _AsyncIterator
 from typing import Awaitable as _Awaitable
@@ -86,7 +87,7 @@ class WebsocketConnection(Connection):
 
     @classmethod
     def server_handler(
-        cls: _Type[T], init: ConnectionInit[T]
+        cls: _Type[T], init: ConnectionInit[T], stop_sig: _asyncio.Event = None
     ) -> _Callable[[_WebSocketServerProtocol], _Awaitable[None]]:
         """
         A wrapper for passing in a websocket handler and initializing a
@@ -97,7 +98,7 @@ class WebsocketConnection(Connection):
             """A handler that runs the callers initialization function."""
             conn = cls(protocol)
             if await init(conn):
-                await conn.process()
+                await conn.process(stop_sig=stop_sig)
 
         return _handler
 
@@ -127,9 +128,14 @@ class WebsocketConnection(Connection):
     @classmethod
     @_asynccontextmanager
     async def serve(
-        cls: _Type[T], init: ConnectionInit[T], **kwargs
+        cls: _Type[T],
+        init: ConnectionInit[T],
+        stop_sig: _asyncio.Event = None,
+        **kwargs,
     ) -> _AsyncIterator[_WebSocketServer]:
         """Serve a WebSocket server."""
 
-        async with _serve(cls.server_handler(init), **kwargs) as server:
+        async with _serve(
+            cls.server_handler(init, stop_sig=stop_sig), **kwargs
+        ) as server:
             yield server
