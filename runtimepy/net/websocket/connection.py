@@ -7,6 +7,7 @@ from __future__ import annotations
 # built-in
 import asyncio as _asyncio
 from contextlib import asynccontextmanager as _asynccontextmanager
+from logging import getLogger as _getLogger
 from typing import AsyncIterator as _AsyncIterator
 from typing import Awaitable as _Awaitable
 from typing import Callable as _Callable
@@ -29,11 +30,14 @@ from websockets.server import WebSocketServer as _WebSocketServer
 from websockets.server import serve as _serve
 
 # internal
+from runtimepy.net import sockname as _sockname
 from runtimepy.net.connection import BinaryMessage, Connection
+from runtimepy.net.manager import ConnectionManager as _ConnectionManager
 
 T = _TypeVar("T", bound="WebsocketConnection")
 ConnectionInit = _Callable[[T], _Awaitable[bool]]
 V = _TypeVar("V")
+LOG = _getLogger(__name__)
 
 
 class WebsocketConnection(Connection):
@@ -87,7 +91,10 @@ class WebsocketConnection(Connection):
 
     @classmethod
     def server_handler(
-        cls: _Type[T], init: ConnectionInit[T], stop_sig: _asyncio.Event = None
+        cls: _Type[T],
+        init: ConnectionInit[T],
+        stop_sig: _asyncio.Event = None,
+        manager: _ConnectionManager = None,
     ) -> _Callable[[_WebSocketServerProtocol], _Awaitable[None]]:
         """
         A wrapper for passing in a websocket handler and initializing a
@@ -98,7 +105,10 @@ class WebsocketConnection(Connection):
             """A handler that runs the callers initialization function."""
             conn = cls(protocol)
             if await init(conn):
-                await conn.process(stop_sig=stop_sig)
+                if manager is not None:
+                    await manager.queue.put(conn)
+                else:
+                    await conn.process(stop_sig=stop_sig)
 
         return _handler
 
@@ -131,11 +141,44 @@ class WebsocketConnection(Connection):
         cls: _Type[T],
         init: ConnectionInit[T],
         stop_sig: _asyncio.Event = None,
+        manager: _ConnectionManager = None,
         **kwargs,
     ) -> _AsyncIterator[_WebSocketServer]:
         """Serve a WebSocket server."""
 
         async with _serve(
-            cls.server_handler(init, stop_sig=stop_sig), **kwargs
+            cls.server_handler(init, stop_sig=stop_sig, manager=manager),
+            **kwargs,
         ) as server:
+            for socket in server.sockets:
+                LOG.info(
+                    "Started WebSocket server listening on '%s'.",
+                    _sockname(socket),
+                )
             yield server
+
+    @classmethod
+    async def app(
+        cls: _Type[T],
+        stop_sig: _asyncio.Event,
+        init: ConnectionInit[T],
+        manager: _ConnectionManager = None,
+        serving_callback: _Callable[[_WebSocketServer], None] = None,
+        **kwargs,
+    ) -> None:
+        """Run a WebSocket-server application."""
+
+        if manager is None:
+            manager = _ConnectionManager()
+
+        async with cls.serve(
+            init, stop_sig=stop_sig, manager=manager, **kwargs
+        ) as server:
+            if serving_callback is not None:
+                serving_callback(server)
+
+            LOG.info("WebSocket Application starting.")
+            await manager.manage(stop_sig)
+            LOG.info("WebSocket Application stopped.")
+
+        LOG.info("WebSocket Server closed.")

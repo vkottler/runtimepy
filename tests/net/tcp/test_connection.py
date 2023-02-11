@@ -13,7 +13,7 @@ from runtimepy.net import sockname
 from runtimepy.net.tcp.connection import TcpConnection
 
 # internal
-from tests.resources import SampleConnectionMixin
+from tests.resources import SampleConnectionMixin, release_after
 
 
 class SampleConnection(TcpConnection, SampleConnectionMixin):
@@ -41,12 +41,6 @@ async def test_tcp_connection_basic():
         ],
         return_when=asyncio.ALL_COMPLETED,
     )
-
-
-async def release_after(sig: asyncio.Event, time: float) -> None:
-    """Disable a connection after a delay."""
-    await asyncio.sleep(time)
-    sig.set()
 
 
 @mark.asyncio
@@ -98,7 +92,6 @@ async def test_tcp_connection_app():
     # some number of connections?
     await asyncio.wait(
         [
-            # release_after(sig, 0.01),
             release_after(sig, 0.1),
             connect(),
             SampleConnection.app(
