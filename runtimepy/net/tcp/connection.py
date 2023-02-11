@@ -129,7 +129,7 @@ class TcpConnection(_Connection, _TransportMixin):
         async with server:
             for socket in server.sockets:
                 LOG.info(
-                    "Started server listening on '%s'.", _sockname(socket)
+                    "Started TCP server listening on '%s'.", _sockname(socket)
                 )
             yield server
 
@@ -158,11 +158,11 @@ class TcpConnection(_Connection, _TransportMixin):
             if serving_callback is not None:
                 serving_callback(server)
 
-            LOG.info("Application starting.")
+            LOG.info("TCP Application starting.")
             await manager.manage(stop_sig)
-            LOG.info("Application stopped.")
+            LOG.info("TCP Application stopped.")
 
-        LOG.info("Server closed.")
+        LOG.info("TCP Server closed.")
 
     @classmethod
     async def create_pair(cls: _Type[T]) -> _Tuple[T, T]:

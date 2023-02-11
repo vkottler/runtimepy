@@ -3,6 +3,7 @@ A module for working with test data.
 """
 
 # built-in
+import asyncio
 from os.path import join
 from pathlib import Path
 
@@ -46,3 +47,9 @@ class SampleConnectionMixin(Connection):
     async def process_binary(self, data: bytes) -> bool:
         """Process a binary frame."""
         return await self.process_text(data.decode())
+
+
+async def release_after(sig: asyncio.Event, time: float) -> None:
+    """Disable a connection after a delay."""
+    await asyncio.sleep(time)
+    sig.set()
