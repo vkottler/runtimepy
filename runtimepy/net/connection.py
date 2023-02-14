@@ -5,7 +5,6 @@ A module implementing a network-connection interface.
 # built-in
 from abc import ABC as _ABC
 import asyncio as _asyncio
-from contextlib import suppress
 from typing import Awaitable as _Awaitable
 from typing import List as _List
 from typing import Optional as _Optional
@@ -13,6 +12,7 @@ from typing import TypeVar as _TypeVar
 from typing import Union as _Union
 
 # third-party
+from vcorelib.asyncio import log_exceptions as _log_exceptions
 from vcorelib.logging import LoggerMixin as _LoggerMixin
 from vcorelib.logging import LoggerType as _LoggerType
 
@@ -106,10 +106,8 @@ class Connection(_LoggerMixin, _ABC):
 
         await _asyncio.wait(self._tasks, return_when=_asyncio.ALL_COMPLETED)
 
-        # Ensure that cancelled tasks have their exceptions retrieved.
-        with suppress(_asyncio.CancelledError):
-            for task in self._tasks:
-                task.exception()
+        # Ensure that tasks have their exceptions retrieved.
+        _log_exceptions(self._tasks, self.logger)
 
         await self.close()
 

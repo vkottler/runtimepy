@@ -9,6 +9,9 @@ import asyncio as _asyncio
 from typing import List as _List
 from typing import Optional as _Optional
 
+# third-party
+from vcorelib.asyncio import log_exceptions as _log_exceptions
+
 # internal
 from runtimepy.net.connection import Connection as _Connection
 
@@ -45,7 +48,7 @@ class ConnectionManager:
             )
 
             # Filter completed tasks out of the working set.
-            next_tasks = [x for x in tasks if not x.done()]
+            next_tasks = _log_exceptions(tasks)
 
             # Filter out disabled connections.
             conns = [x for x in conns if not x.disabled]
