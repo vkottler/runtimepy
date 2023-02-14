@@ -49,7 +49,9 @@ class QueueProtocol(_BinaryMessageQueueMixin, _Protocol):
 
     def connection_made(self, transport: _BaseTransport) -> None:
         """Log the connection establishment."""
-        self.logger = _getLogger(_TransportMixin(transport).logger_name())
+        self.logger = _getLogger(
+            _TransportMixin(transport).logger_name("TCP ")
+        )
         self.logger.info("Connected.")
 
     def connection_lost(self, exc: _Optional[Exception]) -> None:
@@ -76,7 +78,7 @@ class TcpConnection(_Connection, _TransportMixin):
 
         self._protocol = protocol
         self._protocol.conn = self
-        super().__init__(_getLogger(self.logger_name()))
+        super().__init__(_getLogger(self.logger_name("TCP ")))
 
     async def _await_message(self) -> _Optional[_Union[_BinaryMessage, str]]:
         """Await the next message. Return None on error or failure."""

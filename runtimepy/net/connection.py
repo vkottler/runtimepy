@@ -72,11 +72,15 @@ class Connection(_LoggerMixin, _ABC):
         """Determine if this connection is disabled."""
         return not self._enabled
 
+    def disable_extra(self) -> None:
+        """Additional tasks to perform when disabling."""
+
     def disable(self, reason: str) -> None:
         """Disable this connection."""
 
         if self._enabled:
             self.logger.info("Disabling connection: '%s'.", reason)
+            self.disable_extra()
             self._enabled = False
 
             # Cancel tasks.

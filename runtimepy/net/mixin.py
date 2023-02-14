@@ -51,10 +51,10 @@ class TransportMixin:
             addr = _normalize_host(*result)
         return addr
 
-    def logger_name(self) -> str:
+    def logger_name(self, prefix: str = "") -> str:
         """Get a logger name for this connection."""
 
-        name = str(self.local_address)
+        name = prefix + str(self.local_address)
         if self.remote_address is not None:
             name += f" -> {self.remote_address}"
         return name

@@ -98,7 +98,7 @@ async def test_websocket_server_app():
 
                     if idx % 2 == 0:
                         conn.send_text("stop")
-                except ConnectionRefusedError:
+                except (ConnectionRefusedError, OSError):
                     pass
 
             # Wait for connections to close.

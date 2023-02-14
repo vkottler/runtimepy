@@ -2,11 +2,11 @@
     =====================================
     generator=datazen
     version=3.1.0
-    hash=328f14c8c2bc1a1aeb401e59d9f9e5b5
+    hash=f98c92725462ea845a71b0e1db0933f3
     =====================================
 -->
 
-# runtimepy ([0.13.5](https://pypi.org/project/runtimepy/))
+# runtimepy ([0.13.6](https://pypi.org/project/runtimepy/))
 
 [![python](https://img.shields.io/pypi/pyversions/runtimepy.svg)](https://pypi.org/project/runtimepy/)
 ![Build Status](https://github.com/vkottler/runtimepy/workflows/Python%20Package/badge.svg)
@@ -41,7 +41,7 @@ This package is tested on the following platforms:
 # Command-line Options
 
 ```
-$ ./venv3.8/bin/runtimepy -h
+$ ./venv3.7/bin/runtimepy -h
 
 usage: runtimepy [-h] [--version] [-v] [-C DIR] {tui,noop} ...
 
