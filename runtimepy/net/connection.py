@@ -106,10 +106,12 @@ class Connection(_LoggerMixin, _ABC):
 
         await _asyncio.wait(self._tasks, return_when=_asyncio.ALL_COMPLETED)
 
-        # Ensure that cancelled tasks have their exceptions retrieved.
-        with suppress(_asyncio.CancelledError):
-            for task in self._tasks:
-                task.exception()
+        # Ensure that tasks have their exceptions retrieved.
+        for task in self._tasks:
+            with suppress(_asyncio.CancelledError):
+                exc = task.exception()
+                if exc is not None:
+                    self.logger.exception(exc)
 
         await self.close()
 
