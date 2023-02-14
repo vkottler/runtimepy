@@ -63,7 +63,7 @@ class UdpConnection(_Connection, _TransportMixin):
         self._transport: _DatagramTransport = transport
 
         self._protocol = protocol
-        super().__init__(getLogger(self.logger_name()))
+        super().__init__(getLogger(self.logger_name("UDP ")))
         self._protocol.logger = self.logger
 
     @_abstractmethod
