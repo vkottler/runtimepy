@@ -5,10 +5,20 @@ A module for implementing a base class for primitive types.
 # built-in
 import ctypes as _ctypes
 from struct import calcsize as _calcsize
+from struct import pack as _pack
+from struct import unpack as _unpack
+from typing import BinaryIO as _BinaryIO
 from typing import Generic as _Generic
 from typing import Type as _Type
 from typing import TypeVar as _TypeVar
+from typing import Union as _Union
 from typing import cast as _cast
+
+# internal
+from runtimepy.primitives.byte_order import (
+    DEFAULT_BYTE_ORDER as _DEFAULT_BYTE_ORDER,
+)
+from runtimepy.primitives.byte_order import ByteOrder as _ByteOrder
 
 # Integer type aliases.
 Int8Ctype = _ctypes.c_byte
@@ -47,6 +57,8 @@ T = _TypeVar(
     # Boolean type.
     BoolCtype,
 )
+
+PythonPrimitive = _Union[bool, int, float]
 
 
 class PrimitiveType(_Generic[T]):
@@ -98,3 +110,32 @@ class PrimitiveType(_Generic[T]):
     def instance(cls) -> T:
         """Get an instance of this primitive type."""
         return cls.c_type()
+
+    def encode(
+        self,
+        value: PythonPrimitive,
+        byte_order: _ByteOrder = _DEFAULT_BYTE_ORDER,
+    ) -> bytes:
+        """Encode a primitive value."""
+        return _pack(byte_order.fmt + self.format, value)
+
+    def decode(
+        self, data: bytes, byte_order: _ByteOrder = _DEFAULT_BYTE_ORDER
+    ) -> PythonPrimitive:
+        """Decode primitive based on this type."""
+        return _unpack(byte_order.fmt + self.format, data)[0]  # type: ignore
+
+    def read(
+        self, stream: _BinaryIO, byte_order: _ByteOrder = _DEFAULT_BYTE_ORDER
+    ) -> PythonPrimitive:
+        """Read a primitive from a stream based on this type."""
+        return self.decode(stream.read(self.size), byte_order=byte_order)
+
+    def write(
+        self,
+        value: PythonPrimitive,
+        stream: _BinaryIO,
+        byte_order: _ByteOrder = _DEFAULT_BYTE_ORDER,
+    ) -> int:
+        """Write a primitive to a stream based on this type."""
+        return stream.write(self.encode(value, byte_order=byte_order))
