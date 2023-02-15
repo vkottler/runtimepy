@@ -10,11 +10,20 @@ from logging import getLogger as _getLogger
 from vcorelib.logging import LoggerMixin as _LoggerMixin
 from vcorelib.math.analysis.average import MovingAverage as _MovingAverage
 from vcorelib.math.analysis.rate import RateTracker as _RateTracker
+from vcorelib.math.time import nano_str as _nano_str
 
 # internal
 from runtimepy.channel.environment import (
     ChannelEnvironment as _ChannelEnvironment,
 )
+
+
+def rate_str(period_s: float) -> str:
+    """Get a string representing a rate in Hz."""
+
+    period_str = _nano_str(int(period_s * 1e9))
+    freq_str = _nano_str(int((1.0 / period_s) * 1e9), prefix_space=True)
+    return f"{freq_str}Hz ({period_str}s)"
 
 
 class AsyncTask(_LoggerMixin):
@@ -111,7 +120,7 @@ class AsyncTask(_LoggerMixin):
     @property
     def rate_str(self) -> str:
         """Get this periodic's rate as a string."""
-        return f"{1.0 / self.period_s.raw.value:0.3f} Hz"
+        return rate_str(self.period_s.raw.value)
 
     def enable(self) -> None:
         """Enable this task."""
