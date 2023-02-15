@@ -19,8 +19,7 @@ from runtimepy.primitives.byte_order import (
     DEFAULT_BYTE_ORDER as _DEFAULT_BYTE_ORDER,
 )
 from runtimepy.primitives.byte_order import ByteOrder as _ByteOrder
-from runtimepy.primitives.type import PrimitiveTypelike as _PrimitiveTypelike
-from runtimepy.primitives.type import normalize as _normalize
+from runtimepy.primitives.type import AnyPrimitiveType as _AnyPrimitiveType
 
 T = _TypeVar("T", bool, int, float)
 
@@ -34,11 +33,12 @@ class Primitive(_Generic[T]):
     # Use network byte-order by default.
     byte_order: _ByteOrder = _DEFAULT_BYTE_ORDER
 
-    def __init__(self, kind: _PrimitiveTypelike, value: T = None) -> None:
+    # Nominally set the primitive type at the class level.
+    kind: _AnyPrimitiveType
+
+    def __init__(self, value: T = None) -> None:
         """Initialize this primitive."""
 
-        assert kind is not None
-        self.kind = _normalize(kind)
         self.raw = self.kind.instance()
         self.curr_callback: int = 0
         self.callbacks: _Dict[
@@ -53,7 +53,7 @@ class Primitive(_Generic[T]):
 
     def __copy__(self) -> "Primitive[T]":
         """Make a copy of this primitive."""
-        return type(self)(self.kind, value=self.value)
+        return type(self)(value=self.value)
 
     def copy(self) -> "Primitive[T]":
         """A simple wrapper for copy."""

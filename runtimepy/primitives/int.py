@@ -20,9 +20,11 @@ from runtimepy.primitives.type.int import Uint64 as _Uint64
 class Int8Primitive(_Primitive[int]):
     """A simple primitive class for single-precision floating-point."""
 
+    kind = _Int8
+
     def __init__(self, *_, value: int = 0) -> None:
         """Initialize this floating-point primitive."""
-        super().__init__(_Int8, value=value)
+        super().__init__(value=value)
 
 
 Int8 = Int8Primitive
@@ -31,9 +33,11 @@ Int8 = Int8Primitive
 class Int16Primitive(_Primitive[int]):
     """A simple primitive class for single-precision floating-point."""
 
+    kind = _Int16
+
     def __init__(self, *_, value: int = 0) -> None:
         """Initialize this floating-point primitive."""
-        super().__init__(_Int16, value=value)
+        super().__init__(value=value)
 
 
 Int16 = Int16Primitive
@@ -42,9 +46,11 @@ Int16 = Int16Primitive
 class Int32Primitive(_Primitive[int]):
     """A simple primitive class for single-precision floating-point."""
 
+    kind = _Int32
+
     def __init__(self, *_, value: int = 0) -> None:
         """Initialize this floating-point primitive."""
-        super().__init__(_Int32, value=value)
+        super().__init__(value=value)
 
 
 Int32 = Int32Primitive
@@ -53,9 +59,11 @@ Int32 = Int32Primitive
 class Int64Primitive(_Primitive[int]):
     """A simple primitive class for single-precision floating-point."""
 
+    kind = _Int64
+
     def __init__(self, *_, value: int = 0) -> None:
         """Initialize this floating-point primitive."""
-        super().__init__(_Int64, value=value)
+        super().__init__(value=value)
 
 
 Int64 = Int64Primitive
@@ -64,9 +72,11 @@ Int64 = Int64Primitive
 class Uint8Primitive(_Primitive[int]):
     """A simple primitive class for single-precision floating-point."""
 
+    kind = _Uint8
+
     def __init__(self, *_, value: int = 0) -> None:
         """Initialize this floating-point primitive."""
-        super().__init__(_Uint8, value=value)
+        super().__init__(value=value)
 
 
 Uint8 = Uint8Primitive
@@ -75,9 +85,11 @@ Uint8 = Uint8Primitive
 class Uint16Primitive(_Primitive[int]):
     """A simple primitive class for single-precision floating-point."""
 
+    kind = _Uint16
+
     def __init__(self, *_, value: int = 0) -> None:
         """Initialize this floating-point primitive."""
-        super().__init__(_Uint16, value=value)
+        super().__init__(value=value)
 
 
 Uint16 = Uint16Primitive
@@ -86,9 +98,11 @@ Uint16 = Uint16Primitive
 class Uint32Primitive(_Primitive[int]):
     """A simple primitive class for single-precision floating-point."""
 
+    kind = _Uint32
+
     def __init__(self, *_, value: int = 0) -> None:
         """Initialize this floating-point primitive."""
-        super().__init__(_Uint32, value=value)
+        super().__init__(value=value)
 
 
 Uint32 = Uint32Primitive
@@ -97,9 +111,11 @@ Uint32 = Uint32Primitive
 class Uint64Primitive(_Primitive[int]):
     """A simple primitive class for single-precision floating-point."""
 
+    kind = _Uint64
+
     def __init__(self, *_, value: int = 0) -> None:
         """Initialize this floating-point primitive."""
-        super().__init__(_Uint64, value=value)
+        super().__init__(value=value)
 
 
 Uint64 = Uint64Primitive
