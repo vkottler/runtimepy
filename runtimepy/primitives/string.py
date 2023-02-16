@@ -28,7 +28,7 @@ class StringPrimitive:
 
         assert kind.kind.is_integer
         self._value = value
-        self._size = kind(len(self._value))
+        self._size = kind(value=len(self._value))
         self.byte_order = byte_order
 
     def __str__(self) -> str:

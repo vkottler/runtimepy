@@ -21,15 +21,17 @@ def test_string_primitive_basic():
     assert hash(prim)
 
     with BytesIO() as stream:
-        prim.write(stream)
+        assert prim.write(stream) == 6
         stream.seek(0)
 
         assert prim.read(stream) == "test"
 
         stream.seek(0)
         prim.set("Hello, world!")
-        prim.write(stream)
+        assert prim.write(stream) == 15
         stream.seek(0)
 
         new_prim = StringPrimitive.from_stream(stream)
         assert new_prim == "Hello, world!" == str(new_prim)
+
+    assert StringPrimitive("test_test").size == 11
