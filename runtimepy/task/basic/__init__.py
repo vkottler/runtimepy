@@ -12,7 +12,6 @@ from logging import getLogger as _getLogger
 from typing import Optional as _Optional
 
 # third-party
-from vcorelib.asyncio import log_task_exception as _log_task_exception
 from vcorelib.logging import LoggerMixin as _LoggerMixin
 
 # internal
@@ -67,10 +66,8 @@ class PeriodicTask(_LoggerMixin, _ABC):
         # Ensure that a previous version of this task gets cleaned up.
         if self._task is not None:
             if not self._task.done():
-                self._task.cancel()
+                self.enabled = False
                 await self._task
-                _log_task_exception(self._task, logger=self.logger)
-
             self._task = None
 
         self._task = _asyncio.create_task(self._run(period_s))

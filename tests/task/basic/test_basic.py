@@ -47,5 +47,10 @@ async def test_periodic_task_basic():
 
     # Cancel the new task and ensure it stops.
     new_task.cancel()
-    await new_task
-    assert new_task.done()
+    try:
+        await new_task
+        assert new_task.done()
+
+    # This happens on Windows...
+    except asyncio.CancelledError:
+        pass
