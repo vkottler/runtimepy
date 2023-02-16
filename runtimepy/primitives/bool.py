@@ -12,7 +12,7 @@ class BooleanPrimitive(_Primitive[bool]):
 
     kind = _Bool
 
-    def __init__(self, *_, value: bool = False) -> None:
+    def __init__(self, value: bool = False) -> None:
         """Initialize this boolean primitive."""
         super().__init__(value=value)
 

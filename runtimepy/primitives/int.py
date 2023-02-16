@@ -22,7 +22,7 @@ class Int8Primitive(_Primitive[int]):
 
     kind = _Int8
 
-    def __init__(self, *_, value: int = 0) -> None:
+    def __init__(self, value: int = 0) -> None:
         """Initialize this floating-point primitive."""
         super().__init__(value=value)
 
@@ -35,7 +35,7 @@ class Int16Primitive(_Primitive[int]):
 
     kind = _Int16
 
-    def __init__(self, *_, value: int = 0) -> None:
+    def __init__(self, value: int = 0) -> None:
         """Initialize this floating-point primitive."""
         super().__init__(value=value)
 
@@ -48,7 +48,7 @@ class Int32Primitive(_Primitive[int]):
 
     kind = _Int32
 
-    def __init__(self, *_, value: int = 0) -> None:
+    def __init__(self, value: int = 0) -> None:
         """Initialize this floating-point primitive."""
         super().__init__(value=value)
 
@@ -61,7 +61,7 @@ class Int64Primitive(_Primitive[int]):
 
     kind = _Int64
 
-    def __init__(self, *_, value: int = 0) -> None:
+    def __init__(self, value: int = 0) -> None:
         """Initialize this floating-point primitive."""
         super().__init__(value=value)
 
@@ -74,7 +74,7 @@ class Uint8Primitive(_Primitive[int]):
 
     kind = _Uint8
 
-    def __init__(self, *_, value: int = 0) -> None:
+    def __init__(self, value: int = 0) -> None:
         """Initialize this floating-point primitive."""
         super().__init__(value=value)
 
@@ -87,7 +87,7 @@ class Uint16Primitive(_Primitive[int]):
 
     kind = _Uint16
 
-    def __init__(self, *_, value: int = 0) -> None:
+    def __init__(self, value: int = 0) -> None:
         """Initialize this floating-point primitive."""
         super().__init__(value=value)
 
@@ -100,7 +100,7 @@ class Uint32Primitive(_Primitive[int]):
 
     kind = _Uint32
 
-    def __init__(self, *_, value: int = 0) -> None:
+    def __init__(self, value: int = 0) -> None:
         """Initialize this floating-point primitive."""
         super().__init__(value=value)
 
@@ -113,7 +113,7 @@ class Uint64Primitive(_Primitive[int]):
 
     kind = _Uint64
 
-    def __init__(self, *_, value: int = 0) -> None:
+    def __init__(self, value: int = 0) -> None:
         """Initialize this floating-point primitive."""
         super().__init__(value=value)
 

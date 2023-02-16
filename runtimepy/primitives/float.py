@@ -14,7 +14,7 @@ class HalfPrimitive(_Primitive[float]):
 
     kind = _Half
 
-    def __init__(self, *_, value: float = 0.0) -> None:
+    def __init__(self, value: float = 0.0) -> None:
         """Initialize this floating-point primitive."""
         super().__init__(value=value)
 
@@ -27,7 +27,7 @@ class FloatPrimitive(_Primitive[float]):
 
     kind = _Float
 
-    def __init__(self, *_, value: float = 0.0) -> None:
+    def __init__(self, value: float = 0.0) -> None:
         """Initialize this floating-point primitive."""
         super().__init__(value=value)
 
@@ -40,7 +40,7 @@ class DoublePrimitive(_Primitive[float]):
 
     kind = _Double
 
-    def __init__(self, *_, value: float = 0.0) -> None:
+    def __init__(self, value: float = 0.0) -> None:
         """Initialize this floating-point primitive."""
         super().__init__(value=value)
 
