@@ -31,6 +31,30 @@ class StringPrimitive:
         self._size = kind(len(self._value))
         self.byte_order = byte_order
 
+    def __str__(self) -> str:
+        """Get this instance as a string."""
+        return self._value
+
+    def __hash__(self) -> int:
+        """Get a hash for this instance."""
+        return hash(self._value)
+
+    def __eq__(self, other) -> bool:
+        """Determine if this instance is equivalent to another."""
+        return self._value == str(other)
+
+    @staticmethod
+    def from_stream(
+        stream: _BinaryIO,
+        kind: _Type[_Primitive[int]] = _Uint16,
+        byte_order: _ByteOrder = _DEFAULT_BYTE_ORDER,
+    ) -> "StringPrimitive":
+        """Create a new string primitive from a stream."""
+
+        result = StringPrimitive(kind=kind, byte_order=byte_order)
+        result.read(stream)
+        return result
+
     @property
     def value(self) -> str:
         """Get the value of this string."""
