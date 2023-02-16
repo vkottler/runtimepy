@@ -8,6 +8,7 @@ from __future__ import annotations
 from abc import ABC as _ABC
 from abc import abstractmethod as _abstractmethod
 import asyncio as _asyncio
+from contextlib import suppress
 from logging import getLogger as _getLogger
 from typing import Optional as _Optional
 
@@ -66,8 +67,11 @@ class PeriodicTask(_LoggerMixin, _ABC):
         # Ensure that a previous version of this task gets cleaned up.
         if self._task is not None:
             if not self._task.done():
+                # On Windows, setting enabled False here is not enough.
                 self.enabled = False
-                await self._task
+                self._task.cancel()
+                with suppress(_asyncio.CancelledError):
+                    await self._task
             self._task = None
 
         self._task = _asyncio.create_task(self._run(period_s))
