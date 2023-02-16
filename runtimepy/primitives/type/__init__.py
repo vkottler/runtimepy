@@ -35,7 +35,7 @@ from runtimepy.primitives.type.int import (
     Uint64Type,
 )
 
-AnyPrimitive = _Union[
+AnyPrimitiveType = _Union[
     Int8Type,
     Int16Type,
     Int32Type,
@@ -50,7 +50,7 @@ AnyPrimitive = _Union[
     BooleanType,
 ]
 
-PrimitiveTypes: _Dict[str, AnyPrimitive] = {
+PrimitiveTypes: _Dict[str, AnyPrimitiveType] = {
     # Integer types.
     Int8.name: Int8,
     Int16.name: Int16,
@@ -68,10 +68,10 @@ PrimitiveTypes: _Dict[str, AnyPrimitive] = {
     Bool.name: Bool,
 }
 
-PrimitiveTypelike = _Union[str, AnyPrimitive]
+PrimitiveTypelike = _Union[str, AnyPrimitiveType]
 
 
-def normalize(value: PrimitiveTypelike) -> AnyPrimitive:
+def normalize(value: PrimitiveTypelike) -> AnyPrimitiveType:
     """Normalize a primitive type or string into a primitive type."""
 
     if isinstance(value, str):

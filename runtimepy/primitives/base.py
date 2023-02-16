@@ -5,8 +5,6 @@ A module implementing a base, primitive-type storage entity.
 # built-in
 from copy import copy as _copy
 from math import isclose as _isclose
-from struct import pack as _pack
-from struct import unpack as _unpack
 from typing import BinaryIO as _BinaryIO
 from typing import Callable as _Callable
 from typing import Dict as _Dict
@@ -19,8 +17,7 @@ from runtimepy.primitives.byte_order import (
     DEFAULT_BYTE_ORDER as _DEFAULT_BYTE_ORDER,
 )
 from runtimepy.primitives.byte_order import ByteOrder as _ByteOrder
-from runtimepy.primitives.type import PrimitiveTypelike as _PrimitiveTypelike
-from runtimepy.primitives.type import normalize as _normalize
+from runtimepy.primitives.type import AnyPrimitiveType as _AnyPrimitiveType
 
 T = _TypeVar("T", bool, int, float)
 
@@ -34,11 +31,12 @@ class Primitive(_Generic[T]):
     # Use network byte-order by default.
     byte_order: _ByteOrder = _DEFAULT_BYTE_ORDER
 
-    def __init__(self, kind: _PrimitiveTypelike, value: T = None) -> None:
+    # Nominally set the primitive type at the class level.
+    kind: _AnyPrimitiveType
+
+    def __init__(self, value: T = None) -> None:
         """Initialize this primitive."""
 
-        assert kind is not None
-        self.kind = _normalize(kind)
         self.raw = self.kind.instance()
         self.curr_callback: int = 0
         self.callbacks: _Dict[
@@ -53,7 +51,7 @@ class Primitive(_Generic[T]):
 
     def __copy__(self) -> "Primitive[T]":
         """Make a copy of this primitive."""
-        return type(self)(self.kind, value=self.value)
+        return type(self)(value=self.value)
 
     def copy(self) -> "Primitive[T]":
         """A simple wrapper for copy."""
@@ -89,7 +87,7 @@ class Primitive(_Generic[T]):
         curr: T = self.raw.value  # type: ignore
 
         # Call callbacks if the value has changed.
-        if curr != value and self.callbacks:
+        if self.callbacks and curr != value:
             to_remove = []
             for ident, (callback, once) in self.callbacks.items():
                 callback(curr, value)
@@ -135,7 +133,7 @@ class Primitive(_Generic[T]):
         """Convert this instance to a byte array."""
         if byte_order is None:
             byte_order = self.byte_order
-        return _pack(byte_order.fmt + self.kind.format, self.value)
+        return self.kind.encode(self.value, byte_order=byte_order)
 
     def __bytes__(self) -> bytes:
         """Convert this instance to a byte array."""
@@ -155,7 +153,9 @@ class Primitive(_Generic[T]):
         if byte_order is None:
             byte_order = self.byte_order
 
-        self.value = _unpack(byte_order.fmt + self.kind.format, data)[0]
+        self.value = self.kind.decode(  # type: ignore
+            data, byte_order=byte_order
+        )
         return self.value
 
     def from_stream(
@@ -164,3 +164,41 @@ class Primitive(_Generic[T]):
         """Update this primitive from a stream and return the new value."""
 
         return self.update(stream.read(self.kind.size), byte_order=byte_order)
+
+    @classmethod
+    def encode(cls, value: T, byte_order: _ByteOrder = None) -> bytes:
+        """Create a bytes instance based on this primitive type."""
+        if byte_order is None:
+            byte_order = cls.byte_order
+        return cls.kind.encode(value, byte_order=byte_order)
+
+    @classmethod
+    def decode(cls, data: bytes, byte_order: _ByteOrder = None) -> T:
+        """Decode a primitive of this type from provided data."""
+
+        if byte_order is None:
+            byte_order = cls.byte_order
+
+        return cls.kind.decode(data, byte_order=byte_order)  # type: ignore
+
+    @classmethod
+    def read(cls, stream: _BinaryIO, byte_order: _ByteOrder = None) -> T:
+        """
+        Read a primitive from the provided stream based on this primitive type.
+        """
+
+        if byte_order is None:
+            byte_order = cls.byte_order
+
+        return cls.kind.read(stream, byte_order=byte_order)  # type: ignore
+
+    @classmethod
+    def write(
+        cls, value: T, stream: _BinaryIO, byte_order: _ByteOrder = None
+    ) -> int:
+        """Write a primitive to the stream based on this type."""
+
+        if byte_order is None:
+            byte_order = cls.byte_order
+
+        return cls.kind.write(value, stream, byte_order=byte_order)

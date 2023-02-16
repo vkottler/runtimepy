@@ -10,9 +10,11 @@ from runtimepy.primitives.type.bool import Bool as _Bool
 class BooleanPrimitive(_Primitive[bool]):
     """A simple primitive class for booleans."""
 
+    kind = _Bool
+
     def __init__(self, *_, value: bool = False) -> None:
         """Initialize this boolean primitive."""
-        super().__init__(_Bool, value=value)
+        super().__init__(value=value)
 
     def toggle(self) -> None:
         """Toggle the underlying value."""

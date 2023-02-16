@@ -12,9 +12,11 @@ from runtimepy.primitives.type.float import Half as _Half
 class HalfPrimitive(_Primitive[float]):
     """A simple primitive class for single-precision floating-point."""
 
+    kind = _Half
+
     def __init__(self, *_, value: float = 0.0) -> None:
         """Initialize this floating-point primitive."""
-        super().__init__(_Half, value=value)
+        super().__init__(value=value)
 
 
 Half = HalfPrimitive
@@ -23,9 +25,11 @@ Half = HalfPrimitive
 class FloatPrimitive(_Primitive[float]):
     """A simple primitive class for single-precision floating-point."""
 
+    kind = _Float
+
     def __init__(self, *_, value: float = 0.0) -> None:
         """Initialize this floating-point primitive."""
-        super().__init__(_Float, value=value)
+        super().__init__(value=value)
 
 
 Float = FloatPrimitive
@@ -34,9 +38,11 @@ Float = FloatPrimitive
 class DoublePrimitive(_Primitive[float]):
     """A simple primitive class for double-precision floating-point."""
 
+    kind = _Double
+
     def __init__(self, *_, value: float = 0.0) -> None:
         """Initialize this floating-point primitive."""
-        super().__init__(_Double, value=value)
+        super().__init__(value=value)
 
 
 Double = DoublePrimitive

@@ -25,6 +25,7 @@ from runtimepy.primitives.int import Uint8 as _Uint8
 from runtimepy.primitives.int import Uint16 as _Uint16
 from runtimepy.primitives.int import Uint32 as _Uint32
 from runtimepy.primitives.int import Uint64 as _Uint64
+from runtimepy.primitives.type import AnyPrimitiveType as _AnyPrimitiveType
 from runtimepy.registry.item import RegistryItem as _RegistryItem
 
 
@@ -39,6 +40,11 @@ class Channel(_RegistryItem, _EnumMixin, _Generic[_T]):
         """Get this channel as a boolean."""
         return bool(self.raw)
 
+    @property
+    def type(self) -> _AnyPrimitiveType:
+        """Get the underlying primitive type of this channel."""
+        return self.raw.kind
+
     def init(self, data: _JsonObject) -> None:
         """Perform implementation-specific initialization."""
 
@@ -46,7 +52,6 @@ class Channel(_RegistryItem, _EnumMixin, _Generic[_T]):
 
         # This is the underlying storage entity for this channel.
         self.raw: _T = _cast(_T, _normalize(_cast(str, data["type"]))())
-        self.type = self.raw.kind
 
         # Whether or not this channel should accept commands.
         self.commandable: bool = _cast(bool, data["commandable"])
