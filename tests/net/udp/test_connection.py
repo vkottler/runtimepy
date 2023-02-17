@@ -41,6 +41,9 @@ async def test_udp_connection_basic():
 
     conn1, conn2 = await SampleConnection.create_pair()
 
+    assert conn1.socket
+    assert conn2.socket
+
     conn1.send_text("Hello!")
     conn2.send_text("Hello!")
     for idx in range(10):

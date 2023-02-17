@@ -6,7 +6,9 @@ from __future__ import annotations
 
 # built-in
 import asyncio as _asyncio
+from socket import SocketType as _SocketType
 from typing import Optional as _Optional
+from typing import cast as _cast
 
 # internal
 from runtimepy.net import IpHost as _IpHost
@@ -41,6 +43,11 @@ class TransportMixin:
         # sendto to be required. Save a copy of the remote address (may be
         # None).
         self.remote_address = self._remote_address()
+
+    @property
+    def socket(self) -> _SocketType:
+        """Get this instance's underlying socket."""
+        return _cast(_SocketType, self._transport.get_extra_info("socket"))
 
     def _remote_address(self) -> _Optional[_IpHost]:
         """Get a possible remote address for this connection."""
