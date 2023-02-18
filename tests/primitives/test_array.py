@@ -136,30 +136,47 @@ def test_primitive_array_indexing():
     """Test the correctness of various index lookup functions."""
 
     array = sample_array()
-    assert array.size == 42
 
-    # Check index->bytes.
-    assert array.byte_at_index(0) == 0
-    assert array.byte_at_index(1) == 1
-    assert array.byte_at_index(2) == 2
-    assert array.byte_at_index(3) == 4
-    assert array.byte_at_index(4) == 6
-    assert array.byte_at_index(5) == 10
-    assert array.byte_at_index(6) == 14
-    assert array.byte_at_index(7) == 22
-    assert array.byte_at_index(8) == 30
-    assert array.byte_at_index(9) == 34
-    assert array.byte_at_index(10) == array.size
+    for _ in range(3):
+        assert array.size == 42
 
-    # Check bytes->index.
-    assert array.index_at_byte(0) == 0
-    assert array.index_at_byte(1) == 1
-    assert array.index_at_byte(2) == 2
-    assert array.index_at_byte(4) == 3
-    assert array.index_at_byte(6) == 4
-    assert array.index_at_byte(10) == 5
-    assert array.index_at_byte(14) == 6
-    assert array.index_at_byte(22) == 7
-    assert array.index_at_byte(30) == 8
-    assert array.index_at_byte(34) == 9
-    assert array.index_at_byte(array.size) == 10
+        # Check index->bytes.
+        assert array.byte_at_index(0) == 0
+        assert array.byte_at_index(1) == 1
+        assert array.byte_at_index(2) == 2
+        assert array.byte_at_index(3) == 4
+        assert array.byte_at_index(4) == 6
+        assert array.byte_at_index(5) == 10
+        assert array.byte_at_index(6) == 14
+        assert array.byte_at_index(7) == 22
+        assert array.byte_at_index(8) == 30
+        assert array.byte_at_index(9) == 34
+        assert array.byte_at_index(10) == array.size
+
+        # Check bytes->index.
+        assert array.index_at_byte(0) == 0
+        assert array.index_at_byte(1) == 1
+        assert array.index_at_byte(2) == 2
+        assert array.index_at_byte(4) == 3
+        assert array.index_at_byte(6) == 4
+        assert array.index_at_byte(10) == 5
+        assert array.index_at_byte(14) == 6
+        assert array.index_at_byte(22) == 7
+        assert array.index_at_byte(30) == 8
+        assert array.index_at_byte(34) == 9
+        assert array.index_at_byte(array.size) == 10
+
+        array.reset()
+        for item in [
+            "bool",
+            "bool",
+            "int16",
+            "int16",
+            "int32",
+            "int32",
+            "int64",
+            "int64",
+            "float",
+            "double",
+        ]:
+            array.add(create(item))

@@ -42,7 +42,7 @@ class PrimitiveArray:
 
         self._primitives: _List[_AnyPrimitive] = []
         self.byte_order = byte_order
-        self._format: str = byte_order.fmt
+        self._format: str = self.byte_order.fmt
         self.size: int = 0
 
         # Keep track of a quick lookup for converting between element indices
@@ -62,6 +62,17 @@ class PrimitiveArray:
             fragments = []
         for spec in fragments:
             self._add_fragment(spec)
+
+    def reset(self) -> None:
+        """Reset this array so it's empty."""
+
+        self._primitives = []
+        self._format = self.byte_order.fmt
+        self.size = 0
+        self._bytes_to_index = {0: 0}
+        self._index_to_bytes = {0: 0}
+        self._fragments = []
+        self._fragment_specs = []
 
     @property
     def num_fragments(self) -> int:
