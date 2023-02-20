@@ -2,7 +2,7 @@
     =====================================
     generator=datazen
     version=3.1.0
-    hash=784f4bd237212fda23ac3b89194c7a59
+    hash=41abbd8032ebe86e2d91493354987edf
     =====================================
 -->
 
@@ -41,7 +41,7 @@ This package is tested on the following platforms:
 # Command-line Options
 
 ```
-$ ./venv3.7/bin/runtimepy -h
+$ ./venv3.8/bin/runtimepy -h
 
 usage: runtimepy [-h] [--version] [-v] [-C DIR] {tui,noop} ...
 
