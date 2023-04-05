@@ -110,15 +110,18 @@ async def test_websocket_server_app():
 
     await asyncio.wait(
         [
-            connect(),
-            release_after(sig, 0.1),
-            SampleConnection.app(
-                sig,
-                conn_init,
-                serving_callback=serve_cb,
-                host="0.0.0.0",
-                port=0,
-            ),
+            asyncio.create_task(x)
+            for x in [
+                connect(),
+                release_after(sig, 0.1),
+                SampleConnection.app(
+                    sig,
+                    conn_init,
+                    serving_callback=serve_cb,
+                    host="0.0.0.0",
+                    port=0,
+                ),
+            ]
         ],
         return_when=asyncio.ALL_COMPLETED,
     )
