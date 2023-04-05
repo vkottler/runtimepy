@@ -92,10 +92,12 @@ async def test_tcp_connection_app():
     # some number of connections?
     await asyncio.wait(
         [
-            release_after(sig, 0.1),
-            connect(),
-            SampleConnection.app(
-                sig, callback=app, serving_callback=serve_cb, port=0
+            asyncio.create_task(release_after(sig, 0.1)),
+            asyncio.create_task(connect()),
+            asyncio.create_task(
+                SampleConnection.app(
+                    sig, callback=app, serving_callback=serve_cb, port=0
+                )
             ),
         ],
         return_when=asyncio.ALL_COMPLETED,
