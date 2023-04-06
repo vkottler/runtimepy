@@ -4,6 +4,7 @@ Code enumerations relevant to the telnet (RFC 854) protocol.
 
 # built-in
 from enum import IntEnum as _IntEnum
+from typing import BinaryIO as _BinaryIO
 
 
 class TelnetCode(_IntEnum):
@@ -106,6 +107,24 @@ class TelnetNvt(_IntEnum):
     # Moves the printer to the top of the next page, keeping the same
     # horizontal position.
     FF = 12
+
+    def to_stream(self, stream: _BinaryIO) -> bool:
+        """
+        Add text to the provided stream based on this NVT instance. Return
+        whether or not any data was written to the stream.
+        """
+
+        result = False
+
+        if (
+            self is TelnetNvt.CR
+            or self is TelnetNvt.LF
+            or self is TelnetNvt.HT
+        ):
+            stream.write(bytes([self]))
+            result = True
+
+        return result
 
     @staticmethod
     def is_nvt(val: int) -> bool:

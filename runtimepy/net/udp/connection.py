@@ -33,13 +33,17 @@ class UdpQueueProtocol(_DatagramProtocol):
 
     def __init__(self) -> None:
         """Initialize this protocol."""
+
         self.queue: _asyncio.Queue[
             _Tuple[_BinaryMessage, _Tuple[str, int]]
         ] = _asyncio.Queue()
+        self.queue_hwm: int = 0
 
     def datagram_received(self, data: bytes, addr: _Tuple[str, int]) -> None:
         """Handle incoming data."""
+
         self.queue.put_nowait((data, addr))
+        self.queue_hwm = max(self.queue_hwm, self.queue.qsize())
 
     def error_received(self, exc: Exception) -> None:
         """Log any received errors."""
@@ -129,9 +133,7 @@ class UdpConnection(_Connection, _TransportMixin):
 
         while self._enabled:
             # Attempt to get the next message.
-            message = await self._cancelled_handler(
-                self._protocol.queue.get(), "reading cancelled"
-            )
+            message = await self._protocol.queue.get()
             result = False
 
             if message is not None:
