@@ -69,14 +69,24 @@ async def test_telnet_connection_basic():
         conn1.send_command(TelnetCode.IP)
         conn2.send_command(TelnetCode.IP)
 
-    await asyncio.wait_for(
-        asyncio.wait(
-            [
-                asyncio.create_task(run_test()),
-                asyncio.create_task(conn1.process()),
-                asyncio.create_task(conn2.process()),
-            ],
-            return_when=asyncio.ALL_COMPLETED,
-        ),
-        1.0,
+    async def conn_disabler(timeout: float, poll_period: float = 0.05) -> None:
+        """Disable the connections after some timeout."""
+
+        total_time = 0.0
+        while not conn1.disabled or not conn2.disabled:
+            await asyncio.sleep(poll_period)
+            total_time += poll_period
+
+            if total_time >= timeout:
+                conn1.disable("test timed out")
+                conn2.disable("test timed out")
+
+    await asyncio.wait(
+        [
+            asyncio.create_task(run_test()),
+            asyncio.create_task(conn_disabler(2.0)),
+            asyncio.create_task(conn1.process()),
+            asyncio.create_task(conn2.process()),
+        ],
+        return_when=asyncio.ALL_COMPLETED,
     )

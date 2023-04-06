@@ -67,44 +67,42 @@ class Telnet(_TcpConnection):
             text = stack.enter_context(_BytesIO())
             stream = stack.enter_context(_BytesIO(data))
 
-            eof = False
-
-            while not eof:
+            while True:
                 data = stream.read(1)
+                if len(data) == 0:
+                    break
 
-                eof = len(data) == 0
-                if not eof:
-                    last_val = val
-                    val = data[0]
+                last_val = val
+                val = data[0]
 
-                    if processing_option:
-                        await self.process_option(
-                            TelnetCode(last_val), val, stream
-                        )
-                        processing_option = False
+                if processing_option:
+                    await self.process_option(
+                        TelnetCode(last_val), val, stream
+                    )
+                    processing_option = False
 
-                    elif processing_command:
-                        if TelnetCode.is_option_code(val):
-                            processing_option = True
-                        else:
-                            # If 'IAC' appears twice in a row, it's being
-                            # escaped.
-                            if val == TelnetCode.IAC:
-                                text.write(data)
-                            else:
-                                await self.process_command(TelnetCode(val))
-
-                        processing_command = False
-
-                    elif val == TelnetCode.IAC:
-                        processing_command = True
-
-                    elif TelnetNvt.is_nvt(val):
-                        await self.handle_nvt(TelnetNvt(val))
-
-                    # Forward byte to the data stream.
+                elif processing_command:
+                    if TelnetCode.is_option_code(val):
+                        processing_option = True
                     else:
-                        text.write(data)
+                        # If 'IAC' appears twice in a row, it's being
+                        # escaped.
+                        if val == TelnetCode.IAC:
+                            text.write(data)
+                        else:
+                            await self.process_command(TelnetCode(val))
+
+                    processing_command = False
+
+                elif val == TelnetCode.IAC:
+                    processing_command = True
+
+                elif TelnetNvt.is_nvt(val):
+                    await self.handle_nvt(TelnetNvt(val))
+
+                # Forward byte to the data stream.
+                else:
+                    text.write(data)
 
             # Process the message that remains as data.
             result = await self.process_telnet_message(text.getvalue())
