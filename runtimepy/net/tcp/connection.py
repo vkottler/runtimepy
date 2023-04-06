@@ -45,10 +45,13 @@ class QueueProtocol(_BinaryMessageQueueMixin, _Protocol):
 
     def data_received(self, data: _BinaryMessage) -> None:
         """Handle incoming data."""
+
         self.queue.put_nowait(data)
+        self.queue_hwm = max(self.queue_hwm, self.queue.qsize())
 
     def connection_made(self, transport: _BaseTransport) -> None:
         """Log the connection establishment."""
+
         self.logger = _getLogger(
             _TransportMixin(transport).logger_name("TCP ")
         )
@@ -56,6 +59,7 @@ class QueueProtocol(_BinaryMessageQueueMixin, _Protocol):
 
     def connection_lost(self, exc: _Optional[Exception]) -> None:
         """Log the disconnection."""
+
         msg = "Disconnected." if exc is None else f"Disconnected: '{exc}'."
         self.logger.info(msg)
         self.conn.disable("disconnected")

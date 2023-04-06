@@ -104,7 +104,7 @@ async def test_websocket_server_app():
             # Wait for connections to close.
             assert conns
             await asyncio.wait(
-                [conn.process() for conn in conns],
+                [asyncio.create_task(conn.process()) for conn in conns],
                 return_when=asyncio.ALL_COMPLETED,
             )
 

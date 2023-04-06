@@ -29,6 +29,30 @@ class SampleConnection(UdpConnection, SampleConnectionMixin):
         return await self.process_binary(data)
 
 
+class SampleConnectionInitFail(SampleConnection):
+    """Overrides the connection initialization to fail."""
+
+    async def async_init(self) -> bool:
+        """A runtime initialization routine (executes during 'process')."""
+        return False
+
+
+@mark.asyncio
+async def test_udp_connection_init_fail():
+    """Test basic interactions with a UDP connection."""
+
+    conn1, conn2 = await SampleConnectionInitFail.create_pair()
+
+    # Should complete immediately.
+    await asyncio.wait(
+        [
+            asyncio.create_task(conn1.process()),
+            asyncio.create_task(conn2.process()),
+        ],
+        return_when=asyncio.ALL_COMPLETED,
+    )
+
+
 async def close_after(conn: Connection, time: float) -> None:
     """Disable a connection after a delay."""
     await asyncio.sleep(time)

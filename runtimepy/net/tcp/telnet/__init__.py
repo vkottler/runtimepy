@@ -17,7 +17,14 @@ from runtimepy.net.tcp.telnet.codes import (
     TelnetNvt,
 )
 
-__all__ = ["TelnetCode", "TelnetNvt", "Telnet", "NEWLINE", "CARRIAGE_RETURN"]
+__all__ = [
+    "TelnetCode",
+    "TelnetNvt",
+    "Telnet",
+    "BasicTelnet",
+    "NEWLINE",
+    "CARRIAGE_RETURN",
+]
 
 
 class Telnet(_TcpConnection):
@@ -55,6 +62,8 @@ class Telnet(_TcpConnection):
 
     async def process_binary(self, data: bytes) -> bool:
         """Process a binary frame."""
+
+        result = True
 
         last_val = 0
         val = 0
@@ -98,13 +107,43 @@ class Telnet(_TcpConnection):
                     processing_command = True
 
                 elif TelnetNvt.is_nvt(val):
-                    await self.handle_nvt(TelnetNvt(val))
+                    nvt = TelnetNvt(val)
+                    if not nvt.to_stream(text):
+                        await self.handle_nvt(TelnetNvt(val))
 
                 # Forward byte to the data stream.
                 else:
                     text.write(data)
 
             # Process the message that remains as data.
-            result = await self.process_telnet_message(text.getvalue())
+            if text.tell() > 0:
+                result = await self.process_telnet_message(text.getvalue())
 
         return result
+
+
+class BasicTelnet(Telnet):
+    """A simple telnet implementation."""
+
+    async def process_text(self, data: str) -> bool:
+        """Process a text frame."""
+
+        self.logger.info("Text: '%s'.", data)
+        return True
+
+    async def process_command(self, code: TelnetCode) -> None:
+        """Process a telnet command."""
+        self.logger.info("Command: %s (%d).", code, code)
+
+        if code is TelnetCode.IP:
+            self.disable("Interrupt Process")
+
+    async def handle_nvt(self, action: TelnetNvt) -> None:
+        """Handle a signal for the network virtual-terminal."""
+        self.logger.info("NVT signal: %s (%d).", action, action)
+
+    async def process_option(
+        self, code: TelnetCode, option: int, _: _BinaryIO
+    ) -> None:
+        """Process a telnet option."""
+        self.logger.info("Option: %s (%d), %d", code, code, option)

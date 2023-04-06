@@ -22,6 +22,7 @@ class BinaryMessageQueueMixin:
     def __init__(self) -> None:
         """Initialize this protocol."""
         self.queue: _asyncio.Queue[_BinaryMessage] = _asyncio.Queue()
+        self.queue_hwm: int = 0
 
 
 class TransportMixin:

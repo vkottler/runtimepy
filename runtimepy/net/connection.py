@@ -5,7 +5,6 @@ A module implementing a network-connection interface.
 # built-in
 from abc import ABC as _ABC
 import asyncio as _asyncio
-from typing import Awaitable as _Awaitable
 from typing import List as _List
 from typing import Optional as _Optional
 from typing import TypeVar as _TypeVar
@@ -28,13 +27,21 @@ class Connection(_LoggerMixin, _ABC):
 
         super().__init__(logger=logger)
         self._enabled = True
+
         self._text_messages: _asyncio.Queue[str] = _asyncio.Queue()
+        self.tx_text_hwm: int = 0
         self._binary_messages: _asyncio.Queue[BinaryMessage] = _asyncio.Queue()
+        self.tx_binary_hwm: int = 0
+
         self._tasks: _List[_asyncio.Task[None]] = []
         self.init()
 
     def init(self) -> None:
         """Initialize this instance."""
+
+    async def async_init(self) -> bool:
+        """A runtime initialization routine (executes during 'process')."""
+        return True
 
     async def process_text(self, data: str) -> bool:
         """Process a text frame."""
@@ -61,11 +68,17 @@ class Connection(_LoggerMixin, _ABC):
 
     def send_text(self, data: str) -> None:
         """Enqueue a text message to send."""
+
         self._text_messages.put_nowait(data)
+        self.tx_text_hwm = max(self.tx_text_hwm, self._text_messages.qsize())
 
     def send_binary(self, data: BinaryMessage) -> None:
         """Enqueue a binary message tos end."""
+
         self._binary_messages.put_nowait(data)
+        self.tx_binary_hwm = max(
+            self.tx_binary_hwm, self._binary_messages.qsize()
+        )
 
     @property
     def disabled(self) -> bool:
@@ -93,6 +106,12 @@ class Connection(_LoggerMixin, _ABC):
         await stop_sig.wait()
         self.disable("stop signal")
 
+    async def _async_init(self) -> None:
+        """Run this connection's initialization routine."""
+
+        if not await self.async_init():
+            self.disable("init failed")
+
     async def process(self, stop_sig: _asyncio.Event = None) -> None:
         """
         Process tasks for this connection while the connection is active.
@@ -102,6 +121,7 @@ class Connection(_LoggerMixin, _ABC):
             _asyncio.create_task(self._process_read()),
             _asyncio.create_task(self._process_write_text()),
             _asyncio.create_task(self._process_write_binary()),
+            _asyncio.create_task(self._async_init()),
         ]
 
         # Allow a stop signal to also disable the connection.
@@ -120,9 +140,7 @@ class Connection(_LoggerMixin, _ABC):
 
         while self._enabled:
             # Attempt to get the next message.
-            message = await self._cancelled_handler(
-                self._await_message(), "reading cancelled"
-            )
+            message = await self._await_message()
             result = False
 
             if message is not None:
@@ -143,49 +161,27 @@ class Connection(_LoggerMixin, _ABC):
     async def _process_write_text(self) -> None:
         """Process outgoing text messages."""
 
-        cancel_msg = "writing cancelled"
         queue: _asyncio.Queue[str] = self._text_messages
 
         while self._enabled:
             # Attempt to get the next message.
-            data = await self._cancelled_handler(queue.get(), cancel_msg)
+            data = await queue.get()
 
             # Process it.
             if data is not None:
-                await self._cancelled_handler(
-                    self._send_text_message(data), cancel_msg
-                )
+                await self._send_text_message(data)
                 queue.task_done()
 
     async def _process_write_binary(self) -> None:
         """Process outgoing binary messages."""
 
-        cancel_msg = "writing cancelled"
         queue: _asyncio.Queue[BinaryMessage] = self._binary_messages
 
         while self._enabled:
             # Attempt to get the next message.
-            data = await self._cancelled_handler(queue.get(), cancel_msg)
+            data = await queue.get()
 
             # Process it.
             if data is not None:
-                await self._cancelled_handler(
-                    self._send_binay_message(data), cancel_msg
-                )
+                await self._send_binay_message(data)
                 queue.task_done()
-
-    async def _cancelled_handler(
-        self, task: _Awaitable[T], disable_message: str = None
-    ) -> _Optional[T]:
-        """
-        A simple wrapper for handling cancellations from the event loop. Pass
-        a disable message if the cancellation should disable the connection.
-        """
-
-        result = None
-        try:
-            result = await task
-        except _asyncio.CancelledError:
-            if disable_message is not None:
-                self.disable(disable_message)
-        return result
