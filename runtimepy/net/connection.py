@@ -112,6 +112,8 @@ class Connection(_LoggerMixin, _ABC):
 
         if not await self.async_init():
             self.disable("init failed")
+        else:
+            self.logger.info("Initialized.")
         self.initialized.set()
 
     async def process(self, stop_sig: _asyncio.Event = None) -> None:

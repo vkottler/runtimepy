@@ -27,7 +27,11 @@ class ConnectionManager:
     async def manage(self, stop_sig: _asyncio.Event) -> None:
         """Handle incoming connections until the stop signal is set."""
 
-        assert not self._running
+        # Allow this method to be reentrant.
+        if self._running:
+            await stop_sig.wait()
+            return
+
         self._running = True
 
         stop_sig_task = _asyncio.create_task(stop_sig.wait())

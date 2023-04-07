@@ -5,7 +5,6 @@ Test the 'net.udp.connection' module.
 # built-in
 import asyncio
 import socket
-from typing import Tuple
 
 # third-party
 from pytest import mark
@@ -13,23 +12,12 @@ from pytest import mark
 # module under test
 from runtimepy.net import get_free_socket
 from runtimepy.net.connection import Connection
-from runtimepy.net.udp.connection import UdpConnection
 
 # internal
-from tests.resources import SampleConnectionMixin
+from tests.resources import SampleUdpConnection
 
 
-class SampleConnection(UdpConnection, SampleConnectionMixin):
-    """A sample connection class."""
-
-    async def process_datagram(
-        self, data: bytes, addr: Tuple[str, int]
-    ) -> bool:
-        """Process a datagram."""
-        return await self.process_binary(data)
-
-
-class SampleConnectionInitFail(SampleConnection):
+class SampleConnectionInitFail(SampleUdpConnection):
     """Overrides the connection initialization to fail."""
 
     async def async_init(self) -> bool:
@@ -63,7 +51,7 @@ async def close_after(conn: Connection, time: float) -> None:
 async def test_udp_connection_basic():
     """Test basic interactions with a UDP connection."""
 
-    conn1, conn2 = await SampleConnection.create_pair()
+    conn1, conn2 = await SampleUdpConnection.create_pair()
 
     assert conn1.socket
     assert conn2.socket
@@ -93,7 +81,7 @@ async def test_udp_connection_endpoint_down():
     sock = get_free_socket(kind=socket.SOCK_DGRAM)
 
     # Sending to a local address that's not listening will trigger an error.
-    conn3 = await SampleConnection.create_connection(
+    conn3 = await SampleUdpConnection.create_connection(
         remote_addr=("localhost", sock.getsockname()[1])
     )
 
@@ -113,7 +101,7 @@ async def test_udp_connection_endpoint_down():
 async def test_udp_connection_no_endpoint():
     """Test that we can send data without connecting the underlying socket."""
 
-    conn4 = await SampleConnection.create_connection(
+    conn4 = await SampleUdpConnection.create_connection(
         local_addr=("localhost", 0)
     )
     assert conn4.remote_address is None

@@ -81,18 +81,22 @@ class WebsocketConnection(Connection):
         await self.protocol.close()
 
     @classmethod
+    async def create_connection(cls: _Type[T], uri: str, **kwargs) -> T:
+        """Connect a client to an endpoint."""
+        return cls(await getattr(websockets, "connect")(uri, **kwargs))
+
+    @classmethod
     @_asynccontextmanager
-    async def client(cls: _Type[T], uri: str) -> _AsyncIterator[T]:
+    async def client(cls: _Type[T], uri: str, **kwargs) -> _AsyncIterator[T]:
         """A wrapper for connecting a client."""
 
-        async with getattr(websockets, "connect")(uri) as protocol:
-            client = cls(protocol)
-            yield client
+        async with getattr(websockets, "connect")(uri, **kwargs) as protocol:
+            yield cls(protocol)
 
     @classmethod
     def server_handler(
         cls: _Type[T],
-        init: ConnectionInit[T],
+        init: ConnectionInit[T] = None,
         stop_sig: _asyncio.Event = None,
         manager: _ConnectionManager = None,
     ) -> _Callable[[_WebSocketServerProtocol], _Awaitable[None]]:
@@ -104,7 +108,7 @@ class WebsocketConnection(Connection):
         async def _handler(protocol: _WebSocketServerProtocol) -> None:
             """A handler that runs the callers initialization function."""
             conn = cls(protocol)
-            if await init(conn):
+            if init is None or await init(conn):
                 if manager is not None:
                     await manager.queue.put(conn)
                 else:
@@ -139,7 +143,7 @@ class WebsocketConnection(Connection):
     @_asynccontextmanager
     async def serve(
         cls: _Type[T],
-        init: ConnectionInit[T],
+        init: ConnectionInit[T] = None,
         stop_sig: _asyncio.Event = None,
         manager: _ConnectionManager = None,
         **kwargs,
@@ -147,7 +151,7 @@ class WebsocketConnection(Connection):
         """Serve a WebSocket server."""
 
         async with _serve(
-            cls.server_handler(init, stop_sig=stop_sig, manager=manager),
+            cls.server_handler(init=init, stop_sig=stop_sig, manager=manager),
             **kwargs,
         ) as server:
             for socket in server.sockets:
@@ -161,7 +165,7 @@ class WebsocketConnection(Connection):
     async def app(
         cls: _Type[T],
         stop_sig: _asyncio.Event,
-        init: ConnectionInit[T],
+        init: ConnectionInit[T] = None,
         manager: _ConnectionManager = None,
         serving_callback: _Callable[[_WebSocketServer], None] = None,
         **kwargs,
@@ -172,7 +176,7 @@ class WebsocketConnection(Connection):
             manager = _ConnectionManager()
 
         async with cls.serve(
-            init, stop_sig=stop_sig, manager=manager, **kwargs
+            init=init, stop_sig=stop_sig, manager=manager, **kwargs
         ) as server:
             if serving_callback is not None:
                 serving_callback(server)

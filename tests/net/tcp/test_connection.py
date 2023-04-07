@@ -10,21 +10,16 @@ from pytest import mark
 
 # module under test
 from runtimepy.net import sockname
-from runtimepy.net.tcp.connection import TcpConnection
 
 # internal
-from tests.resources import SampleConnectionMixin, release_after
-
-
-class SampleConnection(TcpConnection, SampleConnectionMixin):
-    """A sample connection class."""
+from tests.resources import SampleTcpConnection, release_after
 
 
 @mark.asyncio
 async def test_tcp_connection_basic():
     """Test basic interactions with a TCP connection."""
 
-    conn1, conn2 = await SampleConnection.create_pair()
+    conn1, conn2 = await SampleTcpConnection.create_pair()
 
     conn1.send_text("Hello!\n")
     conn2.send_text("Hello!\n")
@@ -50,7 +45,7 @@ async def test_tcp_connection_app():
     sig = asyncio.Event()
     host_queue: asyncio.Queue = asyncio.Queue()
 
-    def app(conn: SampleConnection) -> None:
+    def app(conn: SampleTcpConnection) -> None:
         """A sample application callback."""
         assert conn
 
@@ -67,7 +62,7 @@ async def test_tcp_connection_app():
         conns = []
         for idx in range(10):
             try:
-                conn = await SampleConnection.create_connection(
+                conn = await SampleTcpConnection.create_connection(
                     host="localhost", port=host.port
                 )
 
@@ -96,7 +91,7 @@ async def test_tcp_connection_app():
             for x in [
                 release_after(sig, 0.1),
                 connect(),
-                SampleConnection.app(
+                SampleTcpConnection.app(
                     sig, callback=app, serving_callback=serve_cb, port=0
                 ),
             ]
