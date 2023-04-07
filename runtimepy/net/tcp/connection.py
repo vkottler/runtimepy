@@ -121,12 +121,10 @@ class TcpConnection(_Connection, _TransportMixin):
             def connection_made(self, transport) -> None:
                 """Save the transport reference and notify."""
                 super().connection_made(transport)
+
+                self.conn = cls(transport, self)
                 if callback is not None:
-                    callback(
-                        cls(  # pylint: disable=abstract-class-instantiated
-                            transport, self
-                        )
-                    )
+                    callback(self.conn)
 
         eloop = _get_event_loop()
         server = await eloop.create_server(
