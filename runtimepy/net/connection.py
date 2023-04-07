@@ -34,6 +34,7 @@ class Connection(_LoggerMixin, _ABC):
         self.tx_binary_hwm: int = 0
 
         self._tasks: _List[_asyncio.Task[None]] = []
+        self.initialized = _asyncio.Event()
         self.init()
 
     def init(self) -> None:
@@ -111,6 +112,7 @@ class Connection(_LoggerMixin, _ABC):
 
         if not await self.async_init():
             self.disable("init failed")
+        self.initialized.set()
 
     async def process(self, stop_sig: _asyncio.Event = None) -> None:
         """
