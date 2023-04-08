@@ -1,7 +1,7 @@
 # =====================================
 # generator=datazen
-# version=3.1.0
-# hash=7038f171453cc0bbd31445328204ecac
+# version=3.1.2
+# hash=a4deafb4ebcc179d8d85f9376d22dc92
 # =====================================
 
 """
@@ -11,6 +11,7 @@ This package's command-line entry-point application.
 # built-in
 from argparse import ArgumentParser as _ArgumentParser
 from argparse import Namespace as _Namespace
+from typing import Optional as _Optional
 
 # third-party
 from vcorelib.args import CommandFunction as _CommandFunction
@@ -19,11 +20,13 @@ from vcorelib.args import app_args as _app_args
 # internal
 from runtimepy.commands.all import commands
 
-COMMAND: _CommandFunction = lambda _: 1
+COMMAND: _Optional[_CommandFunction] = None
 
 
 def entry(args: _Namespace) -> int:
     """Execute the requested task."""
+
+    assert COMMAND is not None
     return COMMAND(args)
 
 

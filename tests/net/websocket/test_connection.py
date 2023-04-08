@@ -12,34 +12,29 @@ from websockets.server import WebSocketServer
 
 # module under test
 from runtimepy.net import sockname
-from runtimepy.net.websocket.connection import WebsocketConnection
 
 # internal
-from tests.resources import SampleConnectionMixin, release_after
-
-
-class SampleConnection(WebsocketConnection, SampleConnectionMixin):
-    """A sample connection class."""
+from tests.resources import SampleWebsocketConnection, release_after
 
 
 @mark.asyncio
 async def test_websocket_server_basic():
     """Test basic interactions with a websocket server."""
 
-    async def server_init(conn: SampleConnection) -> bool:
+    async def server_init(conn: SampleWebsocketConnection) -> bool:
         """A sample handler."""
 
         conn.send_text("Hello, World!")
         conn.send_binary("Hello, World!".encode())
         return True
 
-    async with SampleConnection.serve(
+    async with SampleWebsocketConnection.serve(
         server_init, host="0.0.0.0", port=0
     ) as server:
         host = list(server.sockets)[0].getsockname()
 
         for _ in range(5):
-            async with SampleConnection.client(
+            async with SampleWebsocketConnection.client(
                 f"ws://localhost:{host[1]}"
             ) as client:
                 # Confirm that we receive two messages.
@@ -51,7 +46,7 @@ async def test_websocket_server_basic():
 async def test_websocket_connected_pair():
     """Test that we can create a connected pair."""
 
-    async with SampleConnection.create_pair() as (conn1, conn2):
+    async with SampleWebsocketConnection.create_pair() as (conn1, conn2):
         conn1.send_text("Hello, World!")
         conn2.send_text("Hello, World!")
         conn1.send_text("stop")
@@ -72,7 +67,7 @@ async def test_websocket_server_app():
     server_queue: asyncio.Queue = asyncio.Queue()
     sig = asyncio.Event()
 
-    async def conn_init(conn: SampleConnection) -> bool:
+    async def conn_init(conn: SampleWebsocketConnection) -> bool:
         """A sample handler."""
         assert conn
         return True
@@ -92,7 +87,9 @@ async def test_websocket_server_app():
             for idx in range(20):
                 try:
                     conn = await stack.enter_async_context(
-                        SampleConnection.client(f"ws://localhost:{host.port}")
+                        SampleWebsocketConnection.client(
+                            f"ws://localhost:{host.port}"
+                        )
                     )
                     conns.append(conn)
 
@@ -114,7 +111,7 @@ async def test_websocket_server_app():
             for x in [
                 connect(),
                 release_after(sig, 0.1),
-                SampleConnection.app(
+                SampleWebsocketConnection.app(
                     sig,
                     conn_init,
                     serving_callback=serve_cb,

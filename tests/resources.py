@@ -6,12 +6,16 @@ A module for working with test data.
 import asyncio
 from os.path import join
 from pathlib import Path
+from typing import Tuple
 
 # third-party
 import pkg_resources
 
 # internal
 from runtimepy.net.connection import Connection
+from runtimepy.net.tcp.connection import TcpConnection
+from runtimepy.net.udp.connection import UdpConnection
+from runtimepy.net.websocket.connection import WebsocketConnection
 
 
 def resource(
@@ -47,6 +51,24 @@ class SampleConnectionMixin(Connection):
     async def process_binary(self, data: bytes) -> bool:
         """Process a binary frame."""
         return await self.process_text(data.decode())
+
+
+class SampleUdpConnection(UdpConnection, SampleConnectionMixin):
+    """A sample connection class."""
+
+    async def process_datagram(
+        self, data: bytes, addr: Tuple[str, int]
+    ) -> bool:
+        """Process a datagram."""
+        return await self.process_binary(data)
+
+
+class SampleTcpConnection(TcpConnection, SampleConnectionMixin):
+    """A sample connection class."""
+
+
+class SampleWebsocketConnection(WebsocketConnection, SampleConnectionMixin):
+    """A sample connection class."""
 
 
 async def release_after(sig: asyncio.Event, time: float) -> None:
