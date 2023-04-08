@@ -111,7 +111,9 @@ class TcpConnection(_Connection, _TransportMixin):
     @classmethod
     @_asynccontextmanager
     async def serve(
-        cls: _Type[T], callback: ConnectionCallback[T] = None, **kwargs
+        cls: _Type[T],
+        callback: ConnectionCallback[T] = None,
+        **kwargs,
     ) -> _AsyncIterator[_Any]:
         """Serve incoming connections."""
 

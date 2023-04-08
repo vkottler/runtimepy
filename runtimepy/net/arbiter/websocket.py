@@ -36,10 +36,16 @@ class WebsocketConnectionFactory(_ConnectionFactory, _Generic[T]):
         self,
         stop_sig: _asyncio.Event,
         manager: _ConnectionManager,
+        started_sem: _asyncio.Semaphore,
         *args,
         **kwargs,
     ) -> _ServerTask:
         """Create a task that will run a connection server."""
 
         assert not [*args], "Only keyword arguments are used!"
-        return self.kind.app(stop_sig, manager=manager, **kwargs)
+        return self.kind.app(
+            stop_sig,
+            serving_callback=lambda _: started_sem.release(),
+            manager=manager,
+            **kwargs,
+        )

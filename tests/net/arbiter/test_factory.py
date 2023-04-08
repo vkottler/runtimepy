@@ -19,4 +19,4 @@ async def test_connection_factory_basic():
         await factory.client()
 
     with raises(NotImplementedError):
-        await factory.server_task(None, None)  # type: ignore
+        await factory.server_task(None, None, None)  # type: ignore
