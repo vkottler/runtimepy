@@ -29,6 +29,7 @@ class ConnectionFactory:
         self,
         stop_sig: _asyncio.Event,
         manager: _ConnectionManager,
+        started_sem: _asyncio.Semaphore,
         *args,
         **kwargs,
     ) -> _ServerTask:
@@ -72,7 +73,7 @@ class FactoryConnectionArbiter(_BaseConnectionArbiter):
         return result
 
     async def factory_client(
-        self, factory: str, name: str, *args, **kwargs
+        self, factory: str, name: str, *args, defer: bool = False, **kwargs
     ) -> bool:
         """
         Attempt to register a client connection using a registered factory.
@@ -82,10 +83,13 @@ class FactoryConnectionArbiter(_BaseConnectionArbiter):
 
         if factory in self._factories:
             factory_inst = self._factories[factory]
+
+            conn = factory_inst.client(*args, **kwargs)
+            if not defer:
+                conn = await conn  # type: ignore
+
             result = self.register_connection(
-                await factory_inst.client(*args, **kwargs),
-                *self._names[factory_inst],
-                name,
+                conn, *self._names[factory_inst], name
             )
 
         return result
@@ -99,7 +103,11 @@ class FactoryConnectionArbiter(_BaseConnectionArbiter):
             factory_inst = self._factories[factory]
             self._servers.append(
                 await factory_inst.server_task(
-                    self.stop_sig, self.manager, *args, **kwargs
+                    self.stop_sig,
+                    self.manager,
+                    self._servers_started,
+                    *args,
+                    **kwargs,
                 )
             )
             result = True

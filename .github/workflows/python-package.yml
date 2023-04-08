@@ -41,9 +41,7 @@ jobs:
 
       - run: pip${{matrix.python-version}} install vmklib>=1.8.0
 
-      # 'yamllint' needs to be installed early (presumably a bug in dependency
-      # resolution).
-      - run: mk python-install-yamllint python-sa-types
+      - run: mk python-sa-types
         if: |
           matrix.python-version != '3.7'
           || matrix.system != 'windows-latest'

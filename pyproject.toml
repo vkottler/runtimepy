@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta:__legacy__"
 
 [project]
 name = "runtimepy"
-version = "1.1.0"
+version = "1.1.1"
 description = "A framework for implementing Python services."
 readme = "README.md"
 requires-python = ">=3.7"
@@ -31,6 +31,13 @@ dynamic = ["dependencies"]
 
 [project.optional-dependencies]
 test = [
+  "pylint",
+  "flake8",
+  "black",
+  "ruff",
+  "mypy",
+  "isort",
+  "yamllint",
   "pytest-asyncio",
   "setuptools-wrapper",
   "types-setuptools"

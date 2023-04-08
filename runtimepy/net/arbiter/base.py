@@ -5,11 +5,13 @@ A module implementing a base connection-arbiter interface.
 # built-in
 import asyncio as _asyncio
 from contextlib import AsyncExitStack as _AsyncExitStack
+from inspect import isawaitable as _isawaitable
 from typing import Awaitable as _Awaitable
 from typing import Callable as _Callable
 from typing import Iterable as _Iterable
 from typing import List as _List
 from typing import MutableMapping as _MutableMapping
+from typing import Union as _Union
 
 # third-party
 from vcorelib.asyncio import run_handle_stop as _run_handle_stop
@@ -65,16 +67,28 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
 
         # Keep track of connection objects.
         self._connections: ConnectionMap = {}
+        self._deferred_connections: _MutableMapping[
+            str, _Awaitable[_Connection]
+        ] = {}
+
         self._servers: _List[ServerTask] = []
+        self._servers_started = _asyncio.Semaphore(0)
 
         self._init()
 
     def _init(self) -> None:
         """Additional initialization tasks."""
 
+    def _register_connection(self, connection: _Connection, name: str) -> None:
+        """Perform connection registration."""
+
+        self._connections[name] = connection
+        self.manager.queue.put_nowait(connection)
+        connection.logger.info("Registered as '%s'.", name)
+
     def register_connection(
         self,
-        connection: _Connection,
+        connection: _Union[_Connection, _Awaitable[_Connection]],
         *names: str,
         delim: str = None,
     ) -> bool:
@@ -85,11 +99,17 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
         with self.names_pushed(*names):
             name = self.namespace(delim=delim)
 
-        if name not in self._connections:
-            self._connections[name] = connection
-            self.manager.queue.put_nowait(connection)
+        if (
+            name not in self._connections
+            and name not in self._deferred_connections
+        ):
+            if _isawaitable(connection):
+                self._deferred_connections[name] = connection
+            else:
+                assert isinstance(connection, _Connection)
+                self._register_connection(connection, name)
+
             result = True
-            connection.logger.info("Registered as '%s'.", name)
 
         return result
 
@@ -104,6 +124,17 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
         result = -1
 
         try:
+            # Wait for servers to start.
+            for _ in range(len(self._servers)):
+                await self._servers_started.acquire()
+
+            # Start deferred connections.
+            for key, value in zip(
+                self._deferred_connections,
+                await _asyncio.gather(*self._deferred_connections.values()),
+            ):
+                self._register_connection(value, key)
+
             # Ensure connections are all initialized.
             await _asyncio.gather(
                 *(x.initialized.wait() for x in self._connections.values())

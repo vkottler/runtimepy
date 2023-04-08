@@ -9,6 +9,7 @@ from contextlib import AsyncExitStack as _AsyncExitStack
 from pytest import mark
 
 # module under test
+from runtimepy.net import get_free_socket_name
 from runtimepy.net.arbiter import ConnectionArbiter
 from runtimepy.net.arbiter.tcp import TcpConnectionFactory
 from runtimepy.net.arbiter.udp import UdpConnectionFactory
@@ -56,41 +57,35 @@ async def test_connection_arbiter_basic():
     arbiter = ConnectionArbiter()
 
     # Register connection factories.
-    assert arbiter.register_factory(SampleUdpConn(), "udp", "sample") is True
-    assert arbiter.register_factory(SampleTcpConn(), "tcp", "sample") is True
-    assert (
-        arbiter.register_factory(SampleWebsocketConn(), "websocket", "sample")
-        is True
+    assert arbiter.register_factory(SampleUdpConn(), "udp", "sample")
+    assert arbiter.register_factory(SampleTcpConn(), "tcp", "sample")
+    assert arbiter.register_factory(
+        SampleWebsocketConn(), "websocket", "sample"
     )
 
     # Register a few UDP connections.
-    assert (
-        await arbiter.factory_client(
-            "SampleUdpConn", "a", local_addr=("localhost", 0)
+    for name in "abc":
+        assert await arbiter.factory_client(
+            "SampleUdpConn", name, local_addr=("localhost", 0)
         )
-        is True
-    )
-    assert (
-        await arbiter.factory_client(
-            "sample_udp_conn", "b", local_addr=("localhost", 0)
-        )
-        is True
-    )
-    assert (
-        await arbiter.factory_client(
-            "sample_udp_conn", "c", local_addr=("localhost", 0)
-        )
-        is True
-    )
 
     # Register a few TCP and WebSocket servers.
     for _ in range(3):
-        assert await arbiter.factory_server("sample_tcp_conn", port=0) is True
-        assert (
-            await arbiter.factory_server(
-                "sample_websocket_conn", host="0.0.0.0", port=0
-            )
-            is True
+        assert await arbiter.factory_server("sample_tcp_conn", port=0)
+        assert await arbiter.factory_server(
+            "sample_websocket_conn", host="0.0.0.0", port=0
+        )
+
+    # Register a few deferred TCP clients.
+    tcp_port = get_free_socket_name().port
+    assert await arbiter.factory_server("sample_tcp_conn", port=tcp_port)
+    for name in "def":
+        assert await arbiter.factory_client(
+            "sample_tcp_conn",
+            name,
+            host="localhost",
+            defer=True,
+            port=tcp_port,
         )
 
     async with _AsyncExitStack() as stack:
@@ -102,11 +97,8 @@ async def test_connection_arbiter_basic():
 
         # Register a few TCP connections.
         for name in "abc":
-            assert (
-                await arbiter.factory_client(
-                    "sample_tcp_conn", name, host="localhost", port=tcp_port
-                )
-                is True
+            assert await arbiter.factory_client(
+                "sample_tcp_conn", name, host="localhost", port=tcp_port
             )
 
         # Start a WebSocket server.
@@ -121,13 +113,10 @@ async def test_connection_arbiter_basic():
 
         # Register a few WebSocket connections.
         for name in "abc":
-            assert (
-                await arbiter.factory_client(
-                    "sample_websocket_conn",
-                    name,
-                    f"ws://localhost:{websocket_port}",
-                )
-                is True
+            assert await arbiter.factory_client(
+                "sample_websocket_conn",
+                name,
+                f"ws://localhost:{websocket_port}",
             )
 
         # Run the application.
