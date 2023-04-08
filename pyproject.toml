@@ -31,6 +31,13 @@ dynamic = ["dependencies"]
 
 [project.optional-dependencies]
 test = [
+  "pylint",
+  "flake8",
+  "black",
+  "ruff",
+  "mypy",
+  "isort",
+  "yamllint",
   "pytest-asyncio",
   "setuptools-wrapper",
   "types-setuptools"
