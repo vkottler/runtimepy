@@ -45,6 +45,10 @@ class ConnectionArbiterConfig(_RuntimepyDictCodec):
             ).port
 
         self.app: _Optional[str] = data.get("app")  # type: ignore
+        self.config: _Optional[_JsonObject] = _cast(
+            _JsonObject, data.get("config")
+        )
+
         self.factories: _List[_Any] = data.get("factories", [])  # type: ignore
         self.clients: _List[_Any] = data.get("clients", [])  # type: ignore
         self.servers: _List[_Any] = data.get("servers", [])  # type: ignore
@@ -148,3 +152,7 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
         # Set the new application entry if it's set.
         if config.app is not None:
             self.set_app(config.app)
+
+        # Update application configuration data if necessary.
+        if config.config is not None:
+            self._config = config.config

@@ -31,6 +31,9 @@ async def test_connection_arbiter_config_basic():
 async def echo_test_app(app: AppInfo) -> int:
     """Test some of the echo connections."""
 
+    # Ensure that configuration data got set correctly.
+    assert app.config == {"a": 1, "b": 2, "c": 3}
+
     conns = [
         "tcp.sample.client",
         "udp.sample.client",

@@ -18,6 +18,10 @@ properties:
     # default: "runtimepy.net.apps.init_only"
     type: string
 
+  # Application configuration data.
+  config:
+    type: object
+
   factories:
     type: array
     items:

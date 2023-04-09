@@ -16,6 +16,7 @@ from typing import Union as _Union
 
 # third-party
 from vcorelib.asyncio import run_handle_stop as _run_handle_stop
+from vcorelib.io.types import JsonObject as _JsonObject
 from vcorelib.logging import LoggerMixin as _LoggerMixin
 from vcorelib.logging import LoggerType as _LoggerType
 from vcorelib.namespace import Namespace as _Namespace
@@ -34,6 +35,7 @@ class AppInfo(NamedTuple):
     stack: _AsyncExitStack
     connections: ConnectionMap
     stop: _asyncio.Event
+    config: _JsonObject
 
 
 NetworkApplication = _Callable[[AppInfo], _Awaitable[int]]
@@ -59,6 +61,7 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
         namespace: _Namespace = None,
         logger: _LoggerType = None,
         app: NetworkApplication = init_only,
+        config: _JsonObject = None,
     ) -> None:
         """Initialize this connection arbiter."""
 
@@ -77,6 +80,11 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
         # A fallback application. Set a class attribute so this can be more
         # easily externally updated.
         self._app = app
+
+        # Application configuration data.
+        if config is None:
+            config = {}
+        self._config = config
 
         # Keep track of connection objects.
         self._connections: ConnectionMap = {}
@@ -127,7 +135,10 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
         return result
 
     async def _entry(
-        self, app: NetworkApplication = None, check_connections: bool = True
+        self,
+        app: NetworkApplication = None,
+        check_connections: bool = True,
+        config: _JsonObject = None,
     ) -> int:
         """
         Ensures connections are given a chance to initialize, run the
@@ -167,7 +178,12 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
                         app = self._app
 
                     result = await app(
-                        AppInfo(stack, self._connections, self.stop_sig)
+                        AppInfo(
+                            stack,
+                            self._connections,
+                            self.stop_sig,
+                            config if config is not None else self._config,
+                        )
                     )
                     self.logger.info("Application returned %d.", result)
 
@@ -182,13 +198,16 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
         self,
         app: NetworkApplication = None,
         check_connections: bool = True,
+        config: _JsonObject = None,
     ) -> int:
         """
         Run the application alongside the connection manager and server tasks.
         """
 
         result = await _asyncio.gather(
-            self._entry(app, check_connections=check_connections),
+            self._entry(
+                app, check_connections=check_connections, config=config
+            ),
             self.manager.manage(self.stop_sig),
             *self._servers,
         )
@@ -200,12 +219,15 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
         eloop: _asyncio.AbstractEventLoop = None,
         signals: _Iterable[int] = None,
         check_connections: bool = True,
+        config: _JsonObject = None,
     ) -> int:
         """Run the application until the stop signal is set."""
 
         return _run_handle_stop(
             self.stop_sig,
-            self.app(app=app, check_connections=check_connections),
+            self.app(
+                app=app, check_connections=check_connections, config=config
+            ),
             eloop=eloop,
             signals=signals,
         )
