@@ -13,6 +13,10 @@ properties:
     items:
       $ref: package://runtimepy/schemas/ServerConnectionConfig.yaml
 
+  app:
+    type: string
+    default: "runtimepy.net.arbiter.base.init_only"
+
   factories:
     type: array
     items:

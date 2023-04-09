@@ -15,5 +15,7 @@ dev_requirements:
   - types-setuptools
 
 commands:
+  - name: arbiter
+    description: "run a connection-arbiter application from a config"
   - name: tui
     description: "run a terminal interface for the channel environment"

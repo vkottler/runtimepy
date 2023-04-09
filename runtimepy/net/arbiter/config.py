@@ -43,6 +43,7 @@ class ConnectionArbiterConfig(_RuntimepyDictCodec):
                 else _socket.SOCK_DGRAM,
             ).port
 
+        self.app: str = data["app"]  # type: ignore
         self.factories: _List[_Any] = data.get("factories", [])  # type: ignore
         self.clients: _List[_Any] = data.get("clients", [])  # type: ignore
         self.servers: _List[_Any] = data.get("servers", [])  # type: ignore
@@ -139,3 +140,6 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
                     server.get("kwargs", {}), env=config.ports  # type: ignore
                 ),
             ), f"Couldn't register a '{factory}' server!"
+
+        # Set the new (default) application entry.
+        self.set_app(config.app)

@@ -2,7 +2,7 @@
     =====================================
     generator=datazen
     version=3.1.2
-    hash=e20c572e1e6a5c94557f5ec197dab0ae
+    hash=ce3f1316217e521947cc4b3047971525
     =====================================
 -->
 
@@ -44,20 +44,55 @@ This package is tested on the following platforms:
 ```
 $ ./venv3.8/bin/runtimepy -h
 
-usage: runtimepy [-h] [--version] [-v] [-C DIR] {tui,noop} ...
+usage: runtimepy [-h] [--version] [-v] [-C DIR] {arbiter,tui,noop} ...
 
 A framework for implementing Python services.
 
 optional arguments:
-  -h, --help         show this help message and exit
-  --version          show program's version number and exit
-  -v, --verbose      set to increase logging verbosity
-  -C DIR, --dir DIR  execute from a specific directory
+  -h, --help          show this help message and exit
+  --version           show program's version number and exit
+  -v, --verbose       set to increase logging verbosity
+  -C DIR, --dir DIR   execute from a specific directory
 
 commands:
-  {tui,noop}         set of available commands
-    tui              run a terminal interface for the channel environment
-    noop             command stub (does nothing)
+  {arbiter,tui,noop}  set of available commands
+    arbiter           run a connection-arbiter application from a config
+    tui               run a terminal interface for the channel environment
+    noop              command stub (does nothing)
+
+```
+
+## Sub-command Options
+
+### `arbiter`
+
+```
+$ ./venv3.8/bin/runtimepy arbiter -h
+
+usage: runtimepy arbiter [-h] config
+
+positional arguments:
+  config      the configuration to load
+
+optional arguments:
+  -h, --help  show this help message and exit
+
+```
+
+### `tui`
+
+```
+$ ./venv3.8/bin/runtimepy tui -h
+
+usage: runtimepy tui [-h] [-i ITERATIONS] [-r RATE]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -i ITERATIONS, --iterations ITERATIONS
+                        maximum number of program iterations (if greater than
+                        zero, default: 0)
+  -r RATE, --rate RATE  frequency (in Hz) to run the interface (default: 60.0
+                        Hz)
 
 ```
 

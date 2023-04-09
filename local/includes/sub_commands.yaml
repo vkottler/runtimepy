@@ -1,0 +1,15 @@
+# yamllint disable-file
+---
+default_dirs: false
+
+commands:
+{% for command in ["arbiter", "tui"] %}
+  - name: help-{{command}}
+    command: "./venv{{python_version}}/bin/{{entry}}"
+    force: true
+    arguments:
+      - {{command}}
+      - "-h"
+    dependencies:
+      - commands-install-local
+{% endfor %}

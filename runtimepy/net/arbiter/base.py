@@ -50,6 +50,7 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
         stop_sig: _asyncio.Event = None,
         namespace: _Namespace = None,
         logger: _LoggerType = None,
+        app: NetworkApplication = init_only,
     ) -> None:
         """Initialize this connection arbiter."""
 
@@ -64,6 +65,10 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
         self.stop_sig = stop_sig
 
         _NamespaceMixin.__init__(self, namespace=namespace)
+
+        # A fallback application. Set a class attribute so this can be more
+        # easily externally updated.
+        self._app = app
 
         # Keep track of connection objects.
         self._connections: ConnectionMap = {}
@@ -114,7 +119,7 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
         return result
 
     async def _entry(
-        self, app: NetworkApplication, check_connections: bool = True
+        self, app: NetworkApplication = None, check_connections: bool = True
     ) -> int:
         """
         Ensures connections are given a chance to initialize, run the
@@ -149,6 +154,10 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
             ):
                 async with _AsyncExitStack() as stack:
                     self.logger.info("Application starting.")
+
+                    if app is None:
+                        app = self._app
+
                     result = await app(stack, self._connections)
                     self.logger.info("Application returned %d.", result)
 
@@ -161,7 +170,7 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
 
     async def app(
         self,
-        app: NetworkApplication = init_only,
+        app: NetworkApplication = None,
         check_connections: bool = True,
     ) -> int:
         """
@@ -177,7 +186,7 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
 
     def run(
         self,
-        app: NetworkApplication = init_only,
+        app: NetworkApplication = None,
         eloop: _asyncio.AbstractEventLoop = None,
         signals: _Iterable[int] = None,
         check_connections: bool = True,
