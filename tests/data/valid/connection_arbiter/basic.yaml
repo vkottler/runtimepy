@@ -4,6 +4,11 @@ ports:
   - {name: tcp_server, type: tcp}
   - {name: websocket_server, type: tcp}
 
+factories:
+  - {name: "tests.sample.SampleUdpConn", namespaces: [udp, sample]}
+  - {name: "tests.sample.SampleTcpConn", namespaces: [tcp, sample]}
+  - {name: "tests.sample.SampleWebsocketConn", namespaces: [websocket, sample]}
+
 clients:
   - factory: sample_tcp_conn
     name: client
@@ -27,7 +32,6 @@ clients:
     name: server
     kwargs:
       local_addr: [localhost, "$udp_listen"]
-
 
 servers:
   - factory: sample_tcp_conn

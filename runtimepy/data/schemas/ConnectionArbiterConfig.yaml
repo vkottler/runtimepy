@@ -13,6 +13,23 @@ properties:
     items:
       $ref: package://runtimepy/schemas/ServerConnectionConfig.yaml
 
+  factories:
+    type: array
+    items:
+      type: object
+      required: [name]
+      additionalProperties: false
+
+      properties:
+        name:
+          type: string
+        namespaces:
+          type: array
+          items:
+            type: string
+        kwargs:
+          type: object
+
   ports:
     type: array
     items:

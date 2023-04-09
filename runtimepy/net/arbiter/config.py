@@ -3,9 +3,8 @@ A module implementing a configuration-file interface for registering client
 connections or servers.
 """
 
-import socket as _socket
-
 # built-in
+import socket as _socket
 from typing import Any as _Any
 from typing import Dict as _Dict
 from typing import List as _List
@@ -14,11 +13,12 @@ from typing import cast as _cast
 # third-party
 from vcorelib.dict.env import dict_resolve_env_vars, list_resolve_env_vars
 from vcorelib.io.types import JsonObject as _JsonObject
+from vcorelib.paths import Pathlike as _Pathlike
 
 # internal
 from runtimepy.net import get_free_socket_name, normalize_host
-from runtimepy.net.arbiter.factory import (
-    FactoryConnectionArbiter as _FactoryConnectionArbiter,
+from runtimepy.net.arbiter.imports import (
+    ImportConnectionArbiter as _ImportConnectionArbiter,
 )
 from runtimepy.schemas import RuntimepyDictCodec as _RuntimepyDictCodec
 
@@ -43,8 +43,9 @@ class ConnectionArbiterConfig(_RuntimepyDictCodec):
                 else _socket.SOCK_DGRAM,
             ).port
 
-        self.clients: _List[_Any] = data["clients"]  # type: ignore
-        self.servers: _List[_Any] = data["servers"]  # type: ignore
+        self.factories: _List[_Any] = data.get("factories", [])  # type: ignore
+        self.clients: _List[_Any] = data.get("clients", [])  # type: ignore
+        self.servers: _List[_Any] = data.get("servers", [])  # type: ignore
 
     def asdict(self) -> _JsonObject:
         """Obtain a dictionary representing this instance."""
@@ -81,14 +82,27 @@ def fix_args(data: _List[_Any], ports: _Dict[str, int]) -> _List[_Any]:
     return data
 
 
-class ConfigConnectionArbiter(_FactoryConnectionArbiter):
+class ConfigConnectionArbiter(_ImportConnectionArbiter):
     """
     A class implementing a configuration loading interface for the connection
     arbiter.
     """
 
+    async def load_config(self, path: _Pathlike) -> None:
+        """Load a client and server configuration to the arbiter."""
+        await self.process_config(ConnectionArbiterConfig.decode(path))
+
     async def process_config(self, config: ConnectionArbiterConfig) -> None:
         """Register clients and servers from a configuration object."""
+
+        # Registier factories.
+        for factory in config.factories:
+            name = factory["name"]
+            assert self.register_module_factory(
+                name,
+                *factory.get("namespaces", []),
+                **factory.get("kwargs", {}),
+            ), "Couldn't register factory '{name}'!"
 
         # Register clients.
         for client in config.clients:
