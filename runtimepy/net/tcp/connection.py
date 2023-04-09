@@ -28,6 +28,7 @@ from vcorelib.logging import LoggerType as _LoggerType
 from runtimepy.net import sockname as _sockname
 from runtimepy.net.connection import BinaryMessage as _BinaryMessage
 from runtimepy.net.connection import Connection as _Connection
+from runtimepy.net.connection import EchoConnection as _EchoConnection
 from runtimepy.net.manager import ConnectionManager as _ConnectionManager
 from runtimepy.net.mixin import (
     BinaryMessageQueueMixin as _BinaryMessageQueueMixin,
@@ -194,3 +195,7 @@ class TcpConnection(_Connection, _TransportMixin):
     async def close(self) -> None:
         """Close this connection."""
         self._transport.close()
+
+
+class EchoTcpConnection(TcpConnection, _EchoConnection):
+    """An echo connection for TCP."""

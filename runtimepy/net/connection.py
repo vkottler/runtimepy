@@ -193,3 +193,17 @@ class Connection(_LoggerMixin, _ABC):
             if data is not None:
                 await self._send_binay_message(data)
                 queue.task_done()
+
+
+class EchoConnection(Connection):
+    """A connection that just echoes what it was sent."""
+
+    async def process_text(self, data: str) -> bool:
+        """Process a text frame."""
+        self.send_text(data)
+        return True
+
+    async def process_binary(self, data: bytes) -> bool:
+        """Process a binary frame."""
+        self.send_binary(data)
+        return True

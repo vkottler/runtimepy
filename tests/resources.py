@@ -36,15 +36,24 @@ def resource(
 class SampleConnectionMixin(Connection):
     """A sample connection class."""
 
+    def init(self) -> None:
+        """Initialize this instance."""
+
+        self.message_rx = asyncio.Semaphore(0)
+
     async def process_text(self, data: str) -> bool:
         """Process a text frame."""
 
         stop_found = False
         for item in data.split():
-            self.logger.info("'%s'", item)
-            stop_found = "stop" in item
-            if stop_found:
-                break
+            if item:
+                self.logger.info("'%s'", item)
+                stop_found = "stop" in item
+                if stop_found:
+                    break
+
+        # Signal that we've received a message.
+        self.message_rx.release()
 
         return not stop_found
 

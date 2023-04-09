@@ -14,8 +14,13 @@ properties:
       $ref: package://runtimepy/schemas/ServerConnectionConfig.yaml
 
   app:
+    # This is the default application.
+    # default: "runtimepy.net.apps.init_only"
     type: string
-    default: "runtimepy.net.arbiter.base.init_only"
+
+  # Application configuration data.
+  config:
+    type: object
 
   factories:
     type: array

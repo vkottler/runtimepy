@@ -8,6 +8,7 @@ import socket as _socket
 from typing import Any as _Any
 from typing import Dict as _Dict
 from typing import List as _List
+from typing import Optional as _Optional
 from typing import cast as _cast
 
 # third-party
@@ -43,7 +44,11 @@ class ConnectionArbiterConfig(_RuntimepyDictCodec):
                 else _socket.SOCK_DGRAM,
             ).port
 
-        self.app: str = data["app"]  # type: ignore
+        self.app: _Optional[str] = data.get("app")  # type: ignore
+        self.config: _Optional[_JsonObject] = _cast(
+            _JsonObject, data.get("config")
+        )
+
         self.factories: _List[_Any] = data.get("factories", [])  # type: ignore
         self.clients: _List[_Any] = data.get("clients", [])  # type: ignore
         self.servers: _List[_Any] = data.get("servers", [])  # type: ignore
@@ -91,7 +96,10 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
 
     async def load_config(self, path: _Pathlike) -> None:
         """Load a client and server configuration to the arbiter."""
-        await self.process_config(ConnectionArbiterConfig.decode(path))
+
+        await self.process_config(
+            ConnectionArbiterConfig.decode(path, includes_key="includes")
+        )
 
     async def process_config(self, config: ConnectionArbiterConfig) -> None:
         """Register clients and servers from a configuration object."""
@@ -141,5 +149,10 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
                 ),
             ), f"Couldn't register a '{factory}' server!"
 
-        # Set the new (default) application entry.
-        self.set_app(config.app)
+        # Set the new application entry if it's set.
+        if config.app is not None:
+            self.set_app(config.app)
+
+        # Update application configuration data if necessary.
+        if config.config is not None:
+            self._config = config.config

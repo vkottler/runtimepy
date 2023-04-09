@@ -3,8 +3,6 @@ includes:
   - ports.yaml
   - basic_factories.yaml
 
-app: "runtimepy.net.apps.init_only"
-
 clients:
   - factory: sample_tcp_conn
     name: client
@@ -24,17 +22,23 @@ clients:
     kwargs:
       remote_addr: [localhost, "$udp_listen"]
 
-  - factory: sample_udp_conn
+  - factory: udp_echo
     name: server
     kwargs:
       local_addr: [localhost, "$udp_listen"]
 
 servers:
-  - factory: sample_tcp_conn
+  - factory: tcp_echo
     kwargs:
       port: "$tcp_server"
 
-  - factory: sample_websocket_conn
+  - factory: websocket_echo
     kwargs:
       host: "0.0.0.0"
       port: "$websocket_server"
+
+# Some arbitrary data.
+config:
+  a: 1
+  b: 2
+  c: 3

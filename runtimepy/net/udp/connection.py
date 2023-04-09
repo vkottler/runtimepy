@@ -23,6 +23,7 @@ from vcorelib.logging import LoggerType as _LoggerType
 from runtimepy.net import IpHost, get_free_socket
 from runtimepy.net.connection import BinaryMessage as _BinaryMessage
 from runtimepy.net.connection import Connection as _Connection
+from runtimepy.net.connection import EchoConnection as _EchoConnection
 from runtimepy.net.mixin import TransportMixin as _TransportMixin
 
 LOG = _getLogger(__name__)
@@ -146,3 +147,15 @@ class UdpConnection(_Connection, _TransportMixin):
             # If we failed to read a message, disable.
             if not result:
                 self.disable("read processing error")
+
+
+class EchoUdpConnection(UdpConnection, _EchoConnection):
+    """An echo connection for UDP."""
+
+    async def process_datagram(
+        self, data: bytes, addr: _Tuple[str, int]
+    ) -> bool:
+        """Process a datagram."""
+
+        self.sendto(data, addr=addr)
+        return True
