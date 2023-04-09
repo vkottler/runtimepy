@@ -35,6 +35,7 @@ class Connection(_LoggerMixin, _ABC):
 
         self._tasks: _List[_asyncio.Task[None]] = []
         self.initialized = _asyncio.Event()
+        self.disabled_event = _asyncio.Event()
         self.init()
 
     def init(self) -> None:
@@ -101,6 +102,9 @@ class Connection(_LoggerMixin, _ABC):
             for task in self._tasks:
                 if not task.done():
                     task.cancel()
+
+            # Signal that this connection has been disabled.
+            self.disabled_event.set()
 
     async def _wait_sig(self, stop_sig: _asyncio.Event) -> None:
         """Disable the connection if a stop signal gets set."""

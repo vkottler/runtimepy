@@ -1,0 +1,40 @@
+---
+ports:
+  - {name: udp_listen, type: udp}
+  - {name: tcp_server, type: tcp}
+  - {name: websocket_server, type: tcp}
+
+clients:
+  - factory: sample_tcp_conn
+    name: client
+    defer: true
+    kwargs:
+      host: localhost
+      port: "$tcp_server"
+
+  - factory: sample_websocket_conn
+    name: client
+    defer: true
+    args: ["ws://localhost:$websocket_server"]
+
+  - factory: sample_udp_conn
+    name: client
+    defer: true
+    kwargs:
+      remote_addr: [localhost, "$udp_listen"]
+
+  - factory: sample_udp_conn
+    name: server
+    kwargs:
+      local_addr: [localhost, "$udp_listen"]
+
+
+servers:
+  - factory: sample_tcp_conn
+    kwargs:
+      port: "$tcp_server"
+
+  - factory: sample_websocket_conn
+    kwargs:
+      host: "0.0.0.0"
+      port: "$websocket_server"

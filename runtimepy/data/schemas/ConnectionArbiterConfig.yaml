@@ -1,0 +1,40 @@
+---
+type: object
+additionalProperties: false
+
+properties:
+  clients:
+    type: array
+    items:
+      $ref: package://runtimepy/schemas/ClientConnectionConfig.yaml
+
+  servers:
+    type: array
+    items:
+      $ref: package://runtimepy/schemas/ServerConnectionConfig.yaml
+
+  ports:
+    type: array
+    items:
+      type: object
+      required: [name, type]
+      additionalProperties: false
+
+      properties:
+        name:
+          type: string
+
+        type:
+          enum:
+            - udp
+            - tcp
+
+        host:
+          type: string
+          default: ""
+
+        port:
+          type: integer
+          minimum: 0
+          maximum: 65535
+          default: 0

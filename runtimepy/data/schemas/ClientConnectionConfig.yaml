@@ -1,0 +1,21 @@
+---
+type: object
+required: [factory, name]
+additionalProperties: false
+
+properties:
+  factory:
+    type: string
+
+  name:
+    type: string
+
+  defer:
+    type: boolean
+    default: false
+
+  args:
+    type: array
+
+  kwargs:
+    type: object
