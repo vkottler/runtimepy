@@ -1,0 +1,61 @@
+---
+type: object
+additionalProperties: false
+
+properties:
+  clients:
+    type: array
+    items:
+      $ref: package://runtimepy/schemas/ClientConnectionConfig.yaml
+
+  servers:
+    type: array
+    items:
+      $ref: package://runtimepy/schemas/ServerConnectionConfig.yaml
+
+  app:
+    type: string
+    default: "runtimepy.net.arbiter.base.init_only"
+
+  factories:
+    type: array
+    items:
+      type: object
+      required: [name]
+      additionalProperties: false
+
+      properties:
+        name:
+          type: string
+        namespaces:
+          type: array
+          items:
+            type: string
+        kwargs:
+          type: object
+
+  ports:
+    type: array
+    items:
+      type: object
+      required: [name, type]
+      additionalProperties: false
+
+      properties:
+        name:
+          type: string
+
+        type:
+          enum:
+            - udp
+            - tcp
+
+        host:
+          type: string
+          default: ""
+
+        port:
+          type: integer
+          minimum: 0
+          maximum: 65535
+          default: 0

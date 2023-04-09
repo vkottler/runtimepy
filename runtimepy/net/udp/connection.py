@@ -9,7 +9,7 @@ from abc import abstractmethod as _abstractmethod
 import asyncio as _asyncio
 from asyncio import DatagramProtocol as _DatagramProtocol
 from asyncio import DatagramTransport as _DatagramTransport
-from logging import getLogger
+from logging import getLogger as _getLogger
 import socket as _socket
 from typing import Tuple as _Tuple
 from typing import Type as _Type
@@ -24,6 +24,8 @@ from runtimepy.net import IpHost, get_free_socket
 from runtimepy.net.connection import BinaryMessage as _BinaryMessage
 from runtimepy.net.connection import Connection as _Connection
 from runtimepy.net.mixin import TransportMixin as _TransportMixin
+
+LOG = _getLogger(__name__)
 
 
 class UdpQueueProtocol(_DatagramProtocol):
@@ -67,7 +69,7 @@ class UdpConnection(_Connection, _TransportMixin):
         self._transport: _DatagramTransport = transport
 
         self._protocol = protocol
-        super().__init__(getLogger(self.logger_name("UDP ")))
+        super().__init__(_getLogger(self.logger_name("UDP ")))
         self._protocol.logger = self.logger
 
     @_abstractmethod
@@ -95,6 +97,8 @@ class UdpConnection(_Connection, _TransportMixin):
         """Create a UDP connection."""
 
         eloop = _asyncio.get_event_loop()
+
+        LOG.debug("kwargs: %s", {**kwargs})
 
         transport: _DatagramTransport
         (

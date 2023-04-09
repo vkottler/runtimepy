@@ -110,7 +110,27 @@ class WebsocketConnection(Connection):
             conn = cls(protocol)
             if init is None or await init(conn):
                 if manager is not None:
+                    # Allow the connection manager to process this connection.
                     await manager.queue.put(conn)
+
+                    # Wait for either the connection to be disabled, or for
+                    # the stop signal to be set.
+                    tasks = [_asyncio.create_task(conn.disabled_event.wait())]
+                    if stop_sig is not None:
+                        tasks.append(_asyncio.create_task(stop_sig.wait()))
+
+                    # Wait for the event and cancel the task that didn't
+                    # complete.
+                    _, pending = await _asyncio.wait(
+                        tasks,
+                        return_when=_asyncio.FIRST_COMPLETED,
+                    )
+                    for task in pending:
+                        task.cancel()
+                        await task
+
+                # If there's no connection manager, just process the
+                # connection here.
                 else:
                     await conn.process(stop_sig=stop_sig)
 

@@ -11,36 +11,10 @@ from pytest import mark
 # module under test
 from runtimepy.net import get_free_socket_name
 from runtimepy.net.arbiter import ConnectionArbiter
-from runtimepy.net.arbiter.tcp import TcpConnectionFactory
-from runtimepy.net.arbiter.udp import UdpConnectionFactory
-from runtimepy.net.arbiter.websocket import WebsocketConnectionFactory
 
 # internal
-from tests.resources import (
-    SampleTcpConnection,
-    SampleUdpConnection,
-    SampleWebsocketConnection,
-)
-
-
-class SampleUdpConn(UdpConnectionFactory[SampleUdpConnection]):
-    """A connection factory for the sample UDP connection."""
-
-    kind = SampleUdpConnection
-
-
-class SampleTcpConn(TcpConnectionFactory[SampleTcpConnection]):
-    """A connection factory for the sample TCP connection."""
-
-    kind = SampleTcpConnection
-
-
-class SampleWebsocketConn(
-    WebsocketConnectionFactory[SampleWebsocketConnection]
-):
-    """A connection factory for the sample WebSocket connection."""
-
-    kind = SampleWebsocketConnection
+from tests.net.arbiter import get_test_arbiter
+from tests.resources import SampleTcpConnection, SampleWebsocketConnection
 
 
 def test_connection_arbiter_run():
@@ -54,14 +28,7 @@ def test_connection_arbiter_run():
 async def test_connection_arbiter_basic():
     """Test basic interactions with a connection arbiter."""
 
-    arbiter = ConnectionArbiter()
-
-    # Register connection factories.
-    assert arbiter.register_factory(SampleUdpConn(), "udp", "sample")
-    assert arbiter.register_factory(SampleTcpConn(), "tcp", "sample")
-    assert arbiter.register_factory(
-        SampleWebsocketConn(), "websocket", "sample"
-    )
+    arbiter = get_test_arbiter()
 
     # Register a few UDP connections.
     for name in "abc":
@@ -105,6 +72,7 @@ async def test_connection_arbiter_basic():
         websocket_server = await stack.enter_async_context(
             SampleWebsocketConnection.serve(
                 stop_sig=arbiter.stop_sig,
+                manager=arbiter.manager,
                 host="0.0.0.0",
                 port=0,
             )

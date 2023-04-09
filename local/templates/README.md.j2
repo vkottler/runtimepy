@@ -10,4 +10,17 @@ $ {{" ".join(help["args"])}}
 ```
 {% endif %}
 
+## Sub-command Options
+{% for command in package["commands"] %}
+
+### `{{command["name"]}}`
+{% set help_data = global["help-" + command["name"]] %}
+
+```
+$ {{" ".join(help_data["args"])}}
+
+{{help_data["stdout"]}}
+```
+{% endfor %}
+
 {{python_readme_dep_graph_md}}

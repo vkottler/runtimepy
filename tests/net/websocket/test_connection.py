@@ -8,6 +8,7 @@ from contextlib import AsyncExitStack
 
 # third-party
 from pytest import mark
+from vcorelib.asyncio import log_exceptions
 from websockets.server import WebSocketServer
 
 # module under test
@@ -100,10 +101,12 @@ async def test_websocket_server_app():
 
             # Wait for connections to close.
             assert conns
-            await asyncio.wait(
-                [asyncio.create_task(conn.process()) for conn in conns],
-                return_when=asyncio.ALL_COMPLETED,
-            )
+            tasks = [
+                asyncio.create_task(conn.process(stop_sig=sig))
+                for conn in conns
+            ]
+            await asyncio.wait(tasks, return_when=asyncio.ALL_COMPLETED)
+            log_exceptions(tasks)
 
     await asyncio.wait(
         [

@@ -57,6 +57,8 @@ class FactoryConnectionArbiter(_BaseConnectionArbiter):
 
         result = False
 
+        assert isinstance(factory, ConnectionFactory), factory
+
         name = factory.__class__.__name__
         snake_name = obj_class_to_snake(factory)
 

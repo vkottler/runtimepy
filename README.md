@@ -2,11 +2,11 @@
     =====================================
     generator=datazen
     version=3.1.2
-    hash=182b46b499d24cb62c9688e373b88345
+    hash=ce3f1316217e521947cc4b3047971525
     =====================================
 -->
 
-# runtimepy ([1.1.1](https://pypi.org/project/runtimepy/))
+# runtimepy ([1.2.0](https://pypi.org/project/runtimepy/))
 
 [![python](https://img.shields.io/pypi/pyversions/runtimepy.svg)](https://pypi.org/project/runtimepy/)
 ![Build Status](https://github.com/vkottler/runtimepy/workflows/Python%20Package/badge.svg)
@@ -44,20 +44,55 @@ This package is tested on the following platforms:
 ```
 $ ./venv3.8/bin/runtimepy -h
 
-usage: runtimepy [-h] [--version] [-v] [-C DIR] {tui,noop} ...
+usage: runtimepy [-h] [--version] [-v] [-C DIR] {arbiter,tui,noop} ...
 
 A framework for implementing Python services.
 
 optional arguments:
-  -h, --help         show this help message and exit
-  --version          show program's version number and exit
-  -v, --verbose      set to increase logging verbosity
-  -C DIR, --dir DIR  execute from a specific directory
+  -h, --help          show this help message and exit
+  --version           show program's version number and exit
+  -v, --verbose       set to increase logging verbosity
+  -C DIR, --dir DIR   execute from a specific directory
 
 commands:
-  {tui,noop}         set of available commands
-    tui              run a terminal interface for the channel environment
-    noop             command stub (does nothing)
+  {arbiter,tui,noop}  set of available commands
+    arbiter           run a connection-arbiter application from a config
+    tui               run a terminal interface for the channel environment
+    noop              command stub (does nothing)
+
+```
+
+## Sub-command Options
+
+### `arbiter`
+
+```
+$ ./venv3.8/bin/runtimepy arbiter -h
+
+usage: runtimepy arbiter [-h] config
+
+positional arguments:
+  config      the configuration to load
+
+optional arguments:
+  -h, --help  show this help message and exit
+
+```
+
+### `tui`
+
+```
+$ ./venv3.8/bin/runtimepy tui -h
+
+usage: runtimepy tui [-h] [-i ITERATIONS] [-r RATE]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -i ITERATIONS, --iterations ITERATIONS
+                        maximum number of program iterations (if greater than
+                        zero, default: 0)
+  -r RATE, --rate RATE  frequency (in Hz) to run the interface (default: 60.0
+                        Hz)
 
 ```
 

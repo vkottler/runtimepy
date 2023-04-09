@@ -10,6 +10,7 @@ includes:
   - config/includes/python.yaml
   - config/includes/license.yaml
   - config/includes/funding.yaml
+  - local/includes/sub_commands.yaml
 
 templates:
   - local/templates
@@ -29,6 +30,8 @@ renders:
       - renders-python_readme_header.md
       - renders-python_readme_dep_graph.md
       - commands-help
+      - commands-help-arbiter
+      - commands-help-tui
 
   - name: app.py
     output_dir: "{{project}}"

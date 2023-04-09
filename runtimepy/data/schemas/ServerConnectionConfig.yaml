@@ -1,0 +1,14 @@
+---
+type: object
+required: [factory]
+additionalProperties: false
+
+properties:
+  factory:
+    type: string
+
+  args:
+    type: array
+
+  kwargs:
+    type: object
