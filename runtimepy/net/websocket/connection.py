@@ -32,6 +32,7 @@ from websockets.server import serve as _serve
 # internal
 from runtimepy.net import sockname as _sockname
 from runtimepy.net.connection import BinaryMessage, Connection
+from runtimepy.net.connection import EchoConnection as _EchoConnection
 from runtimepy.net.manager import ConnectionManager as _ConnectionManager
 
 T = _TypeVar("T", bound="WebsocketConnection")
@@ -206,3 +207,7 @@ class WebsocketConnection(Connection):
             LOG.info("WebSocket Application stopped.")
 
         LOG.info("WebSocket Server closed.")
+
+
+class EchoWebsocketConnection(WebsocketConnection, _EchoConnection):
+    """An echo connection for WebSocket."""

@@ -11,6 +11,7 @@ from typing import Callable as _Callable
 from typing import Iterable as _Iterable
 from typing import List as _List
 from typing import MutableMapping as _MutableMapping
+from typing import NamedTuple
 from typing import Union as _Union
 
 # third-party
@@ -25,17 +26,24 @@ from runtimepy.net.connection import Connection as _Connection
 from runtimepy.net.manager import ConnectionManager as _ConnectionManager
 
 ConnectionMap = _MutableMapping[str, _Connection]
-NetworkApplication = _Callable[
-    [_AsyncExitStack, ConnectionMap], _Awaitable[int]
-]
+
+
+class AppInfo(NamedTuple):
+    """References provided to network applications."""
+
+    stack: _AsyncExitStack
+    connections: ConnectionMap
+    stop: _asyncio.Event
+
+
+NetworkApplication = _Callable[[AppInfo], _Awaitable[int]]
 ServerTask = _Awaitable[None]
 
 
-async def init_only(stack: _AsyncExitStack, connections: ConnectionMap) -> int:
+async def init_only(app: AppInfo) -> int:
     """A network application that doesn't do anything."""
 
-    del stack
-    del connections
+    del app
     return 0
 
 
@@ -158,7 +166,9 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
                     if app is None:
                         app = self._app
 
-                    result = await app(stack, self._connections)
+                    result = await app(
+                        AppInfo(stack, self._connections, self.stop_sig)
+                    )
                     self.logger.info("Application returned %d.", result)
 
         finally:

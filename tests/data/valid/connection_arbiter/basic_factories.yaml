@@ -1,0 +1,8 @@
+---
+includes:
+  - echo_factories.yaml
+
+factories:
+  - {name: "tests.sample.SampleUdpConn", namespaces: [udp, sample]}
+  - {name: "tests.sample.SampleTcpConn", namespaces: [tcp, sample]}
+  - {name: "tests.sample.SampleWebsocketConn", namespaces: [websocket, sample]}
