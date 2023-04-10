@@ -28,10 +28,19 @@ class Connection(_LoggerMixin, _ABC):
         super().__init__(logger=logger)
         self._enabled = True
 
+        # A queue for out-going text messages. Connections that don't use
+        # this can set 'uses_text_tx_queue' to False to avoid scheduling a
+        # task for it.
         self._text_messages: _asyncio.Queue[str] = _asyncio.Queue()
         self.tx_text_hwm: int = 0
+        self.uses_text_tx_queue = True
+
+        # A queue for out-going binary messages. Connections that don't use
+        # this can set 'uses_binary_tx_queue' to False to avoid scheduling a
+        # task for it.
         self._binary_messages: _asyncio.Queue[BinaryMessage] = _asyncio.Queue()
         self.tx_binary_hwm: int = 0
+        self.uses_binary_tx_queue = True
 
         self._tasks: _List[_asyncio.Task[None]] = []
         self.initialized = _asyncio.Event()
@@ -127,10 +136,17 @@ class Connection(_LoggerMixin, _ABC):
 
         self._tasks = [
             _asyncio.create_task(self._process_read()),
-            _asyncio.create_task(self._process_write_text()),
-            _asyncio.create_task(self._process_write_binary()),
             _asyncio.create_task(self._async_init()),
         ]
+
+        if self.uses_text_tx_queue:
+            self._tasks.append(
+                _asyncio.create_task(self._process_write_text())
+            )
+        if self.uses_binary_tx_queue:
+            self._tasks.append(
+                _asyncio.create_task(self._process_write_binary())
+            )
 
         # Allow a stop signal to also disable the connection.
         if stop_sig is not None:

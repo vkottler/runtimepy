@@ -73,6 +73,10 @@ class UdpConnection(_Connection, _TransportMixin):
         super().__init__(_getLogger(self.logger_name("UDP ")))
         self._protocol.logger = self.logger
 
+        # UDP connections send datagrams directly without going through queues.
+        self.uses_text_tx_queue = False
+        self.uses_binary_tx_queue = False
+
     @_abstractmethod
     async def process_datagram(
         self, data: bytes, addr: _Tuple[str, int]
