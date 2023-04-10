@@ -85,6 +85,10 @@ class TcpConnection(_Connection, _TransportMixin):
         self._protocol.conn = self
         super().__init__(_getLogger(self.logger_name("TCP ")))
 
+        # TCP connections send data directly without going through queues.
+        self.uses_text_tx_queue = False
+        self.uses_binary_tx_queue = False
+
     async def _await_message(self) -> _Optional[_Union[_BinaryMessage, str]]:
         """Await the next message. Return None on error or failure."""
         return await self._protocol.queue.get()

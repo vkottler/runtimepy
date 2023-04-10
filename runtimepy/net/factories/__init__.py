@@ -6,11 +6,25 @@ A module aggregating commonly used connection factory classes.
 from runtimepy.net.arbiter.tcp import TcpConnectionFactory
 from runtimepy.net.arbiter.udp import UdpConnectionFactory
 from runtimepy.net.arbiter.websocket import WebsocketConnectionFactory
-from runtimepy.net.tcp.connection import EchoTcpConnection
-from runtimepy.net.udp.connection import EchoUdpConnection
-from runtimepy.net.websocket.connection import EchoWebsocketConnection
+from runtimepy.net.tcp.connection import EchoTcpConnection, TcpConnection
+from runtimepy.net.udp.connection import EchoUdpConnection, UdpConnection
+from runtimepy.net.websocket.connection import (
+    EchoWebsocketConnection,
+    WebsocketConnection,
+)
 
-__all__ = ["UdpEcho", "TcpEcho", "WebsocketEcho"]
+# Expose a number of useful symbols in one place.
+__all__ = [
+    "TcpConnection",
+    "TcpConnectionFactory",
+    "TcpEcho",
+    "UdpConnection",
+    "UdpConnectionFactory",
+    "UdpEcho",
+    "WebsocketConnection",
+    "WebsocketConnectionFactory",
+    "WebsocketEcho",
+]
 
 
 class UdpEcho(UdpConnectionFactory[EchoUdpConnection]):
