@@ -14,7 +14,6 @@ from runtimepy.net.arbiter.base import ServerTask as _ServerTask
 from runtimepy.net.arbiter.factory import (
     ConnectionFactory as _ConnectionFactory,
 )
-from runtimepy.net.connection import Connection as _Connection
 from runtimepy.net.manager import ConnectionManager as _ConnectionManager
 from runtimepy.net.websocket.connection import (
     WebsocketConnection as _WebsocketConnection,
@@ -28,7 +27,7 @@ class WebsocketConnectionFactory(_ConnectionFactory, _Generic[T]):
 
     kind: _Type[T]
 
-    async def client(self, *args, **kwargs) -> _Connection:
+    async def client(self, *args, **kwargs) -> T:
         """Create a client connection."""
         return await self.kind.create_connection(*args, **kwargs)
 

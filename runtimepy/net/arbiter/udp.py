@@ -11,7 +11,6 @@ from typing import TypeVar as _TypeVar
 from runtimepy.net.arbiter.factory import (
     ConnectionFactory as _ConnectionFactory,
 )
-from runtimepy.net.connection import Connection as _Connection
 from runtimepy.net.udp.connection import UdpConnection as _UdpConnection
 
 T = _TypeVar("T", bound=_UdpConnection)
@@ -24,7 +23,7 @@ class UdpConnectionFactory(
 
     kind: _Type[T]
 
-    async def client(self, *args, **kwargs) -> _Connection:
+    async def client(self, *args, **kwargs) -> T:
         """Create a client connection."""
 
         assert not [*args], "Only keyword arguments are used!"

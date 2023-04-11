@@ -13,7 +13,6 @@ from runtimepy.net.arbiter.base import ServerTask as _ServerTask
 from runtimepy.net.arbiter.factory import (
     ConnectionFactory as _ConnectionFactory,
 )
-from runtimepy.net.connection import Connection as _Connection
 from runtimepy.net.manager import ConnectionManager as _ConnectionManager
 from runtimepy.net.tcp.connection import TcpConnection as _TcpConnection
 
@@ -25,7 +24,7 @@ class TcpConnectionFactory(_ConnectionFactory, _Generic[T]):
 
     kind: _Type[T]
 
-    async def client(self, *args, **kwargs) -> _Connection:
+    async def client(self, *args, **kwargs) -> T:
         """Create a client connection."""
 
         assert not [*args], "Only keyword arguments are used!"
