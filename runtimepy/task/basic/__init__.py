@@ -34,7 +34,9 @@ class PeriodicTask(_LoggerMixin, _ABC):
     async def dispatch(self) -> bool:
         """Dispatch an iteration of this task."""
 
-    async def _run(self, period_s: float) -> None:
+    async def run(
+        self, period_s: float, stop_sig: _asyncio.Event = None
+    ) -> None:
         """
         Run this task by executing the dispatch method at the specified period
         until a dispatch iteration fails or the task is otherwise disabled.
@@ -52,6 +54,11 @@ class PeriodicTask(_LoggerMixin, _ABC):
             self.enabled = await _asyncio.shield(self.dispatch())
             iter_time = eloop.time() - start
 
+            # Check this synchronously. This may not be suitable for tasks
+            # with long periods.
+            if stop_sig is not None:
+                self.enabled = not stop_sig.is_set()
+
             if self.enabled:
                 try:
                     await _asyncio.sleep(max(period_s - iter_time, 0))
@@ -61,7 +68,9 @@ class PeriodicTask(_LoggerMixin, _ABC):
 
         self.logger.info("Task completed.")
 
-    async def task(self, period_s: float) -> _asyncio.Task[None]:
+    async def task(
+        self, period_s: float, stop_sig: _asyncio.Event = None
+    ) -> _asyncio.Task[None]:
         """Create an event-loop task for this periodic."""
 
         # Ensure that a previous version of this task gets cleaned up.
@@ -74,5 +83,7 @@ class PeriodicTask(_LoggerMixin, _ABC):
                     await self._task
             self._task = None
 
-        self._task = _asyncio.create_task(self._run(period_s))
+        self._task = _asyncio.create_task(
+            self.run(period_s, stop_sig=stop_sig)
+        )
         return self._task
