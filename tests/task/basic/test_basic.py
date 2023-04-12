@@ -54,3 +54,20 @@ async def test_periodic_task_basic():
     # This happens on Windows...
     except asyncio.CancelledError:
         pass
+
+
+@mark.asyncio
+async def test_periodic_task_stop_sig():
+    """Test that periodic tasks stop when the stop signal is set."""
+
+    task = SampleTask("sample")
+
+    stop_sig = asyncio.Event()
+
+    # Create the initial task.
+    initial = await task.task(0.01, stop_sig=stop_sig)
+
+    stop_sig.set()
+
+    await initial
+    assert initial.done()
