@@ -22,6 +22,12 @@ properties:
   config:
     type: object
 
+  # A 'site' directory to add for discovering modules that may appear in other
+  # parts of the configuration. If this isn't specified, the current directory
+  # is used.
+  directory:
+    type: string
+
   factories:
     type: array
     items:
