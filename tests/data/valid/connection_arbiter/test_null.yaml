@@ -1,0 +1,40 @@
+---
+includes:
+  - ports.yaml
+  - basic_factories.yaml
+
+app: tests.net.test_null.spam_app
+
+clients:
+  - factory: tcp_null
+    name: client
+    defer: true
+    kwargs:
+      host: localhost
+      port: "$tcp_server"
+
+  - factory: websocket_null
+    name: client
+    defer: true
+    args: ["ws://localhost:$websocket_server"]
+
+  - factory: udp_null
+    name: client
+    defer: true
+    kwargs:
+      remote_addr: [localhost, "$udp_listen"]
+
+  - factory: udp_echo
+    name: server
+    kwargs:
+      local_addr: [localhost, "$udp_listen"]
+
+servers:
+  - factory: tcp_echo
+    kwargs:
+      port: "$tcp_server"
+
+  - factory: websocket_echo
+    kwargs:
+      host: "0.0.0.0"
+      port: "$websocket_server"

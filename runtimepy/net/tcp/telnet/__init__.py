@@ -140,7 +140,9 @@ class BasicTelnet(Telnet):
 
     async def handle_nvt(self, action: TelnetNvt) -> None:
         """Handle a signal for the network virtual-terminal."""
-        self.logger.info("NVT signal: %s (%d).", action, action)
+
+        if action is not TelnetNvt.NUL:
+            self.logger.info("NVT signal: %s (%d).", action, action)
 
     async def process_option(
         self, code: TelnetCode, option: int, _: _BinaryIO

@@ -29,6 +29,7 @@ from runtimepy.net import sockname as _sockname
 from runtimepy.net.connection import BinaryMessage as _BinaryMessage
 from runtimepy.net.connection import Connection as _Connection
 from runtimepy.net.connection import EchoConnection as _EchoConnection
+from runtimepy.net.connection import NullConnection as _NullConnection
 from runtimepy.net.manager import ConnectionManager as _ConnectionManager
 from runtimepy.net.mixin import (
     BinaryMessageQueueMixin as _BinaryMessageQueueMixin,
@@ -203,3 +204,7 @@ class TcpConnection(_Connection, _TransportMixin):
 
 class EchoTcpConnection(TcpConnection, _EchoConnection):
     """An echo connection for TCP."""
+
+
+class NullTcpConnection(TcpConnection, _NullConnection):
+    """A null TCP connection."""

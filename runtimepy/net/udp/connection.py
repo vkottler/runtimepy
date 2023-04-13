@@ -24,6 +24,7 @@ from runtimepy.net import IpHost, get_free_socket
 from runtimepy.net.connection import BinaryMessage as _BinaryMessage
 from runtimepy.net.connection import Connection as _Connection
 from runtimepy.net.connection import EchoConnection as _EchoConnection
+from runtimepy.net.connection import NullConnection as _NullConnection
 from runtimepy.net.mixin import TransportMixin as _TransportMixin
 
 LOG = _getLogger(__name__)
@@ -162,4 +163,14 @@ class EchoUdpConnection(UdpConnection, _EchoConnection):
         """Process a datagram."""
 
         self.sendto(data, addr=addr)
+        return True
+
+
+class NullUdpConnection(UdpConnection, _NullConnection):
+    """A null UDP connection."""
+
+    async def process_datagram(
+        self, data: bytes, addr: _Tuple[str, int]
+    ) -> bool:
+        """Process a datagram."""
         return True
