@@ -4,6 +4,8 @@ connections or servers.
 """
 
 # built-in
+from pathlib import Path as _Path
+from site import addsitedir as _addsitedir
 import socket as _socket
 from typing import Any as _Any
 from typing import Dict as _Dict
@@ -15,6 +17,7 @@ from typing import cast as _cast
 from vcorelib.dict.env import dict_resolve_env_vars, list_resolve_env_vars
 from vcorelib.io.types import JsonObject as _JsonObject
 from vcorelib.paths import Pathlike as _Pathlike
+from vcorelib.paths import normalize as _normalize
 
 # internal
 from runtimepy.net import get_free_socket_name, normalize_host
@@ -28,6 +31,8 @@ class ConnectionArbiterConfig(_RuntimepyDictCodec):
     """
     A class for encoding and decoding connection-arbiter configuration data.
     """
+
+    directory: _Path
 
     def init(self, data: _JsonObject) -> None:
         """Perform implementation-specific initialization."""
@@ -52,6 +57,8 @@ class ConnectionArbiterConfig(_RuntimepyDictCodec):
         self.factories: _List[_Any] = data.get("factories", [])  # type: ignore
         self.clients: _List[_Any] = data.get("clients", [])  # type: ignore
         self.servers: _List[_Any] = data.get("servers", [])  # type: ignore
+
+        self.directory = _Path(str(data.get("directory", ".")))
 
     def asdict(self) -> _JsonObject:
         """Obtain a dictionary representing this instance."""
@@ -97,9 +104,18 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
     async def load_config(self, path: _Pathlike) -> None:
         """Load a client and server configuration to the arbiter."""
 
-        await self.process_config(
-            ConnectionArbiterConfig.decode(path, includes_key="includes")
-        )
+        path = _normalize(path)
+        config = ConnectionArbiterConfig.decode(path, includes_key="includes")
+
+        # Set the directory to be the parent directory of the configuration
+        # file if it wasn't set.
+        if "directory" not in config.data:
+            config.directory = path.parent
+
+        # Add the site directory to facilitate module discovery.
+        _addsitedir(str(config.directory))
+
+        await self.process_config(config)
 
     async def process_config(self, config: ConnectionArbiterConfig) -> None:
         """Register clients and servers from a configuration object."""
