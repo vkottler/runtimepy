@@ -126,7 +126,9 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
             assert self.register_module_factory(
                 name,
                 *factory.get("namespaces", []),
-                **factory.get("kwargs", {}),
+                **dict_resolve_env_vars(
+                    factory.get("kwargs", {}), env=config.ports  # type: ignore
+                ),
             ), "Couldn't register factory '{name}'!"
 
         # Register clients.
