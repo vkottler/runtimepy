@@ -5,9 +5,8 @@ Test the 'net.apps' module.
 # built-in
 import asyncio
 
-from runtimepy.net.apps import wait_for_stop
-
 # module under test
+from runtimepy.net.apps import wait_for_stop
 from runtimepy.net.arbiter import ConnectionArbiter
 
 

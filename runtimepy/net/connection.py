@@ -223,3 +223,15 @@ class EchoConnection(Connection):
         """Process a binary frame."""
         self.send_binary(data)
         return True
+
+
+class NullConnection(Connection):
+    """A connection that doesn't do anything with incoming data."""
+
+    async def process_text(self, data: str) -> bool:
+        """Process a text frame."""
+        return True
+
+    async def process_binary(self, data: bytes) -> bool:
+        """Process a binary frame."""
+        return True

@@ -33,6 +33,7 @@ from websockets.server import serve as _serve
 from runtimepy.net import sockname as _sockname
 from runtimepy.net.connection import BinaryMessage, Connection
 from runtimepy.net.connection import EchoConnection as _EchoConnection
+from runtimepy.net.connection import NullConnection as _NullConnection
 from runtimepy.net.manager import ConnectionManager as _ConnectionManager
 
 T = _TypeVar("T", bound="WebsocketConnection")
@@ -211,3 +212,7 @@ class WebsocketConnection(Connection):
 
 class EchoWebsocketConnection(WebsocketConnection, _EchoConnection):
     """An echo connection for WebSocket."""
+
+
+class NullWebsocketConnection(WebsocketConnection, _NullConnection):
+    """A null WebSocket connection."""
