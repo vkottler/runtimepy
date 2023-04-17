@@ -20,7 +20,12 @@ clients:
     name: client
     defer: true
     kwargs:
+      # Set this false for code coverage.
+      connect: false
       remote_addr: [localhost, "$udp_listen"]
+
+      # This needs to be set in order to create the socket.
+      local_addr: [localhost, 0]
 
   - factory: udp_echo
     name: server

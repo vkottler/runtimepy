@@ -9,11 +9,14 @@ from typing import cast
 from pytest import mark
 
 # module under test
-from runtimepy.net.arbiter import ConnectionArbiter
-from runtimepy.net.arbiter.base import AppInfo
+from runtimepy.net.arbiter import AppInfo, ConnectionArbiter
 
 # internal
-from tests.resources import SampleConnectionMixin, resource
+from tests.resources import (
+    SampleConnectionMixin,
+    SampleUdpConnection,
+    resource,
+)
 
 
 @mark.asyncio
@@ -33,6 +36,9 @@ async def echo_test_app(app: AppInfo) -> int:
 
     # Ensure that configuration data got set correctly.
     assert app.config == {"a": 1, "b": 2, "c": 3}
+
+    assert len(list(app.search(pattern="sample"))) == 3
+    assert len(list(app.search(kind=SampleUdpConnection))) == 1
 
     conns = [
         "tcp.sample.client",

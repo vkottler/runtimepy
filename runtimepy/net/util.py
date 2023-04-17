@@ -3,6 +3,7 @@ A module implementing various networking utilities.
 """
 
 # built-in
+from contextlib import suppress as _suppress
 import socket as _socket
 from typing import NamedTuple
 from typing import Union as _Union
@@ -15,8 +16,8 @@ class IPv4Host(NamedTuple):
     port: int = 0
 
     def __str__(self) -> str:
-        """A string representation of the host."""
-        return f"{self.name}:{self.port}"
+        """Get this host as a string."""
+        return hostname_port(self.name, self.port)
 
 
 class IPv6Host(NamedTuple):
@@ -28,14 +29,15 @@ class IPv6Host(NamedTuple):
     scope_id: int = 0
 
     def __str__(self) -> str:
-        """A string representation of the host."""
-        return f"{self.name}:{self.port}"
+        """Get this host as a string."""
+        return hostname_port(self.name, self.port)
 
 
 IpHost = _Union[IPv4Host, IPv6Host]
+IpHostlike = _Union[str, int, IpHost, None]
 
 
-def normalize_host(*args: _Union[str, int, IpHost, None]) -> IpHost:
+def normalize_host(*args: IpHostlike) -> IpHost:
     """Get a host object from caller parameters."""
 
     # Default.
@@ -48,6 +50,22 @@ def normalize_host(*args: _Union[str, int, IpHost, None]) -> IpHost:
     if len([*args]) == 2:
         return IPv4Host(*args)  # type: ignore
     return IPv6Host(*args)  # type: ignore
+
+
+def hostname(ip_address: str) -> str:
+    """
+    Attempt to get a string hostname for a string IP address argument that
+    'gethostbyaddr' accepts. Otherwise return the original string
+    """
+    result = ip_address
+    with _suppress(_socket.herror, OSError):
+        result = _socket.gethostbyaddr(ip_address)[0]
+    return result
+
+
+def hostname_port(ip_address: str, port: int) -> str:
+    """Get a hostname string with a port appended."""
+    return f"{hostname(ip_address)}:{port}"
 
 
 def sockname(sock: _socket.SocketType) -> IpHost:

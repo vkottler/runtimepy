@@ -7,7 +7,6 @@ from abc import ABC as _ABC
 import asyncio as _asyncio
 from typing import List as _List
 from typing import Optional as _Optional
-from typing import TypeVar as _TypeVar
 from typing import Union as _Union
 
 # third-party
@@ -16,7 +15,6 @@ from vcorelib.logging import LoggerMixin as _LoggerMixin
 from vcorelib.logging import LoggerType as _LoggerType
 
 BinaryMessage = _Union[bytes, bytearray, memoryview]
-T = _TypeVar("T")
 
 
 class Connection(_LoggerMixin, _ABC):
