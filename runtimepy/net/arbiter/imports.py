@@ -5,7 +5,9 @@ machinery.
 
 # built-in
 from importlib import import_module as _import_module
+from typing import List as _List
 from typing import Tuple as _Tuple
+from typing import Union as _Union
 
 # internal
 from runtimepy.net.arbiter.factory import (
@@ -32,13 +34,21 @@ class ImportConnectionArbiter(_FactoryConnectionArbiter):
     arbitrary Python modules.
     """
 
-    def set_app(self, module_path: str) -> None:
+    def set_app(self, module_path: _Union[str, _List[str]]) -> None:
         """
         Attempt to update the application method from the provided string.
         """
 
-        module, app = import_str_and_item(module_path)
-        self._app = getattr(_import_module(module), app)
+        if isinstance(module_path, str):
+            module_path = [module_path]
+
+        # Load all application methods.
+        apps = []
+        for path in module_path:
+            module, app = import_str_and_item(path)
+            apps.append(getattr(_import_module(module), app))
+
+        self._apps = apps
 
     def register_module_factory(
         self, module_path: str, *namespaces: str, **kwargs

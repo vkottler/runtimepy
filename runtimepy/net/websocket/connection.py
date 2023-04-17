@@ -7,6 +7,7 @@ from __future__ import annotations
 # built-in
 import asyncio as _asyncio
 from contextlib import asynccontextmanager as _asynccontextmanager
+from contextlib import suppress as _suppress
 from logging import getLogger as _getLogger
 from typing import AsyncIterator as _AsyncIterator
 from typing import Awaitable as _Awaitable
@@ -18,6 +19,7 @@ from typing import TypeVar as _TypeVar
 from typing import Union as _Union
 
 # third-party
+from vcorelib.asyncio import log_exceptions as _log_exceptions
 import websockets
 from websockets.client import (
     WebSocketClientProtocol as _WebSocketClientProtocol,
@@ -109,6 +111,7 @@ class WebsocketConnection(Connection):
 
         async def _handler(protocol: _WebSocketServerProtocol) -> None:
             """A handler that runs the callers initialization function."""
+
             conn = cls(protocol)
             if init is None or await init(conn):
                 if manager is not None:
@@ -127,9 +130,13 @@ class WebsocketConnection(Connection):
                         tasks,
                         return_when=_asyncio.FIRST_COMPLETED,
                     )
+
+                    # Cleaning up tasks is always a nightmare.
                     for task in pending:
                         task.cancel()
-                        await task
+                        with _suppress(_asyncio.CancelledError):
+                            await task
+                    _log_exceptions(pending, logger=conn.logger)
 
                 # If there's no connection manager, just process the
                 # connection here.

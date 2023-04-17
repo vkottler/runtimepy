@@ -13,10 +13,14 @@ properties:
     items:
       $ref: package://runtimepy/schemas/ServerConnectionConfig.yaml
 
+  # Runtime application or applications.
+  # defaults to: "runtimepy.net.apps.init_only"
   app:
-    # This is the default application.
-    # default: "runtimepy.net.apps.init_only"
-    type: string
+    oneOf:
+      - type: string
+      - type: array
+        items:
+          type: string
 
   # Application configuration data.
   config:

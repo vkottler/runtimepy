@@ -3,7 +3,9 @@ includes:
   - ports.yaml
   - basic_factories.yaml
 
-app: "runtimepy.net.apps.init_only"
+app:
+  - runtimepy.net.apps.init_only
+  - runtimepy.net.apps.init_only
 
 clients:
   - factory: sample_tcp_conn
