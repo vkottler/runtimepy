@@ -3,7 +3,7 @@ A module implementing a connection arbiter interface.
 """
 
 # built-in
-from runtimepy.net.arbiter.base import NetworkApplication
+from runtimepy.net.arbiter.base import NetworkApplication, init_only
 from runtimepy.net.arbiter.config import (
     ConfigConnectionArbiter as _ConfigConnectionArbiter,
 )
@@ -14,6 +14,7 @@ __all__ = [
     "ConnectionArbiter",
     "ConnectionMap",
     "NetworkApplication",
+    "init_only",
 ]
 
 

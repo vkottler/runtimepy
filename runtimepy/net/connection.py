@@ -5,6 +5,7 @@ A module implementing a network-connection interface.
 # built-in
 from abc import ABC as _ABC
 import asyncio as _asyncio
+from contextlib import suppress as _suppress
 from typing import List as _List
 from typing import Optional as _Optional
 from typing import Union as _Union
@@ -160,25 +161,28 @@ class Connection(_LoggerMixin, _ABC):
     async def _process_read(self) -> None:
         """Process incoming messages while this connection is active."""
 
-        while self._enabled:
-            # Attempt to get the next message.
-            message = await self._await_message()
-            result = False
+        with _suppress(KeyboardInterrupt):
+            while self._enabled:
+                # Attempt to get the next message.
+                message = await self._await_message()
+                result = False
 
-            if message is not None:
-                # Process a text message.
-                if isinstance(message, str):
-                    result = await _asyncio.shield(self.process_text(message))
+                if message is not None:
+                    # Process a text message.
+                    if isinstance(message, str):
+                        result = await _asyncio.shield(
+                            self.process_text(message)
+                        )
 
-                # Process a binary message.
-                else:
-                    result = await _asyncio.shield(
-                        self.process_binary(message)
-                    )
+                    # Process a binary message.
+                    else:
+                        result = await _asyncio.shield(
+                            self.process_binary(message)
+                        )
 
-            # If we failed to read a message, disable.
-            if not result:
-                self.disable("read processing error")
+                # If we failed to read a message, disable.
+                if not result:
+                    self.disable("read processing error")
 
     async def _process_write_text(self) -> None:
         """Process outgoing text messages."""

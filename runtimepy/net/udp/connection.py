@@ -20,7 +20,7 @@ from typing import Union as _Union
 from vcorelib.logging import LoggerType as _LoggerType
 
 # internal
-from runtimepy.net import IpHost, get_free_socket
+from runtimepy.net import IpHost, get_free_socket, normalize_host
 from runtimepy.net.connection import BinaryMessage as _BinaryMessage
 from runtimepy.net.connection import Connection as _Connection
 from runtimepy.net.connection import EchoConnection as _EchoConnection
@@ -121,8 +121,16 @@ class UdpConnection(_Connection, _TransportMixin):
         # If the caller specifies a remote address but doesn't want a connected
         # socket, handle this after initial creation.
         remote_addr = None
-        if not connect and "remote_addr" in kwargs:
-            remote_addr = kwargs.pop("remote_addr")
+        if not connect:
+            if "remote_addr" in kwargs:
+                remote_addr = kwargs.pop("remote_addr")
+
+            # If only 'remote_addr' was specified, that's normally enough to
+            # create the socket. Since we would have popped it, we now need
+            # to specify a local address.
+            if "local_addr" not in kwargs:
+                kwargs["local_addr"] = ("0.0.0.0", 0)
+                kwargs.setdefault("family", _socket.AF_INET)
 
         transport: _DatagramTransport
         (
@@ -134,7 +142,7 @@ class UdpConnection(_Connection, _TransportMixin):
 
         # Set the remote address manually if necessary.
         if not connect and remote_addr is not None:
-            conn.set_remote_address(remote_addr)
+            conn.set_remote_address(normalize_host(*remote_addr))
 
         return conn
 
