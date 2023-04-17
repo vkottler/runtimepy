@@ -39,6 +39,7 @@ class AppInfo(NamedTuple):
 
 
 NetworkApplication = _Callable[[AppInfo], _Awaitable[int]]
+NetworkApplicationlike = _Union[NetworkApplication, _List[NetworkApplication]]
 ServerTask = _Awaitable[None]
 
 
@@ -47,6 +48,20 @@ async def init_only(app: AppInfo) -> int:
 
     del app
     return 0
+
+
+def normalize_app(
+    app: NetworkApplicationlike = None,
+) -> _List[NetworkApplication]:
+    """
+    Normalize some application parameter into a list of network applications.
+    """
+
+    if app is None:
+        app = [init_only]
+    elif not isinstance(app, list):
+        app = [app]
+    return app
 
 
 class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
@@ -60,7 +75,7 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
         stop_sig: _asyncio.Event = None,
         namespace: _Namespace = None,
         logger: _LoggerType = None,
-        app: NetworkApplication = init_only,
+        app: NetworkApplicationlike = None,
         config: _JsonObject = None,
     ) -> None:
         """Initialize this connection arbiter."""
@@ -79,7 +94,7 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
 
         # A fallback application. Set a class attribute so this can be more
         # easily externally updated.
-        self._app = app
+        self._apps: _List[NetworkApplication] = normalize_app(app)
 
         # Application configuration data.
         if config is None:
@@ -136,7 +151,7 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
 
     async def _entry(
         self,
-        app: NetworkApplication = None,
+        app: NetworkApplicationlike = None,
         check_connections: bool = True,
         config: _JsonObject = None,
     ) -> int:
@@ -174,18 +189,28 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
                 async with _AsyncExitStack() as stack:
                     self.logger.info("Application starting.")
 
-                    if app is None:
-                        app = self._app
-
-                    result = await app(
-                        AppInfo(
-                            stack,
-                            self._connections,
-                            self.stop_sig,
-                            config if config is not None else self._config,
-                        )
+                    info = AppInfo(
+                        stack,
+                        self._connections,
+                        self.stop_sig,
+                        config if config is not None else self._config,
                     )
-                    self.logger.info("Application returned %d.", result)
+
+                    # Get application methods.
+                    apps = self._apps
+                    if app is not None:
+                        apps = normalize_app(app)
+
+                    result = 0
+                    for curr_app in apps:
+                        if result == 0:
+                            result = await curr_app(info)
+
+                            self.logger.info(
+                                "Application '%s' returned %d.",
+                                curr_app.__name__,
+                                result,
+                            )
 
         finally:
             for conn in self._connections.values():
@@ -196,7 +221,7 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
 
     async def app(
         self,
-        app: NetworkApplication = None,
+        app: NetworkApplicationlike = None,
         check_connections: bool = True,
         config: _JsonObject = None,
     ) -> int:
@@ -206,7 +231,7 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
 
         result = await _asyncio.gather(
             self._entry(
-                app, check_connections=check_connections, config=config
+                app=app, check_connections=check_connections, config=config
             ),
             self.manager.manage(self.stop_sig),
             *self._servers,
@@ -215,7 +240,7 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
 
     def run(
         self,
-        app: NetworkApplication = None,
+        app: NetworkApplicationlike = None,
         eloop: _asyncio.AbstractEventLoop = None,
         signals: _Iterable[int] = None,
         check_connections: bool = True,

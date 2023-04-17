@@ -10,6 +10,7 @@ from pytest import mark
 
 # module under test
 from runtimepy.net import get_free_socket_name
+from runtimepy.net.apps import init_only
 from runtimepy.net.arbiter import ConnectionArbiter
 
 # internal
@@ -21,7 +22,7 @@ def test_connection_arbiter_run():
     """Test the synchronous 'run' entry."""
 
     arbiter = ConnectionArbiter()
-    assert arbiter.run() == 0
+    assert arbiter.run(app=init_only) == 0
 
 
 @mark.asyncio
