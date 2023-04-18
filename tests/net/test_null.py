@@ -9,8 +9,7 @@ import asyncio
 from pytest import mark
 
 # module under test
-from runtimepy.net.arbiter import ConnectionArbiter
-from runtimepy.net.arbiter.base import AppInfo
+from runtimepy.net.arbiter import AppInfo, ConnectionArbiter
 
 # internal
 from tests.resources import resource

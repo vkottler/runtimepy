@@ -16,6 +16,7 @@ from runtimepy.net.util import (
     IPv6Host,
     get_free_socket,
     get_free_socket_name,
+    hostname,
     normalize_host,
     sockname,
 )
@@ -31,6 +32,7 @@ __all__ = [
     "IPv6Host",
     "get_free_socket",
     "get_free_socket_name",
+    "hostname",
     "normalize_host",
     "sockname",
 ]

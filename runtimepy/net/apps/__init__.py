@@ -4,7 +4,7 @@ connection-arbiter technology).
 """
 
 # internal
-from runtimepy.net.arbiter.base import AppInfo, init_only
+from runtimepy.net.arbiter import AppInfo, init_only
 
 __all__ = ["AppInfo", "init_only", "wait_for_stop"]
 

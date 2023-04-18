@@ -20,12 +20,14 @@ clients:
     name: client
     defer: true
     kwargs:
-      remote_addr: [localhost, "$udp_listen"]
+      # Set this false for code coverage.
+      connect: false
+      remote_addr: [127.0.0.1, "$udp_listen"]
 
   - factory: udp_echo
     name: server
     kwargs:
-      local_addr: [localhost, "$udp_listen"]
+      local_addr: ["0.0.0.0", "$udp_listen"]
 
 servers:
   - factory: tcp_echo

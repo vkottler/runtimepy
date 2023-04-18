@@ -20,7 +20,7 @@ from typing import Union as _Union
 from vcorelib.logging import LoggerType as _LoggerType
 
 # internal
-from runtimepy.net import IpHost, get_free_socket
+from runtimepy.net import IpHost, get_free_socket, normalize_host
 from runtimepy.net.connection import BinaryMessage as _BinaryMessage
 from runtimepy.net.connection import Connection as _Connection
 from runtimepy.net.connection import EchoConnection as _EchoConnection
@@ -78,6 +78,16 @@ class UdpConnection(_Connection, _TransportMixin):
         self.uses_text_tx_queue = False
         self.uses_binary_tx_queue = False
 
+    def set_remote_address(self, addr: IpHost) -> None:
+        """
+        Set a new remote address. Note that this doesn't interact with or
+        attempt to 'connect' the underlying socket. That should be done at
+        creation time.
+        """
+        self.remote_address = addr
+        self.logger = _getLogger(self.logger_name("UDP "))
+        self._protocol.logger = self.logger
+
     @_abstractmethod
     async def process_datagram(
         self, data: bytes, addr: _Tuple[str, int]
@@ -99,19 +109,42 @@ class UdpConnection(_Connection, _TransportMixin):
         self._transport.sendto(data, addr=self.remote_address)
 
     @classmethod
-    async def create_connection(cls: _Type[T], **kwargs) -> T:
+    async def create_connection(
+        cls: _Type[T], connect: bool = True, **kwargs
+    ) -> T:
         """Create a UDP connection."""
 
         eloop = _asyncio.get_event_loop()
 
-        LOG.debug("kwargs: %s", {**kwargs})
+        LOG.debug("kwargs: %s", kwargs)
+
+        # If the caller specifies a remote address but doesn't want a connected
+        # socket, handle this after initial creation.
+        remote_addr = None
+        if not connect:
+            if "remote_addr" in kwargs:
+                remote_addr = kwargs.pop("remote_addr")
+
+            # If only 'remote_addr' was specified, that's normally enough to
+            # create the socket. Since we would have popped it, we now need
+            # to specify a local address.
+            if "local_addr" not in kwargs:
+                kwargs["local_addr"] = ("0.0.0.0", 0)
+                kwargs.setdefault("family", _socket.AF_INET)
 
         transport: _DatagramTransport
         (
             transport,
             protocol,
         ) = await eloop.create_datagram_endpoint(UdpQueueProtocol, **kwargs)
-        return cls(transport, protocol)
+
+        conn = cls(transport, protocol)
+
+        # Set the remote address manually if necessary.
+        if not connect and remote_addr is not None:
+            conn.set_remote_address(normalize_host(*remote_addr))
+
+        return conn
 
     @classmethod
     async def create_pair(cls: _Type[T]) -> _Tuple[T, T]:

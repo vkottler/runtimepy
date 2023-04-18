@@ -11,7 +11,6 @@ from typing import Callable as _Callable
 from typing import Iterable as _Iterable
 from typing import List as _List
 from typing import MutableMapping as _MutableMapping
-from typing import NamedTuple
 from typing import Union as _Union
 
 # third-party
@@ -23,20 +22,9 @@ from vcorelib.namespace import Namespace as _Namespace
 from vcorelib.namespace import NamespaceMixin as _NamespaceMixin
 
 # internal
+from runtimepy.net.arbiter.info import AppInfo, ConnectionMap
 from runtimepy.net.connection import Connection as _Connection
 from runtimepy.net.manager import ConnectionManager as _ConnectionManager
-
-ConnectionMap = _MutableMapping[str, _Connection]
-
-
-class AppInfo(NamedTuple):
-    """References provided to network applications."""
-
-    stack: _AsyncExitStack
-    connections: ConnectionMap
-    stop: _asyncio.Event
-    config: _JsonObject
-
 
 NetworkApplication = _Callable[[AppInfo], _Awaitable[int]]
 NetworkApplicationlike = _Union[NetworkApplication, _List[NetworkApplication]]
@@ -192,6 +180,7 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
                     info = AppInfo(
                         stack,
                         self._connections,
+                        self._namespace,
                         self.stop_sig,
                         config if config is not None else self._config,
                     )
