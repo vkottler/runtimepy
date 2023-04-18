@@ -74,6 +74,10 @@ ConnectionCallback = _Callable[[T], None]
 class TcpConnection(_Connection, _TransportMixin):
     """A TCP connection interface."""
 
+    # TCP connections send data directly without going through queues.
+    uses_text_tx_queue = False
+    uses_binary_tx_queue = False
+
     def __init__(self, transport: _Transport, protocol: QueueProtocol) -> None:
         """Initialize this TCP connection."""
 
@@ -85,10 +89,6 @@ class TcpConnection(_Connection, _TransportMixin):
         self._protocol = protocol
         self._protocol.conn = self
         super().__init__(_getLogger(self.logger_name("TCP ")))
-
-        # TCP connections send data directly without going through queues.
-        self.uses_text_tx_queue = False
-        self.uses_binary_tx_queue = False
 
     async def _await_message(self) -> _Optional[_Union[_BinaryMessage, str]]:
         """Await the next message. Return None on error or failure."""

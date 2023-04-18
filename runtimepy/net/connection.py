@@ -21,6 +21,9 @@ BinaryMessage = _Union[bytes, bytearray, memoryview]
 class Connection(_LoggerMixin, _ABC):
     """A connection interface."""
 
+    uses_text_tx_queue = True
+    uses_binary_tx_queue = True
+
     def __init__(self, logger: _LoggerType) -> None:
         """Initialize this connection."""
 
@@ -32,14 +35,12 @@ class Connection(_LoggerMixin, _ABC):
         # task for it.
         self._text_messages: _asyncio.Queue[str] = _asyncio.Queue()
         self.tx_text_hwm: int = 0
-        self.uses_text_tx_queue = True
 
         # A queue for out-going binary messages. Connections that don't use
         # this can set 'uses_binary_tx_queue' to False to avoid scheduling a
         # task for it.
         self._binary_messages: _asyncio.Queue[BinaryMessage] = _asyncio.Queue()
         self.tx_binary_hwm: int = 0
-        self.uses_binary_tx_queue = True
 
         self._tasks: _List[_asyncio.Task[None]] = []
         self.initialized = _asyncio.Event()
@@ -168,17 +169,11 @@ class Connection(_LoggerMixin, _ABC):
                 result = False
 
                 if message is not None:
-                    # Process a text message.
+                    # Process a text or binary message.
                     if isinstance(message, str):
-                        result = await _asyncio.shield(
-                            self.process_text(message)
-                        )
-
-                    # Process a binary message.
+                        result = await self.process_text(message)
                     else:
-                        result = await _asyncio.shield(
-                            self.process_binary(message)
-                        )
+                        result = await self.process_binary(message)
 
                 # If we failed to read a message, disable.
                 if not result:

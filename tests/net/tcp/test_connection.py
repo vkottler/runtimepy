@@ -80,7 +80,8 @@ async def test_tcp_connection_app():
 
         # Wait for connections to close.
         await asyncio.wait(
-            [x.process() for x in conns], return_when=asyncio.ALL_COMPLETED
+            [x.process(stop_sig=sig) for x in conns],
+            return_when=asyncio.ALL_COMPLETED,
         )
 
     # Continue making connections with the server and stop after some time, or

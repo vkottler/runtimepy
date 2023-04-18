@@ -2,11 +2,11 @@
     =====================================
     generator=datazen
     version=3.1.2
-    hash=f8b8d4c19c47b146c60e9304558da892
+    hash=926d7ae76ae04e015251d3e0fe50ac69
     =====================================
 -->
 
-# runtimepy ([1.5.0](https://pypi.org/project/runtimepy/))
+# runtimepy ([1.5.1](https://pypi.org/project/runtimepy/))
 
 [![python](https://img.shields.io/pypi/pyversions/runtimepy.svg)](https://pypi.org/project/runtimepy/)
 ![Build Status](https://github.com/vkottler/runtimepy/workflows/Python%20Package/badge.svg)
@@ -42,7 +42,7 @@ This package is tested on the following platforms:
 # Command-line Options
 
 ```
-$ ./venv3.7/bin/runtimepy -h
+$ ./venv3.8/bin/runtimepy -h
 
 usage: runtimepy [-h] [--version] [-v] [-C DIR] {arbiter,tui,noop} ...
 
@@ -67,7 +67,7 @@ commands:
 ### `arbiter`
 
 ```
-$ ./venv3.7/bin/runtimepy arbiter -h
+$ ./venv3.8/bin/runtimepy arbiter -h
 
 usage: runtimepy arbiter [-h] config
 
@@ -82,7 +82,7 @@ optional arguments:
 ### `tui`
 
 ```
-$ ./venv3.7/bin/runtimepy tui -h
+$ ./venv3.8/bin/runtimepy tui -h
 
 usage: runtimepy tui [-h] [-i ITERATIONS] [-r RATE]
 

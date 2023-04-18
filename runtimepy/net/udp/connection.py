@@ -9,6 +9,7 @@ from abc import abstractmethod as _abstractmethod
 import asyncio as _asyncio
 from asyncio import DatagramProtocol as _DatagramProtocol
 from asyncio import DatagramTransport as _DatagramTransport
+from contextlib import suppress as _suppress
 from logging import getLogger as _getLogger
 import socket as _socket
 from typing import Tuple as _Tuple
@@ -60,6 +61,10 @@ T = _TypeVar("T", bound="UdpConnection")
 class UdpConnection(_Connection, _TransportMixin):
     """A UDP connection interface."""
 
+    # UDP connections send datagrams directly without going through queues.
+    uses_text_tx_queue = False
+    uses_binary_tx_queue = False
+
     def __init__(
         self, transport: _DatagramTransport, protocol: UdpQueueProtocol
     ) -> None:
@@ -73,10 +78,6 @@ class UdpConnection(_Connection, _TransportMixin):
         self._protocol = protocol
         super().__init__(_getLogger(self.logger_name("UDP ")))
         self._protocol.logger = self.logger
-
-        # UDP connections send datagrams directly without going through queues.
-        self.uses_text_tx_queue = False
-        self.uses_binary_tx_queue = False
 
     def set_remote_address(self, addr: IpHost) -> None:
         """
@@ -95,7 +96,7 @@ class UdpConnection(_Connection, _TransportMixin):
         """Process a datagram."""
 
     def sendto(
-        self, data: bytes, addr: _Union[IpHost, _Tuple[str, int]]
+        self, data: bytes, addr: _Union[IpHost, _Tuple[str, int]] = None
     ) -> None:
         """Send to a specific address."""
         self._transport.sendto(data, addr=addr)
@@ -174,17 +175,20 @@ class UdpConnection(_Connection, _TransportMixin):
     async def _process_read(self) -> None:
         """Process incoming messages while this connection is active."""
 
-        while self._enabled:
-            # Attempt to get the next message.
-            message = await self._protocol.queue.get()
-            result = False
+        with _suppress(KeyboardInterrupt):
+            while self._enabled:
+                # Attempt to get the next message.
+                message = await self._protocol.queue.get()
+                result = False
 
-            if message is not None:
-                result = await self.process_datagram(message[0], message[1])
+                if message is not None:
+                    result = await self.process_datagram(
+                        message[0], message[1]
+                    )
 
-            # If we failed to read a message, disable.
-            if not result:
-                self.disable("read processing error")
+                # If we failed to read a message, disable.
+                if not result:
+                    self.disable("read processing error")
 
 
 class EchoUdpConnection(UdpConnection, _EchoConnection):
