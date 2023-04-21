@@ -20,7 +20,7 @@ async def entry(stop_sig: _asyncio.Event, args: _Namespace) -> int:
     """The async command entry."""
 
     arbiter = ConnectionArbiter(stop_sig=stop_sig)
-    await arbiter.load_config(args.config)
+    await arbiter.load_configs(args.configs)
     return await arbiter.app()
 
 
@@ -34,5 +34,7 @@ def arbiter_cmd(args: _Namespace) -> int:
 def add_arbiter_cmd(parser: _ArgumentParser) -> _CommandFunction:
     """Add arbiter-command arguments to its parser."""
 
-    parser.add_argument("config", type=_Path, help="the configuration to load")
+    parser.add_argument(
+        "configs", type=_Path, nargs="+", help="the configuration to load"
+    )
     return arbiter_cmd

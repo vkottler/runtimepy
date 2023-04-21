@@ -39,5 +39,7 @@ async def test_null_connections_app():
     """Test various null connection types."""
 
     arbiter = ConnectionArbiter()
-    await arbiter.load_config(resource("connection_arbiter", "test_null.yaml"))
+    await arbiter.load_configs(
+        [resource("connection_arbiter", "test_null.yaml")]
+    )
     assert await arbiter.app() == 0
