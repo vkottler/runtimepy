@@ -5,7 +5,6 @@ A module implementing a TCP connection interface.
 # built-in
 import asyncio as _asyncio
 from asyncio import BaseTransport as _BaseTransport
-from asyncio import Protocol as _Protocol
 from asyncio import Semaphore as _Semaphore
 from asyncio import Transport as _Transport
 from asyncio import get_event_loop as _get_event_loop
@@ -31,25 +30,17 @@ from runtimepy.net.connection import Connection as _Connection
 from runtimepy.net.connection import EchoConnection as _EchoConnection
 from runtimepy.net.connection import NullConnection as _NullConnection
 from runtimepy.net.manager import ConnectionManager as _ConnectionManager
-from runtimepy.net.mixin import (
-    BinaryMessageQueueMixin as _BinaryMessageQueueMixin,
-)
+from runtimepy.net.mixin import RxQueueProtocol as _RxQueueProtocol
 from runtimepy.net.mixin import TransportMixin as _TransportMixin
 
 LOG = _getLogger(__name__)
 
 
-class QueueProtocol(_BinaryMessageQueueMixin, _Protocol):
+class QueueProtocol(_RxQueueProtocol):
     """A simple streaming protocol that populates a message queue."""
 
     logger: _LoggerType
     conn: _Connection
-
-    def data_received(self, data: _BinaryMessage) -> None:
-        """Handle incoming data."""
-
-        self.queue.put_nowait(data)
-        self.queue_hwm = max(self.queue_hwm, self.queue.qsize())
 
     def connection_made(self, transport: _BaseTransport) -> None:
         """Log the connection establishment."""

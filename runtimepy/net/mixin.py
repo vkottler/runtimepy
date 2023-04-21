@@ -16,13 +16,19 @@ from runtimepy.net import normalize_host as _normalize_host
 from runtimepy.net.connection import BinaryMessage as _BinaryMessage
 
 
-class BinaryMessageQueueMixin:
+class RxQueueProtocol(_asyncio.Protocol):
     """A mixin for adding a 'queue' attribute."""
 
     def __init__(self) -> None:
         """Initialize this protocol."""
         self.queue: _asyncio.Queue[_BinaryMessage] = _asyncio.Queue()
         self.queue_hwm: int = 0
+
+    def data_received(self, data: _BinaryMessage) -> None:
+        """Handle incoming data."""
+
+        self.queue.put_nowait(data)
+        self.queue_hwm = max(self.queue_hwm, self.queue.qsize())
 
 
 class TransportMixin:
