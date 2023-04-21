@@ -26,7 +26,7 @@ async def test_connection_arbiter_config_basic():
     arbiter = ConnectionArbiter()
 
     # Register clients and servers from the config.
-    await arbiter.load_config(resource("connection_arbiter", "basic.yaml"))
+    await arbiter.load_configs([resource("connection_arbiter", "basic.yaml")])
 
     assert await arbiter.app() == 0
 
@@ -65,6 +65,8 @@ async def test_connection_arbiter_config_echo():
     arbiter = ConnectionArbiter(app=echo_test_app)
 
     # Register clients and servers from the config.
-    await arbiter.load_config(resource("connection_arbiter", "test_echo.yaml"))
+    await arbiter.load_configs(
+        [resource("connection_arbiter", "test_echo.yaml")]
+    )
 
     assert await arbiter.app() == 0

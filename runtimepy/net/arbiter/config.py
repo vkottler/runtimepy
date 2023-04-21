@@ -9,12 +9,15 @@ from site import addsitedir as _addsitedir
 import socket as _socket
 from typing import Any as _Any
 from typing import Dict as _Dict
+from typing import Iterable as _Iterable
 from typing import List as _List
 from typing import Optional as _Optional
 from typing import cast as _cast
 
 # third-party
+from vcorelib.dict import merge as _merge
 from vcorelib.dict.env import dict_resolve_env_vars, list_resolve_env_vars
+from vcorelib.io import ARBITER as _ARBITER
 from vcorelib.io.types import JsonObject as _JsonObject
 from vcorelib.paths import Pathlike as _Pathlike
 from vcorelib.paths import normalize as _normalize
@@ -101,16 +104,29 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
     arbiter.
     """
 
-    async def load_config(self, path: _Pathlike) -> None:
+    async def load_configs(self, paths: _Iterable[_Pathlike]) -> None:
         """Load a client and server configuration to the arbiter."""
 
-        path = _normalize(path)
-        config = ConnectionArbiterConfig.decode(path, includes_key="includes")
+        # Load and meld configuration data.
+        config_data: _JsonObject = {}
+        for path in paths:
+            _merge(
+                config_data,
+                _ARBITER.decode(
+                    path,
+                    includes_key="includes",
+                    require_success=True,
+                    logger=self.logger,
+                ).data,
+                logger=self.logger,
+            )
+
+        config = ConnectionArbiterConfig(data=config_data)
 
         # Set the directory to be the parent directory of the configuration
         # file if it wasn't set.
         if "directory" not in config.data:
-            config.directory = path.parent
+            config.directory = _normalize(list(paths)[0]).parent
 
         # Add the site directory to facilitate module discovery.
         _addsitedir(str(config.directory))
