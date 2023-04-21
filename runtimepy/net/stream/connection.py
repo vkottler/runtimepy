@@ -18,7 +18,6 @@ from runtimepy.net.connection import Connection as _Connection
 from runtimepy.net.connection import EchoConnection as _EchoConnection
 from runtimepy.net.connection import NullConnection as _NullConnection
 
-IOStream = Union[TextIO, BinaryIO, IO[bytes]]
 T = TypeVar("T", bound="StreamConnection")
 
 
@@ -31,18 +30,34 @@ class StreamConnection(_Connection):
     def __init__(
         self,
         name: str,
-        reader: _asyncio.StreamReader,
-        writer: _asyncio.StreamWriter = None,
+        read: int,
+        write: int = None,
+        eloop: _asyncio.AbstractEventLoop = None,
     ) -> None:
         """Initialize this instance."""
 
-        self._reader = reader
-        self._writer = writer
+        self._read = read
+        self._write = write
+        self.eloop = _normalize_eloop(eloop)
+
+        # Register callbacks.
+        self.eloop.add_reader(self._read, self._handle_read_signal)
+        if self._write is not None:
+            self.eloop.add_writer(self._write, self._handle_write_signal)
+
         super().__init__(getLogger(name))
+
+    def _handle_read_signal(self) -> None:
+        """TODO."""
+
+    def _handle_write_signal(self) -> None:
+        """TODO."""
 
     async def _await_message(self) -> Optional[Union[_BinaryMessage, str]]:
         """Await the next message. Return None on error or failure."""
-        return await self._reader.readline()
+
+        print("TODO")
+        return None
 
     async def process_binary(self, data: bytes) -> bool:
         """Process a binary frame."""
@@ -55,52 +70,15 @@ class StreamConnection(_Connection):
     async def _send_binay_message(self, data: _BinaryMessage) -> None:
         """Send a binary message."""
 
-        assert self._writer is not None
-        self._writer.write(data)
-        await self._writer.drain()
+        print(data)
 
     async def close(self) -> None:
         """Close this connection."""
 
-        if self._writer is not None:
-            # Write EOF if it's supported.
-            if self._writer.can_write_eof():
-                self._writer.write_eof()
-
-            # Write all remaining data.
-            await self._writer.drain()
-
-            # Close the writing end.
-            self._writer.close()
-            await self._writer.wait_closed()
-
-    @classmethod
-    async def create(
-        cls: Type[T],
-        read: IOStream = _sys.stdin,
-        write: Optional[IOStream] = _sys.stdout,
-        eloop: _asyncio.AbstractEventLoop = None,
-        name: str = "stdio",
-    ) -> T:
-        """Create a stdio connection."""
-
-        eloop = _normalize_eloop(eloop)
-
-        # Connect a stream-reader and protocol instance to the read stream.
-        reader = _asyncio.StreamReader()
-        await eloop.connect_read_pipe(
-            lambda: _asyncio.StreamReaderProtocol(reader), read
-        )
-
-        writer = None
-        if write is not None:
-            # Create the writer.
-            transport, protocol = await eloop.connect_write_pipe(
-                _asyncio.streams.FlowControlMixin, write
-            )
-            writer = _asyncio.StreamWriter(transport, protocol, reader, eloop)
-
-        return cls(name, reader, writer=writer)
+        # Remove callbacks.
+        self.eloop.remove_reader(self._read)
+        if self._write is not None:
+            self.eloop.remove_writer(self._write)
 
 
 class EchoStreamConnection(StreamConnection, _EchoConnection):
