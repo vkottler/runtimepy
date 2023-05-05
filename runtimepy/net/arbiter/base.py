@@ -6,6 +6,7 @@ A module implementing a base connection-arbiter interface.
 import asyncio as _asyncio
 from contextlib import AsyncExitStack as _AsyncExitStack
 from inspect import isawaitable as _isawaitable
+from logging import getLogger as _getLogger
 from typing import Awaitable as _Awaitable
 from typing import Callable as _Callable
 from typing import Iterable as _Iterable
@@ -178,6 +179,7 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
                     self.logger.info("Application starting.")
 
                     info = AppInfo(
+                        self.logger,
                         stack,
                         self._connections,
                         self._namespace,
@@ -193,13 +195,10 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
                     result = 0
                     for curr_app in apps:
                         if result == 0:
+                            info.logger = _getLogger(curr_app.__name__)
+                            info.logger.info("Starting.")
                             result = await curr_app(info)
-
-                            self.logger.info(
-                                "Application '%s' returned %d.",
-                                curr_app.__name__,
-                                result,
-                            )
+                            info.logger.info("Returned %d.", result)
 
         finally:
             for conn in self._connections.values():

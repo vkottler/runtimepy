@@ -39,6 +39,7 @@ async def echo_test_app(app: AppInfo) -> int:
 
     assert len(list(app.search(pattern="sample"))) == 3
     assert len(list(app.search(kind=SampleUdpConnection))) == 1
+    assert app.single(kind=SampleUdpConnection)
 
     conns = [
         "tcp.sample.client",

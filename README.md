@@ -2,11 +2,11 @@
     =====================================
     generator=datazen
     version=3.1.2
-    hash=f4e6aebd80d22ab521dd78d7d4ac88da
+    hash=cde638b7567222966c038f6c0d5719e0
     =====================================
 -->
 
-# runtimepy ([1.5.2](https://pypi.org/project/runtimepy/))
+# runtimepy ([1.5.3](https://pypi.org/project/runtimepy/))
 
 [![python](https://img.shields.io/pypi/pyversions/runtimepy.svg)](https://pypi.org/project/runtimepy/)
 ![Build Status](https://github.com/vkottler/runtimepy/workflows/Python%20Package/badge.svg)
@@ -42,13 +42,13 @@ This package is tested on the following platforms:
 # Command-line Options
 
 ```
-$ ./venv3.8/bin/runtimepy -h
+$ ./venv3.11/bin/runtimepy -h
 
 usage: runtimepy [-h] [--version] [-v] [-C DIR] {arbiter,tui,noop} ...
 
 A framework for implementing Python services.
 
-optional arguments:
+options:
   -h, --help          show this help message and exit
   --version           show program's version number and exit
   -v, --verbose       set to increase logging verbosity
@@ -67,14 +67,14 @@ commands:
 ### `arbiter`
 
 ```
-$ ./venv3.8/bin/runtimepy arbiter -h
+$ ./venv3.11/bin/runtimepy arbiter -h
 
 usage: runtimepy arbiter [-h] configs [configs ...]
 
 positional arguments:
   configs     the configuration to load
 
-optional arguments:
+options:
   -h, --help  show this help message and exit
 
 ```
@@ -82,11 +82,11 @@ optional arguments:
 ### `tui`
 
 ```
-$ ./venv3.8/bin/runtimepy tui -h
+$ ./venv3.11/bin/runtimepy tui -h
 
 usage: runtimepy tui [-h] [-i ITERATIONS] [-r RATE]
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -i ITERATIONS, --iterations ITERATIONS
                         maximum number of program iterations (if greater than
