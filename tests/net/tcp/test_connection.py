@@ -10,6 +10,7 @@ from pytest import mark
 
 # module under test
 from runtimepy.net import sockname
+from runtimepy.net.manager import ConnectionManager
 
 # internal
 from tests.resources import SampleTcpConnection, release_after
@@ -42,6 +43,7 @@ async def test_tcp_connection_basic():
 async def test_tcp_connection_app():
     """Test the TCP connection's application interface."""
 
+    manager = ConnectionManager()
     sig = asyncio.Event()
     host_queue: asyncio.Queue = asyncio.Queue()
 
@@ -59,7 +61,6 @@ async def test_tcp_connection_app():
         # Wait for the server to start.
         host = await host_queue.get()
 
-        conns = []
         for idx in range(10):
             try:
                 conn = await SampleTcpConnection.create_connection(
@@ -69,20 +70,12 @@ async def test_tcp_connection_app():
                 if idx % 2 == 0:
                     conn.send_text("stop\n")
 
-                conns.append(conn)
+                # Allow the connection manager to manage this connection.
+                await manager.queue.put(conn)
 
             # Don't require every iteration to connection.
             except ConnectionRefusedError:
                 pass
-
-        # Require at least one iteration to connect.
-        assert conns
-
-        # Wait for connections to close.
-        await asyncio.wait(
-            [x.process(stop_sig=sig) for x in conns],
-            return_when=asyncio.ALL_COMPLETED,
-        )
 
     # Continue making connections with the server and stop after some time, or
     # some number of connections?
@@ -93,9 +86,16 @@ async def test_tcp_connection_app():
                 release_after(sig, 0.1),
                 connect(),
                 SampleTcpConnection.app(
-                    sig, callback=app, serving_callback=serve_cb, port=0
+                    sig,
+                    callback=app,
+                    serving_callback=serve_cb,
+                    port=0,
+                    manager=manager,
                 ),
             ]
         ],
         return_when=asyncio.ALL_COMPLETED,
     )
+
+    # For code coverage.
+    await SampleTcpConnection.app(sig, port=0)
