@@ -130,7 +130,9 @@ class AsyncTask(_LoggerMixin):
         """Disable this task."""
         self.enabled.raw.value = False
 
-    async def run(self, *args, **kwargs) -> None:
+    async def run(
+        self, *args, stop_sig: _asyncio.Event = None, **kwargs
+    ) -> None:
         """Run this task while it's enabled."""
 
         eloop = _asyncio.get_running_loop()
@@ -168,7 +170,7 @@ class AsyncTask(_LoggerMixin):
             if (
                 self.max_iterations.raw.value > 0
                 and self.dispatches.raw.value >= self.max_iterations.raw.value
-            ):
+            ) or (stop_sig is not None and stop_sig.is_set()):
                 self.disable()
 
             if self.enabled:
