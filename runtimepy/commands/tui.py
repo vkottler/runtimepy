@@ -10,7 +10,7 @@ import curses as _curses
 
 # third-party
 from vcorelib.args import CommandFunction as _CommandFunction
-from vcorelib.asyncio import run_handle_interrupt as _run_handle_interrupt
+from vcorelib.asyncio import run_handle_stop as _run_handle_stop
 
 # internal
 from runtimepy.channel.environment import (
@@ -29,10 +29,8 @@ def start(window: _CursesWindow, args: _Namespace) -> None:
         _ChannelEnvironment(),
         max_iterations=args.iterations,
     )
-
-    eloop = _asyncio.new_event_loop()
-    _asyncio.set_event_loop(eloop)
-    _run_handle_interrupt(task.run(window), eloop)
+    stop_sig = _asyncio.Event()
+    return _run_handle_stop(stop_sig, task.run(window, stop_sig=stop_sig))
 
 
 def tui_cmd(args: _Namespace) -> int:
