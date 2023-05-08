@@ -8,8 +8,10 @@ import asyncio as _asyncio
 from typing import Dict as _Dict
 from typing import List as _List
 
+# third-party
+from vcorelib.names import obj_class_to_snake
+
 # internal
-from runtimepy.names import obj_class_to_snake
 from runtimepy.net.arbiter.base import (
     BaseConnectionArbiter as _BaseConnectionArbiter,
 )
