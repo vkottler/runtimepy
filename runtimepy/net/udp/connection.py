@@ -99,15 +99,24 @@ class UdpConnection(_Connection, _TransportMixin):
         self, data: bytes, addr: _Union[IpHost, _Tuple[str, int]] = None
     ) -> None:
         """Send to a specific address."""
-        self._transport.sendto(data, addr=addr)
+
+        try:
+            self._transport.sendto(data, addr=addr)
+
+        # Catch a bug in the underlying event loop implementation - we try to
+        # send, but the underlying socket is gone (e.g. attribute is 'None').
+        # This seems to be possible (but intermittent) when shutting down the
+        # application.
+        except AttributeError as exc:
+            self.disable(str(exc))
 
     def send_text(self, data: str) -> None:
         """Enqueue a text message to send."""
-        self._transport.sendto(data.encode(), addr=self.remote_address)
+        self.sendto(data.encode(), addr=self.remote_address)
 
     def send_binary(self, data: _BinaryMessage) -> None:
         """Enqueue a binary message tos end."""
-        self._transport.sendto(data, addr=self.remote_address)
+        self.sendto(data, addr=self.remote_address)
 
     @classmethod
     async def create_connection(
