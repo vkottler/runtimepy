@@ -2,7 +2,7 @@
     =====================================
     generator=datazen
     version=3.1.2
-    hash=435f4ede67c5843c9c2facaa08f76e30
+    hash=d94e863595f8d7f340e96c0820f3b232
     =====================================
 -->
 
@@ -23,7 +23,6 @@ See also: [generated documentation](https://vkottler.github.io/python/pydoc/runt
 
 This package is tested with the following Python minor versions:
 
-* [`python3.7`](https://docs.python.org/3.7/)
 * [`python3.8`](https://docs.python.org/3.8/)
 * [`python3.9`](https://docs.python.org/3.9/)
 * [`python3.10`](https://docs.python.org/3.10/)
