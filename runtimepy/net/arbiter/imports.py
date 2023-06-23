@@ -11,6 +11,9 @@ from typing import Union as _Union
 
 # internal
 from runtimepy.net.arbiter.factory import (
+    ConnectionFactory as _ConnectionFactory,
+)
+from runtimepy.net.arbiter.factory import (
     FactoryConnectionArbiter as _FactoryConnectionArbiter,
 )
 
@@ -57,8 +60,12 @@ class ImportConnectionArbiter(_FactoryConnectionArbiter):
 
         module, factory_class = import_str_and_item(module_path)
 
-        return self.register_factory(
-            # We need to call the factory class to create an instance.
-            getattr(_import_module(module), factory_class)(**kwargs),
-            *namespaces,
-        )
+        # We need to call the factory class to create an instance.
+        inst = getattr(_import_module(module), factory_class)(**kwargs)
+
+        # Determine what kind of factory to register.
+        result = False
+        if isinstance(inst, _ConnectionFactory):
+            result = self.register_connection_factory(inst, *namespaces)
+
+        return result
