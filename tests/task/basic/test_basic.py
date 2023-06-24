@@ -26,7 +26,7 @@ class SampleTask(PeriodicTask):
 async def test_periodic_task_basic():
     """Test basic interactions with periodic tasks."""
 
-    base_period = 0.01
+    base_period = 0.05
 
     task = SampleTask("sample")
 
