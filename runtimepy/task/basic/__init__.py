@@ -24,6 +24,8 @@ from runtimepy.task.basic.metrics import PeriodicTaskMetrics
 
 __all__ = ["PeriodicTask", "PeriodicTaskMetrics"]
 
+DEFAULT_DEPTH = 10
+
 
 class PeriodicTask(_LoggerMixin, _ABC):
     """A class implementing a simple periodic-task interface."""
@@ -31,8 +33,10 @@ class PeriodicTask(_LoggerMixin, _ABC):
     def __init__(
         self,
         name: str,
-        average_depth: int = 10,
+        *args,
+        average_depth: int = DEFAULT_DEPTH,
         metrics: PeriodicTaskMetrics = None,
+        **kwargs,
     ) -> None:
         """Initialize this task."""
 
@@ -49,6 +53,11 @@ class PeriodicTask(_LoggerMixin, _ABC):
 
         self._dispatch_rate = _RateTracker(depth=average_depth)
         self._dispatch_time = _MovingAverage(depth=average_depth)
+
+        self.init(*args, **kwargs)
+
+    def init(self, *args, **kwargs) -> None:
+        """An optional initialization method."""
 
     @_abstractmethod
     async def dispatch(self) -> bool:
