@@ -16,6 +16,7 @@ from runtimepy.net.connection import Connection
 from runtimepy.net.tcp.connection import TcpConnection
 from runtimepy.net.udp.connection import UdpConnection
 from runtimepy.net.websocket.connection import WebsocketConnection
+from runtimepy.task import PeriodicTask
 
 
 def resource(
@@ -84,3 +85,13 @@ async def release_after(sig: asyncio.Event, time: float) -> None:
     """Disable a connection after a delay."""
     await asyncio.sleep(time)
     sig.set()
+
+
+class SampleTask(PeriodicTask):
+    """A sample task."""
+
+    async def dispatch(self) -> bool:
+        """Dispatch an iteration of this task."""
+
+        self.logger.info("Iteration.")
+        return True

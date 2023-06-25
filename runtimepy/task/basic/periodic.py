@@ -41,6 +41,7 @@ class PeriodicTask(_LoggerMixin, _ABC):
         *args,
         average_depth: int = _DEFAULT_DEPTH,
         metrics: PeriodicTaskMetrics = None,
+        period_s: float = None,
         **kwargs,
     ) -> None:
         """Initialize this task."""
@@ -48,6 +49,9 @@ class PeriodicTask(_LoggerMixin, _ABC):
         self.name = name
         super().__init__(logger=_getLogger(self.name))
         self._task: _Optional[_asyncio.Task[None]] = None
+
+        self._period_s: _Optional[float] = None
+        self.set_period(period_s=period_s)
 
         # Setup runtime state.
         self._enabled = _Bool()
@@ -60,6 +64,18 @@ class PeriodicTask(_LoggerMixin, _ABC):
         self._dispatch_time = _MovingAverage(depth=average_depth)
 
         self.init(*args, **kwargs)
+
+    def set_period(self, period_s: float = None) -> bool:
+        """Attempt to set a new period for this task."""
+
+        result = False
+
+        if period_s is not None and self._period_s != period_s:
+            self._period_s = period_s
+            self.logger.info("Task rate set to %s.", rate_str(period_s))
+            result = True
+
+        return result
 
     def init(self, *args, **kwargs) -> None:
         """An optional initialization method."""
@@ -77,7 +93,7 @@ class PeriodicTask(_LoggerMixin, _ABC):
         return result
 
     async def run(
-        self, period_s: float, stop_sig: _asyncio.Event = None
+        self, period_s: float = None, stop_sig: _asyncio.Event = None
     ) -> None:
         """
         Run this task by executing the dispatch method at the specified period
@@ -87,7 +103,9 @@ class PeriodicTask(_LoggerMixin, _ABC):
         assert not self._enabled
         self._enabled.raw.value = True
 
-        self.logger.info("Task starting at %s.", rate_str(period_s))
+        self.set_period(period_s=period_s)
+        assert self._period_s is not None, "Task period isn't set!"
+        self.logger.info("Task starting at %s.", rate_str(self._period_s))
 
         eloop = _asyncio.get_running_loop()
 
@@ -113,19 +131,21 @@ class PeriodicTask(_LoggerMixin, _ABC):
             if stop_sig is not None:
                 self._enabled.raw.value = not stop_sig.is_set()
 
+            sleep_s = self._period_s - iter_time
+
             if self._enabled:
                 try:
-                    await _asyncio.sleep(max(period_s - iter_time, 0))
+                    await _asyncio.sleep(max(sleep_s, 0))
                 except _asyncio.CancelledError:
                     self.logger.info("Task was cancelled.")
                     self.disable()
 
         self.logger.info("Task completed.")
 
-    async def task(
-        self, period_s: float, stop_sig: _asyncio.Event = None
-    ) -> _asyncio.Task[None]:
-        """Create an event-loop task for this periodic."""
+    async def stop(self) -> bool:
+        """Wait for this task to stop running (if it is)."""
+
+        result = False
 
         # Ensure that a previous version of this task gets cleaned up.
         if self._task is not None:
@@ -136,8 +156,17 @@ class PeriodicTask(_LoggerMixin, _ABC):
                 with _suppress(_asyncio.CancelledError):
                     await self._task
             self._task = None
+            result = True
 
+        return result
+
+    async def task(
+        self, period_s: float = None, stop_sig: _asyncio.Event = None
+    ) -> _asyncio.Task[None]:
+        """Create an event-loop task for this periodic."""
+
+        await self.stop()
         self._task = _asyncio.create_task(
-            self.run(period_s, stop_sig=stop_sig)
+            self.run(period_s=period_s, stop_sig=stop_sig)
         )
         return self._task
