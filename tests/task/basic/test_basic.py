@@ -9,7 +9,7 @@ import asyncio
 from pytest import mark
 
 # module under test
-from runtimepy.task.basic import PeriodicTask
+from runtimepy.task import PeriodicTask
 
 
 class SampleTask(PeriodicTask):
