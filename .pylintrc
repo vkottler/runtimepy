@@ -6,4 +6,4 @@ max-attributes=12
 disable=too-few-public-methods
 
 [FORMAT]
-good-names=id,x,y
+good-names=id,x,y,tx,rx

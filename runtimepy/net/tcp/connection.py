@@ -92,15 +92,20 @@ class TcpConnection(_Connection, _TransportMixin):
 
     async def _await_message(self) -> _Optional[_Union[_BinaryMessage, str]]:
         """Await the next message. Return None on error or failure."""
-        return await self._protocol.queue.get()
+
+        data = await self._protocol.queue.get()
+        if data is not None:
+            self.metrics.rx.increment(len(data))
+        return data
 
     def send_text(self, data: str) -> None:
         """Enqueue a text message to send."""
-        self._transport.write(data.encode())
+        self.send_binary(data.encode())
 
     def send_binary(self, data: _BinaryMessage) -> None:
         """Enqueue a binary message tos end."""
         self._transport.write(data)
+        self.metrics.tx.increment(len(data))
 
     @classmethod
     async def create_connection(cls: _Type[T], **kwargs) -> T:
