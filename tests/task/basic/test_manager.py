@@ -15,11 +15,15 @@ from runtimepy.task import PeriodicTaskManager
 from tests.resources import SampleTask
 
 
+class Manager(PeriodicTaskManager[SampleTask]):
+    """A task-manager class."""
+
+
 @mark.asyncio
 async def test_periodic_task_manager_basic():
     """Test basic interactions with a periodic-task manager."""
 
-    manager = PeriodicTaskManager()
+    manager = Manager()
 
     base_period = 0.05
 

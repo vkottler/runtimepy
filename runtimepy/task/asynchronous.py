@@ -8,14 +8,14 @@ from logging import getLogger as _getLogger
 
 # third-party
 from vcorelib.logging import LoggerMixin as _LoggerMixin
-from vcorelib.math.analysis.average import MovingAverage as _MovingAverage
-from vcorelib.math.analysis.rate import RateTracker as _RateTracker
+from vcorelib.math import MovingAverage as _MovingAverage
+from vcorelib.math import RateTracker as _RateTracker
+from vcorelib.math import rate_str as _rate_str
 
 # internal
 from runtimepy.channel.environment import (
     ChannelEnvironment as _ChannelEnvironment,
 )
-from runtimepy.task.basic import rate_str
 
 
 class AsyncTask(_LoggerMixin):
@@ -112,7 +112,7 @@ class AsyncTask(_LoggerMixin):
     @property
     def rate_str(self) -> str:
         """Get this periodic's rate as a string."""
-        return rate_str(self.period_s.raw.value)
+        return _rate_str(self.period_s.raw.value)
 
     def enable(self) -> None:
         """Enable this task."""

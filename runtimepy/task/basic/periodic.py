@@ -17,19 +17,11 @@ from vcorelib.logging import LoggerMixin as _LoggerMixin
 from vcorelib.math import DEFAULT_DEPTH as _DEFAULT_DEPTH
 from vcorelib.math import MovingAverage as _MovingAverage
 from vcorelib.math import RateTracker as _RateTracker
-from vcorelib.math import nano_str as _nano_str
+from vcorelib.math import rate_str as _rate_str
 
 # internal
 from runtimepy.primitives import Bool as _Bool
 from runtimepy.task.basic.metrics import PeriodicTaskMetrics
-
-
-def rate_str(period_s: float) -> str:
-    """Get a string representing a rate in Hz."""
-
-    period_str = _nano_str(int(period_s * 1e9))
-    freq_str = _nano_str(int((1.0 / period_s) * 1e9), prefix_space=True)
-    return f"{freq_str}Hz ({period_str}s)"
 
 
 class PeriodicTask(_LoggerMixin, _ABC):
@@ -38,11 +30,9 @@ class PeriodicTask(_LoggerMixin, _ABC):
     def __init__(
         self,
         name: str,
-        *args,
         average_depth: int = _DEFAULT_DEPTH,
         metrics: PeriodicTaskMetrics = None,
         period_s: float = None,
-        **kwargs,
     ) -> None:
         """Initialize this task."""
 
@@ -63,8 +53,6 @@ class PeriodicTask(_LoggerMixin, _ABC):
         self._dispatch_rate = _RateTracker(depth=average_depth)
         self._dispatch_time = _MovingAverage(depth=average_depth)
 
-        self.init(*args, **kwargs)
-
     def set_period(self, period_s: float = None) -> bool:
         """Attempt to set a new period for this task."""
 
@@ -72,13 +60,10 @@ class PeriodicTask(_LoggerMixin, _ABC):
 
         if period_s is not None and self._period_s != period_s:
             self._period_s = period_s
-            self.logger.info("Task rate set to %s.", rate_str(period_s))
+            self.logger.info("Task rate set to %s.", _rate_str(period_s))
             result = True
 
         return result
-
-    def init(self, *args, **kwargs) -> None:
-        """An optional initialization method."""
 
     @_abstractmethod
     async def dispatch(self) -> bool:
@@ -105,7 +90,7 @@ class PeriodicTask(_LoggerMixin, _ABC):
 
         self.set_period(period_s=period_s)
         assert self._period_s is not None, "Task period isn't set!"
-        self.logger.info("Task starting at %s.", rate_str(self._period_s))
+        self.logger.info("Task starting at %s.", _rate_str(self._period_s))
 
         eloop = _asyncio.get_running_loop()
 

@@ -7,19 +7,24 @@ import asyncio as _asyncio
 from contextlib import asynccontextmanager as _asynccontextmanager
 from typing import AsyncIterator as _AsyncIterator
 from typing import Dict as _Dict
+from typing import Generic as _Generic
+from typing import Iterator as _Iterator
+from typing import TypeVar as _TypeVar
 
 # internal
 from runtimepy.task.basic.periodic import PeriodicTask as _PeriodicTask
 
+T = _TypeVar("T", bound=_PeriodicTask)
 
-class PeriodicTaskManager:
+
+class PeriodicTaskManager(_Generic[T]):
     """A class for managing periodic tasks as a single group."""
 
     def __init__(self) -> None:
         """Initialize this instance."""
-        self._tasks: _Dict[str, _PeriodicTask] = {}
+        self._tasks: _Dict[str, T] = {}
 
-    def register(self, task: _PeriodicTask, period_s: float = None) -> bool:
+    def register(self, task: T, period_s: float = None) -> bool:
         """Register a periodic task."""
 
         result = task.name not in self._tasks
@@ -28,7 +33,12 @@ class PeriodicTaskManager:
             task.set_period(period_s=period_s)
         return result
 
-    def __getitem__(self, name: str) -> _PeriodicTask:
+    @property
+    def tasks(self) -> _Iterator[T]:
+        """Iterate over tasks."""
+        yield from self._tasks.values()
+
+    def __getitem__(self, name: str) -> T:
         """Get a task by name."""
         return self._tasks[name]
 

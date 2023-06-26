@@ -24,9 +24,11 @@ from vcorelib.namespace import NamespaceMixin as _NamespaceMixin
 
 # internal
 from runtimepy.net.arbiter.info import AppInfo, ConnectionMap
+from runtimepy.net.arbiter.task import (
+    ArbiterTaskManager as _ArbiterTaskManager,
+)
 from runtimepy.net.connection import Connection as _Connection
 from runtimepy.net.manager import ConnectionManager as _ConnectionManager
-from runtimepy.task import PeriodicTaskManager as _PeriodicTaskManager
 
 NetworkApplication = _Callable[[AppInfo], _Awaitable[int]]
 NetworkApplicationlike = _Union[NetworkApplication, _List[NetworkApplication]]
@@ -76,7 +78,7 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
             manager = _ConnectionManager()
         self.manager = manager
 
-        self.task_manager = _PeriodicTaskManager()
+        self.task_manager = _ArbiterTaskManager()
 
         if stop_sig is None:
             stop_sig = _asyncio.Event()
@@ -190,7 +192,9 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
                         config if config is not None else self._config,
                     )
 
-                    # Register tasks.
+                    # Initialize tasks.
+                    for task in self.task_manager.tasks:
+                        task.init(info)
 
                     # Start tasks.
                     await stack.enter_async_context(
