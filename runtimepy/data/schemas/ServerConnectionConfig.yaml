@@ -1,12 +1,8 @@
 ---
-type: object
-required: [factory]
-additionalProperties: false
+includes:
+  - has_factory.yaml
 
 properties:
-  factory:
-    type: string
-
   args:
     type: array
 

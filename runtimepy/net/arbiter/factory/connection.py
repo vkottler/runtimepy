@@ -49,10 +49,10 @@ class FactoryConnectionArbiter(_BaseConnectionArbiter):
         """Additional initialization tasks."""
 
         super()._init()
-        self._factories: _Dict[str, ConnectionFactory] = {}
-        self._names: _Dict[ConnectionFactory, _List[str]] = {}
+        self._conn_factories: _Dict[str, ConnectionFactory] = {}
+        self._conn_names: _Dict[ConnectionFactory, _List[str]] = {}
 
-    def register_factory(
+    def register_connection_factory(
         self, factory: ConnectionFactory, *namespaces: str
     ) -> bool:
         """Attempt to register a connection factory."""
@@ -64,10 +64,13 @@ class FactoryConnectionArbiter(_BaseConnectionArbiter):
         name = factory.__class__.__name__
         snake_name = obj_class_to_snake(factory)
 
-        if name not in self._factories and snake_name not in self._factories:
-            self._factories[name] = factory
-            self._factories[snake_name] = factory
-            self._names[factory] = [*namespaces]
+        if (
+            name not in self._conn_factories
+            and snake_name not in self._conn_factories
+        ):
+            self._conn_factories[name] = factory
+            self._conn_factories[snake_name] = factory
+            self._conn_names[factory] = [*namespaces]
 
             result = True
             self.logger.info(
@@ -85,15 +88,15 @@ class FactoryConnectionArbiter(_BaseConnectionArbiter):
 
         result = False
 
-        if factory in self._factories:
-            factory_inst = self._factories[factory]
+        if factory in self._conn_factories:
+            factory_inst = self._conn_factories[factory]
 
             conn = factory_inst.client(*args, **kwargs)
             if not defer:
                 conn = await conn  # type: ignore
 
             result = self.register_connection(
-                conn, *self._names[factory_inst], name
+                conn, *self._conn_names[factory_inst], name
             )
 
         return result
@@ -103,8 +106,8 @@ class FactoryConnectionArbiter(_BaseConnectionArbiter):
 
         result = False
 
-        if factory in self._factories:
-            factory_inst = self._factories[factory]
+        if factory in self._conn_factories:
+            factory_inst = self._conn_factories[factory]
             self._servers.append(
                 await factory_inst.server_task(
                     self.stop_sig,

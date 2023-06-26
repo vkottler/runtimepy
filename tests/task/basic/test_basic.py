@@ -8,25 +8,15 @@ import asyncio
 # third-party
 from pytest import mark
 
-# module under test
-from runtimepy.task.basic import PeriodicTask
-
-
-class SampleTask(PeriodicTask):
-    """A sample task."""
-
-    async def dispatch(self) -> bool:
-        """Dispatch an iteration of this task."""
-
-        self.logger.info("Iteration.")
-        return True
+# internal
+from tests.resources import SampleTask
 
 
 @mark.asyncio
 async def test_periodic_task_basic():
     """Test basic interactions with periodic tasks."""
 
-    base_period = 0.01
+    base_period = 0.05
 
     task = SampleTask("sample")
 

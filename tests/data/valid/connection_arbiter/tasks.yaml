@@ -1,0 +1,4 @@
+---
+tasks:
+  - {name: "a", factory: sample_task_factory_a}
+  - {name: "b", factory: SampleTaskFactoryB, period_s: 0.1}

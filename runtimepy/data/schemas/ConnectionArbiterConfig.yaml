@@ -13,6 +13,11 @@ properties:
     items:
       $ref: package://runtimepy/schemas/ServerConnectionConfig.yaml
 
+  tasks:
+    type: array
+    items:
+      $ref: package://runtimepy/schemas/TaskConfig.yaml
+
   # Runtime application or applications.
   # defaults to: "runtimepy.net.apps.init_only"
   app:

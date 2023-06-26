@@ -11,8 +11,15 @@ from typing import Union as _Union
 
 # internal
 from runtimepy.net.arbiter.factory import (
+    ConnectionFactory as _ConnectionFactory,
+)
+from runtimepy.net.arbiter.factory import (
     FactoryConnectionArbiter as _FactoryConnectionArbiter,
 )
+from runtimepy.net.arbiter.factory.task import (
+    TaskConnectionArbiter as _TaskConnectionArbiter,
+)
+from runtimepy.net.arbiter.task import TaskFactory as _TaskFactory
 
 
 def import_str_and_item(module_path: str) -> _Tuple[str, str]:
@@ -28,7 +35,9 @@ def import_str_and_item(module_path: str) -> _Tuple[str, str]:
     return ".".join(parts), item
 
 
-class ImportConnectionArbiter(_FactoryConnectionArbiter):
+class ImportConnectionArbiter(
+    _FactoryConnectionArbiter, _TaskConnectionArbiter
+):
     """
     A class implementing extensions to the connection arbiter for working with
     arbitrary Python modules.
@@ -57,8 +66,14 @@ class ImportConnectionArbiter(_FactoryConnectionArbiter):
 
         module, factory_class = import_str_and_item(module_path)
 
-        return self.register_factory(
-            # We need to call the factory class to create an instance.
-            getattr(_import_module(module), factory_class)(**kwargs),
-            *namespaces,
-        )
+        # We need to call the factory class to create an instance.
+        inst = getattr(_import_module(module), factory_class)(**kwargs)
+
+        # Determine what kind of factory to register.
+        result = False
+        if isinstance(inst, _ConnectionFactory):
+            result = self.register_connection_factory(inst, *namespaces)
+        elif isinstance(inst, _TaskFactory):
+            result = self.register_task_factory(inst, *namespaces)
+
+        return result

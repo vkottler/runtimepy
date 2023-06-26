@@ -31,6 +31,6 @@ def test_async_task_basic():
     asyncio.run(task.run())
 
     # Cause sleep to raise a cancelled error.
-    with patch("runtimepy.task._asyncio.sleep") as mocked:
+    with patch("runtimepy.task.asynchronous._asyncio.sleep") as mocked:
         mocked.side_effect = asyncio.CancelledError
         asyncio.run(task.run())

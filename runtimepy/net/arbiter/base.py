@@ -24,6 +24,9 @@ from vcorelib.namespace import NamespaceMixin as _NamespaceMixin
 
 # internal
 from runtimepy.net.arbiter.info import AppInfo, ConnectionMap
+from runtimepy.net.arbiter.task import (
+    ArbiterTaskManager as _ArbiterTaskManager,
+)
 from runtimepy.net.connection import Connection as _Connection
 from runtimepy.net.manager import ConnectionManager as _ConnectionManager
 
@@ -74,6 +77,8 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
         if manager is None:
             manager = _ConnectionManager()
         self.manager = manager
+
+        self.task_manager = _ArbiterTaskManager()
 
         if stop_sig is None:
             stop_sig = _asyncio.Event()
@@ -187,6 +192,16 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
                         config if config is not None else self._config,
                     )
 
+                    # Initialize tasks.
+                    await _asyncio.gather(
+                        *(x.init(info) for x in self.task_manager.tasks)
+                    )
+
+                    # Start tasks.
+                    await stack.enter_async_context(
+                        self.task_manager.running(stop_sig=self.stop_sig)
+                    )
+
                     # Get application methods.
                     apps = self._apps
                     if app is not None:
@@ -197,8 +212,14 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
                         if result == 0:
                             info.logger = _getLogger(curr_app.__name__)
                             info.logger.info("Starting.")
-                            result = await curr_app(info)
-                            info.logger.info("Returned %d.", result)
+                            try:
+                                result = await curr_app(info)
+                                info.logger.info("Returned %d.", result)
+                            except AssertionError as exc:
+                                info.logger.exception(
+                                    "Failed an assertion:", exc_info=exc
+                                )
+                                result = -1
 
         finally:
             for conn in self._connections.values():

@@ -11,18 +11,34 @@ from pytest import mark
 # module under test
 from runtimepy.net import get_free_socket_name
 from runtimepy.net.apps import init_only
-from runtimepy.net.arbiter import ConnectionArbiter
+from runtimepy.net.arbiter import AppInfo, ConnectionArbiter
 
 # internal
 from tests.net.arbiter import get_test_arbiter
-from tests.resources import SampleTcpConnection, SampleWebsocketConnection
+from tests.resources import (
+    SampleArbiterTask,
+    SampleTcpConnection,
+    SampleWebsocketConnection,
+)
+
+
+async def assertion_failer(app: AppInfo) -> int:
+    """An app task that raises an assertion."""
+
+    assert app
+    assert False, "nominal failure"
+    return 0
 
 
 def test_connection_arbiter_run():
     """Test the synchronous 'run' entry."""
 
     arbiter = ConnectionArbiter()
+    assert arbiter.task_manager.register(
+        SampleArbiterTask("sample"), period_s=0.05
+    )
     assert arbiter.run(app=init_only) == 0
+    assert arbiter.run(app=assertion_failer) != 0
 
 
 @mark.asyncio
