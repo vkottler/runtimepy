@@ -193,8 +193,9 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
                     )
 
                     # Initialize tasks.
-                    for task in self.task_manager.tasks:
-                        task.init(info)
+                    await _asyncio.gather(
+                        *(x.init(info) for x in self.task_manager.tasks)
+                    )
 
                     # Start tasks.
                     await stack.enter_async_context(
@@ -211,8 +212,14 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
                         if result == 0:
                             info.logger = _getLogger(curr_app.__name__)
                             info.logger.info("Starting.")
-                            result = await curr_app(info)
-                            info.logger.info("Returned %d.", result)
+                            try:
+                                result = await curr_app(info)
+                                info.logger.info("Returned %d.", result)
+                            except AssertionError as exc:
+                                info.logger.exception(
+                                    "Failed an assertion:", exc_info=exc
+                                )
+                                result = -1
 
         finally:
             for conn in self._connections.values():

@@ -1,0 +1,8 @@
+---
+type: object
+required: [factory]
+additionalProperties: false
+
+properties:
+  factory:
+    type: string

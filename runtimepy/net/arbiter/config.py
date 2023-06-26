@@ -60,6 +60,7 @@ class ConnectionArbiterConfig(_RuntimepyDictCodec):
         self.factories: _List[_Any] = data.get("factories", [])  # type: ignore
         self.clients: _List[_Any] = data.get("clients", [])  # type: ignore
         self.servers: _List[_Any] = data.get("servers", [])  # type: ignore
+        self.tasks: _List[_Any] = data.get("tasks", [])  # type: ignore
 
         self.directory = _Path(str(data.get("directory", ".")))
 
@@ -182,6 +183,17 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
                     server.get("kwargs", {}), env=config.ports  # type: ignore
                 ),
             ), f"Couldn't register a '{factory}' server!"
+
+        # Register tasks.
+        for task in config.tasks:
+            name = task["name"]
+            factory = task["factory"]
+            assert self.factory_task(
+                factory,
+                name,
+                period_s=task["period_s"],
+                average_depth=task["average_depth"],
+            ), f"Couldn't register task '{name}' ({factory})!"
 
         # Set the new application entry if it's set.
         if config.app is not None:

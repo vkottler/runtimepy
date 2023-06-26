@@ -16,6 +16,10 @@ from runtimepy.net.arbiter.factory import (
 from runtimepy.net.arbiter.factory import (
     FactoryConnectionArbiter as _FactoryConnectionArbiter,
 )
+from runtimepy.net.arbiter.factory.task import (
+    TaskConnectionArbiter as _TaskConnectionArbiter,
+)
+from runtimepy.net.arbiter.task import TaskFactory as _TaskFactory
 
 
 def import_str_and_item(module_path: str) -> _Tuple[str, str]:
@@ -31,7 +35,9 @@ def import_str_and_item(module_path: str) -> _Tuple[str, str]:
     return ".".join(parts), item
 
 
-class ImportConnectionArbiter(_FactoryConnectionArbiter):
+class ImportConnectionArbiter(
+    _FactoryConnectionArbiter, _TaskConnectionArbiter
+):
     """
     A class implementing extensions to the connection arbiter for working with
     arbitrary Python modules.
@@ -67,5 +73,7 @@ class ImportConnectionArbiter(_FactoryConnectionArbiter):
         result = False
         if isinstance(inst, _ConnectionFactory):
             result = self.register_connection_factory(inst, *namespaces)
+        elif isinstance(inst, _TaskFactory):
+            result = self.register_task_factory(inst, *namespaces)
 
         return result

@@ -1,0 +1,15 @@
+---
+includes:
+  - has_factory.yaml
+  - has_name.yaml
+
+properties:
+  period_s:
+    type: number
+    default: 1.0
+    exclusiveMinimum: 0.0
+
+  average_depth:
+    type: integer
+    default: 10
+    minimum: 1

@@ -12,6 +12,7 @@ from typing import Tuple
 import pkg_resources
 
 # internal
+from runtimepy.net.arbiter import ArbiterTask
 from runtimepy.net.connection import Connection
 from runtimepy.net.tcp.connection import TcpConnection
 from runtimepy.net.udp.connection import UdpConnection
@@ -95,3 +96,7 @@ class SampleTask(PeriodicTask):
 
         self.logger.info("Iteration.")
         return True
+
+
+class SampleArbiterTask(ArbiterTask, SampleTask):
+    """A sample arbiter task."""
