@@ -102,6 +102,7 @@ class UdpConnection(_Connection, _TransportMixin):
 
         try:
             self._transport.sendto(data, addr=addr)
+            self.metrics.tx.increment(len(data))
 
         # Catch a bug in the underlying event loop implementation - we try to
         # send, but the underlying socket is gone (e.g. attribute is 'None').
@@ -191,9 +192,9 @@ class UdpConnection(_Connection, _TransportMixin):
                 result = False
 
                 if message is not None:
-                    result = await self.process_datagram(
-                        message[0], message[1]
-                    )
+                    data = message[0]
+                    result = await self.process_datagram(data, message[1])
+                    self.metrics.rx.increment(len(data))
 
                 # If we failed to read a message, disable.
                 if not result:

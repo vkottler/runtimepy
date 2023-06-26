@@ -17,6 +17,7 @@ async def test_connection_basic():
     """Test basic interactions with a connection object."""
 
     conn = Connection(getLogger(__name__))
+    conn.reset_metrics()
     assert conn
 
     with raises(NotImplementedError):

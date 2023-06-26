@@ -15,6 +15,9 @@ from vcorelib.asyncio import log_exceptions as _log_exceptions
 from vcorelib.logging import LoggerMixin as _LoggerMixin
 from vcorelib.logging import LoggerType as _LoggerType
 
+# internal
+from runtimepy.net.metrics import ConnectionMetrics
+
 BinaryMessage = _Union[bytes, bytearray, memoryview]
 
 
@@ -42,10 +45,17 @@ class Connection(_LoggerMixin, _ABC):
         self._binary_messages: _asyncio.Queue[BinaryMessage] = _asyncio.Queue()
         self.tx_binary_hwm: int = 0
 
+        self.metrics = ConnectionMetrics()
+
         self._tasks: _List[_asyncio.Task[None]] = []
         self.initialized = _asyncio.Event()
         self.disabled_event = _asyncio.Event()
         self.init()
+
+    def reset_metrics(self) -> None:
+        """Reset connection metrics."""
+        self.metrics.tx.reset()
+        self.metrics.rx.reset()
 
     def init(self) -> None:
         """Initialize this instance."""

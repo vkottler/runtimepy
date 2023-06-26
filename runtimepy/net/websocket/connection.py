@@ -70,15 +70,21 @@ class WebsocketConnection(Connection):
 
     async def _await_message(self) -> _Optional[_Union[BinaryMessage, str]]:
         """Await the next message. Return None on error or failure."""
-        return await self._handle_connection_closed(self.protocol.recv())
+
+        data = await self._handle_connection_closed(self.protocol.recv())
+        if data is not None:
+            self.metrics.rx.increment(len(data))
+        return data
 
     async def _send_text_message(self, data: str) -> None:
         """Send a text message."""
         await self._handle_connection_closed(self.protocol.send(data))
+        self.metrics.tx.increment(len(data))
 
     async def _send_binay_message(self, data: BinaryMessage) -> None:
         """Send a binary message."""
         await self._handle_connection_closed(self.protocol.send(data))
+        self.metrics.tx.increment(len(data))
 
     async def close(self) -> None:
         """Close this connection."""
