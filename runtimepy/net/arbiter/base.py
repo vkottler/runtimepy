@@ -23,6 +23,7 @@ from vcorelib.namespace import Namespace as _Namespace
 from vcorelib.namespace import NamespaceMixin as _NamespaceMixin
 
 # internal
+from runtimepy.net.arbiter.housekeeping import metrics_poller
 from runtimepy.net.arbiter.info import AppInfo, ConnectionMap
 from runtimepy.net.arbiter.task import (
     ArbiterTaskManager as _ArbiterTaskManager,
@@ -79,6 +80,9 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
         self.manager = manager
 
         self.task_manager = _ArbiterTaskManager()
+
+        # Ensure that connection metrics are polled.
+        self.task_manager.register(metrics_poller(self.manager))
 
         if stop_sig is None:
             stop_sig = _asyncio.Event()

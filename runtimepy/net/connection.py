@@ -52,11 +52,6 @@ class Connection(_LoggerMixin, _ABC):
         self.disabled_event = _asyncio.Event()
         self.init()
 
-    def reset_metrics(self) -> None:
-        """Reset connection metrics."""
-        self.metrics.tx.reset()
-        self.metrics.rx.reset()
-
     def init(self) -> None:
         """Initialize this instance."""
 

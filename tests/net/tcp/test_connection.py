@@ -73,6 +73,10 @@ async def test_tcp_connection_app():
                 # Allow the connection manager to manage this connection.
                 await manager.queue.put(conn)
 
+                if manager.num_connections:
+                    manager.reset_metrics()
+                    manager.poll_metrics()
+
             # Don't require every iteration to connection.
             except ConnectionRefusedError:
                 pass

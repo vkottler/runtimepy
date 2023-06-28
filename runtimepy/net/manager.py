@@ -11,6 +11,7 @@ from typing import Optional as _Optional
 
 # third-party
 from vcorelib.asyncio import log_exceptions as _log_exceptions
+from vcorelib.math import default_time_ns as _default_time_ns
 
 # internal
 from runtimepy.net.connection import Connection as _Connection
@@ -23,6 +24,26 @@ class ConnectionManager:
         """Initialize this connection manager."""
         self.queue: _asyncio.Queue[_Connection] = _asyncio.Queue()
         self._running = False
+        self._conns: _List[_Connection] = []
+
+    @property
+    def num_connections(self) -> int:
+        """Return the number of managed connections."""
+        return len(self._conns)
+
+    def reset_metrics(self) -> None:
+        """Reset connection metrics."""
+        for conn in self._conns:
+            conn.metrics.reset()
+
+    def poll_metrics(self, time_ns: int = None) -> None:
+        """Poll connection metrics."""
+
+        if time_ns is None:
+            time_ns = _default_time_ns()
+
+        for conn in self._conns:
+            conn.metrics.poll(time_ns=time_ns)
 
     async def manage(self, stop_sig: _asyncio.Event) -> None:
         """Handle incoming connections until the stop signal is set."""
@@ -36,7 +57,7 @@ class ConnectionManager:
 
         stop_sig_task = _asyncio.create_task(stop_sig.wait())
         tasks: _List[_asyncio.Task[None]] = []
-        conns: _List[_Connection] = []
+        self._conns = []
         new_conn_task: _Optional[_asyncio.Task[_Connection]] = None
 
         while not stop_sig.is_set():
@@ -55,13 +76,13 @@ class ConnectionManager:
             next_tasks = _log_exceptions(tasks)
 
             # Filter out disabled connections.
-            conns = [x for x in conns if not x.disabled]
+            self._conns = [x for x in self._conns if not x.disabled]
 
             # If a new connection was made, register a task for processing
             # it.
             if new_conn_task.done():
                 new_conn = new_conn_task.result()
-                conns.append(new_conn)
+                self._conns.append(new_conn)
                 next_tasks.append(
                     _asyncio.create_task(new_conn.process(stop_sig=stop_sig))
                 )
