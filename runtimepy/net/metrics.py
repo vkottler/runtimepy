@@ -23,11 +23,17 @@ class ChannelMetrics:
         self._kbps_tracker = RateTracker()
         self.stale = True
 
+    def poll(self, time_ns: int = None) -> None:
+        """Poll kbps tracking."""
+        self.kbps.raw.value = self._kbps_tracker.poll(time_ns=time_ns)
+
     def increment(self, count: int, time_ns: int = None) -> None:
         """Update tracking."""
 
         self.bytes.raw.value += count
-        self._kbps_tracker(time_ns=time_ns, value=float(count))
+        self.kbps.raw.value = self._kbps_tracker(
+            time_ns=time_ns, value=float(count) / 1000.0
+        )
         self.stale = False
 
     def reset(self) -> None:
@@ -48,3 +54,13 @@ class ConnectionMetrics:
 
         self.tx = ChannelMetrics()
         self.rx = ChannelMetrics()
+
+    def reset(self) -> None:
+        """Reset metrics."""
+        self.tx.reset()
+        self.rx.reset()
+
+    def poll(self, time_ns: int = None) -> None:
+        """Poll channels."""
+        self.tx.poll(time_ns=time_ns)
+        self.rx.poll(time_ns=time_ns)
