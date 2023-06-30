@@ -88,14 +88,12 @@ class ConnectionManager:
                 )
                 new_conn_task = None
 
-            # If the stop signal was sent, cancel existing connections.
-            if stop_sig.is_set():
-                # Allow existing tasks to clean up.
-                if new_conn_task is not None:
-                    new_conn_task.cancel()
-                for task in next_tasks:
-                    await task
-
             tasks = next_tasks
+
+        # Allow existing tasks to clean up.
+        if new_conn_task is not None:
+            new_conn_task.cancel()
+        for task in tasks:
+            await task
 
         self._running = False

@@ -55,6 +55,11 @@ class Connection(_LoggerMixin, _ABC):
     def init(self) -> None:
         """Initialize this instance."""
 
+    def log_metrics(self, label: str = "conn") -> None:
+        """Log connection metrics."""
+        self.logger.info("(%s) tx: %s", label, self.metrics.tx)
+        self.logger.info("(%s) rx: %s", label, self.metrics.rx)
+
     async def async_init(self) -> bool:
         """A runtime initialization routine (executes during 'process')."""
         return True
