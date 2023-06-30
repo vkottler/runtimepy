@@ -30,7 +30,7 @@ class ConnectionMetricsPoller(_ArbiterTask):
 
 
 def metrics_poller(
-    manager: _ConnectionManager, period_s: float = 0.1
+    manager: _ConnectionManager, period_s: float = 0.5
 ) -> ConnectionMetricsPoller:
     """Create a metrics-polling task."""
 
