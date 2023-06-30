@@ -1,4 +1,8 @@
 ---
 tasks:
-  - {name: "a", factory: sample_task_factory_a}
-  - {name: "b", factory: SampleTaskFactoryB, period_s: 0.1}
+  - {name: a, factory: sample_task_factory_a}
+  - {name: b, factory: SampleTaskFactoryB, period_s: 0.1}
+
+  - name: log_metrics
+    factory: ConnectionMetricsLoggerFactory
+    period_s: 0.1

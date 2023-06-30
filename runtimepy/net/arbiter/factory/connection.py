@@ -109,12 +109,14 @@ class FactoryConnectionArbiter(_BaseConnectionArbiter):
         if factory in self._conn_factories:
             factory_inst = self._conn_factories[factory]
             self._servers.append(
-                await factory_inst.server_task(
-                    self.stop_sig,
-                    self.manager,
-                    self._servers_started,
-                    *args,
-                    **kwargs,
+                _asyncio.create_task(
+                    await factory_inst.server_task(  # type: ignore
+                        self.stop_sig,
+                        self.manager,
+                        self._servers_started,
+                        *args,
+                        **kwargs,
+                    )
                 )
             )
             result = True

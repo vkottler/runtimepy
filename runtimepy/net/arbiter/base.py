@@ -105,7 +105,7 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
             str, _Awaitable[_Connection]
         ] = {}
 
-        self._servers: _List[ServerTask] = []
+        self._servers: _List[_asyncio.Task[None]] = []
         self._servers_started = _asyncio.Semaphore(0)
 
         self._init()

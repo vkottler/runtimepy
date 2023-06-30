@@ -27,6 +27,18 @@ class ChannelMetrics:
         self.kbps = _Float()
         self._kbps_tracker = _RateTracker(depth=METRICS_DEPTH)
 
+    def __str__(self) -> str:
+        """Get metrics as a string."""
+
+        return "\t".join(
+            [
+                f"messages={self.messages.value}",
+                f"message_rate={self.message_rate.value:.2f}",
+                f"bytes={self.bytes.value}",
+                f"kbps={self.kbps.value:.2f}",
+            ]
+        )
+
     def poll(self, time_ns: int = None) -> None:
         """Poll kbps tracking."""
 

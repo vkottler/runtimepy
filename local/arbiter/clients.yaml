@@ -1,0 +1,19 @@
+---
+clients:
+  - factory: tcp_null
+    name: client
+    defer: true
+    kwargs:
+      host: localhost
+      port: "$tcp_server"
+
+  - factory: websocket_null
+    name: client
+    defer: true
+    args: ["ws://localhost:$websocket_server"]
+
+  - factory: udp_null
+    name: client
+    defer: true
+    kwargs:
+      remote_addr: [127.0.0.1, "$udp_listen"]

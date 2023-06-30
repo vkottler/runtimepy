@@ -1,0 +1,14 @@
+---
+includes:
+  - factories.yaml
+  - ports.yaml
+  - servers.yaml
+  - clients.yaml
+
+tasks:
+  - name: log_metrics
+    factory: ConnectionMetricsLoggerFactory
+    period_s: 1.0
+
+app:
+  - tasks.test
