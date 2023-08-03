@@ -5,6 +5,8 @@ ruff
 mypy
 isort
 yamllint
+yambs
+vmklib
 pytest-asyncio
 setuptools-wrapper
 types-setuptools
