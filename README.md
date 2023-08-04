@@ -2,7 +2,7 @@
     =====================================
     generator=datazen
     version=3.1.2
-    hash=dcf2c1807c7b51c3ecf85165da8ba116
+    hash=dd35f3049c766bf08815607a372d968c
     =====================================
 -->
 
@@ -16,8 +16,14 @@
 
 *A framework for implementing Python services.*
 
-See also: [generated documentation](https://vkottler.github.io/python/pydoc/runtimepy.html)
-(created with [`pydoc`](https://docs.python.org/3/library/pydoc.html)).
+## Documentation
+
+### Generated
+
+* By [sphinx-apidoc](https://vkottler.github.io/python/sphinx/runtimepy)
+(What's [`sphinx-apidoc`](https://www.sphinx-doc.org/en/master/man/sphinx-apidoc.html)?)
+* By [pydoc](https://vkottler.github.io/python/pydoc/runtimepy.html)
+(What's [`pydoc`](https://docs.python.org/3/library/pydoc.html)?)
 
 ## Python Version Support
 
