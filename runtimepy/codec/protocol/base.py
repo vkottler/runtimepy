@@ -177,6 +177,13 @@ class ProtocolBase:
 
         return self._fields.get(name, resolve_enum=resolve_enum)
 
+    def __str__(self) -> str:
+        """Get this instance as a string."""
+
+        return f"({self.array.size})\t" + "\t".join(
+            f"{name}={self[name]}" for name in self._names.registered_order
+        )
+
     def __getitem__(self, name: str) -> ProtocolPrimitive:
         """Get the value of a protocol field."""
         return self.value(name)

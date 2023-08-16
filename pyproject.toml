@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta:__legacy__"
 
 [project]
 name = "runtimepy"
-version = "1.7.3"
+version = "1.7.4"
 description = "A framework for implementing Python services."
 readme = "README.md"
 requires-python = ">=3.8"
@@ -39,6 +39,8 @@ test = [
   "yamllint",
   "yambs",
   "vmklib",
+  "sphinx",
+  "sphinx-book-theme",
   "pytest-asyncio",
   "setuptools-wrapper",
   "types-setuptools"

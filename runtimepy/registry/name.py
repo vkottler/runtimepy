@@ -39,6 +39,11 @@ class NameRegistry(_TwoWayNameMapping[int]):
     ) -> _Optional[int]:
         """Register a new name."""
 
+        curr = self.identifier(name)
+        if curr is not None:
+            assert identifier is None or curr == identifier
+            return curr
+
         # Ensure the name is valid.
         if not self.validate_name(name):
             return None
@@ -51,12 +56,7 @@ class NameRegistry(_TwoWayNameMapping[int]):
 
         # Store the mapping and return the identifier.
         if identifier not in self._mapping:
-            self._mapping[identifier] = name
-            self._reverse[name] = identifier
-            return identifier
-
-        # If this name is already registered, return the identifier.
-        if self._reverse.get(name) == identifier:
+            self._set(identifier, name)
             return identifier
 
         return None
