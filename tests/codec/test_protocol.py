@@ -60,3 +60,5 @@ def test_protocol_basic():
         assert proto.write_meta(stream)
         stream.seek(0)
         assert Protocol.import_json(load(stream))
+
+    assert str(proto)

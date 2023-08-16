@@ -56,8 +56,11 @@ class ChannelMetrics:
         )
 
         self.bytes.raw.value += count
-        self.kbps.raw.value = self._kbps_tracker(
-            time_ns=time_ns, value=float(count) / 1000.0
+
+        # Multiply by 8 to get bits from bytes.
+        self.kbps.raw.value = (
+            self._kbps_tracker(time_ns=time_ns, value=float(count) / 1000.0)
+            * 8
         )
 
     def reset(self) -> None:
@@ -66,7 +69,7 @@ class ChannelMetrics:
         self.messages.raw.value = 0
         self.bytes.raw.value = 0
         self.kbps.raw.value = 0.0
-        self._kbps_tracker()
+        self._kbps_tracker.reset()
 
 
 class ConnectionMetrics:

@@ -6,6 +6,7 @@ A module implementing a generic, two-way mapping interface.
 from typing import Dict as _Dict
 from typing import Generic as _Generic
 from typing import Iterator as _Iterator
+from typing import List as _List
 from typing import MutableMapping as _MutableMapping
 from typing import Optional as _Optional
 from typing import Type as _Type
@@ -48,6 +49,7 @@ class TwoWayNameMapping(_RegexMixin, _Generic[T]):
 
         self._mapping: _Dict[T, str] = {}
         self._reverse: _Dict[str, T] = {}
+        self.registered_order: _List[str] = []
 
         if mapping is not None:
             self.load_key_to_name(mapping)
@@ -64,14 +66,17 @@ class TwoWayNameMapping(_RegexMixin, _Generic[T]):
             self._mapping[key] = name
         else:
             # Ensure the mappings are consistent.
-            assert self._mapping[key] == name
+            curr_name = self._mapping[key]
+            assert curr_name == name, f"{curr_name} != {name} ({key})"
 
         # Add to the name->key mapping.
         if name not in self._reverse:
             self._reverse[name] = key
+            self.registered_order.append(name)
         else:
             # Ensure the mappings are consistent.
-            assert self._reverse[name] == key
+            curr_key = self._reverse[name]
+            assert curr_key == key, f"{curr_key} != {key} ({name})"
 
     def load_key_to_name(self, mapping: KeyToName[T]) -> None:
         """Load a key-to-name mapping."""
