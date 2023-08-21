@@ -35,6 +35,17 @@ from runtimepy.primitives.type.int import (
     Uint64Type,
 )
 
+AnyIntegerType = _Union[
+    Int8Type,
+    Int16Type,
+    Int32Type,
+    Int64Type,
+    Uint8Type,
+    Uint16Type,
+    Uint32Type,
+    Uint64Type,
+]
+
 AnyPrimitiveType = _Union[
     Int8Type,
     Int16Type,

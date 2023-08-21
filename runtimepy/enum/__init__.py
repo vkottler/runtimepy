@@ -13,10 +13,11 @@ from typing import cast as _cast
 from vcorelib.io.types import JsonObject as _JsonObject
 from vcorelib.io.types import JsonValue as _JsonValue
 
-# internal
 from runtimepy.enum.type import EnumType as _EnumType
 from runtimepy.mapping import BoolMappingData as _BoolMappingData
 from runtimepy.mapping import IntMappingData as _IntMappingData
+
+# internal
 from runtimepy.registry.bool import BooleanRegistry as _BooleanRegistry
 from runtimepy.registry.item import RegistryItem as _RegistryItem
 from runtimepy.registry.name import NameRegistry as _NameRegistry
@@ -53,6 +54,7 @@ class RuntimeEnum(_RegistryItem):
         super().init(data)
 
         self.type = _EnumType.normalize(str(data["type"]))
+        self.primitive = str(data["primitive"])
 
         # Use distinct storage attributes for each kind of underlying
         # enumeration.
@@ -74,7 +76,11 @@ class RuntimeEnum(_RegistryItem):
     def asdict(self) -> _JsonObject:
         """Obtain a dictionary representing this instance."""
 
-        result: _JsonObject = {"id": self.id, "type": str(self.type)}
+        result: _JsonObject = {
+            "id": self.id,
+            "type": str(self.type),
+            "primitive": self.primitive,
+        }
         if self.is_integer:
             result["items"] = _cast(_JsonValue, self.ints.asdict())
         else:
