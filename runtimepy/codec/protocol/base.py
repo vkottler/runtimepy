@@ -124,7 +124,7 @@ class ProtocolBase:
     def add_field(
         self,
         name: str,
-        kind: _Primitivelike,
+        kind: _Primitivelike = None,
         enum: _RegistryKey = None,
         track: bool = True,
     ) -> None:
@@ -134,11 +134,16 @@ class ProtocolBase:
         ident = self._names.register_name(name)
         assert ident is not None, f"Couldn't register field '{name}'!"
 
+        if enum is not None:
+            runtime_enum = self._enum_registry[enum]
+            self._enum_fields[name] = runtime_enum
+            kind = runtime_enum.primitive
+
+        assert kind is not None
         new = _create(kind)
+
         self.array.add(new)
         self._regular_fields[name] = new
-        if enum is not None:
-            self._enum_fields[name] = self._enum_registry[enum]
 
         if track:
             self._build.append(FieldSpec(name, kind, enum))

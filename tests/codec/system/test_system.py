@@ -17,3 +17,13 @@ def test_type_system_basic():
     assert new_type
 
     assert system.size("SomeStruct") == 0
+
+    system.enum("TestEnum1", {"a": 1, "b": 2, "c": 3})
+
+    new_type.add_field("a", enum="TestEnum1")
+    assert new_type.array.size == 1
+
+    system.enum("TestEnum2", {"a": 1, "b": 2, "c": 3}, primitive="uint16")
+    new_type.add_field("b", enum="TestEnum2")
+    assert new_type.array.size == 3
+    assert system.size("SomeStruct") == 3

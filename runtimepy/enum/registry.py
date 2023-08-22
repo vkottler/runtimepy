@@ -31,10 +31,11 @@ class EnumRegistry(_Registry[_RuntimeEnum]):
         name: str,
         kind: _EnumTypelike,
         items: _EnumMappingData = None,
+        primitive: str = "uint8",
     ) -> _Optional[_RuntimeEnum]:
         """Create a new runtime enumeration."""
 
-        data: _JsonObject = {"type": _cast(str, kind)}
+        data: _JsonObject = {"type": _cast(str, kind), "primitive": primitive}
         if items is not None:
             data["items"] = items  # type: ignore
         return self.register_dict(name, data)

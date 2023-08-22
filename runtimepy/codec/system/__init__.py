@@ -35,7 +35,7 @@ class TypeSystem:
 
         # Register enums.
         self._enums = EnumRegistry()
-        self.register_enum(
+        self.runtime_enum(
             "ByteOrder", ByteOrder.register_enum(self._enums, name="ByteOrder")
         )
 
@@ -47,7 +47,7 @@ class TypeSystem:
         self.custom[name] = new_type
         return new_type
 
-    def register_enum(self, name: str, enum: RuntimeEnum) -> bool:
+    def runtime_enum(self, name: str, enum: RuntimeEnum) -> bool:
         """Register an enumeration."""
 
         name = self.root_namespace.namespace(name)
@@ -58,6 +58,13 @@ class TypeSystem:
         self.primitives[name] = PrimitiveTypes[enum.primitive]
 
         return result
+
+    def enum(
+        self, name: str, items: Dict[str, int], primitive: str = "uint8"
+    ) -> None:
+        """Register an enumeration."""
+
+        self._enums.enum(name, "int", items=items, primitive=primitive)
 
     def size(self, name: str) -> int:
         """Get the size of a named type."""
