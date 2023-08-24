@@ -6,7 +6,6 @@ A module for implementing arrays of arbitrary primitives.
 from copy import copy as _copy
 from struct import pack as _pack
 from struct import unpack as _unpack
-from typing import BinaryIO as _BinaryIO
 from typing import Dict as _Dict
 from typing import List as _List
 from typing import NamedTuple
@@ -18,6 +17,7 @@ from runtimepy.primitives.byte_order import (
     DEFAULT_BYTE_ORDER as _DEFAULT_BYTE_ORDER,
 )
 from runtimepy.primitives.byte_order import ByteOrder as _ByteOrder
+from runtimepy.primitives.serializable import Serializable
 
 
 class ArrayFragmentSpec(NamedTuple):
@@ -29,7 +29,7 @@ class ArrayFragmentSpec(NamedTuple):
     byte_end: int
 
 
-class PrimitiveArray:
+class PrimitiveArray(Serializable):
     """A class for managing primitives as arrays."""
 
     def __init__(
@@ -37,22 +37,27 @@ class PrimitiveArray:
         *primitives: _AnyPrimitive,
         byte_order: _ByteOrder = _DEFAULT_BYTE_ORDER,
         fragments: _List[ArrayFragmentSpec] = None,
+        next_array: "PrimitiveArray" = None,
     ) -> None:
         """Initialize this primitive array."""
 
         self._primitives: _List[_AnyPrimitive] = []
         self.byte_order = byte_order
         self._format: str = self.byte_order.fmt
-        self.size: int = 0
 
         # Keep track of a quick lookup for converting between element indices
         # and byte indices.
         self._bytes_to_index: _Dict[int, int] = {0: 0}
         self._index_to_bytes: _Dict[int, int] = {0: 0}
 
+        self.size = 0
+        self.chain = None
+
         # Add initial items.
         for item in primitives:
             self.add(item)
+
+        super().__init__(chain=next_array)
 
         self._fragments: _List["PrimitiveArray"] = []
         self._fragment_specs: _List[ArrayFragmentSpec] = []
@@ -160,7 +165,7 @@ class PrimitiveArray:
         """Determine the array index that a byte index lands on."""
         return self._bytes_to_index[count]
 
-    def __copy__(self) -> "PrimitiveArray":
+    def _copy_impl(self) -> "PrimitiveArray":
         """Make a copy of this primitive array."""
 
         return PrimitiveArray(
@@ -169,10 +174,6 @@ class PrimitiveArray:
             fragments=_copy(self._fragment_specs),
         )
 
-    def copy(self) -> "PrimitiveArray":
-        """A simple wrapper for copy."""
-        return _copy(self)
-
     def __getitem__(self, index: int) -> _AnyPrimitive:
         """Access underlying primitives by index."""
         return self._primitives[index]
@@ -180,16 +181,30 @@ class PrimitiveArray:
     def add(self, primitive: _AnyPrimitive) -> int:
         """Add another primitive to manage."""
 
-        self._primitives.append(primitive)
-        self._format += primitive.kind.format
-        self.size += primitive.size
+        end = self.end
+        if isinstance(end, PrimitiveArray):
+            if end is self:
+                self._primitives.append(primitive)
+                self._format += primitive.kind.format
+                self.size += primitive.size
 
-        # Add tracking information for the current tail.
-        curr_idx = len(self._primitives)
-        self._bytes_to_index[self.size] = curr_idx
-        self._index_to_bytes[curr_idx] = self.size
+                # Add tracking information for the current tail.
+                curr_idx = len(self._primitives)
+                self._bytes_to_index[self.size] = curr_idx
+                self._index_to_bytes[curr_idx] = self.size
+                result = self.size
+            else:
+                result = end.add(primitive)
 
-        return self.size
+        # Add a new primitive array to the end of this chain for this
+        # primitive.
+        else:
+            new_array = PrimitiveArray(byte_order=self.byte_order)
+            end.assign(new_array)
+
+            result = new_array.add(primitive)
+
+        return result
 
     def __bytes__(self) -> bytes:
         """Get this primitive array as a bytes instance."""
@@ -200,13 +215,7 @@ class PrimitiveArray:
         """Get bytes from a fragment."""
         return bytes(self._fragments[index])
 
-    def to_stream(self, stream: _BinaryIO) -> int:
-        """Write this array to a stream."""
-
-        stream.write(bytes(self))
-        return self.size
-
-    def update(self, data: bytes) -> None:
+    def update(self, data: bytes) -> int:
         """Update primitive values from a bytes instance."""
 
         for primitive, item in zip(
@@ -214,12 +223,8 @@ class PrimitiveArray:
         ):
             primitive.value = item
 
+        return self.size
+
     def update_fragment(self, index: int, data: bytes) -> None:
         """Update a fragment by index."""
         self._fragments[index].update(data)
-
-    def from_stream(self, stream: _BinaryIO) -> int:
-        """Update this array from a stream."""
-
-        self.update(stream.read(self.size))
-        return self.size
