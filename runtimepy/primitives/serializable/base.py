@@ -1,5 +1,5 @@
 """
-A module defining an interface for serializable objects.
+A module defining a base interface fore serializable objects.
 """
 
 # built-in
@@ -7,6 +7,12 @@ from abc import ABC, abstractmethod
 from copy import copy as _copy
 from typing import BinaryIO as _BinaryIO
 from typing import TypeVar
+
+# internal
+from runtimepy.primitives.byte_order import (
+    DEFAULT_BYTE_ORDER as _DEFAULT_BYTE_ORDER,
+)
+from runtimepy.primitives.byte_order import ByteOrder as _ByteOrder
 
 T = TypeVar("T", bound="Serializable")
 
@@ -16,11 +22,17 @@ class Serializable(ABC):
 
     size: int
 
-    def __init__(self, chain: T = None) -> None:
+    def __init__(
+        self,
+        byte_order: _ByteOrder = _DEFAULT_BYTE_ORDER,
+        chain: T = None,
+    ) -> None:
         """Initialize this instance."""
 
         if not hasattr(self, "size"):
             self.size = 0
+
+        self.byte_order = byte_order
         self.chain = chain
 
     def length(self) -> int:
@@ -51,6 +63,7 @@ class Serializable(ABC):
 
         if self.chain is not None:
             result.assign(self.chain.copy())
+        result.byte_order = self.byte_order
 
         return result
 
@@ -80,14 +93,19 @@ class Serializable(ABC):
 
         return result
 
-    @abstractmethod
     def update(self, data: bytes) -> int:
         """Update this serializable from a bytes instance."""
+        raise NotImplementedError
+
+    def _from_stream(self, stream: _BinaryIO) -> int:
+        """Update just this instance from a stream."""
+
+        return self.update(stream.read(self.size))
 
     def from_stream(self, stream: _BinaryIO) -> int:
         """Update this serializable from a stream."""
 
-        result = self.update(stream.read(self.size))
+        result = self._from_stream(stream)
 
         if self.chain is not None:
             result += self.chain.from_stream(stream)
@@ -104,30 +122,3 @@ class Serializable(ABC):
         """Add a new serializable to the end of this chain."""
 
         self.end.assign(chain)
-
-
-class FixedChunk(Serializable):
-    """A simple fixed-size serializable chunk."""
-
-    def __init__(self, data: bytes, chain: Serializable = None) -> None:
-        """Initialize this instance."""
-
-        super().__init__(chain=chain)
-        assert data
-        self.data = data
-        self.size = len(self.data)
-
-    def _copy_impl(self) -> "FixedChunk":
-        """Make a copy of this instance."""
-        return FixedChunk(self.data)
-
-    def __bytes__(self) -> bytes:
-        """Get this serializable as a bytes instance."""
-        return self.data
-
-    def update(self, data: bytes) -> int:
-        """Update this serializable from a bytes instance."""
-
-        assert len(data) == self.size
-        self.data = data
-        return self.size

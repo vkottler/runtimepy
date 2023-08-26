@@ -57,7 +57,7 @@ class PrimitiveArray(Serializable):
         for item in primitives:
             self.add(item)
 
-        super().__init__(chain=next_array)
+        super().__init__(byte_order=self.byte_order, chain=next_array)
 
         self._fragments: _List["PrimitiveArray"] = []
         self._fragment_specs: _List[ArrayFragmentSpec] = []

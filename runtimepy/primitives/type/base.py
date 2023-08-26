@@ -68,10 +68,11 @@ class PrimitiveType(_Generic[T]):
     name: str
     c_type: _Type[T]
 
-    def __init__(self, struct_format: str) -> None:
+    def __init__(self, struct_format: str, signed: bool = True) -> None:
         """Initialize this primitive type."""
 
         self.format = struct_format
+        self.signed = signed
 
         # Make sure that the struct size and ctype size match. There's
         # unfortunately no obvious (or via public interfaces) way to just

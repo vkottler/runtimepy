@@ -16,10 +16,12 @@ from runtimepy.primitives.int import (
     Int16,
     Int32,
     Int64,
+    SignedInt,
     Uint8,
     Uint16,
     Uint32,
     Uint64,
+    UnsignedInt,
 )
 
 __all__ = [
@@ -40,6 +42,8 @@ __all__ = [
     "Primitivelike",
     "normalize",
     "create",
+    "SignedInt",
+    "UnsignedInt",
 ]
 
 AnyPrimitive = _Union[
