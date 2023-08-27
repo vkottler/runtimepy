@@ -11,6 +11,13 @@ clients:
       host: localhost
       port: "$tcp_server"
 
+  - factory: tcp_message
+    name: client
+    defer: true
+    kwargs:
+      host: localhost
+      port: "$tcp_message_server"
+
   - factory: sample_websocket_conn
     name: client
     defer: true
@@ -24,15 +31,30 @@ clients:
       connect: false
       remote_addr: [127.0.0.1, "$udp_listen"]
 
+  - factory: udp_message
+    name: client
+    defer: true
+    kwargs:
+      remote_addr: [127.0.0.1, "$udp_message_listen"]
+
   - factory: udp_echo
     name: server
     kwargs:
       local_addr: ["0.0.0.0", "$udp_listen"]
 
+  - factory: udp_message_echo
+    name: server
+    kwargs:
+      local_addr: ["0.0.0.0", "$udp_message_listen"]
+
 servers:
   - factory: tcp_echo
     kwargs:
       port: "$tcp_server"
+
+  - factory: tcp_message_echo
+    kwargs:
+      port: "$tcp_message_server"
 
   - factory: websocket_echo
     kwargs:
