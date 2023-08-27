@@ -42,3 +42,12 @@ def test_prefixed_chunk_basic():
 
     assert str(chunk_copy) + str(end_copy) == "ab"
     assert chunk_copy.length() == 5
+
+    chunk_copy.add_to_end(end_copy.copy())
+    assert chunk_copy.length() == 7
+
+    try:
+        chunk_copy.update(bytes())
+        assert False
+    except NotImplementedError:
+        pass

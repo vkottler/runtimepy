@@ -3,7 +3,7 @@ A basic type-system implementation.
 """
 
 # built-in
-from typing import Dict, List, Union
+from typing import Dict
 
 # third-party
 from vcorelib.namespace import CPP_DELIM, Namespace
@@ -14,15 +14,6 @@ from runtimepy.enum import RuntimeEnum
 from runtimepy.enum.registry import EnumRegistry
 from runtimepy.primitives.byte_order import ByteOrder
 from runtimepy.primitives.type import AnyPrimitiveType, PrimitiveTypes
-
-
-class CustomType:
-    """An interface for custom types."""
-
-    def __init__(self) -> None:
-        """Initialize this instance."""
-
-        self.constituents: List[Union[CustomType, AnyPrimitiveType]] = []
 
 
 class TypeSystem:

@@ -13,6 +13,8 @@ from typing import cast as _cast
 
 # internal
 from runtimepy.primitives import AnyPrimitive as _AnyPrimitive
+from runtimepy.primitives import Primitivelike as _Primitivelike
+from runtimepy.primitives import create as _create
 from runtimepy.primitives.byte_order import (
     DEFAULT_BYTE_ORDER as _DEFAULT_BYTE_ORDER,
 )
@@ -177,6 +179,10 @@ class PrimitiveArray(Serializable):
     def __getitem__(self, index: int) -> _AnyPrimitive:
         """Access underlying primitives by index."""
         return self._primitives[index]
+
+    def add_primitive(self, kind: _Primitivelike) -> int:
+        """Add to the array by specifying the type of element to add."""
+        return self.add(_create(kind))
 
     def add(self, primitive: _AnyPrimitive) -> int:
         """Add another primitive to manage."""

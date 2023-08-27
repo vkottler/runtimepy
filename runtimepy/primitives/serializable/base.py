@@ -71,13 +71,6 @@ class Serializable(ABC):
         """Create a copy of a serializable instance."""
         return _copy(self)
 
-    def replace(self, serializable: T) -> None:
-        """Replace this node in the chain."""
-
-        if self.chain is not None:
-            serializable.assign(self.chain)
-            self.chain = None
-
     @abstractmethod
     def __bytes__(self) -> bytes:
         """Get this serializable as a bytes instance."""
