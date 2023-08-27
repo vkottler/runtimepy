@@ -15,7 +15,7 @@ class BooleanType(_PrimitiveType[_BoolCtype]):
 
     def __init__(self) -> None:
         """Initialize this type."""
-        super().__init__("?")
+        super().__init__("?", signed=False)
         assert self.is_boolean
 
 

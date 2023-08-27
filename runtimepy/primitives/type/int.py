@@ -82,7 +82,7 @@ class Uint8Type(_PrimitiveType[_Uint8Ctype]):
 
     def __init__(self) -> None:
         """Initialize this type."""
-        super().__init__("B")
+        super().__init__("B", signed=False)
         assert self.is_integer
 
 
@@ -97,7 +97,7 @@ class Uint16Type(_PrimitiveType[_Uint16Ctype]):
 
     def __init__(self) -> None:
         """Initialize this type."""
-        super().__init__("H")
+        super().__init__("H", signed=False)
         assert self.is_integer
 
 
@@ -112,7 +112,7 @@ class Uint32Type(_PrimitiveType[_Uint32Ctype]):
 
     def __init__(self) -> None:
         """Initialize this type."""
-        super().__init__("I")
+        super().__init__("I", signed=False)
         assert self.is_integer
 
 
@@ -127,7 +127,7 @@ class Uint64Type(_PrimitiveType[_Uint64Ctype]):
 
     def __init__(self) -> None:
         """Initialize this type."""
-        super().__init__("Q")
+        super().__init__("Q", signed=False)
         assert self.is_integer
 
 

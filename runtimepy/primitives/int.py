@@ -119,4 +119,5 @@ class Uint64Primitive(_Primitive[int]):
 
 
 Uint64 = Uint64Primitive
+SignedInt = _Union[Int8, Int16, Int32, Int64]
 UnsignedInt = _Union[Uint8, Uint16, Uint32, Uint64]

@@ -35,19 +35,13 @@ from runtimepy.primitives.type.int import (
     Uint64Type,
 )
 
+SignedIntegerType = _Union[Int8Type, Int16Type, Int32Type, Int64Type]
+UnsignedIntegerType = _Union[Uint8Type, Uint16Type, Uint32Type, Uint64Type]
+
+AnyIntegerType = _Union[SignedIntegerType, UnsignedIntegerType]
+
 AnyPrimitiveType = _Union[
-    Int8Type,
-    Int16Type,
-    Int32Type,
-    Int64Type,
-    Uint8Type,
-    Uint16Type,
-    Uint32Type,
-    Uint64Type,
-    HalfType,
-    FloatType,
-    DoubleType,
-    BooleanType,
+    AnyIntegerType, HalfType, FloatType, DoubleType, BooleanType
 ]
 
 PrimitiveTypes: _Dict[str, AnyPrimitiveType] = {

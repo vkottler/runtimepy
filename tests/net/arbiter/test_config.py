@@ -3,6 +3,7 @@ Test the 'net.arbiter.config' module.
 """
 
 # built-in
+import asyncio
 from typing import cast
 
 # third-party
@@ -10,6 +11,7 @@ from pytest import mark
 
 # module under test
 from runtimepy.net.arbiter import AppInfo, ConnectionArbiter
+from runtimepy.net.stream import PrefixedMessageConnection
 
 # internal
 from tests.resources import (
@@ -29,6 +31,22 @@ async def test_connection_arbiter_config_basic():
     await arbiter.load_configs([resource("connection_arbiter", "basic.yaml")])
 
     assert await arbiter.app() == 0
+
+
+async def echo_message_test_app(app: AppInfo) -> int:
+    """Test message connections."""
+
+    senders = list(app.search(pattern="null", kind=PrefixedMessageConnection))
+    assert len(senders) == 2
+
+    for _ in range(2):
+        for idx in range(4096):
+            msg = f"Hello, world! ({idx})"
+            for sender in senders:
+                sender.send_message_str(msg)
+        await asyncio.sleep(0)
+
+    return 0
 
 
 async def echo_test_app(app: AppInfo) -> int:
@@ -63,7 +81,7 @@ async def echo_test_app(app: AppInfo) -> int:
 async def test_connection_arbiter_config_echo():
     """Test various 'echo' connection types."""
 
-    arbiter = ConnectionArbiter(app=echo_test_app)
+    arbiter = ConnectionArbiter(app=[echo_test_app, echo_message_test_app])
 
     # Register clients and servers from the config.
     await arbiter.load_configs(

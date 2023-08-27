@@ -17,6 +17,7 @@ from vcorelib.logging import LoggerType as _LoggerType
 
 # internal
 from runtimepy.net.metrics import ConnectionMetrics
+from runtimepy.primitives.byte_order import DEFAULT_BYTE_ORDER, ByteOrder
 
 BinaryMessage = _Union[bytes, bytearray, memoryview]
 
@@ -26,6 +27,8 @@ class Connection(_LoggerMixin, _ABC):
 
     uses_text_tx_queue = True
     uses_binary_tx_queue = True
+
+    byte_order: ByteOrder = DEFAULT_BYTE_ORDER
 
     def __init__(self, logger: _LoggerType) -> None:
         """Initialize this connection."""
