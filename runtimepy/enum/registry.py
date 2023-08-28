@@ -17,6 +17,8 @@ from runtimepy.enum.type import EnumTypelike as _EnumTypelike
 from runtimepy.mapping import EnumMappingData as _EnumMappingData
 from runtimepy.registry import Registry as _Registry
 
+DEFAULT_ENUM_PRIMITIVE = "uint8"
+
 
 class EnumRegistry(_Registry[_RuntimeEnum]):
     """A runtime enumeration registry."""
@@ -31,7 +33,7 @@ class EnumRegistry(_Registry[_RuntimeEnum]):
         name: str,
         kind: _EnumTypelike,
         items: _EnumMappingData = None,
-        primitive: str = "uint8",
+        primitive: str = DEFAULT_ENUM_PRIMITIVE,
     ) -> _Optional[_RuntimeEnum]:
         """Create a new runtime enumeration."""
 
@@ -45,6 +47,16 @@ class RuntimeIntEnum(_IntEnum):
     """An integer enumeration extension."""
 
     @classmethod
+    def primitive(cls) -> str:
+        """The underlying primitive type for this runtime enumeration."""
+        return DEFAULT_ENUM_PRIMITIVE
+
+    @classmethod
+    def enum_name(cls) -> str:
+        """Get a name for this enumeration."""
+        return cls.__name__
+
+    @classmethod
     def runtime_enum(cls, identifier: int) -> _RuntimeEnum:
         """Obtain a runtime enumeration from this class."""
         return _RuntimeEnum.from_enum(cls, identifier)
@@ -56,8 +68,10 @@ class RuntimeIntEnum(_IntEnum):
         """Register an enumeration to a registry."""
 
         if name is None:
-            name = cls.__name__
+            name = cls.enum_name()
 
-        result = registry.register_dict(name, _RuntimeEnum.data_from_enum(cls))
+        data = _RuntimeEnum.data_from_enum(cls)
+        data["primitive"] = cls.primitive()
+        result = registry.register_dict(name, data)
         assert result is not None
         return result
