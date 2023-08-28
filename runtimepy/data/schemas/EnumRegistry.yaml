@@ -3,5 +3,5 @@ type: object
 additionalProperties: false
 
 patternProperties:
-  "^\\w+$":
+  "^[\\w\\:]+$":
     $ref: package://runtimepy/schemas/RuntimeEnum.yaml

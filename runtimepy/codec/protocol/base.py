@@ -182,10 +182,15 @@ class ProtocolBase:
 
         return self._fields.get(name, resolve_enum=resolve_enum)
 
+    @property
+    def size(self) -> int:
+        """Get this protocol's size in bytes."""
+        return self.array.length()
+
     def __str__(self) -> str:
         """Get this instance as a string."""
 
-        return f"({self.array.size})\t" + "\t".join(
+        return f"({self.size})\t" + "\t".join(
             f"{name}={self[name]}" for name in self._names.registered_order
         )
 
