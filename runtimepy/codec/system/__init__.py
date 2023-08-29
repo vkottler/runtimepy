@@ -95,7 +95,7 @@ class TypeSystem:
 
         # Lookup field type.
         if field_type_name in self.custom:
-            custom.array.add_to_end(self.custom[field_type_name].array)
+            custom.array.add_to_end(self.custom[field_type_name].array.copy())
             return
 
         custom.add_field(
