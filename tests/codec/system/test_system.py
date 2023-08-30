@@ -21,6 +21,8 @@ def get_test_system() -> TypeSystem:
 
     assert system.size("SampleStruct") == 7
 
+    assert system.get_enum("TestEnum2")
+
     return system
 
 
@@ -41,6 +43,8 @@ def test_type_system_compound_types():
     system.add("SomeStruct", "field2", "int16")
 
     assert system.size("SomeStruct") == 16
+
+    assert system.get_protocol("SomeStruct")
 
 
 def test_type_system_basic():
