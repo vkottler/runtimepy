@@ -137,7 +137,11 @@ class ProtocolBase:
         if enum is not None:
             runtime_enum = self._enum_registry[enum]
             self._enum_fields[name] = runtime_enum
-            kind = runtime_enum.primitive
+
+            # Allow the primitive type to be overridden when passed as a
+            # method argument.
+            if kind is None:
+                kind = runtime_enum.primitive
 
         assert kind is not None
         new = _create(kind)

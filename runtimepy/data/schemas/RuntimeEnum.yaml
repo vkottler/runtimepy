@@ -23,5 +23,4 @@ properties:
       "^\\w+$":
         oneOf:
           - type: integer
-            minimum: 0
           - type: boolean
