@@ -11,6 +11,7 @@ from vcorelib.namespace import CPP_DELIM, Namespace
 # internal
 from runtimepy import PKG_NAME
 from runtimepy.codec.protocol import Protocol
+from runtimepy.enum import RuntimeEnum
 from runtimepy.enum.registry import (
     DEFAULT_ENUM_PRIMITIVE,
     EnumRegistry,
@@ -45,6 +46,13 @@ class TypeSystem:
 
         self.root_namespace = global_namespace.child(*namespace)
 
+    def get_enum(self, name: str, *namespace: str) -> RuntimeEnum:
+        """Lookup an enum type at runtime."""
+
+        found = self._find_name(name, *namespace, strict=True)
+        assert found is not None
+        return self._enums[found]
+
     def runtime_int_enum(self, enum: Type[RuntimeIntEnum]) -> None:
         """Register an enumeration class."""
 
@@ -75,6 +83,13 @@ class TypeSystem:
             self._name(name, *namespace, check_available=True)
         ] = new_type
         return new_type
+
+    def get_protocol(self, name: str, *namespace: str) -> Protocol:
+        """Get a custom protocol by name."""
+
+        found = self._find_name(name, *namespace, strict=True)
+        assert found is not None
+        return self.custom[found]
 
     def add(self, custom_type: str, field_name: str, field_type: str) -> None:
         """Add a field to a custom type."""
