@@ -39,7 +39,7 @@ class PrimitiveArray(Serializable):
         *primitives: _AnyPrimitive,
         byte_order: _ByteOrder = _DEFAULT_BYTE_ORDER,
         fragments: _List[ArrayFragmentSpec] = None,
-        next_array: "PrimitiveArray" = None,
+        chain: Serializable = None,
     ) -> None:
         """Initialize this primitive array."""
 
@@ -59,7 +59,7 @@ class PrimitiveArray(Serializable):
         for item in primitives:
             self.add(item)
 
-        super().__init__(byte_order=self.byte_order, chain=next_array)
+        super().__init__(byte_order=self.byte_order, chain=chain)
 
         self._fragments: _List["PrimitiveArray"] = []
         self._fragment_specs: _List[ArrayFragmentSpec] = []

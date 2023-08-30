@@ -11,6 +11,7 @@ from json import load
 from runtimepy.codec.protocol import Protocol
 from runtimepy.codec.protocol.base import FieldSpec
 from runtimepy.enum.registry import EnumRegistry
+from runtimepy.primitives.serializable import PrefixedChunk
 
 # internal
 from tests.resources import resource
@@ -62,3 +63,16 @@ def test_protocol_basic():
         assert Protocol.import_json(load(stream))
 
     assert str(proto)
+
+    # Create a string serializable.
+    string = PrefixedChunk.create()
+    assert string.length() == 2
+    assert string.update_str("abc") == 5
+
+    # Add the string to the end and confirm the size update.
+    curr = proto.size
+    proto.add_field("string", serializable=string)
+    assert proto.size == curr + 5
+
+    # Should be the same size.
+    assert copy(proto).size == proto.size
