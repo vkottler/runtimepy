@@ -29,6 +29,7 @@ from runtimepy.primitives.byte_order import (
 from runtimepy.primitives.byte_order import ByteOrder as _ByteOrder
 from runtimepy.primitives.field.fields import BitFields as _BitFields
 from runtimepy.primitives.field.manager import BitFieldsManager
+from runtimepy.primitives.serializable import Serializable, SerializableMap
 from runtimepy.registry.name import NameRegistry as _NameRegistry
 from runtimepy.registry.name import RegistryKey as _RegistryKey
 
@@ -68,6 +69,7 @@ class ProtocolBase:
         build: _List[_Union[int, FieldSpec]] = None,
         identifier: int = 1,
         byte_order: _Union[_ByteOrder, _RegistryKey] = _DEFAULT_BYTE_ORDER,
+        serializables: SerializableMap = None,
     ) -> None:
         """Initialize this protocol."""
 
@@ -110,6 +112,12 @@ class ProtocolBase:
                     item.name, item.kind, enum=item.enum, track=False
                 )
 
+        # Keep track of named serializables.
+        self.serializables: SerializableMap = {}
+        if serializables is not None:
+            for name, serializable in serializables.items():
+                self.add_field(name, serializable=serializable)
+
     def __copy__(self: T) -> T:
         """Create another protocol instance from this one."""
 
@@ -119,6 +127,7 @@ class ProtocolBase:
             fields=_copy(self._fields),
             build=self._build,
             byte_order=self.array.byte_order,
+            serializables=self.serializables,
         )
 
     def add_field(
@@ -126,6 +135,7 @@ class ProtocolBase:
         name: str,
         kind: _Primitivelike = None,
         enum: _RegistryKey = None,
+        serializable: Serializable = None,
         track: bool = True,
     ) -> None:
         """Add a new field to the protocol."""
@@ -133,6 +143,13 @@ class ProtocolBase:
         # Register the field name.
         ident = self._names.register_name(name)
         assert ident is not None, f"Couldn't register field '{name}'!"
+
+        # Add the serializable to the end of this protocol.
+        if serializable is not None:
+            assert kind is None and enum is None
+            self.serializables[name] = serializable
+            self.array.add_to_end(serializable)
+            return
 
         if enum is not None:
             runtime_enum = self._enum_registry[enum]
