@@ -6,7 +6,7 @@ import asyncio
 
 # built-in
 from copy import copy
-from json import dumps, loads
+from json import JSONDecodeError, dumps, loads
 from typing import Any, Awaitable, Callable, Dict, Tuple, Type, TypeVar, Union
 
 # third-party
@@ -14,6 +14,7 @@ from vcorelib.dict.codec import JsonCodec
 
 # internal
 from runtimepy.net.stream.string import StringMessageConnection
+from runtimepy.net.udp import UdpConnection
 
 JsonMessage = Dict[str, Any]
 
@@ -33,12 +34,26 @@ T = TypeVar("T", bound=JsonCodec)
 TypedHandler = Callable[[JsonMessage, T], Awaitable[None]]
 
 DEFAULT_LOOPBACK = {"a": 1, "b": 2, "c": 3}
+DEFAULT_TIMEOUT = 3
 
 
 async def loopback_handler(outbox: JsonMessage, inbox: JsonMessage) -> None:
     """A simple loopback handler."""
 
     outbox.update(inbox)
+
+
+async def event_wait(event: asyncio.Event, timeout: float) -> bool:
+    """Wait for an event to be set within a timeout."""
+
+    result = True
+
+    try:
+        await asyncio.wait_for(event.wait(), timeout)
+    except asyncio.TimeoutError:
+        result = False
+
+    return result
 
 
 class JsonMessageConnection(StringMessageConnection):
@@ -107,7 +122,10 @@ class JsonMessageConnection(StringMessageConnection):
         self.send_message_str(dumps(data, separators=(",", ":")), addr=addr)
 
     async def wait_json(
-        self, data: Union[JsonMessage, JsonCodec], addr: Tuple[str, int] = None
+        self,
+        data: Union[JsonMessage, JsonCodec],
+        addr: Tuple[str, int] = None,
+        timeout: float = DEFAULT_TIMEOUT,
     ) -> JsonMessage:
         """Send a JSON message and wait for a response."""
 
@@ -128,21 +146,30 @@ class JsonMessageConnection(StringMessageConnection):
 
         # Send message and await response.
         self.send_json(data, addr=addr)
-        await got_response.wait()
+
+        assert await event_wait(
+            got_response, timeout
+        ), f"No response received in {timeout} seconds!"
 
         # Return the result.
         result = self.id_responses[ident]
         del self.id_responses[ident]
+
         return result
 
-    async def loopback(self, data: JsonMessage = None) -> bool:
+    async def loopback(
+        self,
+        data: JsonMessage = None,
+        addr: Tuple[str, int] = None,
+        timeout: float = DEFAULT_TIMEOUT,
+    ) -> bool:
         """Perform a simple loopback test on this connection."""
 
         if data is None:
             data = DEFAULT_LOOPBACK
 
         message = {"loopback": data}
-        response = await self.wait_json(message)
+        response = await self.wait_json(message, addr=addr, timeout=timeout)
         status = response == message
 
         self.logger.info(
@@ -152,6 +179,22 @@ class JsonMessageConnection(StringMessageConnection):
         )
 
         return status
+
+    async def async_init(self) -> bool:
+        """A runtime initialization routine (executes during 'process')."""
+
+        # Check loopback if it makes sense to.
+        result = await super().async_init()
+
+        # Only not-connected UDP connections can't do this.
+        if (
+            result
+            and hasattr("self", "remote_address")
+            or not isinstance(self, UdpConnection)
+        ):
+            result = await self.loopback()
+
+        return result
 
     async def process_json(
         self, data: JsonMessage, addr: Tuple[str, int] = None
@@ -217,11 +260,15 @@ class JsonMessageConnection(StringMessageConnection):
         """Process a string message."""
 
         result = True
-        decoded = loads(data)
 
-        if decoded and isinstance(decoded, dict):
-            result = await self.process_json(decoded, addr=addr)
-        else:
-            self.logger.error("Ignoring message '%s'.", data)
+        try:
+            decoded = loads(data)
+
+            if decoded and isinstance(decoded, dict):
+                result = await self.process_json(decoded, addr=addr)
+            else:
+                self.logger.error("Ignoring message '%s'.", data)
+        except JSONDecodeError as exc:
+            self.logger.exception("Couldn't decode '%s': %s", data, exc)
 
         return result
