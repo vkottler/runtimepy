@@ -7,6 +7,8 @@ factories:
   - {name: tests.sample.SampleUdpConn, namespaces: [udp, sample]}
   - {name: tests.sample.SampleTcpConn, namespaces: [tcp, sample]}
   - {name: tests.sample.SampleWebsocketConn, namespaces: [websocket, sample]}
+  - {name: tests.sample.UdpString, namespaces: [udp, message]}
+  - {name: tests.sample.TcpString, namespaces: [tcp, message]}
 
   # Task factories.
   - {name: runtimepy.net.arbiter.housekeeping.ConnectionMetricsLoggerFactory}

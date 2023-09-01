@@ -8,6 +8,14 @@ app:
   - runtimepy.net.apps.init_only
   - runtimepy.net.apps.init_only
 
+  - [
+    runtimepy.net.apps.init_only,
+    tests.net.stream.stream_test,
+    runtimepy.net.apps.init_only,
+  ]
+
+  - runtimepy.net.apps.init_only
+
 clients:
   - factory: sample_tcp_conn
     name: client
@@ -15,6 +23,19 @@ clients:
     kwargs:
       host: localhost
       port: "$tcp_server"
+
+  - factory: tcp_string
+    name: tcp_message_client
+    defer: true
+    kwargs:
+      host: localhost
+      port: "$tcp_string"
+
+  - factory: udp_string
+    name: udp_message_client
+    defer: true
+    kwargs:
+      remote_addr: [localhost, "$udp_string"]
 
   - factory: sample_websocket_conn
     name: client
@@ -32,10 +53,19 @@ clients:
     kwargs:
       local_addr: [localhost, "$udp_listen"]
 
+  - factory: udp_string
+    name: string_server
+    kwargs:
+      local_addr: [localhost, "$udp_string"]
+
 servers:
   - factory: sample_tcp_conn
     kwargs:
       port: "$tcp_server"
+
+  - factory: tcp_string
+    kwargs:
+      port: "$tcp_string"
 
   - factory: sample_websocket_conn
     kwargs:

@@ -7,6 +7,10 @@ from runtimepy.net.arbiter import TaskFactory
 from runtimepy.net.arbiter.tcp import TcpConnectionFactory
 from runtimepy.net.arbiter.udp import UdpConnectionFactory
 from runtimepy.net.arbiter.websocket import WebsocketConnectionFactory
+from runtimepy.net.stream import (
+    TcpStringMessageConnection,
+    UdpStringMessageConnection,
+)
 
 # internal
 from tests.resources import (
@@ -27,6 +31,18 @@ class SampleTaskFactoryB(TaskFactory[SampleArbiterTask]):
     """A sample task factory."""
 
     kind = SampleArbiterTask
+
+
+class TcpString(TcpConnectionFactory[TcpStringMessageConnection]):
+    """A string-message connection factory for TCP."""
+
+    kind = TcpStringMessageConnection
+
+
+class UdpString(UdpConnectionFactory[UdpStringMessageConnection]):
+    """A string-message connection factory for UDP."""
+
+    kind = UdpStringMessageConnection
 
 
 class SampleUdpConn(UdpConnectionFactory[SampleUdpConnection]):
