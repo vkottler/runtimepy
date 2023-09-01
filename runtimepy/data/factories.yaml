@@ -5,9 +5,6 @@ factories:
   - {name: runtimepy.net.factories.UdpJson}
   - {name: runtimepy.net.factories.WebsocketJson}
 
-  # Task factories.
-  - {name: runtimepy.net.arbiter.housekeeping.ConnectionMetricsLoggerFactory}
-
 ports:
   # Reserve ports for JSON listeners.
   - {name: udp_json, type: udp}

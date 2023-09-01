@@ -14,3 +14,4 @@ factories:
   # Task factories.
   - {name: tests.sample.SampleTaskFactoryA, namespaces: [tasks, a]}
   - {name: tests.sample.SampleTaskFactoryB, namespaces: [tasks, b]}
+  - {name: runtimepy.net.arbiter.housekeeping.ConnectionMetricsLoggerFactory}
