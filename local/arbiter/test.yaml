@@ -11,4 +11,4 @@ tasks:
     period_s: 1.0
 
 app:
-  - tasks.test
+  - [tasks.test, tasks.noop1, tasks.noop2]

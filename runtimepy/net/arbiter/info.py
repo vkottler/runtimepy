@@ -6,6 +6,7 @@ A module implementing an application information interface.
 import asyncio as _asyncio
 from contextlib import AsyncExitStack as _AsyncExitStack
 from dataclasses import dataclass
+from logging import getLogger as _getLogger
 from typing import Iterator as _Iterator
 from typing import MutableMapping as _MutableMapping
 from typing import Type as _Type
@@ -46,6 +47,18 @@ class AppInfo:
 
     # Configuration data that may be specified in a configuration file.
     config: _JsonObject
+
+    def with_new_logger(self, name: str) -> "AppInfo":
+        """Get a copy of this AppInfo instance, but with a new logger."""
+
+        return AppInfo(
+            _getLogger(name),
+            self.stack,
+            self.connections,
+            self.names,
+            self.stop,
+            self.config,
+        )
 
     def search(
         self,

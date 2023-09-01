@@ -1,5 +1,5 @@
 """
-A module implementing a stream-oriented connection interface.
+A module implementing a base, stream-oriented connection interface.
 """
 
 # built-in
@@ -69,7 +69,7 @@ class PrefixedMessageConnection(_Connection):
     async def process_single(
         self, stream: _BinaryIO, addr: Tuple[str, int] = None
     ) -> bool:
-        """Process a single GTP message."""
+        """Process a single message."""
         del stream
         del addr
         return True
@@ -111,7 +111,7 @@ class PrefixedMessageConnection(_Connection):
         return result
 
 
-class TcpPrefixedMessageConnection(TcpConnection, PrefixedMessageConnection):
+class TcpPrefixedMessageConnection(PrefixedMessageConnection, TcpConnection):
     """A TCP implementation for size-prefixed messages."""
 
 
@@ -155,3 +155,33 @@ class EchoUdpMessageConnection(
     UdpPrefixedMessageConnection, EchoMessageConnection
 ):
     """A connection that just echoes what it was sent."""
+
+
+class StringMessageConnection(PrefixedMessageConnection):
+    """A simple string-message sending and processing connection."""
+
+    async def process_message(
+        self, data: str, addr: Tuple[str, int] = None
+    ) -> bool:
+        """Process a string message."""
+
+        del addr
+        self.logger.info(data)
+        return True
+
+    async def process_single(
+        self, stream: _BinaryIO, addr: Tuple[str, int] = None
+    ) -> bool:
+        """Process a single message."""
+
+        return await self.process_message(stream.read().decode(), addr=addr)
+
+
+class TcpStringMessageConnection(StringMessageConnection, TcpConnection):
+    """A simple string-message sending and processing connection using TCP."""
+
+
+class UdpStringMessageConnection(
+    StringMessageConnection, UdpPrefixedMessageConnection
+):
+    """A simple string-message sending and processing connection using UDP."""

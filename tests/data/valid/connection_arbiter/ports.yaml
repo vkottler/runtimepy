@@ -6,3 +6,6 @@ ports:
 
   - {name: udp_message_listen, type: udp}
   - {name: tcp_message_server, type: tcp}
+
+  - {name: udp_string, type: tcp}
+  - {name: tcp_string, type: tcp}

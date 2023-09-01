@@ -6,7 +6,6 @@ A module implementing a base connection-arbiter interface.
 import asyncio as _asyncio
 from contextlib import AsyncExitStack as _AsyncExitStack
 from inspect import isawaitable as _isawaitable
-from logging import getLogger as _getLogger
 from typing import Awaitable as _Awaitable
 from typing import Callable as _Callable
 from typing import Iterable as _Iterable
@@ -45,16 +44,18 @@ async def init_only(app: AppInfo) -> int:
 
 def normalize_app(
     app: NetworkApplicationlike = None,
-) -> _List[NetworkApplication]:
+) -> _List[_List[NetworkApplication]]:
     """
     Normalize some application parameter into a list of network applications.
     """
 
     if app is None:
         app = [init_only]
-    elif not isinstance(app, list):
+
+    if not isinstance(app, list):
         app = [app]
-    return app
+
+    return [app]
 
 
 class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
@@ -92,7 +93,7 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
 
         # A fallback application. Set a class attribute so this can be more
         # easily externally updated.
-        self._apps: _List[NetworkApplication] = normalize_app(app)
+        self._apps: _List[_List[NetworkApplication]] = normalize_app(app)
 
         # Application configuration data.
         if config is None:
@@ -211,19 +212,11 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
                     if app is not None:
                         apps = normalize_app(app)
 
+                    # Run applications in order.
                     result = 0
                     for curr_app in apps:
                         if result == 0:
-                            info.logger = _getLogger(curr_app.__name__)
-                            info.logger.info("Starting.")
-                            try:
-                                result = await curr_app(info)
-                                info.logger.info("Returned %d.", result)
-                            except AssertionError as exc:
-                                info.logger.exception(
-                                    "Failed an assertion:", exc_info=exc
-                                )
-                                result = -1
+                            result = await self._run_apps(curr_app, info)
 
         finally:
             for conn in self._connections.values():
@@ -231,6 +224,29 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
             self.stop_sig.set()
 
         return result
+
+    async def _run_apps(
+        self, apps: _List[NetworkApplication], info: AppInfo
+    ) -> int:
+        """Run application methods in parallel."""
+
+        pairs = [(app, info.with_new_logger(app.__name__)) for app in apps]
+
+        for _, inf in pairs:
+            inf.logger.info("Starting.")
+
+        total = 0
+        try:
+            results = await _asyncio.gather(*(app(inf) for app, inf in pairs))
+            for idx, result in enumerate(results):
+                pairs[idx][1].logger.info("Returned %d.", result)
+                total += result
+
+        except AssertionError as exc:
+            info.logger.exception("Failed an assertion:", exc_info=exc)
+            total = -1
+
+        return total
 
     async def app(
         self,

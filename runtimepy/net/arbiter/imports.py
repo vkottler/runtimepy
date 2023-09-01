@@ -53,9 +53,16 @@ class ImportConnectionArbiter(
 
         # Load all application methods.
         apps = []
-        for path in module_path:
-            module, app = import_str_and_item(path)
-            apps.append(getattr(_import_module(module), app))
+        for paths in module_path:
+            if not isinstance(paths, list):
+                paths = [paths]  # type: ignore
+
+            methods = []
+            for path in paths:
+                module, app = import_str_and_item(path)
+                methods.append(getattr(_import_module(module), app))
+
+            apps.append(methods)
 
         self._apps = apps
 
