@@ -3,17 +3,14 @@ includes:
   - ports.yaml
   - basic_factories.yaml
   - tasks.yaml
+  - json.yaml
 
 app:
   - runtimepy.net.apps.init_only
-  - runtimepy.net.apps.init_only
-
   - [
-    runtimepy.net.apps.init_only,
     tests.net.stream.stream_test,
-    runtimepy.net.apps.init_only,
+    tests.net.stream.json_test,
   ]
-
   - runtimepy.net.apps.init_only
 
 clients:
@@ -27,9 +24,7 @@ clients:
   - factory: tcp_string
     name: tcp_message_client
     defer: true
-    kwargs:
-      host: localhost
-      port: "$tcp_string"
+    kwargs: {host: localhost, port: "$tcp_string"}
 
   - factory: udp_string
     name: udp_message_client

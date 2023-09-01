@@ -4,6 +4,11 @@ A module aggregating commonly used connection factory classes.
 
 # internal
 from runtimepy.net.arbiter.tcp import TcpConnectionFactory
+from runtimepy.net.arbiter.tcp.json import (
+    TcpJsonMessageConnection,
+    UdpJsonMessageConnection,
+    WebsocketJsonMessageConnection,
+)
 from runtimepy.net.arbiter.udp import UdpConnectionFactory
 from runtimepy.net.arbiter.websocket import WebsocketConnectionFactory
 from runtimepy.net.stream import (
@@ -73,6 +78,12 @@ class UdpNull(UdpConnectionFactory[NullUdpConnection]):
     kind = NullUdpConnection
 
 
+class UdpJson(UdpConnectionFactory[UdpJsonMessageConnection]):
+    """UDP JSON-connection factory."""
+
+    kind = UdpJsonMessageConnection
+
+
 class TcpEcho(TcpConnectionFactory[EchoTcpConnection]):
     """TCP echo-connection factory."""
 
@@ -97,6 +108,12 @@ class TcpNull(TcpConnectionFactory[NullTcpConnection]):
     kind = NullTcpConnection
 
 
+class TcpJson(TcpConnectionFactory[TcpJsonMessageConnection]):
+    """TCP JSON-connection factory."""
+
+    kind = TcpJsonMessageConnection
+
+
 class WebsocketEcho(WebsocketConnectionFactory[EchoWebsocketConnection]):
     """WebSocket echo-connection factory."""
 
@@ -107,3 +124,11 @@ class WebsocketNull(WebsocketConnectionFactory[NullWebsocketConnection]):
     """WebSocket null-connection factory."""
 
     kind = NullWebsocketConnection
+
+
+class WebsocketJson(
+    WebsocketConnectionFactory[WebsocketJsonMessageConnection]
+):
+    """WebSocket JSON-connection factory."""
+
+    kind = WebsocketJsonMessageConnection

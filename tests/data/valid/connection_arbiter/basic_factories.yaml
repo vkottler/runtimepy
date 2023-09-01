@@ -1,6 +1,7 @@
 ---
 includes:
   - echo_factories.yaml
+  - package://runtimepy/factories.yaml
 
 factories:
   # Connection factories.
@@ -11,6 +12,5 @@ factories:
   - {name: tests.sample.TcpString, namespaces: [tcp, message]}
 
   # Task factories.
-  - {name: runtimepy.net.arbiter.housekeeping.ConnectionMetricsLoggerFactory}
   - {name: tests.sample.SampleTaskFactoryA, namespaces: [tasks, a]}
   - {name: tests.sample.SampleTaskFactoryB, namespaces: [tasks, b]}
