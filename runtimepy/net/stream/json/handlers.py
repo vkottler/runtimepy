@@ -6,7 +6,9 @@ A module defining some useful JSON message handlers.
 import asyncio
 
 # third-party
+from vcorelib.dict import MergeStrategy
 from vcorelib.dict.codec import BasicDictCodec
+from vcorelib.io import ARBITER
 from vcorelib.paths import find_file
 
 # internal
@@ -33,14 +35,14 @@ async def event_wait(event: asyncio.Event, timeout: float) -> bool:
     return result
 
 
-class FindFileRequest(RuntimepyDictCodec, BasicDictCodec):
+class FindFile(RuntimepyDictCodec, BasicDictCodec):
     """A schema-validated find-file request."""
 
     data: JsonMessage
 
 
 async def find_file_request_handler(
-    outbox: JsonMessage, request: FindFileRequest
+    outbox: JsonMessage, request: FindFile
 ) -> None:
     """Attempt to find a file path based on the request."""
 
@@ -56,3 +58,22 @@ async def find_file_request_handler(
         )
         outbox["path"] = str(path) if path is not None else None
         outbox["is_request"] = False
+
+        # Attempt to decode the file if requested.
+        if request.data["decode"]:
+            decoded = {"success": False, "data": {}, "time_ns": -1}
+
+            if path is not None:
+                result = ARBITER.decode(
+                    path,
+                    includes_key=request.data["includes_key"],
+                    expect_overwrite=request.data["expect_overwrite"],
+                    strategy=MergeStrategy.UPDATE
+                    if request.data["update"]
+                    else MergeStrategy.RECURSIVE,
+                )
+                decoded["success"] = result.success
+                decoded["data"] = result.data
+                decoded["time_ns"] = result.time_ns
+
+            outbox["decoded"] = decoded

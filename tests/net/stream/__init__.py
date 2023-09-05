@@ -41,10 +41,13 @@ async def json_client_find_file(client: JsonMessageConnection) -> None:
                 "path": "schemas",
                 "parts": ["BitFields.yaml"],
                 "package": PKG_NAME,
+                "decode": True,
             }
         }
     )
     assert file_result["find_file"]["path"] is not None
+    assert file_result["find_file"]["decoded"]["success"]
+    assert file_result["find_file"]["decoded"]["data"]
 
     file_result = await client.wait_json(
         {

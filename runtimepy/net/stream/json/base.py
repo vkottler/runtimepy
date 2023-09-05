@@ -15,7 +15,7 @@ from vcorelib.dict.codec import JsonCodec
 # internal
 from runtimepy import PKG_NAME, VERSION
 from runtimepy.net.stream.json.handlers import (
-    FindFileRequest,
+    FindFile,
     event_wait,
     find_file_request_handler,
     loopback_handler,
@@ -44,9 +44,7 @@ class JsonMessageConnection(StringMessageConnection):
         """Register connection-specific command handlers."""
 
         # Extra handlers.
-        self.typed_handler(
-            "find_file", FindFileRequest, find_file_request_handler
-        )
+        self.typed_handler("find_file", FindFile, find_file_request_handler)
 
     def init(self) -> None:
         """Initialize this instance."""

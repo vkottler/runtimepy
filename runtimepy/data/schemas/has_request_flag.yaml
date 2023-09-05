@@ -1,0 +1,5 @@
+---
+properties:
+  is_request:
+    type: boolean
+    default: true
