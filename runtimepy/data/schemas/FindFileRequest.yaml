@@ -1,0 +1,36 @@
+---
+type: object
+required: [path]
+additionalProperties: false
+
+properties:
+  path:
+    type: [string, "null"]
+
+  is_request:
+    type: boolean
+    default: true
+
+  parts:
+    type: array
+    items:
+      type: string
+
+  search_paths:
+    type: array
+    items:
+      type: string
+
+  include_cwd:
+    type: boolean
+    default: false
+
+  relative_to:
+    type: string
+
+  package:
+    type: string
+
+  package_subdir:
+    type: string
+    default: data

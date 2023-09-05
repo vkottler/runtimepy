@@ -9,6 +9,7 @@ import asyncio
 from vcorelib.dict.codec import BasicDictCodec
 
 # module under test
+from runtimepy import PKG_NAME
 from runtimepy.net.arbiter.info import AppInfo
 from runtimepy.net.stream import StringMessageConnection
 from runtimepy.net.stream.json import JsonMessage, JsonMessageConnection
@@ -31,6 +32,32 @@ async def stream_test(app: AppInfo) -> int:
     return 0
 
 
+async def json_client_find_file(client: JsonMessageConnection) -> None:
+    """Test JSON-message client file finding."""
+
+    file_result = await client.wait_json(
+        {
+            "find_file": {
+                "path": "schemas",
+                "parts": ["BitFields.yaml"],
+                "package": PKG_NAME,
+            }
+        }
+    )
+    assert file_result["find_file"]["path"] is not None
+
+    file_result = await client.wait_json(
+        {
+            "find_file": {
+                "path": "schemas",
+                "parts": ["not_a_file"],
+                "package": PKG_NAME,
+            }
+        }
+    )
+    assert file_result["find_file"]["path"] is None
+
+
 async def json_client_test(client: JsonMessageConnection) -> int:
     """Test a single JSON client."""
 
@@ -39,6 +66,8 @@ async def json_client_test(client: JsonMessageConnection) -> int:
 
     client.stage_remote_log("Hello, world!")
     client.stage_remote_log("Hello, world! %d", 2)
+
+    await json_client_find_file(client)
 
     assert await client.wait_json({"unknown": 0, "command": 1}) == {
         "keys_ignored": ["command", "unknown"]

@@ -1,5 +1,5 @@
 """
-A module implementing a JSON message connection interface.
+A module implementing a base JSON messaging connection interface.
 """
 
 # built-in
@@ -7,65 +7,31 @@ import asyncio
 from copy import copy
 from json import JSONDecodeError, dumps, loads
 import logging
-from typing import (
-    Any,
-    Awaitable,
-    Callable,
-    Dict,
-    List,
-    Optional,
-    Tuple,
-    Type,
-    TypeVar,
-    Union,
-)
+from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
 # third-party
 from vcorelib.dict.codec import JsonCodec
 
 # internal
 from runtimepy import PKG_NAME, VERSION
+from runtimepy.net.stream.json.handlers import (
+    FindFileRequest,
+    event_wait,
+    find_file_request_handler,
+    loopback_handler,
+)
+from runtimepy.net.stream.json.types import (
+    DEFAULT_LOOPBACK,
+    DEFAULT_TIMEOUT,
+    RESERVED_KEYS,
+    JsonMessage,
+    MessageHandler,
+    MessageHandlers,
+    T,
+    TypedHandler,
+)
 from runtimepy.net.stream.string import StringMessageConnection
 from runtimepy.net.udp import UdpConnection
-
-JsonMessage = Dict[str, Any]
-
-#
-# def message_handler(response: JsonMessage, data: JsonMessage) -> None:
-#     """A sample message handler."""
-#
-MessageHandler = Callable[[JsonMessage, JsonMessage], Awaitable[None]]
-MessageHandlers = Dict[str, MessageHandler]
-RESERVED_KEYS = {"keys_ignored", "__id__", "__log_messages__"}
-
-#
-# def message_handler(response: JsonMessage, data: JsonCodec) -> None:
-#     """A sample message handler."""
-#
-T = TypeVar("T", bound=JsonCodec)
-TypedHandler = Callable[[JsonMessage, T], Awaitable[None]]
-
-DEFAULT_LOOPBACK = {"a": 1, "b": 2, "c": 3}
-DEFAULT_TIMEOUT = 3
-
-
-async def loopback_handler(outbox: JsonMessage, inbox: JsonMessage) -> None:
-    """A simple loopback handler."""
-
-    outbox.update(inbox)
-
-
-async def event_wait(event: asyncio.Event, timeout: float) -> bool:
-    """Wait for an event to be set within a timeout."""
-
-    result = True
-
-    try:
-        await asyncio.wait_for(event.wait(), timeout)
-    except asyncio.TimeoutError:
-        result = False
-
-    return result
 
 
 class JsonMessageConnection(StringMessageConnection):
@@ -76,6 +42,11 @@ class JsonMessageConnection(StringMessageConnection):
 
     def _register_handlers(self) -> None:
         """Register connection-specific command handlers."""
+
+        # Extra handlers.
+        self.typed_handler(
+            "find_file", FindFileRequest, find_file_request_handler
+        )
 
     def init(self) -> None:
         """Initialize this instance."""
