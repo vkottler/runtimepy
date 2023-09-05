@@ -1,0 +1,63 @@
+---
+includes:
+  - has_request_flag.yaml
+
+type: object
+required: [path]
+additionalProperties: false
+
+properties:
+  path:
+    type: [string, "null"]
+
+  parts:
+    type: array
+    items:
+      type: string
+
+  search_paths:
+    type: array
+    items:
+      type: string
+
+  include_cwd:
+    type: boolean
+    default: false
+
+  relative_to:
+    type: string
+
+  package:
+    type: string
+
+  package_subdir:
+    type: string
+    default: data
+
+  # Parameters for requesting to decode the file.
+  decode:
+    type: boolean
+    default: false
+  includes_key:
+    type: string
+    default: includes
+  expect_overwrite:
+    type: boolean
+    default: false
+  update:
+    type: boolean
+    default: false
+
+  # Decoded data (if any).
+  decoded:
+    type: object
+    required: [success, data]
+    additionalProperties: false
+
+    properties:
+      success:
+        type: boolean
+      data:
+        type: object
+      time_ns:
+        type: integer
