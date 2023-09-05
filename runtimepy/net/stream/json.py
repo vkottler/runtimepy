@@ -92,12 +92,6 @@ class JsonMessageConnection(StringMessageConnection):
             "version": VERSION,
             "kind": type(self).__name__,
         }
-        self.logger.info(
-            "metadata: package=%s, version=%s, kind=%s",
-            self.meta["package"],
-            self.meta["version"],
-            self.meta["kind"],
-        )
 
         self.curr_id: int = 1
 
@@ -112,6 +106,18 @@ class JsonMessageConnection(StringMessageConnection):
         self.basic_handler("meta", self._meta_handler)
 
         self._register_handlers()
+
+        self.meta["handlers"] = list(  # type: ignore
+            set(self.handlers.keys()) | set(self.typed_handlers.keys())
+        )
+
+        self.logger.info(
+            "metadata: package=%s, version=%s, kind=%s, handlers=%s",
+            self.meta["package"],
+            self.meta["version"],
+            self.meta["kind"],
+            self.meta["handlers"],
+        )
 
     def _validate_key(self, key: str) -> str:
         """Validate a handler key."""
@@ -257,10 +263,14 @@ class JsonMessageConnection(StringMessageConnection):
 
             # Log peer's metadata.
             self.logger.info(
-                "remote metadata: package=%s, version=%s, kind=%s",
+                (
+                    "remote metadata: package=%s, "
+                    "version=%s, kind=%s, handlers=%s"
+                ),
                 self.remote_meta["package"],
                 self.remote_meta["version"],
                 self.remote_meta["kind"],
+                self.remote_meta["handlers"],
             )
 
     def _handle_reserved(
