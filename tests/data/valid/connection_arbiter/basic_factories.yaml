@@ -1,7 +1,6 @@
 ---
 includes:
   - echo_factories.yaml
-  - package://runtimepy/factories.yaml
 
 factories:
   # Connection factories.

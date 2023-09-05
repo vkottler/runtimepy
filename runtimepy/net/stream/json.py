@@ -13,6 +13,7 @@ from typing import (
     Callable,
     Dict,
     List,
+    Optional,
     Tuple,
     Type,
     TypeVar,
@@ -23,6 +24,7 @@ from typing import (
 from vcorelib.dict.codec import JsonCodec
 
 # internal
+from runtimepy import PKG_NAME, VERSION
 from runtimepy.net.stream.string import StringMessageConnection
 from runtimepy.net.udp import UdpConnection
 
@@ -70,6 +72,7 @@ class JsonMessageConnection(StringMessageConnection):
     """A connection interface for JSON messaging."""
 
     _log_messages: List[Dict[str, Any]]
+    remote_meta: Optional[JsonMessage]
 
     def _register_handlers(self) -> None:
         """Register connection-specific command handlers."""
@@ -84,15 +87,29 @@ class JsonMessageConnection(StringMessageConnection):
             str, Tuple[Type[JsonCodec], TypedHandler[Any]]
         ] = {}
 
+        self.meta = {
+            "package": PKG_NAME,
+            "version": VERSION,
+            "kind": type(self).__name__,
+        }
+        self.logger.info(
+            "metadata: package=%s, version=%s, kind=%s",
+            self.meta["package"],
+            self.meta["version"],
+            self.meta["kind"],
+        )
+
         self.curr_id: int = 1
 
         self.ids_waiting: Dict[int, asyncio.Event] = {}
         self.id_responses: Dict[int, JsonMessage] = {}
 
         self._log_messages: List[Dict[str, Any]] = []
+        self.remote_meta = None
 
         # Standard handlers.
         self.basic_handler("loopback")
+        self.basic_handler("meta", self._meta_handler)
 
         self._register_handlers()
 
@@ -224,7 +241,27 @@ class JsonMessageConnection(StringMessageConnection):
         ):
             result = await self.loopback()
 
+            if result:
+                await self.wait_json({"meta": self.meta})
+
         return result
+
+    async def _meta_handler(
+        self, outbox: JsonMessage, inbox: JsonMessage
+    ) -> None:
+        """Handle the peer's metadata."""
+
+        if self.remote_meta is None:
+            self.remote_meta = inbox
+            outbox.update(self.meta)
+
+            # Log peer's metadata.
+            self.logger.info(
+                "remote metadata: package=%s, version=%s, kind=%s",
+                self.remote_meta["package"],
+                self.remote_meta["version"],
+                self.remote_meta["kind"],
+            )
 
     def _handle_reserved(
         self, data: JsonMessage, response: JsonMessage

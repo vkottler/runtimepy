@@ -4,6 +4,7 @@ includes:
   - ports.yaml
   - servers.yaml
   - clients.yaml
+  - ../../tests/data/valid/connection_arbiter/json.yaml
 
 tasks:
   - name: log_metrics
