@@ -37,6 +37,9 @@ async def json_client_test(client: JsonMessageConnection) -> int:
     client.send_json({})
     await client.wait_json({})
 
+    client.stage_remote_log("Hello, world!")
+    client.stage_remote_log("Hello, world! %d", 2)
+
     assert await client.wait_json({"unknown": 0, "command": 1}) == {
         "keys_ignored": ["command", "unknown"]
     }

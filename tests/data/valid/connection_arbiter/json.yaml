@@ -1,4 +1,7 @@
 ---
+includes:
+  - package://runtimepy/factories.yaml
+
 clients:
   - factory: udp_json
     name: udp_json_client
