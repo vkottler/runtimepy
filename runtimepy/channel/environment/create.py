@@ -60,7 +60,7 @@ class CreateChannelEnvironment(_BaseChannelEnvironment):
     def int_channel(
         self,
         name: str,
-        kind: _Primitivelike = "uint32",
+        kind: _Union[Primitive[_Any], _Primitivelike] = "uint32",
         commandable: bool = False,
         enum: _Union[_RegistryKey, _RuntimeEnum] = None,
         namespace: _Namespace = None,
@@ -76,7 +76,7 @@ class CreateChannelEnvironment(_BaseChannelEnvironment):
     def bool_channel(
         self,
         name: str,
-        kind: _Primitivelike = "bool",
+        kind: _Union[Primitive[_Any], _Primitivelike] = "bool",
         commandable: bool = False,
         enum: _Union[_RegistryKey, _RuntimeEnum] = None,
         namespace: _Namespace = None,
@@ -92,7 +92,7 @@ class CreateChannelEnvironment(_BaseChannelEnvironment):
     def float_channel(
         self,
         name: str,
-        kind: _Primitivelike = "float",
+        kind: _Union[Primitive[_Any], _Primitivelike] = "float",
         commandable: bool = False,
         namespace: _Namespace = None,
     ) -> _FloatChannel:

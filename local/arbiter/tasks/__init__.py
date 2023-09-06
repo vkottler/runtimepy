@@ -24,12 +24,20 @@ async def noop2(app: AppInfo) -> int:
     return 1
 
 
+async def gui(app: AppInfo) -> int:
+    """Run a channel GUI for application connections."""
+
+    print(app)
+
+    return 0
+
+
 async def test(app: AppInfo) -> int:
     """A network application that doesn't do anything."""
 
     while not app.stop.is_set():
-        for _ in range(100):
-            for conn in app.search(pattern="client", kind=Connection):
+        for conn in app.search(pattern="client", kind=Connection):
+            for _ in range(100):
                 conn.send_text("Hello, world!")
 
         await asyncio.sleep(0.1)

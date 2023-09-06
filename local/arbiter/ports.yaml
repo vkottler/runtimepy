@@ -1,5 +1,0 @@
----
-ports:
-  - {name: udp_listen, type: udp}
-  - {name: tcp_server, type: tcp}
-  - {name: websocket_server, type: tcp}

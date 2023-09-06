@@ -11,6 +11,7 @@ from typing import Callable as _Callable
 from typing import Iterable as _Iterable
 from typing import List as _List
 from typing import MutableMapping as _MutableMapping
+from typing import Optional
 from typing import Union as _Union
 
 # third-party
@@ -29,6 +30,7 @@ from runtimepy.net.arbiter.task import (
 )
 from runtimepy.net.connection import Connection as _Connection
 from runtimepy.net.manager import ConnectionManager as _ConnectionManager
+from runtimepy.tui.mixin import CursesWindow, TuiMixin
 
 NetworkApplication = _Callable[[AppInfo], _Awaitable[int]]
 NetworkApplicationlike = _Union[NetworkApplication, _List[NetworkApplication]]
@@ -58,7 +60,7 @@ def normalize_app(
     return [app]
 
 
-class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
+class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
     """
     A class implementing a base connection-manager for a broader application.
     """
@@ -71,10 +73,12 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin):
         logger: _LoggerType = None,
         app: NetworkApplicationlike = None,
         config: _JsonObject = None,
+        window: Optional[CursesWindow] = None,
     ) -> None:
         """Initialize this connection arbiter."""
 
         _LoggerMixin.__init__(self, logger=logger)
+        TuiMixin.__init__(self, window=window)
 
         if manager is None:
             manager = _ConnectionManager()

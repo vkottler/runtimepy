@@ -8,7 +8,7 @@ from runtimepy.channel.environment import (
 )
 from runtimepy.task import AsyncTask as _AsyncTask
 from runtimepy.tui.channels import ChannelTui as _ChannelTui
-from runtimepy.tui.channels import CursesWindow as _CursesWindow
+from runtimepy.tui.mixin import CursesWindow as _CursesWindow
 
 
 class TuiTask(_AsyncTask):
@@ -25,7 +25,7 @@ class TuiTask(_AsyncTask):
 
         # Initialize the interface.
         window: _CursesWindow = args[0]
-        return await self.tui.init(window)
+        return self.tui.init(window)
 
     async def dispatch(self, *_, **__) -> bool:
         """Dispatch this task."""

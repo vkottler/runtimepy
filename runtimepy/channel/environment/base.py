@@ -12,6 +12,7 @@ from typing import Union as _Union
 from typing import cast as _cast
 
 # third-party
+from vcorelib.namespace import DEFAULT_DELIM, Namespace
 from vcorelib.namespace import NamespaceMixin as _NamespaceMixin
 
 # internal
@@ -47,10 +48,12 @@ class BaseChannelEnvironment(_NamespaceMixin):
         enums: _EnumRegistry = None,
         values: ValueMap = None,
         fields: _Iterable[_BitFields] = None,
+        namespace: Namespace = None,
+        namespace_delim: str = DEFAULT_DELIM,
     ) -> None:
         """Initialize this channel environment."""
 
-        super().__init__()
+        super().__init__(namespace=namespace, namespace_delim=namespace_delim)
 
         if channels is None:
             channels = _ChannelRegistry()

@@ -1,0 +1,91 @@
+"""
+A module for terminal user-interface application mixins.
+"""
+
+# built-in
+import curses as _curses
+from typing import Any, Optional
+
+# internal
+from runtimepy.primitives import Uint16
+
+# Typing for something like '_curses.window' isn't supported yet.
+CursesWindow = Any
+
+
+class TuiMixin:
+    """A class mixin for building TUI applications."""
+
+    def __init__(self, window: Optional[CursesWindow] = None) -> None:
+        """Initialize this instance."""
+
+        self._window = window
+        self.window_width_raw = Uint16()
+        self.window_height_raw = Uint16()
+
+        self.init(window)
+
+    def init(self, window: Optional[CursesWindow]) -> bool:
+        """Initialize this interface's window."""
+
+        do_init = window is not None and self._window is None
+
+        if do_init:
+            assert window is not None
+            self._window = window
+
+            # _curses.use_default_colors()
+            getattr(_curses, "use_default_colors")()
+
+            # _curses.curs_set(0)
+            getattr(_curses, "curs_set")(0)
+
+            # Don't block when getting a character.
+            window.nodelay(True)
+
+            # Initialize the window dimensions.
+            self.update_dimensions()
+
+        return do_init
+
+    @property
+    def window(self) -> CursesWindow:
+        """Get the window for this instance."""
+
+        assert self._window is not None
+        return self._window
+
+    def update_dimensions(self) -> CursesWindow:
+        """Handle an update to the window's dimensions."""
+
+        window = self.window
+
+        # Update width and height.
+        (
+            self.window_height_raw.value,
+            self.window_width_raw.value,
+        ) = window.getmaxyx()
+
+        # Resize the window.
+        window.resize(
+            self.window_height_raw.value, self.window_width_raw.value
+        )
+
+        return window
+
+    def tui_update(self) -> None:
+        """Re-draw the screen."""
+
+        getattr(_curses, "doupdate")()
+
+    async def handle_char(self, char: int) -> bool:
+        """Handle character input."""
+
+        handled = False
+
+        if char != -1:
+            if char == getattr(_curses, "KEY_RESIZE"):
+                self.update_dimensions()
+                handled = True
+
+        return handled
