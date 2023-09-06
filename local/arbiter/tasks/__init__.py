@@ -27,7 +27,18 @@ async def noop2(app: AppInfo) -> int:
 async def gui(app: AppInfo) -> int:
     """Run a channel GUI for application connections."""
 
-    print(app)
+    window = app.tui.window
+    while not app.stop.is_set():
+        data = window.getch()
+        if data != -1 and not await app.tui.handle_char(data):
+            # trigger this with 'q'
+            app.stop.set()
+
+        # do stuff
+
+        # make this updating a task
+        app.tui.tui_update()
+        await asyncio.sleep(0.1)
 
     return 0
 

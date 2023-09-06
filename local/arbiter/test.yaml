@@ -16,4 +16,4 @@ tasks:
 
 app:
   # - [tasks.test, tasks.noop1, tasks.noop2]
-  - tasks.noop1
+  - tasks.gui

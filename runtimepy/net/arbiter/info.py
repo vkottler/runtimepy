@@ -19,6 +19,7 @@ from vcorelib.namespace import Namespace as _Namespace
 
 # internal
 from runtimepy.net.connection import Connection as _Connection
+from runtimepy.tui.mixin import TuiMixin
 
 ConnectionMap = _MutableMapping[str, _Connection]
 T = _TypeVar("T", bound=_Connection)
@@ -48,6 +49,8 @@ class AppInfo:
     # Configuration data that may be specified in a configuration file.
     config: _JsonObject
 
+    tui: TuiMixin
+
     def with_new_logger(self, name: str) -> "AppInfo":
         """Get a copy of this AppInfo instance, but with a new logger."""
 
@@ -58,6 +61,7 @@ class AppInfo:
             self.names,
             self.stop,
             self.config,
+            self.tui,
         )
 
     def search(

@@ -199,6 +199,7 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
                         self._namespace,
                         self.stop_sig,
                         config if config is not None else self._config,
+                        self,
                     )
 
                     # Initialize tasks.
