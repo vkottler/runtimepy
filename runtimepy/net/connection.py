@@ -16,6 +16,7 @@ from vcorelib.logging import LoggerMixin as _LoggerMixin
 from vcorelib.logging import LoggerType as _LoggerType
 
 # internal
+from runtimepy.channel.environment import ChannelEnvironment
 from runtimepy.net.metrics import ConnectionMetrics
 from runtimepy.primitives.byte_order import DEFAULT_BYTE_ORDER, ByteOrder
 
@@ -30,7 +31,12 @@ class Connection(_LoggerMixin, _ABC):
 
     byte_order: ByteOrder = DEFAULT_BYTE_ORDER
 
-    def __init__(self, logger: _LoggerType) -> None:
+    def __init__(
+        self,
+        logger: _LoggerType,
+        env: ChannelEnvironment = None,
+        add_metrics: bool = True,
+    ) -> None:
         """Initialize this connection."""
 
         super().__init__(logger=logger)
@@ -53,7 +59,36 @@ class Connection(_LoggerMixin, _ABC):
         self._tasks: _List[_asyncio.Task[None]] = []
         self.initialized = _asyncio.Event()
         self.disabled_event = _asyncio.Event()
+
+        self._init_channel_environment(env=env, add_metrics=add_metrics)
         self.init()
+
+    def _init_channel_environment(
+        self,
+        add_metrics: bool = True,
+        env: ChannelEnvironment = None,
+        **kwargs,
+    ) -> None:
+        """Initialize this connection's channel environment."""
+
+        if env is None:
+            env = ChannelEnvironment(**kwargs)
+        self.env = env
+
+        if add_metrics:
+            # Add metrics channels.
+            with self.env.names_pushed("metrics"):
+                for name, direction in [
+                    ("tx", self.metrics.tx),
+                    ("rx", self.metrics.rx),
+                ]:
+                    with self.env.names_pushed(name):
+                        self.env.channel("messages", direction.messages)
+                        self.env.channel(
+                            "messages_rate", direction.message_rate
+                        )
+                        self.env.channel("bytes", direction.bytes)
+                        self.env.channel("kbps", direction.kbps)
 
     def init(self) -> None:
         """Initialize this instance."""

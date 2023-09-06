@@ -1,12 +1,12 @@
 <!--
     =====================================
     generator=datazen
-    version=3.1.2
-    hash=b7f4f833830e6d02bb40fa8830398467
+    version=3.1.3
+    hash=6f4a1197f00eb12e7c4413bda1eb6bb1
     =====================================
 -->
 
-# runtimepy ([2.5.0](https://pypi.org/project/runtimepy/))
+# runtimepy ([2.6.0](https://pypi.org/project/runtimepy/))
 
 [![python](https://img.shields.io/pypi/pyversions/runtimepy.svg)](https://pypi.org/project/runtimepy/)
 ![Build Status](https://github.com/vkottler/runtimepy/workflows/Python%20Package/badge.svg)
@@ -74,13 +74,14 @@ commands:
 ```
 $ ./venv3.11/bin/runtimepy arbiter -h
 
-usage: runtimepy arbiter [-h] configs [configs ...]
+usage: runtimepy arbiter [-h] [--curses] configs [configs ...]
 
 positional arguments:
   configs     the configuration to load
 
 options:
   -h, --help  show this help message and exit
+  --curses    whether or not to use curses.wrapper when starting
 
 ```
 
