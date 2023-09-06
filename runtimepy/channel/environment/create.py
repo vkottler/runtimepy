@@ -3,15 +3,15 @@ A module for creating channels at runtime.
 """
 
 # built-in
+from typing import Any as _Any
 from typing import Union as _Union
 from typing import cast as _cast
 
 # third-party
 from vcorelib.namespace import Namespace as _Namespace
 
-from runtimepy.channel import FloatChannel as _FloatChannel
-
 # internal
+from runtimepy.channel import FloatChannel as _FloatChannel
 from runtimepy.channel.environment.base import (
     BaseChannelEnvironment as _BaseChannelEnvironment,
 )
@@ -25,6 +25,7 @@ from runtimepy.channel.environment.base import ChannelResult as _ChannelResult
 from runtimepy.enum import RuntimeEnum as _RuntimeEnum
 from runtimepy.enum.type import EnumTypelike as _EnumTypelike
 from runtimepy.mapping import EnumMappingData as _EnumMappingData
+from runtimepy.primitives import Primitive
 from runtimepy.primitives import Primitivelike as _Primitivelike
 from runtimepy.registry.name import RegistryKey as _RegistryKey
 
@@ -35,7 +36,7 @@ class CreateChannelEnvironment(_BaseChannelEnvironment):
     def channel(
         self,
         name: str,
-        kind: _Primitivelike,
+        kind: _Union[Primitive[_Any], _Primitivelike],
         commandable: bool = False,
         enum: _Union[_RegistryKey, _RuntimeEnum] = None,
         namespace: _Namespace = None,
