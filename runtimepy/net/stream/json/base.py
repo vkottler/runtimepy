@@ -14,6 +14,7 @@ from vcorelib.dict.codec import JsonCodec
 
 # internal
 from runtimepy import PKG_NAME, VERSION
+from runtimepy.net.channel import ChannelEnvironmentMixin
 from runtimepy.net.stream.json.handlers import (
     FindFile,
     event_wait,
@@ -34,7 +35,7 @@ from runtimepy.net.stream.string import StringMessageConnection
 from runtimepy.net.udp import UdpConnection
 
 
-class JsonMessageConnection(StringMessageConnection):
+class JsonMessageConnection(StringMessageConnection, ChannelEnvironmentMixin):
     """A connection interface for JSON messaging."""
 
     _log_messages: List[Dict[str, Any]]
@@ -50,6 +51,7 @@ class JsonMessageConnection(StringMessageConnection):
         """Initialize this instance."""
 
         super().init()
+        ChannelEnvironmentMixin.init(self)
 
         self.handlers: MessageHandlers = {}
         self.typed_handlers: Dict[

@@ -4,7 +4,6 @@ A module implementing a channel-environment user interface.
 
 # built-in
 import curses as _curses
-from typing import Any as _Any
 from typing import List as _List
 from typing import Optional as _Optional
 
@@ -14,12 +13,12 @@ from runtimepy import VERSION as _VERSION
 from runtimepy.channel.environment import (
     ChannelEnvironment as _ChannelEnvironment,
 )
+from runtimepy.tui.mixin import CursesWindow, TuiMixin
 
-# Typing for something like '_curses.window' isn't supported yet.
-CursesWindow = _Any
+__all__ = ["ChannelTui", "TuiMixin", "CursesWindow"]
 
 
-class ChannelTui:
+class ChannelTui(TuiMixin):
     """
     A class for implementing a text user-interface for channel environments.
     """
@@ -27,31 +26,24 @@ class ChannelTui:
     def __init__(self, env: _ChannelEnvironment) -> None:
         """Initialize this text user-interface for a channel environment."""
 
-        self._window: _Optional[CursesWindow] = None
+        super().__init__()
+
         self._header: _Optional[CursesWindow] = None
         self._body: _Optional[CursesWindow] = None
-
-        # _curses.use_default_colors()
-        getattr(_curses, "use_default_colors")()
-
-        # _curses.curs_set(0)
-        getattr(_curses, "curs_set")(0)
 
         # Initialize channels for the window width and height.
         with env.names_pushed("ui"):
             with env.names_pushed("window"):
-                self.window_width = env.int_channel("width", "uint16")[0]
-                self.window_height = env.int_channel("height", "uint16")[0]
+                self.window_width = env.int_channel(
+                    "width", self.window_width_raw
+                )[0]
+                self.window_height = env.int_channel(
+                    "height", self.window_height_raw
+                )[0]
 
         self.env = env
         self.channel_names: _List[str] = []
         self.value_col: int = 0
-
-    @property
-    def window(self) -> CursesWindow:
-        """Get this interface's window."""
-        assert self._window is not None
-        return self._window
 
     @property
     def header(self) -> CursesWindow:
@@ -65,45 +57,27 @@ class ChannelTui:
         assert self._body is not None
         return self._body
 
-    async def init(self, window: CursesWindow) -> bool:
+    def init(self, window: CursesWindow) -> bool:
         """Initialize this interface's window."""
 
-        assert self._window is None, "Already initialized!"
-        self._window = window
+        result = super().init(window)
+        if result:
+            # Collect channel names from the environment.
+            self.channel_names = sorted(self.env.names)
+            window = self.body
 
-        # Don't block when getting a character.
-        window.nodelay(True)
+            # Initialize channel names.
+            for idx, item in enumerate(self.channel_names):
+                window.addstr(1 + idx, 1, item)
+                self.value_col = max(self.value_col, len(item))
+            self.value_col += 2
 
-        # Initialize the window dimensions.
-        await self.update_dimensions()
+        return result
 
-        # Collect channel names from the environment.
-        self.channel_names = sorted(self.env.names)
-        window = self.body
-
-        # Initialize channel names.
-        for idx, item in enumerate(self.channel_names):
-            window.addstr(1 + idx, 1, item)
-            self.value_col = max(self.value_col, len(item))
-        self.value_col += 2
-
-        return True
-
-    async def update_dimensions(self) -> None:
+    def update_dimensions(self) -> CursesWindow:
         """Handle an update to the window's dimensions."""
 
-        window = self.window
-
-        # Update width and height.
-        (
-            self.window_height.raw.value,
-            self.window_width.raw.value,
-        ) = window.getmaxyx()
-
-        # Resize the window.
-        window.resize(
-            self.window_height.raw.value, self.window_width.raw.value
-        )
+        window = super().update_dimensions()
 
         # Clear screen content and draw a box.
         window.clear()
@@ -131,18 +105,17 @@ class ChannelTui:
         body.box()
         self._body = body
 
-    async def handle_char(self, char: int) -> None:
-        """
-        Handle character input.
-        """
+    async def handle_char(self, char: int) -> bool:
+        """Handle character input."""
 
-        if char != -1:
-            if char == getattr(_curses, "KEY_RESIZE"):
-                await self.update_dimensions()
+        await super().handle_char(char)
 
+        handled = char != -1
+        if handled:
             key_str = "'" + getattr(_curses, "keyname")(char).decode() + "'"
-
             self.header.addstr(3, 1, f"key: {char:4} {key_str:12}")
+
+        return handled
 
     async def update_header(self) -> None:
         """Update the header portion of the interface."""
@@ -177,5 +150,6 @@ class ChannelTui:
         await self.update_body()
 
         # Re-draw the screen.
-        getattr(_curses, "doupdate")()
+        self.tui_update()
+
         return True

@@ -6,7 +6,7 @@ A module implementing a channel registry.
 from typing import Any as _Any
 from typing import Optional as _Optional
 from typing import Type as _Type
-from typing import cast as _cast
+from typing import Union
 
 # third-party
 from vcorelib.io.types import JsonObject as _JsonObject
@@ -15,7 +15,9 @@ from vcorelib.io.types import JsonObject as _JsonObject
 from runtimepy.channel import AnyChannel as _AnyChannel
 from runtimepy.channel import Channel as _Channel
 from runtimepy.mixins.regex import CHANNEL_PATTERN as _CHANNEL_PATTERN
+from runtimepy.primitives import Primitive
 from runtimepy.primitives import Primitivelike as _Primitivelike
+from runtimepy.primitives import normalize
 from runtimepy.registry import Registry as _Registry
 from runtimepy.registry.name import NameRegistry as _NameRegistry
 from runtimepy.registry.name import RegistryKey as _RegistryKey
@@ -40,17 +42,31 @@ class ChannelRegistry(_Registry[_Channel[_Any]]):
     def channel(
         self,
         name: str,
-        kind: _Primitivelike,
+        kind: Union[Primitive[_Any], _Primitivelike],
         commandable: bool = False,
         enum: _RegistryKey = None,
     ) -> _Optional[_AnyChannel]:
         """Create a new channel."""
 
+        if isinstance(kind, str):
+            kind = normalize(kind)
+
+        if isinstance(kind, Primitive):
+            primitive = kind
+        else:
+            primitive = kind()
+
         data: _JsonObject = {
-            "type": _cast(str, kind),
+            "type": str(primitive.kind),
             "commandable": commandable,
         }
         if enum is not None:
             data["enum"] = enum
 
-        return self.register_dict(name, data)
+        result = self.register_dict(name, data)
+
+        # Replace the underlying primitive, in case it was direclty passed in.
+        if result is not None:
+            result.raw = primitive
+
+        return result

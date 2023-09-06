@@ -19,4 +19,6 @@ edit: $(PY_PREFIX)edit
 clean: $(PY_PREFIX)clean $(DZ_PREFIX)clean
 
 s:
-	./venv$(PYTHON_VERSION)/bin/runtimepy arbiter ./local/arbiter/test.yaml
+	./venv$(PYTHON_VERSION)/bin/runtimepy arbiter --curses \
+		./local/arbiter/test.yaml
+	+@echo "success"

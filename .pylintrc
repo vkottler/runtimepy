@@ -1,7 +1,7 @@
 [DESIGN]
 max-args=8
 max-attributes=12
-max-parents=9
+max-parents=10
 
 [MESSAGES CONTROL]
 disable=too-few-public-methods

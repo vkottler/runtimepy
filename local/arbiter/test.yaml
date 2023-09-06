@@ -1,15 +1,19 @@
 ---
 includes:
-  - factories.yaml
-  - ports.yaml
-  - servers.yaml
-  - clients.yaml
+  # - servers.yaml
+  # - clients.yaml
   - ../../tests/data/valid/connection_arbiter/json.yaml
+  - ../../tests/data/valid/connection_arbiter/echo_factories.yaml
+  - ../../tests/data/valid/connection_arbiter/ports.yaml
+
+factories:
+  - {name: runtimepy.net.arbiter.housekeeping.ConnectionMetricsLoggerFactory}
 
 tasks:
   - name: log_metrics
     factory: ConnectionMetricsLoggerFactory
-    period_s: 1.0
+    period_s: 10.0
 
 app:
-  - [tasks.test, tasks.noop1, tasks.noop2]
+  # - [tasks.test, tasks.noop1, tasks.noop2]
+  - tasks.gui
