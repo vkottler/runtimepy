@@ -7,7 +7,7 @@ from argparse import ArgumentParser as _ArgumentParser
 from argparse import Namespace as _Namespace
 import asyncio as _asyncio
 import curses as _curses
-from typing import Callable, Optional
+from typing import Optional
 
 # third-party
 from vcorelib.args import CommandFunction as _CommandFunction
@@ -20,13 +20,11 @@ from runtimepy.channel.environment import (
 from runtimepy.tui.channels import CursesWindow as _CursesWindow
 from runtimepy.tui.task import TuiTask as _TuiTask
 
-CursesApp = Callable[[Optional[_CursesWindow], _Namespace], None]
 
-
-def start(window: Optional[_CursesWindow], args: _Namespace) -> None:
+def start(args: _Namespace) -> int:
     """Start the user interface."""
 
-    assert window is not None
+    assert args.window is not None
 
     task = _TuiTask(
         "ui",
@@ -35,23 +33,40 @@ def start(window: Optional[_CursesWindow], args: _Namespace) -> None:
         max_iterations=args.iterations,
     )
     stop_sig = _asyncio.Event()
-    return _run_handle_stop(stop_sig, task.run(window, stop_sig=stop_sig))
+    _run_handle_stop(stop_sig, task.run(args.window, stop_sig=stop_sig))
+
+    return 0
 
 
-def curses_wrap_if(cond: bool, method: CursesApp, args: _Namespace) -> None:
+def curses_wrap_if(method: _CommandFunction, args: _Namespace) -> int:
     """Run a method in TUI mode if a condition is met."""
 
-    if cond:
-        getattr(_curses, "wrapper")(method, args)
+    assert not hasattr(args, "window"), args
+    args.window = None
+
+    result = -1
+
+    if getattr(args, "curses", False):
+
+        def wrapper(window: Optional[_CursesWindow], args: _Namespace) -> None:
+            """Set the window attribute."""
+
+            args.window = window
+            nonlocal result
+            result = method(args)
+
+        getattr(_curses, "wrapper")(wrapper, args)
     else:
-        method(None, args)
+        result = method(args)
+
+    return result
 
 
 def tui_cmd(args: _Namespace) -> int:
     """Execute the tui command."""
 
-    curses_wrap_if(True, start, args)
-    return 0
+    args.curses = True
+    return curses_wrap_if(start, args)
 
 
 def add_tui_cmd(parser: _ArgumentParser) -> _CommandFunction:

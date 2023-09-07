@@ -1,7 +1,7 @@
 # =====================================
 # generator=datazen
 # version=3.1.3
-# hash=a4deafb4ebcc179d8d85f9376d22dc92
+# hash=a091a3ec7aaa384242f64698f5326a1c
 # =====================================
 
 """
@@ -35,3 +35,8 @@ def add_app_args(parser: _ArgumentParser) -> None:
     global COMMAND  # pylint: disable=global-statement
     add, COMMAND = _app_args(commands, {})
     add(parser)
+    parser.add_argument(
+        "--curses",
+        action="store_true",
+        help="whether or not to use curses.wrapper when starting",
+    )
