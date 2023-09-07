@@ -4,25 +4,27 @@ A module for terminal user-interface application mixins.
 
 # built-in
 import curses as _curses
-from typing import Any, Optional
+from typing import Optional
 
 # internal
 from runtimepy.primitives import Uint16
+from runtimepy.tui.cursor import CursesWindow, Cursor
 
-# Typing for something like '_curses.window' isn't supported yet.
-CursesWindow = Any
+__all__ = ["CursesWindow", "Cursor", "TuiMixin"]
 
 
 class TuiMixin:
     """A class mixin for building TUI applications."""
 
+    cursor: Cursor
+
     def __init__(self, window: Optional[CursesWindow] = None) -> None:
         """Initialize this instance."""
 
-        self._window = window
         self.window_width_raw = Uint16()
         self.window_height_raw = Uint16()
 
+        self._window = None
         self.init(window)
 
     def init(self, window: Optional[CursesWindow]) -> bool:
@@ -33,6 +35,7 @@ class TuiMixin:
         if do_init:
             assert window is not None
             self._window = window
+            self.cursor = Cursor(self._window)
 
             # _curses.use_default_colors()
             getattr(_curses, "use_default_colors")()

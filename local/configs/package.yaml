@@ -4,6 +4,8 @@ version: "{{major}}.{{minor}}.{{patch}}"
 description: A framework for implementing Python services.
 entry: {{entry}}
 
+curses: true
+
 requirements:
   - vcorelib>=2.6.0
   - websockets

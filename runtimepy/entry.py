@@ -1,7 +1,7 @@
 # =====================================
 # generator=datazen
-# version=3.1.2
-# hash=40f5c85d844b6d42a5dd10ff46c82cdd
+# version=3.1.3
+# hash=70b70e2522b648c99a1b710278c8f242
 # =====================================
 
 """
@@ -19,6 +19,16 @@ from typing import List
 # internal
 from runtimepy import DESCRIPTION, VERSION
 from runtimepy.app import add_app_args, entry
+
+
+def init_logging(args: argparse.Namespace) -> None:
+    """Initialize logging based on command-line arguments."""
+
+    if not getattr(args, "curses", False):
+        logging.basicConfig(
+            level=logging.DEBUG if args.verbose else logging.INFO,
+            format="%(name)-36s - %(levelname)-6s - %(message)s",
+        )
 
 
 def main(argv: List[str] = None) -> int:
@@ -45,6 +55,11 @@ def main(argv: List[str] = None) -> int:
         help="set to increase logging verbosity",
     )
     parser.add_argument(
+        "--curses",
+        action="store_true",
+        help="whether or not to use curses.wrapper when starting",
+    )
+    parser.add_argument(
         "-C",
         "--dir",
         default=Path.cwd(),
@@ -63,11 +78,7 @@ def main(argv: List[str] = None) -> int:
         args.dir = args.dir.resolve()
 
         # initialize logging
-        log_level = logging.DEBUG if args.verbose else logging.INFO
-        logging.basicConfig(
-            level=log_level,
-            format="%(name)-36s - %(levelname)-6s - %(message)s",
-        )
+        init_logging(args)
 
         # change to the specified directory
         os.chdir(args.dir)

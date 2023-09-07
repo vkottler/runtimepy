@@ -20,11 +20,13 @@ from vcorelib.math import RateTracker as _RateTracker
 from vcorelib.math import rate_str as _rate_str
 
 # internal
+from runtimepy.channel.environment import ChannelEnvironment
+from runtimepy.metrics import PeriodicTaskMetrics
+from runtimepy.mixins.environment import ChannelEnvironmentMixin
 from runtimepy.primitives import Bool as _Bool
-from runtimepy.task.basic.metrics import PeriodicTaskMetrics
 
 
-class PeriodicTask(_LoggerMixin, _ABC):
+class PeriodicTask(_LoggerMixin, ChannelEnvironmentMixin, _ABC):
     """A class implementing a simple periodic-task interface."""
 
     def __init__(
@@ -33,11 +35,12 @@ class PeriodicTask(_LoggerMixin, _ABC):
         average_depth: int = _DEFAULT_DEPTH,
         metrics: PeriodicTaskMetrics = None,
         period_s: float = None,
+        env: ChannelEnvironment = None,
     ) -> None:
         """Initialize this task."""
 
         self.name = name
-        super().__init__(logger=_getLogger(self.name))
+        _LoggerMixin.__init__(self, logger=_getLogger(self.name))
         self._task: _Optional[_asyncio.Task[None]] = None
 
         self._period_s: _Optional[float] = None
@@ -49,6 +52,9 @@ class PeriodicTask(_LoggerMixin, _ABC):
         if metrics is None:
             metrics = PeriodicTaskMetrics.create()
         self.metrics = metrics
+
+        ChannelEnvironmentMixin.__init__(self, env=env)
+        self.register_task_metrics(self.metrics)
 
         self._dispatch_rate = _RateTracker(depth=average_depth)
         self._dispatch_time = _MovingAverage(depth=average_depth)

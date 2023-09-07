@@ -1,5 +1,5 @@
 """
-A module implementing a connection-metrics structure.
+A module implementing a channel-metrics interface.
 """
 
 # third-party
@@ -70,23 +70,3 @@ class ChannelMetrics:
         self.bytes.raw.value = 0
         self.kbps.raw.value = 0.0
         self._kbps_tracker.reset()
-
-
-class ConnectionMetrics:
-    """Metrics for a network connection."""
-
-    def __init__(self) -> None:
-        """Initialize this instance."""
-
-        self.tx = ChannelMetrics()
-        self.rx = ChannelMetrics()
-
-    def reset(self) -> None:
-        """Reset metrics."""
-        self.tx.reset()
-        self.rx.reset()
-
-    def poll(self, time_ns: int = None) -> None:
-        """Poll channels."""
-        self.tx.poll(time_ns=time_ns)
-        self.rx.poll(time_ns=time_ns)

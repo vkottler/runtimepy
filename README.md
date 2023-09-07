@@ -1,12 +1,12 @@
 <!--
     =====================================
     generator=datazen
-    version=3.1.2
-    hash=b7f4f833830e6d02bb40fa8830398467
+    version=3.1.3
+    hash=658cf5caabd9cdd1e33db33971eb1a47
     =====================================
 -->
 
-# runtimepy ([2.5.0](https://pypi.org/project/runtimepy/))
+# runtimepy ([2.6.0](https://pypi.org/project/runtimepy/))
 
 [![python](https://img.shields.io/pypi/pyversions/runtimepy.svg)](https://pypi.org/project/runtimepy/)
 ![Build Status](https://github.com/vkottler/runtimepy/workflows/Python%20Package/badge.svg)
@@ -49,7 +49,8 @@ This package is tested on the following platforms:
 ```
 $ ./venv3.11/bin/runtimepy -h
 
-usage: runtimepy [-h] [--version] [-v] [-C DIR] {arbiter,tui,noop} ...
+usage: runtimepy [-h] [--version] [-v] [--curses] [-C DIR]
+                 {arbiter,tui,noop} ...
 
 A framework for implementing Python services.
 
@@ -57,6 +58,7 @@ options:
   -h, --help          show this help message and exit
   --version           show program's version number and exit
   -v, --verbose       set to increase logging verbosity
+  --curses            whether or not to use curses.wrapper when starting
   -C DIR, --dir DIR   execute from a specific directory
 
 commands:

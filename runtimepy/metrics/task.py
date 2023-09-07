@@ -1,5 +1,5 @@
 """
-A module implementing a metrics interface for periodic tasks.
+A module implementing a periodic-task metrics interface.
 """
 
 # built-in
