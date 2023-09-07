@@ -17,13 +17,14 @@ from vcorelib.logging import LoggerType as _LoggerType
 
 # internal
 from runtimepy.channel.environment import ChannelEnvironment
-from runtimepy.net.metrics import ConnectionMetrics
+from runtimepy.metrics import ConnectionMetrics
+from runtimepy.mixins.environment import ChannelEnvironmentMixin
 from runtimepy.primitives.byte_order import DEFAULT_BYTE_ORDER, ByteOrder
 
 BinaryMessage = _Union[bytes, bytearray, memoryview]
 
 
-class Connection(_LoggerMixin, _ABC):
+class Connection(_LoggerMixin, ChannelEnvironmentMixin, _ABC):
     """A connection interface."""
 
     uses_text_tx_queue = True
@@ -39,7 +40,7 @@ class Connection(_LoggerMixin, _ABC):
     ) -> None:
         """Initialize this connection."""
 
-        super().__init__(logger=logger)
+        _LoggerMixin.__init__(self, logger=logger)
         self._enabled = True
 
         # A queue for out-going text messages. Connections that don't use
@@ -54,41 +55,17 @@ class Connection(_LoggerMixin, _ABC):
         self._binary_messages: _asyncio.Queue[BinaryMessage] = _asyncio.Queue()
         self.tx_binary_hwm: int = 0
 
-        self.metrics = ConnectionMetrics()
-
         self._tasks: _List[_asyncio.Task[None]] = []
         self.initialized = _asyncio.Event()
         self.disabled_event = _asyncio.Event()
 
-        self._init_channel_environment(env=env, add_metrics=add_metrics)
-        self.init()
+        self.metrics = ConnectionMetrics()
 
-    def _init_channel_environment(
-        self,
-        add_metrics: bool = True,
-        env: ChannelEnvironment = None,
-        **kwargs,
-    ) -> None:
-        """Initialize this connection's channel environment."""
-
-        if env is None:
-            env = ChannelEnvironment(**kwargs)
-        self.env = env
-
+        ChannelEnvironmentMixin.__init__(self, env=env)
         if add_metrics:
-            # Add metrics channels.
-            with self.env.names_pushed("metrics"):
-                for name, direction in [
-                    ("tx", self.metrics.tx),
-                    ("rx", self.metrics.rx),
-                ]:
-                    with self.env.names_pushed(name):
-                        self.env.channel("messages", direction.messages)
-                        self.env.channel(
-                            "messages_rate", direction.message_rate
-                        )
-                        self.env.channel("bytes", direction.bytes)
-                        self.env.channel("kbps", direction.kbps)
+            self.register_connection_metrics(self.metrics)
+
+        self.init()
 
     def init(self) -> None:
         """Initialize this instance."""

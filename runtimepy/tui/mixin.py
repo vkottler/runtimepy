@@ -19,10 +19,10 @@ class TuiMixin:
     def __init__(self, window: Optional[CursesWindow] = None) -> None:
         """Initialize this instance."""
 
-        self._window = window
         self.window_width_raw = Uint16()
         self.window_height_raw = Uint16()
 
+        self._window = None
         self.init(window)
 
     def init(self, window: Optional[CursesWindow]) -> bool:
