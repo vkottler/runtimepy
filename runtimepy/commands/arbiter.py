@@ -6,7 +6,6 @@ An entry-point for the 'arbiter' command.
 from argparse import ArgumentParser as _ArgumentParser
 from argparse import Namespace as _Namespace
 import asyncio as _asyncio
-from pathlib import Path as _Path
 
 # third-party
 from vcorelib.args import CommandFunction as _CommandFunction
@@ -46,7 +45,5 @@ def arbiter_cmd(args: _Namespace) -> int:
 def add_arbiter_cmd(parser: _ArgumentParser) -> _CommandFunction:
     """Add arbiter-command arguments to its parser."""
 
-    parser.add_argument(
-        "configs", type=_Path, nargs="+", help="the configuration to load"
-    )
+    parser.add_argument("configs", nargs="+", help="the configuration to load")
     return arbiter_cmd
