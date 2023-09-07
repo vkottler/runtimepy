@@ -10,6 +10,8 @@ from runtimepy.metrics import ConnectionMetrics, PeriodicTaskMetrics
 class ChannelEnvironmentMixin:
     """A simple channel-environment mixin."""
 
+    env: ChannelEnvironment
+
     def __init__(self, env: ChannelEnvironment = None, **kwargs) -> None:
         """Initialize this instance."""
 
