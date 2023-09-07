@@ -2,7 +2,7 @@
     =====================================
     generator=datazen
     version=3.1.3
-    hash=ff30fc45c304debc65506b2976bfcfbd
+    hash=658cf5caabd9cdd1e33db33971eb1a47
     =====================================
 -->
 
@@ -49,7 +49,7 @@ This package is tested on the following platforms:
 ```
 $ ./venv3.11/bin/runtimepy -h
 
-usage: runtimepy [-h] [--version] [-v] [-C DIR] [--curses]
+usage: runtimepy [-h] [--version] [-v] [--curses] [-C DIR]
                  {arbiter,tui,noop} ...
 
 A framework for implementing Python services.
@@ -58,8 +58,8 @@ options:
   -h, --help          show this help message and exit
   --version           show program's version number and exit
   -v, --verbose       set to increase logging verbosity
-  -C DIR, --dir DIR   execute from a specific directory
   --curses            whether or not to use curses.wrapper when starting
+  -C DIR, --dir DIR   execute from a specific directory
 
 commands:
   {arbiter,tui,noop}  set of available commands
