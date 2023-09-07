@@ -14,7 +14,7 @@ from runtimepy.tui.mixin import CursesWindow
 from .base import AppBase
 
 
-class App(AppBase):
+class Tui(AppBase):
     """A simple TUI application."""
 
     envs: Dict[str, ChannelEnvironment]
