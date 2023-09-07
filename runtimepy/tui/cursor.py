@@ -26,13 +26,16 @@ class Cursor:
 
         self.reset()
 
-    def _move(self) -> None:
+    def _move(self) -> bool:
         """Perform the underlying cursor move."""
 
-        assert self.y.value < self.max_y.value
-        assert self.x.value < self.max_x.value
+        result = (
+            self.y.value < self.max_y.value and self.x.value < self.max_x.value
+        )
+        if result:
+            self.window.move(self.y.value, self.x.value)
 
-        self.window.move(self.y.value, self.x.value)
+        return result
 
     def poll_max(self) -> None:
         """Update the min and max cursor positions."""
@@ -46,12 +49,12 @@ class Cursor:
         self.poll_max()
         self._move()
 
-    def inc_x(self, amount: int = 1) -> None:
+    def inc_x(self, amount: int = 1) -> bool:
         """Increment the cursor's X coordinate."""
         self.x.value += amount
-        self._move()
+        return self._move()
 
-    def inc_y(self, amount: int = 1) -> None:
+    def inc_y(self, amount: int = 1) -> bool:
         """Increment the cursor's Y coordinate."""
         self.y.value += amount
-        self._move()
+        return self._move()
