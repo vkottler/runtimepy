@@ -13,19 +13,14 @@ from tests.resources import resource
 def test_arbiter_command_basic():
     """Test basic usages of the 'arbiter' command."""
 
-    for entry in ["basic.yaml"]:
-        assert (
-            runtimepy_main(
-                [
-                    PKG_NAME,
-                    "arbiter",
-                    "--init_only",
-                    str(resource("connection_arbiter", entry)),
-                ]
-            )
-            == 0
+    assert (
+        runtimepy_main(
+            [PKG_NAME, "arbiter", "--init_only", str(resource("empty.yaml"))]
         )
+        == 0
+    )
 
+    for entry in ["basic.yaml"]:
         assert (
             runtimepy_main(
                 [
