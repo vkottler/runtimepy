@@ -31,6 +31,10 @@ def app(args: _Namespace) -> int:
     """Start the application with an optional TUI."""
 
     stop_sig = _asyncio.Event()
+
+    if args.init_only:
+        stop_sig.set()
+
     return _run_handle_stop(
         stop_sig, entry(stop_sig, args, window=args.window)
     )
@@ -45,5 +49,11 @@ def arbiter_cmd(args: _Namespace) -> int:
 def add_arbiter_cmd(parser: _ArgumentParser) -> _CommandFunction:
     """Add arbiter-command arguments to its parser."""
 
+    parser.add_argument(
+        "--init_only",
+        action="store_true",
+        help="exit after completing initialization",
+    )
     parser.add_argument("configs", nargs="+", help="the configuration to load")
+
     return arbiter_cmd

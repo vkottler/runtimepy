@@ -19,6 +19,18 @@ def test_arbiter_command_basic():
                 [
                     PKG_NAME,
                     "arbiter",
+                    "--init_only",
+                    str(resource("connection_arbiter", entry)),
+                ]
+            )
+            == 0
+        )
+
+        assert (
+            runtimepy_main(
+                [
+                    PKG_NAME,
+                    "arbiter",
                     str(resource("connection_arbiter", entry)),
                 ]
             )
