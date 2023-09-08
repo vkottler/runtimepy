@@ -2,11 +2,11 @@
     =====================================
     generator=datazen
     version=3.1.3
-    hash=235f889fe10d86a261fbe780916da99b
+    hash=a3111c8378903228c0a4d8a5626629ec
     =====================================
 -->
 
-# runtimepy ([2.6.1](https://pypi.org/project/runtimepy/))
+# runtimepy ([2.6.2](https://pypi.org/project/runtimepy/))
 
 [![python](https://img.shields.io/pypi/pyversions/runtimepy.svg)](https://pypi.org/project/runtimepy/)
 ![Build Status](https://github.com/vkottler/runtimepy/workflows/Python%20Package/badge.svg)
@@ -76,13 +76,14 @@ commands:
 ```
 $ ./venv3.11/bin/runtimepy arbiter -h
 
-usage: runtimepy arbiter [-h] configs [configs ...]
+usage: runtimepy arbiter [-h] [--init_only] configs [configs ...]
 
 positional arguments:
-  configs     the configuration to load
+  configs      the configuration to load
 
 options:
-  -h, --help  show this help message and exit
+  -h, --help   show this help message and exit
+  --init_only  exit after completing initialization
 
 ```
 

@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
 # third-party
 from vcorelib.dict.codec import JsonCodec
+from vcorelib.target.resolver import TargetResolver
 
 # internal
 from runtimepy import PKG_NAME, VERSION
@@ -26,7 +27,6 @@ from runtimepy.net.stream.json.types import (
     RESERVED_KEYS,
     JsonMessage,
     MessageHandler,
-    MessageHandlers,
     T,
     TypedHandler,
 )
@@ -51,10 +51,7 @@ class JsonMessageConnection(StringMessageConnection):
 
         super().init()
 
-        self.handlers: MessageHandlers = {}
-        self.typed_handlers: Dict[
-            str, Tuple[Type[JsonCodec], TypedHandler[Any]]
-        ] = {}
+        self.targets = TargetResolver()
 
         self.meta = {
             "package": PKG_NAME,
@@ -76,9 +73,9 @@ class JsonMessageConnection(StringMessageConnection):
 
         self._register_handlers()
 
-        self.meta["handlers"] = list(  # type: ignore
-            set(self.handlers.keys()) | set(self.typed_handlers.keys())
-        )
+        self.meta["handlers"] = list(self.targets.literals) + [  # type: ignore
+            x.data for x in self.targets.dynamic
+        ]
 
         self.logger.info(
             "metadata: package=%s, version=%s, kind=%s, handlers=%s",
@@ -88,34 +85,19 @@ class JsonMessageConnection(StringMessageConnection):
             self.meta["handlers"],
         )
 
-    def _validate_key(self, key: str) -> str:
-        """Validate a handler key."""
-
-        assert self._valid_new_key(key), key
-        return key
-
-    def _valid_new_key(self, key: str) -> bool:
-        """Determine if a key is valid."""
-
-        return (
-            key not in self.handlers
-            and key not in self.typed_handlers
-            and key not in RESERVED_KEYS
-        )
-
     def basic_handler(
         self, key: str, handler: MessageHandler = loopback_handler
     ) -> None:
         """Register a basic handler."""
 
-        self.handlers[self._validate_key(key)] = handler
+        assert self.targets.register(key, (key, handler, None))
 
     def typed_handler(
         self, key: str, kind: Type[T], handler: TypedHandler[T]
     ) -> None:
         """Register a typed handler."""
 
-        self.typed_handlers[self._validate_key(key)] = (kind, handler)
+        assert self.targets.register(key, (key, handler, kind))
 
     def send_json(
         self, data: Union[JsonMessage, JsonCodec], addr: Tuple[str, int] = None
@@ -290,18 +272,31 @@ class JsonMessageConnection(StringMessageConnection):
         sub_responses: JsonMessage = {}
 
         for key, item in data.items():
-            if self._valid_new_key(key):
-                keys_ignored.append(key)
-                continue
-
             sub_response: JsonMessage = {}
 
-            # Prepare handler. Each sets its own response data.
-            if key in self.handlers:
-                tasks.append(self.handlers[key](sub_response, item))
-            elif key in self.typed_handlers:
-                kind, handler = self.typed_handlers[key]
-                tasks.append(handler(sub_response, kind.create(item)))
+            target = self.targets.evaluate(key)
+            if target:
+                assert target.data is not None
+                key, handler, kind = target.data
+
+                # Use target resolution data (if any) as a base.
+                with_sub_data = copy(
+                    target.result.substitutions
+                    if target.result.substitutions
+                    else {}
+                )
+                with_sub_data.update(item)
+
+                if kind is None:
+                    tasks.append(handler(sub_response, with_sub_data))
+                else:
+                    tasks.append(
+                        handler(sub_response, kind.create(with_sub_data))
+                    )
+
+            elif key not in RESERVED_KEYS:
+                keys_ignored.append(key)
+                continue
 
             sub_responses[key] = sub_response
 
