@@ -6,13 +6,13 @@ An entry-point for the 'arbiter' command.
 from argparse import ArgumentParser as _ArgumentParser
 from argparse import Namespace as _Namespace
 import asyncio as _asyncio
-from pathlib import Path as _Path
 
 # third-party
 from vcorelib.args import CommandFunction as _CommandFunction
 from vcorelib.asyncio import run_handle_stop as _run_handle_stop
 
 # internal
+from runtimepy.commands.common import arbiter_args
 from runtimepy.commands.tui import curses_wrap_if
 from runtimepy.net.arbiter import ConnectionArbiter
 from runtimepy.tui.channels import CursesWindow as _CursesWindow
@@ -32,6 +32,10 @@ def app(args: _Namespace) -> int:
     """Start the application with an optional TUI."""
 
     stop_sig = _asyncio.Event()
+
+    if args.init_only:
+        stop_sig.set()
+
     return _run_handle_stop(
         stop_sig, entry(stop_sig, args, window=args.window)
     )
@@ -46,7 +50,5 @@ def arbiter_cmd(args: _Namespace) -> int:
 def add_arbiter_cmd(parser: _ArgumentParser) -> _CommandFunction:
     """Add arbiter-command arguments to its parser."""
 
-    parser.add_argument(
-        "configs", type=_Path, nargs="+", help="the configuration to load"
-    )
+    arbiter_args(parser)
     return arbiter_cmd

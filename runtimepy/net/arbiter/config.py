@@ -7,6 +7,7 @@ connections or servers.
 from pathlib import Path as _Path
 from site import addsitedir as _addsitedir
 import socket as _socket
+import sys
 from typing import Any as _Any
 from typing import Dict as _Dict
 from typing import Iterable as _Iterable
@@ -20,6 +21,7 @@ from vcorelib.dict.env import dict_resolve_env_vars, list_resolve_env_vars
 from vcorelib.io import ARBITER as _ARBITER
 from vcorelib.io.types import JsonObject as _JsonObject
 from vcorelib.paths import Pathlike as _Pathlike
+from vcorelib.paths import find_file
 from vcorelib.paths import normalize as _normalize
 
 # internal
@@ -62,7 +64,12 @@ class ConnectionArbiterConfig(_RuntimepyDictCodec):
         self.servers: _List[_Any] = data.get("servers", [])  # type: ignore
         self.tasks: _List[_Any] = data.get("tasks", [])  # type: ignore
 
-        self.directory = _Path(str(data.get("directory", ".")))
+        directory_str = str(data.get("directory", "."))
+        self.directory = _Path(directory_str)
+
+        # Add directory to Python path.
+        if directory_str not in sys.path:
+            sys.path.append(directory_str)
 
     def asdict(self) -> _JsonObject:
         """Obtain a dictionary representing this instance."""
@@ -108,19 +115,32 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
     async def load_configs(self, paths: _Iterable[_Pathlike]) -> None:
         """Load a client and server configuration to the arbiter."""
 
+        loaded = set()
+
         # Load and meld configuration data.
         config_data: _JsonObject = {}
         for path in paths:
-            _merge(
-                config_data,
-                _ARBITER.decode(
-                    path,
-                    includes_key="includes",
-                    require_success=True,
-                    logger=self.logger,
-                ).data,
-                logger=self.logger,
+            found = find_file(
+                path,
+                logger=self.logger,  # type: ignore
+                include_cwd=True,
             )
+            assert found is not None, f"Couldn't find '{path}'!"
+
+            # Only load files once.
+            absolute = found.resolve()
+            if absolute not in loaded:
+                _merge(
+                    config_data,
+                    _ARBITER.decode(
+                        found,
+                        includes_key="includes",
+                        require_success=True,
+                        logger=self.logger,
+                    ).data,
+                    logger=self.logger,
+                )
+                loaded.add(absolute)
 
         config = ConnectionArbiterConfig(data=config_data)
 
