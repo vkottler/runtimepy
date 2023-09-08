@@ -24,6 +24,7 @@ from runtimepy.channel.environment import ChannelEnvironment
 from runtimepy.metrics import PeriodicTaskMetrics
 from runtimepy.mixins.environment import ChannelEnvironmentMixin
 from runtimepy.primitives import Bool as _Bool
+from runtimepy.primitives import Double as _Double
 from runtimepy.primitives import Float as _Float
 
 
@@ -112,34 +113,26 @@ class PeriodicTask(_LoggerMixin, ChannelEnvironmentMixin, _ABC):
         )
 
         eloop = _asyncio.get_running_loop()
+        iter_time = _Double()
 
         while self._enabled:
-            start = eloop.time()
-
-            # Keep track of the rate that this task is running at.
-            self.metrics.rate_hz.raw.value = self._dispatch_rate(
-                int(start * 1e9)
-            )
-
-            self._enabled.raw.value = await _asyncio.shield(self.dispatch())
-            iter_time = eloop.time() - start
-
-            # Update runtime metrics.
-            self.metrics.dispatches.raw.value += 1
-            self.metrics.average_s.raw.value = self._dispatch_time(iter_time)
-            self.metrics.max_s.raw.value = self._dispatch_time.max
-            self.metrics.min_s.raw.value = self._dispatch_time.min
+            with self.metrics.measure(
+                eloop, self._dispatch_rate, self._dispatch_time, iter_time
+            ):
+                self._enabled.raw.value = await _asyncio.shield(
+                    self.dispatch()
+                )
 
             # Check this synchronously. This may not be suitable for tasks
             # with long periods.
             if stop_sig is not None:
                 self._enabled.raw.value = not stop_sig.is_set()
 
-            sleep_s = self.period_s.value - iter_time
-
             if self._enabled:
                 try:
-                    await _asyncio.sleep(max(sleep_s, 0))
+                    await _asyncio.sleep(
+                        max(self.period_s.value - iter_time.value, 0)
+                    )
                 except _asyncio.CancelledError:
                     self.logger.info("Task was cancelled.")
                     self.disable()
