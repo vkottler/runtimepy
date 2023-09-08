@@ -244,8 +244,10 @@ class JsonMessageConnection(StringMessageConnection):
 
     def _handle_reserved(
         self, data: JsonMessage, response: JsonMessage
-    ) -> None:
+    ) -> bool:
         """Handle special keys in an incoming message."""
+
+        should_respond = True
 
         # If a message identifier is present, send one in the response.
         if "__id__" in data:
@@ -256,6 +258,10 @@ class JsonMessageConnection(StringMessageConnection):
                 event = self.ids_waiting[ident]
                 del self.ids_waiting[ident]
                 event.set()
+
+                # Don't respond if we're receiving a reply.
+                should_respond = False
+
             response["__id__"] = ident
 
         # Log messages sent by the peer.
@@ -267,6 +273,8 @@ class JsonMessageConnection(StringMessageConnection):
                         "remote: " + message["msg"],
                         *message.get("args", []),
                     )
+
+        return should_respond
 
     async def process_json(
         self, data: JsonMessage, addr: Tuple[str, int] = None
@@ -310,9 +318,7 @@ class JsonMessageConnection(StringMessageConnection):
         if keys_ignored:
             response["keys_ignored"] = sorted(keys_ignored)
 
-        self._handle_reserved(data, response)
-
-        if response:
+        if self._handle_reserved(data, response) and response:
             self.send_json(response, addr=addr)
 
         return True
