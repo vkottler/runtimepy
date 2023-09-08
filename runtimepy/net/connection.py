@@ -19,6 +19,7 @@ from vcorelib.logging import LoggerType as _LoggerType
 from runtimepy.channel.environment import ChannelEnvironment
 from runtimepy.metrics import ConnectionMetrics
 from runtimepy.mixins.environment import ChannelEnvironmentMixin
+from runtimepy.primitives import Bool
 from runtimepy.primitives.byte_order import DEFAULT_BYTE_ORDER, ByteOrder
 
 BinaryMessage = _Union[bytes, bytearray, memoryview]
@@ -41,7 +42,7 @@ class Connection(_LoggerMixin, ChannelEnvironmentMixin, _ABC):
         """Initialize this connection."""
 
         _LoggerMixin.__init__(self, logger=logger)
-        self._enabled = True
+        self._enabled = Bool(True)
 
         # A queue for out-going text messages. Connections that don't use
         # this can set 'uses_text_tx_queue' to False to avoid scheduling a
@@ -64,6 +65,9 @@ class Connection(_LoggerMixin, ChannelEnvironmentMixin, _ABC):
         ChannelEnvironmentMixin.__init__(self, env=env)
         if add_metrics:
             self.register_connection_metrics(self.metrics)
+
+        # State.
+        self.env.channel("enabled", self._enabled)
 
         self.init()
 
@@ -130,7 +134,7 @@ class Connection(_LoggerMixin, ChannelEnvironmentMixin, _ABC):
         if self._enabled:
             self.logger.info("Disabling connection: '%s'.", reason)
             self.disable_extra()
-            self._enabled = False
+            self._enabled.value = False
 
             # Cancel tasks.
             for task in self._tasks:

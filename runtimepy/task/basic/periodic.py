@@ -24,6 +24,7 @@ from runtimepy.channel.environment import ChannelEnvironment
 from runtimepy.metrics import PeriodicTaskMetrics
 from runtimepy.mixins.environment import ChannelEnvironmentMixin
 from runtimepy.primitives import Bool as _Bool
+from runtimepy.primitives import Float as _Float
 
 
 class PeriodicTask(_LoggerMixin, ChannelEnvironmentMixin, _ABC):
@@ -34,7 +35,7 @@ class PeriodicTask(_LoggerMixin, ChannelEnvironmentMixin, _ABC):
         name: str,
         average_depth: int = _DEFAULT_DEPTH,
         metrics: PeriodicTaskMetrics = None,
-        period_s: float = None,
+        period_s: float = 1.0,
         env: ChannelEnvironment = None,
     ) -> None:
         """Initialize this task."""
@@ -43,7 +44,7 @@ class PeriodicTask(_LoggerMixin, ChannelEnvironmentMixin, _ABC):
         _LoggerMixin.__init__(self, logger=_getLogger(self.name))
         self._task: _Optional[_asyncio.Task[None]] = None
 
-        self._period_s: _Optional[float] = None
+        self.period_s = _Float()
         self.set_period(period_s=period_s)
 
         # Setup runtime state.
@@ -56,17 +57,27 @@ class PeriodicTask(_LoggerMixin, ChannelEnvironmentMixin, _ABC):
         ChannelEnvironmentMixin.__init__(self, env=env)
         self.register_task_metrics(self.metrics)
 
+        # State.
+        self.env.channel("enabled", self._enabled)
+        self.env.channel("period", self.period_s)
+        self._init_state()
+
         self._dispatch_rate = _RateTracker(depth=average_depth)
         self._dispatch_time = _MovingAverage(depth=average_depth)
+
+    def _init_state(self) -> None:
+        """Add channels to this instance's channel environment."""
 
     def set_period(self, period_s: float = None) -> bool:
         """Attempt to set a new period for this task."""
 
         result = False
 
-        if period_s is not None and self._period_s != period_s:
-            self._period_s = period_s
-            self.logger.info("Task rate set to %s.", _rate_str(period_s))
+        if period_s is not None and self.period_s != period_s:
+            self.period_s.value = period_s
+            self.logger.info(
+                "Task rate set to %s.", _rate_str(self.period_s.value)
+            )
             result = True
 
         return result
@@ -95,8 +106,10 @@ class PeriodicTask(_LoggerMixin, ChannelEnvironmentMixin, _ABC):
         self._enabled.raw.value = True
 
         self.set_period(period_s=period_s)
-        assert self._period_s is not None, "Task period isn't set!"
-        self.logger.info("Task starting at %s.", _rate_str(self._period_s))
+        assert self.period_s is not None, "Task period isn't set!"
+        self.logger.info(
+            "Task starting at %s.", _rate_str(self.period_s.value)
+        )
 
         eloop = _asyncio.get_running_loop()
 
@@ -122,7 +135,7 @@ class PeriodicTask(_LoggerMixin, ChannelEnvironmentMixin, _ABC):
             if stop_sig is not None:
                 self._enabled.raw.value = not stop_sig.is_set()
 
-            sleep_s = self._period_s - iter_time
+            sleep_s = self.period_s.value - iter_time
 
             if self._enabled:
                 try:
