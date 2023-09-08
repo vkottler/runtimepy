@@ -8,6 +8,7 @@ from contextlib import AsyncExitStack as _AsyncExitStack
 from dataclasses import dataclass
 from logging import getLogger as _getLogger
 from typing import Iterator as _Iterator
+from typing import List
 from typing import MutableMapping as _MutableMapping
 from typing import Type as _Type
 from typing import TypeVar as _TypeVar
@@ -19,6 +20,7 @@ from vcorelib.namespace import Namespace as _Namespace
 
 # internal
 from runtimepy.net.connection import Connection as _Connection
+from runtimepy.task import PeriodicTask
 from runtimepy.tui.mixin import TuiMixin
 
 ConnectionMap = _MutableMapping[str, _Connection]
@@ -51,6 +53,8 @@ class AppInfo:
 
     tui: TuiMixin
 
+    tasks: List[PeriodicTask]
+
     def with_new_logger(self, name: str) -> "AppInfo":
         """Get a copy of this AppInfo instance, but with a new logger."""
 
@@ -62,6 +66,7 @@ class AppInfo:
             self.stop,
             self.config,
             self.tui,
+            self.tasks,
         )
 
     def search(
