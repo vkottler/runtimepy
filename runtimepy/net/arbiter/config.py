@@ -115,6 +115,8 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
     async def load_configs(self, paths: _Iterable[_Pathlike]) -> None:
         """Load a client and server configuration to the arbiter."""
 
+        loaded = set()
+
         # Load and meld configuration data.
         config_data: _JsonObject = {}
         for path in paths:
@@ -125,16 +127,20 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
             )
             assert found is not None, f"Couldn't find '{path}'!"
 
-            _merge(
-                config_data,
-                _ARBITER.decode(
-                    found,
-                    includes_key="includes",
-                    require_success=True,
+            # Only load files once.
+            absolute = found.resolve()
+            if absolute not in loaded:
+                _merge(
+                    config_data,
+                    _ARBITER.decode(
+                        found,
+                        includes_key="includes",
+                        require_success=True,
+                        logger=self.logger,
+                    ).data,
                     logger=self.logger,
-                ).data,
-                logger=self.logger,
-            )
+                )
+                loaded.add(absolute)
 
         config = ConnectionArbiterConfig(data=config_data)
 
