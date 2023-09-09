@@ -31,16 +31,6 @@ class ChannelTui(TuiMixin):
         self._header: _Optional[CursesWindow] = None
         self._body: _Optional[CursesWindow] = None
 
-        # Initialize channels for the window width and height.
-        with env.names_pushed("ui"):
-            with env.names_pushed("window"):
-                self.window_width = env.int_channel(
-                    "width", self.window_width_raw
-                )[0]
-                self.window_height = env.int_channel(
-                    "height", self.window_height_raw
-                )[0]
-
         self.env = env
         self.channel_names: _List[str] = []
         self.value_col: int = 0
@@ -62,6 +52,12 @@ class ChannelTui(TuiMixin):
 
         result = super().init(window)
         if result:
+            # Initialize channels for the window width and height.
+            with self.env.names_pushed("ui"):
+                with self.env.names_pushed("window"):
+                    self.env.int_channel("width", self.cursor.max_x)
+                    self.env.int_channel("height", self.cursor.max_y)
+
             # Collect channel names from the environment.
             self.channel_names = sorted(self.env.names)
             window = self.body
@@ -90,16 +86,14 @@ class ChannelTui(TuiMixin):
 
         # Create the header box.
         header_height = 5
-        header = window.subwin(
-            header_height, self.window_width.raw.value - 2, 2, 1
-        )
+        header = window.subwin(header_height, self.cursor.width - 2, 2, 1)
         header.clear()
         header.box()
         self._header = header
 
         # Create the body box.
-        body_lines = self.window_height.raw.value - 2 - header_height - 1
-        body_cols = self.window_width.raw.value - 2
+        body_lines = self.cursor.height - 2 - header_height - 1
+        body_cols = self.cursor.width - 2
         body = window.subwin(body_lines, body_cols, 2 + header_height, 1)
         body.clear()
         body.box()
@@ -121,8 +115,8 @@ class ChannelTui(TuiMixin):
         """Update the header portion of the interface."""
 
         window = self.header
-        window.addstr(1, 1, f"width:  {self.window_width.raw.value:4}")
-        window.addstr(2, 1, f"height: {self.window_height.raw.value:4}")
+        window.addstr(1, 1, f"width:  {self.cursor.width:4}")
+        window.addstr(2, 1, f"height: {self.cursor.height:4}")
         window.noutrefresh()
 
     async def update_body(self) -> None:

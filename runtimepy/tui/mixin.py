@@ -7,7 +7,6 @@ import curses as _curses
 from typing import Optional
 
 # internal
-from runtimepy.primitives import Uint16
 from runtimepy.tui.cursor import CursesWindow, Cursor
 
 __all__ = ["CursesWindow", "Cursor", "TuiMixin"]
@@ -20,9 +19,6 @@ class TuiMixin:
 
     def __init__(self, window: Optional[CursesWindow] = None) -> None:
         """Initialize this instance."""
-
-        self.window_width_raw = Uint16()
-        self.window_height_raw = Uint16()
 
         self._window = None
         self.init(window)
@@ -62,18 +58,7 @@ class TuiMixin:
         """Handle an update to the window's dimensions."""
 
         window = self.window
-
-        # Update width and height.
-        (
-            self.window_height_raw.value,
-            self.window_width_raw.value,
-        ) = window.getmaxyx()
-
-        # Resize the window.
-        window.resize(
-            self.window_height_raw.value, self.window_width_raw.value
-        )
-
+        self.cursor.poll_max()
         return window
 
     def tui_update(self) -> None:

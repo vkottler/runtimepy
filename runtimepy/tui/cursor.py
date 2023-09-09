@@ -26,20 +26,46 @@ class Cursor:
 
         self.reset()
 
-    def _move(self) -> bool:
+    def move(self, new_y: int = None, new_x: int = None) -> bool:
         """Perform the underlying cursor move."""
 
-        result = (
-            self.y.value < self.max_y.value and self.x.value < self.max_x.value
-        )
+        if new_y is None:
+            new_y = self.y.value
+        if new_x is None:
+            new_x = self.x.value
+
+        result = new_y < self.height and new_x < self.width
         if result:
-            self.window.move(self.y.value, self.x.value)
+            self.window.move(new_y, new_x)
+            self.y.value = new_y
+            self.x.value = new_x
 
         return result
 
-    def poll_max(self) -> None:
+    def poll_max(self) -> bool:
         """Update the min and max cursor positions."""
+
+        curr_width = self.width
+        curr_height = self.height
+
+        # Update underlying values.
         self.max_y.value, self.max_x.value = self.window.getmaxyx()
+
+        changed = curr_width != self.width or curr_height != self.height
+        if changed:
+            self.window.resize(self.height, self.width)
+
+        return changed
+
+    @property
+    def width(self) -> int:
+        """Get the width of this cursor's window."""
+        return self.max_x.value
+
+    @property
+    def height(self) -> int:
+        """Get the height of this cursor's window."""
+        return self.max_y.value
 
     def reset(self) -> None:
         """Reset this cursor."""
@@ -47,14 +73,13 @@ class Cursor:
         self.x.value = 0
         self.y.value = 0
         self.poll_max()
-        self._move()
+        assert self.move()
 
     def inc_x(self, amount: int = 1) -> bool:
         """Increment the cursor's X coordinate."""
-        self.x.value += amount
-        return self._move()
+
+        return self.move(new_x=self.x.value + amount)
 
     def inc_y(self, amount: int = 1) -> bool:
         """Increment the cursor's Y coordinate."""
-        self.y.value += amount
-        return self._move()
+        return self.move(new_y=self.y.value + amount)
