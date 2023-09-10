@@ -184,7 +184,7 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
 
             self.logger.info("Connections initialized.")
 
-            tasks = list(self.task_manager.tasks)
+            tasks = {x.name: x for x in self.task_manager.tasks}
 
             # Run application, but only if all the registered connections are
             # still alive after initialization.

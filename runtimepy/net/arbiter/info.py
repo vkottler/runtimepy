@@ -7,8 +7,9 @@ import asyncio as _asyncio
 from contextlib import AsyncExitStack as _AsyncExitStack
 from dataclasses import dataclass
 from logging import getLogger as _getLogger
+from re import compile as _compile
+from typing import Dict
 from typing import Iterator as _Iterator
-from typing import List
 from typing import MutableMapping as _MutableMapping
 from typing import Type as _Type
 from typing import TypeVar as _TypeVar
@@ -25,6 +26,7 @@ from runtimepy.tui.mixin import TuiMixin
 
 ConnectionMap = _MutableMapping[str, _Connection]
 T = _TypeVar("T", bound=_Connection)
+V = _TypeVar("V", bound=PeriodicTask)
 
 
 @dataclass
@@ -53,7 +55,7 @@ class AppInfo:
 
     tui: TuiMixin
 
-    tasks: List[PeriodicTask]
+    tasks: Dict[str, PeriodicTask]
 
     def with_new_logger(self, name: str) -> "AppInfo":
         """Get a copy of this AppInfo instance, but with a new logger."""
@@ -84,6 +86,17 @@ class AppInfo:
             conn = self.connections[name]
             if isinstance(conn, kind):
                 yield conn
+
+    def search_tasks(
+        self, kind: _Type[V], pattern: str = ".*"
+    ) -> _Iterator[V]:
+        """Search for tasks by type or pattern."""
+
+        compiled = _compile(pattern)
+
+        for name, task in self.tasks.items():
+            if compiled.search(name) is not None and isinstance(task, kind):
+                yield task
 
     def single(
         self,

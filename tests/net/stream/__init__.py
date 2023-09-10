@@ -14,9 +14,14 @@ from runtimepy.net.arbiter.info import AppInfo
 from runtimepy.net.stream import StringMessageConnection
 from runtimepy.net.stream.json import JsonMessage, JsonMessageConnection
 
+# internal
+from tests.resources import SampleArbiterTask
+
 
 async def stream_test(app: AppInfo) -> int:
     """A network application that doesn't do anything."""
+
+    assert list(app.search_tasks(SampleArbiterTask))
 
     count = 0
     for client in app.search(
