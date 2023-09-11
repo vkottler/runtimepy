@@ -1,7 +1,7 @@
 # =====================================
 # generator=datazen
 # version=3.1.3
-# hash=70b70e2522b648c99a1b710278c8f242
+# hash=c2bc26deadfa7cc275e815f499693863
 # =====================================
 
 """
@@ -10,25 +10,17 @@ This package's command-line entry-point (boilerplate).
 
 # built-in
 import argparse
-import logging
 import os
 from pathlib import Path
 import sys
 from typing import List
 
+# third-party
+from vcorelib.logging import init_logging, logging_args
+
 # internal
 from runtimepy import DESCRIPTION, VERSION
 from runtimepy.app import add_app_args, entry
-
-
-def init_logging(args: argparse.Namespace) -> None:
-    """Initialize logging based on command-line arguments."""
-
-    if not getattr(args, "curses", False):
-        logging.basicConfig(
-            level=logging.DEBUG if args.verbose else logging.INFO,
-            format="%(name)-36s - %(levelname)-6s - %(message)s",
-        )
 
 
 def main(argv: List[str] = None) -> int:
@@ -48,17 +40,7 @@ def main(argv: List[str] = None) -> int:
         action="version",
         version=f"%(prog)s {VERSION}",
     )
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        action="store_true",
-        help="set to increase logging verbosity",
-    )
-    parser.add_argument(
-        "--curses",
-        action="store_true",
-        help="whether or not to use curses.wrapper when starting",
-    )
+    logging_args(parser)
     parser.add_argument(
         "-C",
         "--dir",
@@ -78,7 +60,9 @@ def main(argv: List[str] = None) -> int:
         args.dir = args.dir.resolve()
 
         # initialize logging
-        init_logging(args)
+        init_logging(
+            args, default_format="%(name)-36s - %(levelname)-6s - %(message)s"
+        )
 
         # change to the specified directory
         os.chdir(args.dir)
