@@ -19,3 +19,6 @@ commands:
     description: "run a connection-arbiter application from a config"
   - name: tui
     description: "run a terminal interface for the channel environment"
+
+init_local: |
+  METRICS_NAME = "metrics"

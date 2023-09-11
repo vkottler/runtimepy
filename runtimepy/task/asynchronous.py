@@ -13,6 +13,7 @@ from vcorelib.math import RateTracker as _RateTracker
 from vcorelib.math import rate_str as _rate_str
 
 # internal
+from runtimepy import METRICS_NAME
 from runtimepy.channel.environment import (
     ChannelEnvironment as _ChannelEnvironment,
 )
@@ -51,7 +52,7 @@ class AsyncTask(_LoggerMixin):
             )[0]
             self.max_iterations.raw.value = max_iterations
 
-            with env.names_pushed("metrics"):
+            with env.names_pushed(METRICS_NAME):
                 # Track the number of times this task has been dispatched.
                 self.dispatches = env.int_channel("dispatches", kind="uint8")[
                     0
