@@ -55,6 +55,11 @@ class CreateChannelEnvironment(_BaseChannelEnvironment):
             name, kind, commandable=commandable, enum=enum
         )
         assert result is not None, f"Can't create channel '{name}'!"
+
+        # Keep track of any new enum channels.
+        if enum is not None:
+            self.channel_enums[result] = self.enums[enum]
+
         return self[name]
 
     def int_channel(

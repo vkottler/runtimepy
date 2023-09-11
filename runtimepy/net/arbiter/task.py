@@ -15,8 +15,12 @@ from runtimepy.task import PeriodicTask, PeriodicTaskManager
 class ArbiterTask(PeriodicTask):
     """A base class for arbiter periodic tasks."""
 
+    app: AppInfo
+
     async def init(self, app: AppInfo) -> None:
         """Initialize this task with application information."""
+
+        self.app = app
 
 
 class ArbiterTaskManager(PeriodicTaskManager[ArbiterTask]):
