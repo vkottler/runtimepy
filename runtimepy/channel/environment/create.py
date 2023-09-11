@@ -23,6 +23,7 @@ from runtimepy.channel.environment.base import (
 )
 from runtimepy.channel.environment.base import ChannelResult as _ChannelResult
 from runtimepy.enum import RuntimeEnum as _RuntimeEnum
+from runtimepy.enum.registry import DEFAULT_ENUM_PRIMITIVE
 from runtimepy.enum.type import EnumTypelike as _EnumTypelike
 from runtimepy.mapping import EnumMappingData as _EnumMappingData
 from runtimepy.primitives import Primitive
@@ -115,6 +116,7 @@ class CreateChannelEnvironment(_BaseChannelEnvironment):
         kind: _EnumTypelike,
         items: _EnumMappingData = None,
         namespace: _Namespace = None,
+        primitive: str = DEFAULT_ENUM_PRIMITIVE,
     ) -> _RuntimeEnum:
         """Create a new enum from the environment."""
 
@@ -122,6 +124,7 @@ class CreateChannelEnvironment(_BaseChannelEnvironment):
             self.namespace(name=name, namespace=namespace),
             kind=kind,
             items=items,
+            primitive=primitive,
         )
         assert result is not None, f"Can't create enum '{name}'!"
         return result

@@ -3,6 +3,7 @@ A module implementing a channel-environment class mixin.
 """
 
 # internal
+from runtimepy import METRICS_NAME
 from runtimepy.channel.environment import ChannelEnvironment
 from runtimepy.metrics import ConnectionMetrics, PeriodicTaskMetrics
 
@@ -20,7 +21,7 @@ class ChannelEnvironmentMixin:
         self.env = env
 
     def register_task_metrics(
-        self, metrics: PeriodicTaskMetrics, namespace: str = "metrics"
+        self, metrics: PeriodicTaskMetrics, namespace: str = METRICS_NAME
     ) -> None:
         """Register periodic task metrics."""
 
@@ -32,7 +33,7 @@ class ChannelEnvironmentMixin:
             self.env.channel("min_s", metrics.min_s)
 
     def register_connection_metrics(
-        self, metrics: ConnectionMetrics, namespace: str = "metrics"
+        self, metrics: ConnectionMetrics, namespace: str = METRICS_NAME
     ) -> None:
         """Register connection metrics."""
 
