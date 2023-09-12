@@ -14,12 +14,12 @@ clients:
       local_addr: [localhost, "$udp_json"]
 
   - factory: tcp_json
-    name: tcp_json
+    name: tcp_json_client
     defer: true
     kwargs: {host: localhost, port: "$tcp_json"}
 
   - factory: websocket_json
-    name: websocket_json
+    name: websocket_json_client
     defer: true
     args: ["ws://localhost:$websocket_json"]
 

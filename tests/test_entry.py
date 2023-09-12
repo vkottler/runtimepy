@@ -12,6 +12,9 @@ from runtimepy import PKG_NAME
 from runtimepy.entry import main as runtimepy_main
 from runtimepy.tui.mock import wrapper_mock
 
+# internal
+from tests.resources import base_args
+
 
 def test_entry_basic():
     """Test basic argument parsing."""
@@ -32,6 +35,8 @@ def test_package_entry():
 def test_entry_tui_cmd():
     """Test basic usages of the 'tui' command."""
 
+    base = base_args("tui")
+
     with patch("runtimepy.commands.tui._curses.wrapper", new=wrapper_mock):
         # Only run 20 iterations.
-        assert runtimepy_main([PKG_NAME, "tui", "-i", "20"]) == 0
+        assert runtimepy_main(base + ["-i", "20"]) == 0

@@ -6,17 +6,15 @@ includes:
   - ../../tests/data/valid/connection_arbiter/echo_factories.yaml
   - ../../tests/data/valid/connection_arbiter/ports.yaml
 
-# - {name: runtimepy.net.arbiter.housekeeping.ConnectionMetricsLoggerFactory}
-# factories:
 #   - {name: tasks.TuiApp}
+factories:
+  - {name: runtimepy.net.arbiter.housekeeping.ConnectionMetricsLoggerFactory}
 
-#   - name: log_metrics
-#     factory: ConnectionMetricsLoggerFactory
-#     period_s: 10.0
-# tasks:
 #   - {name: tui, factory: TuiApp, period_s: 0.01}
+tasks:
+  - name: log_metrics
+    factory: ConnectionMetricsLoggerFactory
+    period_s: 1.0
 
-#   - [tasks.test, tasks.noop1, tasks.noop2]
 app:
-  # - runtimepy.net.apps.wait_for_stop
-  - tasks.textual_testing.test
+  - tasks.test.test

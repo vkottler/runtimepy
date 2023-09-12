@@ -37,7 +37,9 @@ def app(args: _Namespace) -> int:
         stop_sig.set()
 
     return _run_handle_stop(
-        stop_sig, entry(stop_sig, args, window=args.window)
+        stop_sig,
+        entry(stop_sig, args, window=args.window),
+        enable_uvloop=not getattr(args, "no_uvloop", False),
     )
 
 

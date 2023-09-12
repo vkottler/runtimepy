@@ -6,12 +6,15 @@ A module for working with test data.
 import asyncio
 from os.path import join
 from pathlib import Path
-from typing import Tuple
+from sys import version_info
+from typing import List, Tuple
 
 # third-party
 import pkg_resources
+from vcorelib.platform import is_windows
 
 # internal
+from runtimepy import PKG_NAME
 from runtimepy.net.arbiter import ArbiterTask
 from runtimepy.net.connection import Connection
 from runtimepy.net.tcp.connection import TcpConnection
@@ -100,3 +103,24 @@ class SampleTask(PeriodicTask):
 
 class SampleArbiterTask(ArbiterTask, SampleTask):
     """A sample arbiter task."""
+
+
+def can_use_uvloop() -> bool:
+    """Determine if tests should try to use uvloop."""
+
+    return not is_windows() and (
+        version_info.major >= 3 and version_info.minor >= 11
+    )
+
+
+def base_args(command: str) -> List[str]:
+    """Get base command-line arguments."""
+
+    base = [PKG_NAME]
+
+    # Don't use uvloop if not using Python 3.11.
+    if not can_use_uvloop() and not is_windows():
+        base.append("--no-uvloop")
+
+    base.append(command)
+    return base
