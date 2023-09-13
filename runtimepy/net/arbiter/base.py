@@ -282,6 +282,7 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
         signals: _Iterable[int] = None,
         check_connections: bool = True,
         config: _JsonObject = None,
+        enable_uvloop: bool = True,
     ) -> int:
         """Run the application until the stop signal is set."""
 
@@ -292,4 +293,5 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
             ),
             eloop=eloop,
             signals=signals,
+            enable_uvloop=enable_uvloop,
         )

@@ -19,6 +19,7 @@ from tests.resources import (
     SampleArbiterTask,
     SampleTcpConnection,
     SampleWebsocketConnection,
+    can_use_uvloop,
 )
 
 
@@ -37,8 +38,10 @@ def test_connection_arbiter_run():
     assert arbiter.task_manager.register(
         SampleArbiterTask("sample"), period_s=0.05
     )
-    assert arbiter.run(app=init_only) == 0
-    assert arbiter.run(app=assertion_failer) != 0
+    assert arbiter.run(app=init_only, enable_uvloop=can_use_uvloop()) == 0
+    assert (
+        arbiter.run(app=assertion_failer, enable_uvloop=can_use_uvloop()) != 0
+    )
 
 
 @mark.asyncio

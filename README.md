@@ -2,11 +2,11 @@
     =====================================
     generator=datazen
     version=3.1.3
-    hash=b00889b261f786062d9c52086554c0ff
+    hash=13de77cea2a96abdf252103ade6dd6db
     =====================================
 -->
 
-# runtimepy ([2.6.8](https://pypi.org/project/runtimepy/))
+# runtimepy ([2.7.0](https://pypi.org/project/runtimepy/))
 
 [![python](https://img.shields.io/pypi/pyversions/runtimepy.svg)](https://pypi.org/project/runtimepy/)
 ![Build Status](https://github.com/vkottler/runtimepy/workflows/Python%20Package/badge.svg)
@@ -47,7 +47,7 @@ This package is tested on the following platforms:
 ```
 $ ./venv3.11/bin/runtimepy -h
 
-usage: runtimepy [-h] [--version] [-v] [-q] [--curses] [-C DIR]
+usage: runtimepy [-h] [--version] [-v] [-q] [--curses] [--no-uvloop] [-C DIR]
                  {arbiter,tui,noop} ...
 
 A framework for implementing Python services.
@@ -58,6 +58,7 @@ options:
   -v, --verbose       set to increase logging verbosity
   -q, --quiet         set to reduce output
   --curses            whether or not to use curses.wrapper when starting
+  --no-uvloop         whether or not to disable uvloop as event loop driver
   -C DIR, --dir DIR   execute from a specific directory
 
 commands:

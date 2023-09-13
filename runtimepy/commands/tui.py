@@ -33,7 +33,14 @@ def start(args: _Namespace) -> int:
         max_iterations=args.iterations,
     )
     stop_sig = _asyncio.Event()
-    _run_handle_stop(stop_sig, task.run(args.window, stop_sig=stop_sig))
+    _run_handle_stop(
+        stop_sig,
+        task.run(
+            args.window,
+            stop_sig=stop_sig,
+        ),
+        enable_uvloop=not getattr(args, "no_uvloop", False),
+    )
 
     return 0
 
