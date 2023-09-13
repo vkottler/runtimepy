@@ -82,3 +82,8 @@ def test_enum_registry_basic():
         enums.encode(tmp)
         new_enums = EnumRegistry.decode(tmp)
         assert enums == new_enums
+
+    # Test a name expected to be valid.
+    assert enums.register_dict(
+        "sharer.actuator-1.control_mode.cmd", {"type": "int", "items": {}}
+    )
