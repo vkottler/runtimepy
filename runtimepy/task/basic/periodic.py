@@ -21,6 +21,7 @@ from vcorelib.math import rate_str as _rate_str
 
 # internal
 from runtimepy.channel.environment import ChannelEnvironment
+from runtimepy.channel.environment.command import ChannelCommandProcessor
 from runtimepy.metrics import PeriodicTaskMetrics
 from runtimepy.mixins.environment import ChannelEnvironmentMixin
 from runtimepy.primitives import Bool as _Bool
@@ -50,17 +51,19 @@ class PeriodicTask(_LoggerMixin, ChannelEnvironmentMixin, _ABC):
 
         # Setup runtime state.
         self._enabled = _Bool()
+        self._paused = _Bool()
 
         if metrics is None:
             metrics = PeriodicTaskMetrics.create()
         self.metrics = metrics
 
         ChannelEnvironmentMixin.__init__(self, env=env)
+        self.command = ChannelCommandProcessor(self.env, self.logger)
         self.register_task_metrics(self.metrics)
 
         # State.
-        self.env.channel("enabled", self._enabled)
-        self.env.channel("period", self.period_s)
+        self.env.channel("paused", self._paused, commandable=True)
+        self.env.channel("period_s", self.period_s, commandable=True)
         self._init_state()
 
         self._dispatch_rate = _RateTracker(depth=average_depth)
@@ -116,12 +119,14 @@ class PeriodicTask(_LoggerMixin, ChannelEnvironmentMixin, _ABC):
         iter_time = _Double()
 
         while self._enabled:
-            with self.metrics.measure(
-                eloop, self._dispatch_rate, self._dispatch_time, iter_time
-            ):
-                self._enabled.raw.value = await _asyncio.shield(
-                    self.dispatch()
-                )
+            # When paused, don't run the iteration itself.
+            if not self._paused:
+                with self.metrics.measure(
+                    eloop, self._dispatch_rate, self._dispatch_time, iter_time
+                ):
+                    self._enabled.raw.value = await _asyncio.shield(
+                        self.dispatch()
+                    )
 
             # Check this synchronously. This may not be suitable for tasks
             # with long periods.

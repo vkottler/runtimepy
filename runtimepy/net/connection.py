@@ -17,6 +17,7 @@ from vcorelib.logging import LoggerType as _LoggerType
 
 # internal
 from runtimepy.channel.environment import ChannelEnvironment
+from runtimepy.channel.environment.command import ChannelCommandProcessor
 from runtimepy.metrics import ConnectionMetrics
 from runtimepy.mixins.environment import ChannelEnvironmentMixin
 from runtimepy.primitives import Bool
@@ -63,6 +64,7 @@ class Connection(_LoggerMixin, ChannelEnvironmentMixin, _ABC):
         self.metrics = ConnectionMetrics()
 
         ChannelEnvironmentMixin.__init__(self, env=env)
+        self.command = ChannelCommandProcessor(self.env, self.logger)
         if add_metrics:
             self.register_connection_metrics(self.metrics)
 
