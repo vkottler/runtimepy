@@ -106,21 +106,35 @@ class BaseChannelEnvironment(_NamespaceMixin):
         if isinstance(value, str):
             # Ensure that the channel has an associated enumeration.
             if enum is None:
-                raise ValueError(
-                    (
-                        f"Can't assign '{value}' to channel "
-                        f"'{self.channels.names.name(key)}'!"
+                resolved = False
+
+                is_int = chan.raw.kind.is_integer
+
+                if is_int or chan.raw.kind.is_float:
+                    kind = int if is_int else float
+                    try:
+                        value = kind(value)
+                        resolved = True
+                    except ValueError:
+                        pass
+
+                if not resolved:
+                    raise ValueError(
+                        (
+                            f"Can't assign '{value}' to channel "
+                            f"'{self.channels.names.name(key)}'!"
+                        )
                     )
+
+            else:
+                value = (
+                    enum.get_bool(value)
+                    if chan.type.is_boolean
+                    else enum.get_int(value)
                 )
 
-            value = (
-                enum.get_bool(value)
-                if chan.type.is_boolean
-                else enum.get_int(value)
-            )
-
         # Assign the value to the channel.
-        chan.raw.value = value
+        chan.raw.value = value  # type: ignore
 
     def apply(self, values: ValueMap) -> None:
         """Apply a map of values to the environment."""

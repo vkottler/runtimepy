@@ -21,6 +21,7 @@ from vcorelib.math import rate_str as _rate_str
 
 # internal
 from runtimepy.channel.environment import ChannelEnvironment
+from runtimepy.channel.environment.command import ChannelCommandProcessor
 from runtimepy.metrics import PeriodicTaskMetrics
 from runtimepy.mixins.environment import ChannelEnvironmentMixin
 from runtimepy.primitives import Bool as _Bool
@@ -56,6 +57,7 @@ class PeriodicTask(_LoggerMixin, ChannelEnvironmentMixin, _ABC):
         self.metrics = metrics
 
         ChannelEnvironmentMixin.__init__(self, env=env)
+        self.command = ChannelCommandProcessor(self.env, self.logger)
         self.register_task_metrics(self.metrics)
 
         # State.
