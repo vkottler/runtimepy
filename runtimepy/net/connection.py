@@ -12,7 +12,6 @@ from typing import Union as _Union
 
 # third-party
 from vcorelib.asyncio import log_exceptions as _log_exceptions
-from vcorelib.logging import LoggerMixin as _LoggerMixin
 from vcorelib.logging import LoggerType as _LoggerType
 
 # internal
@@ -20,13 +19,14 @@ from runtimepy.channel.environment import ChannelEnvironment
 from runtimepy.channel.environment.command import ChannelCommandProcessor
 from runtimepy.metrics import ConnectionMetrics
 from runtimepy.mixins.environment import ChannelEnvironmentMixin
+from runtimepy.mixins.logging import LoggerMixinLevelControl
 from runtimepy.primitives import Bool
 from runtimepy.primitives.byte_order import DEFAULT_BYTE_ORDER, ByteOrder
 
 BinaryMessage = _Union[bytes, bytearray, memoryview]
 
 
-class Connection(_LoggerMixin, ChannelEnvironmentMixin, _ABC):
+class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
     """A connection interface."""
 
     uses_text_tx_queue = True
@@ -42,7 +42,7 @@ class Connection(_LoggerMixin, ChannelEnvironmentMixin, _ABC):
     ) -> None:
         """Initialize this connection."""
 
-        _LoggerMixin.__init__(self, logger=logger)
+        LoggerMixinLevelControl.__init__(self, logger=logger)
         self._enabled = Bool(True)
 
         # A queue for out-going text messages. Connections that don't use
@@ -64,6 +64,7 @@ class Connection(_LoggerMixin, ChannelEnvironmentMixin, _ABC):
         self.metrics = ConnectionMetrics()
 
         ChannelEnvironmentMixin.__init__(self, env=env)
+        self.setup_level_channel(self.env)
         self.command = ChannelCommandProcessor(self.env, self.logger)
         if add_metrics:
             self.register_connection_metrics(self.metrics)

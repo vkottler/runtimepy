@@ -13,7 +13,6 @@ from logging import getLogger as _getLogger
 from typing import Optional as _Optional
 
 # third-party
-from vcorelib.logging import LoggerMixin as _LoggerMixin
 from vcorelib.math import DEFAULT_DEPTH as _DEFAULT_DEPTH
 from vcorelib.math import MovingAverage as _MovingAverage
 from vcorelib.math import RateTracker as _RateTracker
@@ -24,12 +23,13 @@ from runtimepy.channel.environment import ChannelEnvironment
 from runtimepy.channel.environment.command import ChannelCommandProcessor
 from runtimepy.metrics import PeriodicTaskMetrics
 from runtimepy.mixins.environment import ChannelEnvironmentMixin
+from runtimepy.mixins.logging import LoggerMixinLevelControl
 from runtimepy.primitives import Bool as _Bool
 from runtimepy.primitives import Double as _Double
 from runtimepy.primitives import Float as _Float
 
 
-class PeriodicTask(_LoggerMixin, ChannelEnvironmentMixin, _ABC):
+class PeriodicTask(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
     """A class implementing a simple periodic-task interface."""
 
     def __init__(
@@ -43,7 +43,7 @@ class PeriodicTask(_LoggerMixin, ChannelEnvironmentMixin, _ABC):
         """Initialize this task."""
 
         self.name = name
-        _LoggerMixin.__init__(self, logger=_getLogger(self.name))
+        LoggerMixinLevelControl.__init__(self, logger=_getLogger(self.name))
         self._task: _Optional[_asyncio.Task[None]] = None
 
         self.period_s = _Float()
@@ -58,6 +58,7 @@ class PeriodicTask(_LoggerMixin, ChannelEnvironmentMixin, _ABC):
         self.metrics = metrics
 
         ChannelEnvironmentMixin.__init__(self, env=env)
+        self.setup_level_channel(self.env)
         self.command = ChannelCommandProcessor(self.env, self.logger)
         self.register_task_metrics(self.metrics)
 
