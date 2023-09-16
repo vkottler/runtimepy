@@ -9,14 +9,31 @@ import asyncio
 from pytest import mark
 
 # internal
-from tests.resources import SampleTask
+from tests.resources import OverrunTask, SampleTask
+
+BASE_PERIOD = 0.05
+
+
+@mark.asyncio
+async def test_periodic_task_overrun():
+    """Test that the overrun counter increments properly."""
+
+    task = OverrunTask("overrun")
+    await task.task(period_s=BASE_PERIOD)
+
+    # Allow it to run.
+    while task.metrics.dispatches.value == 0:
+        await asyncio.sleep(BASE_PERIOD)
+
+    await task.stop()
+    assert task.metrics.overruns.value > 0
 
 
 @mark.asyncio
 async def test_periodic_task_basic():
     """Test basic interactions with periodic tasks."""
 
-    base_period = 0.05
+    base_period = BASE_PERIOD
 
     task = SampleTask("sample")
 

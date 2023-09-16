@@ -31,6 +31,7 @@ class ChannelEnvironmentMixin:
             self.env.channel("average_s", metrics.average_s)
             self.env.channel("max_s", metrics.max_s)
             self.env.channel("min_s", metrics.min_s)
+            self.env.channel("overruns", metrics.overruns)
 
     def register_connection_metrics(
         self, metrics: ConnectionMetrics, namespace: str = METRICS_NAME
