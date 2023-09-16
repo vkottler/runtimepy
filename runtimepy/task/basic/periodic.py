@@ -145,6 +145,9 @@ class PeriodicTask(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
 
         self.logger.info("Task completed.")
 
+    async def stop_extra(self) -> None:
+        """Extra actions to perform when this task is stopping."""
+
     async def stop(self) -> bool:
         """Wait for this task to stop running (if it is)."""
 
@@ -159,6 +162,8 @@ class PeriodicTask(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
                 with _suppress(_asyncio.CancelledError):
                     await self._task
             self._task = None
+
+            await self.stop_extra()
             result = True
 
         return result
