@@ -123,7 +123,11 @@ class PeriodicTask(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
             # When paused, don't run the iteration itself.
             if not self._paused:
                 with self.metrics.measure(
-                    eloop, self._dispatch_rate, self._dispatch_time, iter_time
+                    eloop,
+                    self._dispatch_rate,
+                    self._dispatch_time,
+                    iter_time,
+                    self.period_s.value,
                 ):
                     self._enabled.raw.value = await _asyncio.shield(
                         self.dispatch()

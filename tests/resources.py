@@ -98,6 +98,17 @@ class SampleTask(PeriodicTask):
         """Dispatch an iteration of this task."""
 
         self.logger.info("Iteration.")
+
+        return True
+
+
+class OverrunTask(PeriodicTask):
+    """A sample task."""
+
+    async def dispatch(self) -> bool:
+        """Dispatch an iteration of this task."""
+
+        await asyncio.sleep(self.period_s.value * 2)
         return True
 
 

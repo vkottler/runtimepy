@@ -13,6 +13,7 @@ from vcorelib.math import MovingAverage, RateTracker
 # internal
 from runtimepy.primitives import Double as _Double
 from runtimepy.primitives import Float as _Float
+from runtimepy.primitives import Uint16 as _Uint16
 from runtimepy.primitives import Uint32 as _Uint32
 
 
@@ -24,13 +25,14 @@ class PeriodicTaskMetrics(NamedTuple):
     average_s: _Float
     max_s: _Float
     min_s: _Float
+    overruns: _Uint16
 
     @staticmethod
     def create() -> "PeriodicTaskMetrics":
         """Create a new metrics instance."""
 
         return PeriodicTaskMetrics(
-            _Uint32(), _Float(), _Float(), _Float(), _Float()
+            _Uint32(), _Float(), _Float(), _Float(), _Float(), _Uint16()
         )
 
     @contextmanager
@@ -40,6 +42,7 @@ class PeriodicTaskMetrics(NamedTuple):
         rate: RateTracker,
         dispatch: MovingAverage,
         iter_time: _Double,
+        period_s: float,
     ) -> Iterator[None]:
         """Measure the time spent yielding and update data."""
 
@@ -55,3 +58,5 @@ class PeriodicTaskMetrics(NamedTuple):
         self.average_s.raw.value = dispatch(iter_time.value)
         self.max_s.raw.value = dispatch.max
         self.min_s.raw.value = dispatch.min
+        if iter_time.value > period_s:
+            self.overruns.value += 1
