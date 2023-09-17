@@ -42,23 +42,21 @@ class ChannelMetrics:
     def poll(self, time_ns: int = None) -> None:
         """Poll kbps tracking."""
 
-        self.kbps.raw.value = self._kbps_tracker.poll(time_ns=time_ns)
-        self.message_rate.raw.value = self._message_rate_tracker.poll(
+        self.kbps.value = self._kbps_tracker.poll(time_ns=time_ns)
+        self.message_rate.value = self._message_rate_tracker.poll(
             time_ns=time_ns
         )
 
     def increment(self, count: int, time_ns: int = None) -> None:
         """Update tracking."""
 
-        self.messages.raw.value += 1
-        self.message_rate.raw.value = self._message_rate_tracker(
-            time_ns=time_ns
-        )
+        self.messages.value += 1
+        self.message_rate.value = self._message_rate_tracker(time_ns=time_ns)
 
-        self.bytes.raw.value += count
+        self.bytes.value += count
 
         # Multiply by 8 to get bits from bytes.
-        self.kbps.raw.value = (
+        self.kbps.value = (
             self._kbps_tracker(time_ns=time_ns, value=float(count) / 1000.0)
             * 8
         )
@@ -66,7 +64,7 @@ class ChannelMetrics:
     def reset(self) -> None:
         """Reset metrics."""
 
-        self.messages.raw.value = 0
-        self.bytes.raw.value = 0
-        self.kbps.raw.value = 0.0
+        self.messages.value = 0
+        self.bytes.value = 0
+        self.kbps.value = 0.0
         self._kbps_tracker.reset()
