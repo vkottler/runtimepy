@@ -120,11 +120,7 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
         # Load and meld configuration data.
         config_data: _JsonObject = {}
         for path in paths:
-            found = find_file(
-                path,
-                logger=self.logger,  # type: ignore
-                include_cwd=True,
-            )
+            found = find_file(path, logger=self.logger, include_cwd=True)
             assert found is not None, f"Couldn't find '{path}'!"
 
             # Only load files once.
