@@ -47,16 +47,16 @@ class PeriodicTaskMetrics(NamedTuple):
         """Measure the time spent yielding and update data."""
 
         start = eloop.time()
-        self.rate_hz.raw.value = rate(int(start * 1e9))
+        self.rate_hz.value = rate(int(start * 1e9))
 
         yield
 
         iter_time.value = eloop.time() - start
 
         # Update runtime metrics.
-        self.dispatches.raw.value += 1
-        self.average_s.raw.value = dispatch(iter_time.value)
-        self.max_s.raw.value = dispatch.max
-        self.min_s.raw.value = dispatch.min
+        self.dispatches.value += 1
+        self.average_s.value = dispatch(iter_time.value)
+        self.max_s.value = dispatch.max
+        self.min_s.value = dispatch.min
         if iter_time.value > period_s:
             self.overruns.value += 1
