@@ -142,6 +142,9 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
                 )
                 loaded.add(absolute)
 
+        assert "root" not in self._config, self._config
+        self._config["root"] = config_data  # type: ignore
+
         config = ConnectionArbiterConfig(data=config_data)
 
         # Set the directory to be the parent directory of the configuration
