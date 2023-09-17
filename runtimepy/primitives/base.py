@@ -12,6 +12,9 @@ from typing import Generic as _Generic
 from typing import Tuple as _Tuple
 from typing import TypeVar as _TypeVar
 
+# third-party
+from vcorelib.math.time import default_time_ns, nano_str
+
 # internal
 from runtimepy.primitives.byte_order import (
     DEFAULT_BYTE_ORDER as _DEFAULT_BYTE_ORDER,
@@ -43,6 +46,20 @@ class Primitive(_Generic[T]):
             int, _Tuple[PrimitiveChangeCallaback[T], bool]
         ] = {}
         self(value=value)
+        self.last_updated_ns: int = default_time_ns()
+
+    def age_ns(self, now: int = None) -> int:
+        """Get the age of this primitive's value in nanoseconds."""
+
+        if now is None:
+            now = default_time_ns()
+
+        return now - self.last_updated_ns
+
+    def age_str(self, now: int = None) -> str:
+        """Get the age of this primitive's value as a string."""
+
+        return nano_str(self.age_ns(now=now))
 
     @property
     def size(self) -> int:
@@ -98,6 +115,7 @@ class Primitive(_Generic[T]):
             for item in to_remove:
                 self.remove_callback(item)
 
+        self.last_updated_ns = default_time_ns()
         self.raw.value = value
 
     def __call__(self, value: T = None) -> T:

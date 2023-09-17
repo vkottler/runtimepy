@@ -31,6 +31,8 @@ def test_primitives_half_basic():
 
     assert inst == 1.0
 
+    assert inst.age_str()
+
 
 def test_primitives_encode_decode():
     """Test simple encoding and decoding interactions."""
