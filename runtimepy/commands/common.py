@@ -11,6 +11,7 @@ def arbiter_args(parser: _ArgumentParser, nargs: str = "+") -> None:
 
     parser.add_argument(
         "--init_only",
+        "--init-only",
         action="store_true",
         help="exit after completing initialization",
     )
