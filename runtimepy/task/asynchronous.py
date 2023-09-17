@@ -11,6 +11,7 @@ from vcorelib.logging import LoggerMixin as _LoggerMixin
 from vcorelib.math import MovingAverage as _MovingAverage
 from vcorelib.math import RateTracker as _RateTracker
 from vcorelib.math import rate_str as _rate_str
+from vcorelib.math import to_nanos
 
 # internal
 from runtimepy import METRICS_NAME
@@ -145,7 +146,7 @@ class AsyncTask(_LoggerMixin):
         while self.enabled:
             # Keep track of the rate that this task is running at.
             start = eloop.time()
-            self.rate_hz.raw.value = self.dispatch_rate(int(start * 1e9))
+            self.rate_hz.raw.value = self.dispatch_rate(to_nanos(start))
 
             self.enabled.raw.value &= await _asyncio.shield(
                 self.dispatch(*args, **kwargs)

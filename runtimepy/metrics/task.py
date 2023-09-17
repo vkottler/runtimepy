@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from typing import Iterator, NamedTuple
 
 # third-party
-from vcorelib.math import MovingAverage, RateTracker
+from vcorelib.math import MovingAverage, RateTracker, to_nanos
 
 # internal
 from runtimepy.primitives import Double as _Double
@@ -47,7 +47,7 @@ class PeriodicTaskMetrics(NamedTuple):
         """Measure the time spent yielding and update data."""
 
         start = eloop.time()
-        self.rate_hz.value = rate(int(start * 1e9))
+        self.rate_hz.value = rate(to_nanos(start))
 
         yield
 
