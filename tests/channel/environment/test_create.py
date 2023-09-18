@@ -48,3 +48,9 @@ def test_channel_environment_create_basic():
 
     assert proc.command("toggle test_field")
     assert underlying.value == 0
+
+    assert proc.command("set test_field 1")
+    assert underlying.value == 1
+
+    assert proc.command("set test_field 0")
+    assert underlying.value == 0

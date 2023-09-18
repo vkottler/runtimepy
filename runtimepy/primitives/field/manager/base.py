@@ -115,11 +115,12 @@ class BitFieldsManagerBase:
         field = self[key]
 
         if isinstance(value, str):
-            parsed = StrToBool.parse(value)
-            if not parsed.valid:
+            if field.name in self.enum_lookup:
                 value = self.enum_lookup[field.name].get_int(value)
             else:
-                value = parsed.result
+                parsed = StrToBool.parse(value)
+                if parsed.valid:
+                    value = parsed.result
 
         # Update the value.
         field(int(value))
