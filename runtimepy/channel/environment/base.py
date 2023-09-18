@@ -134,7 +134,7 @@ class BaseChannelEnvironment(_NamespaceMixin):
                 )
 
         # Assign the value to the channel.
-        chan.raw.value = value  # type: ignore
+        chan.raw.scaled = value  # type: ignore
 
     def apply(self, values: ValueMap) -> None:
         """Apply a map of values to the environment."""
@@ -161,13 +161,11 @@ class BaseChannelEnvironment(_NamespaceMixin):
 
         chan, enum = self[key]
 
-        value: ChannelValue
+        value: ChannelValue = chan.raw.scaled
 
         # Resolve enumeration values to strings.
         if enum is not None and resolve_enum:
-            value = enum.get_str(_cast(int, chan.raw.value))
-        else:
-            value = chan.raw.value
+            value = enum.get_str(_cast(int, value))
 
         return value
 

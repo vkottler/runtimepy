@@ -40,5 +40,7 @@ def apply(value: Numeric, scaling: ChannelScaling = None) -> Numeric:
         for scalar in reversed(scaling):
             result += scalar * poly_index_val
             poly_index_val *= value
+    else:
+        result = value
 
     return result
