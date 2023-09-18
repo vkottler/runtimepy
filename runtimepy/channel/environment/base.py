@@ -24,6 +24,7 @@ from runtimepy.channel.registry import ChannelRegistry as _ChannelRegistry
 from runtimepy.enum import RuntimeEnum as _RuntimeEnum
 from runtimepy.enum.registry import EnumRegistry as _EnumRegistry
 from runtimepy.mixins.finalize import FinalizeMixin
+from runtimepy.primitives import StrToBool
 from runtimepy.primitives.field import BitField as _BitField
 from runtimepy.primitives.field.fields import BitFields as _BitFields
 from runtimepy.primitives.field.manager import (
@@ -121,6 +122,12 @@ class BaseChannelEnvironment(_NamespaceMixin, FinalizeMixin):
                         resolved = True
                     except ValueError:
                         pass
+
+                # Handle booleans.
+                else:
+                    parsed = StrToBool.parse(value)
+                    value = parsed.result
+                    resolved = parsed.valid
 
                 if not resolved:
                     raise ValueError(

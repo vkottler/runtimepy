@@ -4,7 +4,7 @@ A module implementing UI command processing.
 
 # built-in
 from argparse import Namespace
-from typing import Any, Optional, cast
+from typing import Any, Optional, Union, cast
 
 # third-party
 from vcorelib.logging import LoggerType
@@ -19,6 +19,7 @@ from runtimepy.channel.environment.command.parser import (
 from runtimepy.channel.environment.command.result import SUCCESS, CommandResult
 from runtimepy.mixins.environment import ChannelEnvironmentMixin
 from runtimepy.primitives.bool import Bool
+from runtimepy.primitives.field import BitField
 
 
 class ChannelCommandProcessor(ChannelEnvironmentMixin):
@@ -62,14 +63,23 @@ class ChannelCommandProcessor(ChannelEnvironmentMixin):
         try:
             self.env.set(args.channel, args.extra[0])
         except (ValueError, KeyError) as exc:
-            result = CommandResult(False, str(exc))
+            self.logger.exception(
+                "Exception setting '%s':", args.channel, exc_info=exc
+            )
+            result = CommandResult(
+                False, f"Exception while setting '{args.channel}'."
+            )
 
         return result
 
-    def do_toggle(self, args: Namespace, channel: AnyChannel) -> CommandResult:
+    def do_toggle(
+        self, args: Namespace, channel: Union[BitField, AnyChannel]
+    ) -> CommandResult:
         """Attempt to toggle a channel."""
 
-        if args.command == ChannelCommand.TOGGLE:
+        if isinstance(channel, BitField):
+            channel.invert()
+        else:
             if not channel.type.is_boolean:
                 return CommandResult(
                     False,
@@ -89,13 +99,20 @@ class ChannelCommandProcessor(ChannelEnvironmentMixin):
         result = SUCCESS
 
         chan = self.env.get(args.channel)
+
+        channel: Union[BitField, AnyChannel]
+
         if chan is None:
-            return CommandResult(False, f"No channel '{args.channel}'.")
+            # Check if the name is a field.
+            field = self.env.fields.get_field(args.channel)
+            if field is None:
+                return CommandResult(False, f"No channel '{args.channel}'.")
+            channel = field
+        else:
+            channel, _ = chan
 
-        channel, enum = chan
-        del enum
-
-        # Check if channel is commandable (or if a -f/--force flag is set?).
+        # Check if channel is commandable (or if a -f/--force flag is
+        # set?).
         if not channel.commandable and not args.force:
             return CommandResult(
                 False,

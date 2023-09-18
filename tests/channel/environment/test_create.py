@@ -2,8 +2,14 @@
 Test the 'channel.environment.create' module.
 """
 
+# built-in
+import logging
+
 # module under test
 from runtimepy.channel.environment import ChannelEnvironment
+from runtimepy.channel.environment.command import ChannelCommandProcessor
+from runtimepy.primitives import Uint8
+from runtimepy.primitives.field import BitField
 
 
 def test_channel_environment_create_basic():
@@ -15,3 +21,29 @@ def test_channel_environment_create_basic():
 
     result = env.channel("sample_channel", "bool", enum=enum)
     assert result
+
+    name = "test_field"
+    underlying = Uint8()
+
+    assert env.add_field(
+        name, BitField(name, underlying, 0, 1, commandable=True)
+    )
+    assert not env.value("test_field")
+
+    env.set("test_field", True)
+    assert env.value("test_field")
+    assert underlying.value == 1
+
+    proc = ChannelCommandProcessor(env, logging.getLogger(__name__))
+
+    assert proc.command("set test_field true")
+    assert underlying.value == 1
+
+    assert proc.command("set test_field false")
+    assert underlying.value == 0
+
+    assert proc.command("toggle test_field")
+    assert underlying.value == 1
+
+    assert proc.command("toggle test_field")
+    assert underlying.value == 0

@@ -51,3 +51,11 @@ def test_channel_command_processor_basic():
     assert isclose(env.value("float1"), 42)  # type: ignore
     assert processor.command("set float1 -101.5 -f")
     assert isclose(env.value("float1"), -101.5)  # type: ignore
+
+    assert processor.command("set bool1 true -f")
+    assert env.value("bool1")
+
+    assert not processor.command("set bool1 ttrue -f")
+
+    assert processor.command("set bool1 false -f")
+    assert not env.value("bool1")
