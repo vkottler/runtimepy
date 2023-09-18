@@ -28,8 +28,8 @@ def invert(
         value -= offset
         value /= scale
 
-        if should_round:
-            value = round(value)
+    if should_round:
+        value = round(value)
 
     return value
 

@@ -44,8 +44,12 @@ def test_primitive_scaling():
     assert isclose(prim.scaled, 5.0)
 
     int_prim = Int32(scaling=[2.0, 3.0])
-    int_prim.scaled = -1
+    int_prim.scaled = -1.0
     assert isclose(int_prim.scaled, -1)
+
+    int_prim = Int32()
+    int_prim.scaled = -2.0
+    assert isclose(int_prim.scaled, -2)
 
 
 def test_primitives_encode_decode():
