@@ -2,6 +2,9 @@
 Test the 'channel.environment.array' module.
 """
 
+# built-in
+from math import isclose
+
 # module under test
 from runtimepy.channel.environment import ChannelEnvironment
 
@@ -37,3 +40,8 @@ def test_channel_environment_array_basic():
         ["bool.1", "field0", "field1", "bool.2", "field5", "field6"]
     )
     assert bytes(array.array)
+
+    # Test scaled channels.
+    env.float_channel("float.3", scaling=[1.0, 2.0])
+    env.set("float.3", 5.0)
+    assert isclose(env.value("float.3"), 5.0)  # type: ignore

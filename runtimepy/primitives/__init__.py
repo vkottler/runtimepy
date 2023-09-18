@@ -24,8 +24,11 @@ from runtimepy.primitives.int import (
     Uint64,
     UnsignedInt,
 )
+from runtimepy.primitives.scaling import ChannelScaling, Numeric
 
 __all__ = [
+    "ChannelScaling",
+    "Numeric",
     "Bool",
     "Double",
     "Float",

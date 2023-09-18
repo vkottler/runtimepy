@@ -15,7 +15,7 @@ from vcorelib.io.types import JsonObject as _JsonObject
 from runtimepy.channel import AnyChannel as _AnyChannel
 from runtimepy.channel import Channel as _Channel
 from runtimepy.mixins.regex import CHANNEL_PATTERN as _CHANNEL_PATTERN
-from runtimepy.primitives import Primitive
+from runtimepy.primitives import ChannelScaling, Primitive
 from runtimepy.primitives import Primitivelike as _Primitivelike
 from runtimepy.primitives import normalize
 from runtimepy.registry import Registry as _Registry
@@ -45,6 +45,7 @@ class ChannelRegistry(_Registry[_Channel[_Any]]):
         kind: Union[Primitive[_Any], _Primitivelike],
         commandable: bool = False,
         enum: _RegistryKey = None,
+        scaling: ChannelScaling = None,
     ) -> _Optional[_AnyChannel]:
         """Create a new channel."""
 
@@ -55,6 +56,13 @@ class ChannelRegistry(_Registry[_Channel[_Any]]):
             primitive = kind
         else:
             primitive = kind()
+
+        if scaling:
+            assert not primitive.scaling or scaling == primitive.scaling, (
+                scaling,
+                primitive.scaling,
+            )
+            primitive.scaling = scaling
 
         data: _JsonObject = {
             "type": str(primitive.kind),
