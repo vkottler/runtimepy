@@ -145,13 +145,11 @@ class CreateChannelEnvironment(_BaseChannelEnvironment):
         assert result is not None, f"Can't create enum '{name}'!"
         return result
 
-    def add_field(
-        self, name: str, field: BitField, namespace: _Namespace = None
-    ) -> str:
+    def add_field(self, field: BitField, namespace: _Namespace = None) -> str:
         """Add a bit field to the environment."""
 
         fields = BitFields.new()
-        name = self.namespace(name=name, namespace=namespace)
+        name = self.namespace(name=field.name, namespace=namespace)
         fields.fields[name] = field
         self.fields.add(fields)
         return name
