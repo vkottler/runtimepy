@@ -37,6 +37,22 @@ class BitFieldBase:
         self.mask = (2**self.width) - 1
         self.shifted_mask = self.mask << self.index
 
+    def where_str(self) -> str:
+        """
+        Get a simple string representing the bit locations this field occupies.
+        """
+
+        result = ""
+
+        for idx in range(self.raw.size * 8):
+            val = 1 << idx
+            if val & self.shifted_mask:
+                result += "^"
+            else:
+                result += "-"
+
+        return result
+
     def __call__(self, val: int = None) -> int:
         """
         Set (or get) the underlying value of this field. Return the actual

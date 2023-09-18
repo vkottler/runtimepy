@@ -18,7 +18,10 @@ def test_bit_fields_basic():
     byte = BitFields.new()
 
     flag1 = byte.flag("flag1")
+    assert flag1.where_str() == "^-------"
+
     flag2 = byte.flag("flag2")
+    assert flag2.where_str() == "-^------"
 
     flag1.set()
     assert byte.raw.value == 1
