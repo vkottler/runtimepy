@@ -210,6 +210,8 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
                     await _asyncio.gather(
                         *(x.init(info) for x in self.task_manager.tasks)
                     )
+                    for task in self.task_manager.tasks:
+                        task.env.finalize(strict=False)
                     self.logger.debug("Periodic tasks initialized.")
 
                     # Start tasks.

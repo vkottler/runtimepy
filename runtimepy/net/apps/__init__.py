@@ -12,5 +12,7 @@ __all__ = ["AppInfo", "init_only", "wait_for_stop"]
 async def wait_for_stop(app: AppInfo) -> int:
     """Waits for the stop signal to be set."""
 
+    await app.all_finalized()
     await app.stop.wait()
+
     return 0

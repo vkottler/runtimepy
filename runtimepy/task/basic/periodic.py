@@ -32,6 +32,8 @@ from runtimepy.primitives import Float as _Float
 class PeriodicTask(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
     """A class implementing a simple periodic-task interface."""
 
+    auto_finalize = True
+
     def __init__(
         self,
         name: str,
@@ -66,7 +68,8 @@ class PeriodicTask(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
         self.env.channel("paused", self._paused, commandable=True)
         self.env.channel("period_s", self.period_s, commandable=True)
         self._init_state()
-        self.env.finalize()
+        if self.auto_finalize:
+            self.env.finalize()
 
         self._dispatch_rate = _RateTracker(depth=average_depth)
         self._dispatch_time = _MovingAverage(depth=average_depth)
