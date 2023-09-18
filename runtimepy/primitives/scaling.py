@@ -9,7 +9,9 @@ Numeric = Union[float, int]
 ChannelScaling = List[Numeric]
 
 
-def invert(value: Numeric, scaling: ChannelScaling = None) -> Numeric:
+def invert(
+    value: Numeric, scaling: ChannelScaling = None, should_round: bool = False
+) -> Numeric:
     """Apply a scaling polynomial to a value."""
 
     if scaling:
@@ -25,6 +27,9 @@ def invert(value: Numeric, scaling: ChannelScaling = None) -> Numeric:
 
         value -= offset
         value /= scale
+
+        if should_round:
+            value = round(value)
 
     return value
 
