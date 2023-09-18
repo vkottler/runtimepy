@@ -19,16 +19,39 @@ from runtimepy.registry.name import RegistryKey as _RegistryKey
 class BitFieldBase:
     """A simple bit-field implementation."""
 
-    def __init__(self, raw: _UnsignedInt, index: int, width: int) -> None:
+    def __init__(
+        self,
+        raw: _UnsignedInt,
+        index: int,
+        width: int,
+        commandable: bool = False,
+    ) -> None:
         """Initialize this bit-field."""
 
         self.raw = raw
         self.index = index
+        self.commandable = commandable
 
         # Compute a bit-mask for this field.
         self.width = width
         self.mask = (2**self.width) - 1
         self.shifted_mask = self.mask << self.index
+
+    def where_str(self) -> str:
+        """
+        Get a simple string representing the bit locations this field occupies.
+        """
+
+        result = ""
+
+        for idx in range(self.raw.size * 8):
+            val = 1 << idx
+            if val & self.shifted_mask:
+                result += "^"
+            else:
+                result += "-"
+
+        return result
 
     def __call__(self, val: int = None) -> int:
         """
@@ -52,6 +75,10 @@ class BitFieldBase:
 
         return result
 
+    def invert(self) -> int:
+        """Invert the value of this field and return the result."""
+        return self(~self())
+
 
 class BitField(BitFieldBase, _RegexMixin, _EnumMixin):
     """A class managing a portion of an unsigned-integer primitive."""
@@ -65,10 +92,11 @@ class BitField(BitFieldBase, _RegexMixin, _EnumMixin):
         index: int,
         width: int,
         enum: _RegistryKey = None,
+        commandable: bool = False,
     ) -> None:
         """Initialize this bit-field."""
 
-        super().__init__(raw, index, width)
+        super().__init__(raw, index, width, commandable=commandable)
 
         # Verify bit-field parameters.
         assert (
@@ -108,9 +136,13 @@ class BitFlag(BitField):
         raw: _UnsignedInt,
         index: int,
         enum: _RegistryKey = None,
+        commandable: bool = False,
     ) -> None:
         """Initialize this bit flag."""
-        super().__init__(name, raw, index, 1, enum=enum)
+
+        super().__init__(
+            name, raw, index, 1, enum=enum, commandable=commandable
+        )
 
     def clear(self) -> None:
         """Clear this field."""

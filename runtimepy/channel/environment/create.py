@@ -28,6 +28,8 @@ from runtimepy.enum.type import EnumTypelike as _EnumTypelike
 from runtimepy.mapping import EnumMappingData as _EnumMappingData
 from runtimepy.primitives import ChannelScaling, Primitive
 from runtimepy.primitives import Primitivelike as _Primitivelike
+from runtimepy.primitives.field import BitField
+from runtimepy.primitives.field.fields import BitFields
 from runtimepy.registry.name import RegistryKey as _RegistryKey
 
 
@@ -142,3 +144,12 @@ class CreateChannelEnvironment(_BaseChannelEnvironment):
         )
         assert result is not None, f"Can't create enum '{name}'!"
         return result
+
+    def add_field(self, field: BitField, namespace: _Namespace = None) -> str:
+        """Add a bit field to the environment."""
+
+        fields = BitFields.new()
+        name = self.namespace(name=field.name, namespace=namespace)
+        fields.fields[name] = field
+        self.fields.add(fields)
+        return name

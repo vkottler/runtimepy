@@ -10,7 +10,7 @@ from typing import Union as _Union
 
 # internal
 from runtimepy.primitives.base import Primitive
-from runtimepy.primitives.bool import Bool
+from runtimepy.primitives.bool import Bool, StrToBool
 from runtimepy.primitives.float import Double, Float, Half
 from runtimepy.primitives.int import (
     Int8,
@@ -49,6 +49,7 @@ __all__ = [
     "SignedInt",
     "UnsignedInt",
     "Primitive",
+    "StrToBool",
 ]
 
 AnyPrimitive = _Union[

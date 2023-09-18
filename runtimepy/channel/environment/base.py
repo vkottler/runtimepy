@@ -24,6 +24,7 @@ from runtimepy.channel.registry import ChannelRegistry as _ChannelRegistry
 from runtimepy.enum import RuntimeEnum as _RuntimeEnum
 from runtimepy.enum.registry import EnumRegistry as _EnumRegistry
 from runtimepy.mixins.finalize import FinalizeMixin
+from runtimepy.primitives import StrToBool
 from runtimepy.primitives.field import BitField as _BitField
 from runtimepy.primitives.field.fields import BitFields as _BitFields
 from runtimepy.primitives.field.manager import (
@@ -121,6 +122,12 @@ class BaseChannelEnvironment(_NamespaceMixin, FinalizeMixin):
                         resolved = True
                     except ValueError:
                         pass
+
+                # Handle booleans.
+                else:
+                    parsed = StrToBool.parse(value)
+                    value = parsed.result
+                    resolved = parsed.valid
 
                 if not resolved:
                     raise ValueError(
@@ -229,3 +236,14 @@ class BaseChannelEnvironment(_NamespaceMixin, FinalizeMixin):
         return bool(
             self.channels == other.channels and self.enums == other.enums
         )
+
+    def age_ns(self, key: _RegistryKey) -> int:
+        """Get the age of an entity based on registry key."""
+
+        chan = self.get(key)
+        if chan is not None:
+            prim = chan[0].raw
+        else:
+            prim = self.fields[key].raw
+
+        return prim.age_ns()

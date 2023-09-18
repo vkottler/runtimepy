@@ -21,6 +21,7 @@ from vcorelib.paths import Pathlike as _Pathlike
 # internal
 from runtimepy.enum import RuntimeEnum as _RuntimeEnum
 from runtimepy.enum.registry import EnumRegistry as _EnumRegistry
+from runtimepy.primitives import StrToBool
 from runtimepy.primitives.field import BitField as _BitField
 from runtimepy.primitives.field import BitFlag as _BitFlag
 from runtimepy.primitives.field.fields import BitFields as _BitFields
@@ -114,7 +115,12 @@ class BitFieldsManagerBase:
         field = self[key]
 
         if isinstance(value, str):
-            value = self.enum_lookup[field.name].get_int(value)
+            if field.name in self.enum_lookup:
+                value = self.enum_lookup[field.name].get_int(value)
+            else:
+                parsed = StrToBool.parse(value)
+                if parsed.valid:
+                    value = parsed.result
 
         # Update the value.
         field(int(value))
