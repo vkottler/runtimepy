@@ -112,7 +112,9 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
     arbiter.
     """
 
-    async def load_configs(self, paths: _Iterable[_Pathlike]) -> None:
+    async def load_configs(
+        self, paths: _Iterable[_Pathlike], wait_for_stop: bool = False
+    ) -> None:
         """Load a client and server configuration to the arbiter."""
 
         loaded = set()
@@ -151,9 +153,11 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
         # Add the site directory to facilitate module discovery.
         _addsitedir(str(config.directory))
 
-        await self.process_config(config)
+        await self.process_config(config, wait_for_stop=wait_for_stop)
 
-    async def process_config(self, config: ConnectionArbiterConfig) -> None:
+    async def process_config(
+        self, config: ConnectionArbiterConfig, wait_for_stop: bool = False
+    ) -> None:
         """Register clients and servers from a configuration object."""
 
         # Registier factories.
@@ -215,8 +219,7 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
             ), f"Couldn't register task '{name}' ({factory})!"
 
         # Set the new application entry if it's set.
-        if config.app is not None:
-            self.set_app(config.app)
+        self.set_app(config.app, wait_for_stop=wait_for_stop)
 
         # Update application configuration data if necessary.
         if config.config is not None:

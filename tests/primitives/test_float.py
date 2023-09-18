@@ -4,9 +4,10 @@ Test the 'primitives.float' module.
 
 # built-in
 from io import BytesIO
+from math import isclose
 
 # module under test
-from runtimepy.primitives.float import Double, Half
+from runtimepy.primitives import Double, Half, Int32
 
 
 def test_primitives_half_basic():
@@ -32,6 +33,19 @@ def test_primitives_half_basic():
     assert inst == 1.0
 
     assert inst.age_str()
+
+
+def test_primitive_scaling():
+    """Test a basic primitive scaling scenario."""
+
+    prim = Double(scaling=[1.0, 2.0])
+
+    prim.scaled = 5.0
+    assert isclose(prim.scaled, 5.0)
+
+    int_prim = Int32(scaling=[2.0, 3.0])
+    int_prim.scaled = 1
+    assert isclose(int_prim.scaled, 1)
 
 
 def test_primitives_encode_decode():

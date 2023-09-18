@@ -6,6 +6,7 @@ machinery.
 # built-in
 from importlib import import_module as _import_module
 from typing import List as _List
+from typing import Optional
 from typing import Tuple as _Tuple
 from typing import Union as _Union
 
@@ -43,13 +44,22 @@ class ImportConnectionArbiter(
     arbitrary Python modules.
     """
 
-    def set_app(self, module_path: _Union[str, _List[str]]) -> None:
+    def set_app(
+        self,
+        module_path: Optional[_Union[str, _List[str]]],
+        wait_for_stop: bool = False,
+    ) -> None:
         """
         Attempt to update the application method from the provided string.
         """
 
-        if isinstance(module_path, str):
+        if module_path is None:
+            module_path = []
+        elif isinstance(module_path, str):
             module_path = [module_path]
+
+        if wait_for_stop:
+            module_path.append("runtimepy.net.apps.wait_for_stop")
 
         # Load all application methods.
         apps = []
@@ -64,7 +74,8 @@ class ImportConnectionArbiter(
 
             apps.append(methods)
 
-        self._apps = apps
+        if apps:
+            self._apps = apps
 
     def register_module_factory(
         self, module_path: str, *namespaces: str, **kwargs

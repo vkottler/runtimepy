@@ -109,3 +109,15 @@ class AppInfo:
         result = list(self.search(*names, pattern=pattern, kind=kind))
         assert len(result) == 1, result
         return result[0]
+
+    async def all_finalized(self) -> None:
+        """Wait for all tasks and connections to be finalized."""
+
+        # Wait for all connections and tasks to be finalized.
+        await _asyncio.gather(
+            *(
+                x.env.wait_finalized()
+                for x in list(self.connections.values())
+                + list(self.tasks.values())
+            )
+        )

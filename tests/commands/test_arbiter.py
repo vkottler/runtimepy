@@ -15,7 +15,9 @@ def test_arbiter_command_basic():
     base = base_args("arbiter")
 
     assert (
-        runtimepy_main(base + ["--init_only", str(resource("empty.yaml"))])
+        runtimepy_main(
+            base + ["-w", "--init_only", str(resource("empty.yaml"))]
+        )
         == 0
     )
 

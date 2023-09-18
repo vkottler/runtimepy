@@ -26,7 +26,7 @@ from runtimepy.enum import RuntimeEnum as _RuntimeEnum
 from runtimepy.enum.registry import DEFAULT_ENUM_PRIMITIVE
 from runtimepy.enum.type import EnumTypelike as _EnumTypelike
 from runtimepy.mapping import EnumMappingData as _EnumMappingData
-from runtimepy.primitives import Primitive
+from runtimepy.primitives import ChannelScaling, Primitive
 from runtimepy.primitives import Primitivelike as _Primitivelike
 from runtimepy.registry.name import RegistryKey as _RegistryKey
 
@@ -41,8 +41,11 @@ class CreateChannelEnvironment(_BaseChannelEnvironment):
         commandable: bool = False,
         enum: _Union[_RegistryKey, _RuntimeEnum] = None,
         namespace: _Namespace = None,
+        scaling: ChannelScaling = None,
     ) -> _ChannelResult:
         """Create a new channel from the environment."""
+
+        assert not self.finalized, "Environment already finalized!"
 
         # Apply the current (or provided) namespace.
         name = self.namespace(name=name, namespace=namespace)
@@ -53,7 +56,7 @@ class CreateChannelEnvironment(_BaseChannelEnvironment):
 
         # Register the channel.
         result = self.channels.channel(
-            name, kind, commandable=commandable, enum=enum
+            name, kind, commandable=commandable, enum=enum, scaling=scaling
         )
         assert result is not None, f"Can't create channel '{name}'!"
 
@@ -70,11 +73,17 @@ class CreateChannelEnvironment(_BaseChannelEnvironment):
         commandable: bool = False,
         enum: _Union[_RegistryKey, _RuntimeEnum] = None,
         namespace: _Namespace = None,
+        scaling: ChannelScaling = None,
     ) -> _IntChannelResult:
         """Create an integer channel."""
 
         result = self.channel(
-            name, kind, commandable=commandable, enum=enum, namespace=namespace
+            name,
+            kind,
+            commandable=commandable,
+            enum=enum,
+            namespace=namespace,
+            scaling=scaling,
         )
         assert result[0].raw.kind.is_integer
         return _cast(_IntChannelResult, result)
@@ -101,11 +110,16 @@ class CreateChannelEnvironment(_BaseChannelEnvironment):
         kind: _Union[Primitive[_Any], _Primitivelike] = "float",
         commandable: bool = False,
         namespace: _Namespace = None,
+        scaling: ChannelScaling = None,
     ) -> _FloatChannel:
         """Create a floating-point channel."""
 
         result = self.channel(
-            name, kind, commandable=commandable, namespace=namespace
+            name,
+            kind,
+            commandable=commandable,
+            namespace=namespace,
+            scaling=scaling,
         )[0]
         assert result.raw.kind.is_float
         return _cast(_FloatChannel, result)

@@ -16,6 +16,7 @@ class ArbiterTask(PeriodicTask):
     """A base class for arbiter periodic tasks."""
 
     app: AppInfo
+    auto_finalize = False
 
     async def init(self, app: AppInfo) -> None:
         """Initialize this task with application information."""

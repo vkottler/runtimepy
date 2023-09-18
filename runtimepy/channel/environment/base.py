@@ -23,6 +23,7 @@ from runtimepy.channel import IntChannel as _IntChannel
 from runtimepy.channel.registry import ChannelRegistry as _ChannelRegistry
 from runtimepy.enum import RuntimeEnum as _RuntimeEnum
 from runtimepy.enum.registry import EnumRegistry as _EnumRegistry
+from runtimepy.mixins.finalize import FinalizeMixin
 from runtimepy.primitives.field import BitField as _BitField
 from runtimepy.primitives.field.fields import BitFields as _BitFields
 from runtimepy.primitives.field.manager import (
@@ -39,7 +40,7 @@ BoolChannelResult = _Tuple[_BoolChannel, _Optional[_RuntimeEnum]]
 IntChannelResult = _Tuple[_IntChannel, _Optional[_RuntimeEnum]]
 
 
-class BaseChannelEnvironment(_NamespaceMixin):
+class BaseChannelEnvironment(_NamespaceMixin, FinalizeMixin):
     """A class integrating channel and enumeration registries."""
 
     def __init__(
@@ -53,7 +54,10 @@ class BaseChannelEnvironment(_NamespaceMixin):
     ) -> None:
         """Initialize this channel environment."""
 
-        super().__init__(namespace=namespace, namespace_delim=namespace_delim)
+        _NamespaceMixin.__init__(
+            self, namespace=namespace, namespace_delim=namespace_delim
+        )
+        FinalizeMixin.__init__(self)
 
         if channels is None:
             channels = _ChannelRegistry()
@@ -111,7 +115,7 @@ class BaseChannelEnvironment(_NamespaceMixin):
                 is_int = chan.raw.kind.is_integer
 
                 if is_int or chan.raw.kind.is_float:
-                    kind = int if is_int else float
+                    kind = int if is_int and not chan.raw.scaled else float
                     try:
                         value = kind(value)
                         resolved = True
@@ -134,7 +138,7 @@ class BaseChannelEnvironment(_NamespaceMixin):
                 )
 
         # Assign the value to the channel.
-        chan.raw.value = value  # type: ignore
+        chan.raw.scaled = value  # type: ignore
 
     def apply(self, values: ValueMap) -> None:
         """Apply a map of values to the environment."""
@@ -161,13 +165,11 @@ class BaseChannelEnvironment(_NamespaceMixin):
 
         chan, enum = self[key]
 
-        value: ChannelValue
+        value: ChannelValue = chan.raw.scaled
 
         # Resolve enumeration values to strings.
         if enum is not None and resolve_enum:
-            value = enum.get_str(_cast(int, chan.raw.value))
-        else:
-            value = chan.raw.value
+            value = enum.get_str(_cast(int, value))
 
         return value
 

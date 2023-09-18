@@ -24,8 +24,11 @@ from runtimepy.primitives.int import (
     Uint64,
     UnsignedInt,
 )
+from runtimepy.primitives.scaling import ChannelScaling, Numeric
 
 __all__ = [
+    "ChannelScaling",
+    "Numeric",
     "Bool",
     "Double",
     "Float",
@@ -108,6 +111,6 @@ def normalize(value: Primitivelike) -> _Type[AnyPrimitive]:
     return value
 
 
-def create(value: Primitivelike) -> AnyPrimitive:
+def create(value: Primitivelike, **kwargs) -> AnyPrimitive:
     """Create an instance of a primitive."""
-    return normalize(value)()
+    return normalize(value)(**kwargs)
