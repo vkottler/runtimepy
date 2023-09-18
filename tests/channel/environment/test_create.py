@@ -22,6 +22,8 @@ def test_channel_environment_create_basic():
     result = env.channel("sample_channel", "bool", enum=enum)
     assert result
 
+    assert env.age_ns("sample_channel")
+
     name = "test_field"
     underlying = Uint8()
 
@@ -38,6 +40,7 @@ def test_channel_environment_create_basic():
 
     assert proc.command("set test_field true")
     assert underlying.value == 1
+    assert env.age_ns("test_field")
 
     assert proc.command("set test_field false")
     assert underlying.value == 0

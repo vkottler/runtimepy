@@ -236,3 +236,14 @@ class BaseChannelEnvironment(_NamespaceMixin, FinalizeMixin):
         return bool(
             self.channels == other.channels and self.enums == other.enums
         )
+
+    def age_ns(self, key: _RegistryKey) -> int:
+        """Get the age of an entity based on registry key."""
+
+        chan = self.get(key)
+        if chan is not None:
+            prim = chan[0].raw
+        else:
+            prim = self.fields[key].raw
+
+        return prim.age_ns()
