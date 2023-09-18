@@ -24,7 +24,9 @@ async def entry(
     """The async command entry."""
 
     arbiter = ConnectionArbiter(stop_sig=stop_sig, window=window)
-    await arbiter.load_configs(args.configs)
+
+    await arbiter.load_configs(args.configs, wait_for_stop=args.wait_for_stop)
+
     return await arbiter.app()
 
 

@@ -20,6 +20,7 @@ from runtimepy.primitives.byte_order import (
     DEFAULT_BYTE_ORDER as _DEFAULT_BYTE_ORDER,
 )
 from runtimepy.primitives.byte_order import ByteOrder as _ByteOrder
+from runtimepy.primitives.scaling import ChannelScaling, Numeric, apply, invert
 from runtimepy.primitives.type import AnyPrimitiveType as _AnyPrimitiveType
 
 T = _TypeVar("T", bool, int, float)
@@ -37,7 +38,9 @@ class Primitive(_Generic[T]):
     # Nominally set the primitive type at the class level.
     kind: _AnyPrimitiveType
 
-    def __init__(self, value: T = None) -> None:
+    def __init__(
+        self, value: T = None, scaling: ChannelScaling = None
+    ) -> None:
         """Initialize this primitive."""
 
         self.raw = self.kind.instance()
@@ -47,6 +50,7 @@ class Primitive(_Generic[T]):
         ] = {}
         self(value=value)
         self.last_updated_ns: int = default_time_ns()
+        self.scaling = scaling
 
     def age_ns(self, now: int = None) -> int:
         """Get the age of this primitive's value in nanoseconds."""
@@ -117,6 +121,16 @@ class Primitive(_Generic[T]):
 
         self.last_updated_ns = default_time_ns()
         self.raw.value = value
+
+    @property
+    def scaled(self) -> Numeric:
+        """Get this primitive as a scaled value."""
+        return apply(self.value, scaling=self.scaling)
+
+    @scaled.setter
+    def scaled(self, value: T) -> None:
+        """Set this value but invert scaling information."""
+        self.value = invert(value, scaling=self.scaling)  # type: ignore
 
     def __call__(self, value: T = None) -> T:
         """
