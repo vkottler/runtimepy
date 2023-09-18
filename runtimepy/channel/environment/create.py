@@ -45,6 +45,8 @@ class CreateChannelEnvironment(_BaseChannelEnvironment):
     ) -> _ChannelResult:
         """Create a new channel from the environment."""
 
+        assert not self.finalized, "Environment already finalized!"
+
         # Apply the current (or provided) namespace.
         name = self.namespace(name=name, namespace=namespace)
 
