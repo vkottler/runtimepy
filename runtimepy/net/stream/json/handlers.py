@@ -24,7 +24,7 @@ class ChannelCommand(RuntimepyDictCodec, BasicDictCodec):
 
 
 def channel_env_handler(
-    envs: dict[str, ChannelCommandProcessor]
+    envs: dict[str, ChannelCommandProcessor], default: ChannelCommandProcessor
 ) -> TypedHandler[ChannelCommand]:
     """Create a channel-environment map command handler."""
 
@@ -36,9 +36,13 @@ def channel_env_handler(
 
             env_name = request.data["environment"]
 
+            env = envs.get(env_name)
+            if env_name == "default":
+                env = default
+
             # Run the command if we have the environment.
-            if env_name in envs:
-                result = envs[env_name].command(request.data["command"])
+            if env is not None:
+                result = env.command(request.data["command"])
                 outbox["success"] = result.success
                 outbox["reason"] = result.reason
 

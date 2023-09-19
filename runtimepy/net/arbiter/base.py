@@ -23,6 +23,7 @@ from vcorelib.namespace import Namespace as _Namespace
 from vcorelib.namespace import NamespaceMixin as _NamespaceMixin
 
 # internal
+from runtimepy.channel.environment.command import clear_env, register_env
 from runtimepy.net.arbiter.housekeeping import metrics_poller
 from runtimepy.net.arbiter.info import AppInfo, ConnectionMap
 from runtimepy.net.arbiter.task import (
@@ -185,6 +186,13 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
             self.logger.info("Connections initialized.")
 
             tasks = {x.name: x for x in self.task_manager.tasks}
+
+            # Register environments.
+            clear_env()
+            for task in tasks.values():
+                register_env(task.name, task.command)
+            for name, conn in self._connections.items():
+                register_env(name, conn.command)
 
             # Run application, but only if all the registered connections are
             # still alive after initialization.

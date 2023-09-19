@@ -53,6 +53,8 @@ async def echo_test_app(app: AppInfo) -> int:
     """Test some of the echo connections."""
 
     # Ensure that configuration data got set correctly.
+    if "root" in app.config:
+        del app.config["root"]
     assert app.config == {"a": 1, "b": 2, "c": 3}
 
     assert len(list(app.search(pattern="sample"))) == 3

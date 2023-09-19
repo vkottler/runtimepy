@@ -16,10 +16,7 @@ from vcorelib.target.resolver import TargetResolver
 
 # internal
 from runtimepy import PKG_NAME, VERSION
-from runtimepy.channel.environment.command import (
-    ChannelCommandProcessor,
-    FieldOrChannel,
-)
+from runtimepy.channel.environment.command import ENVIRONMENTS, FieldOrChannel
 from runtimepy.channel.environment.command.result import CommandResult
 from runtimepy.net.stream.json.handlers import (
     ChannelCommand,
@@ -55,10 +52,11 @@ class JsonMessageConnection(StringMessageConnection):
         # Extra handlers.
         self.typed_handler("find_file", FindFile, find_file_request_handler)
         self.typed_handler(
-            "channel_command", ChannelCommand, channel_env_handler(self.envs)
+            "channel_command",
+            ChannelCommand,
+            channel_env_handler(ENVIRONMENTS, self.command),
         )
 
-    envs: dict[str, ChannelCommandProcessor]
     outgoing_commands: asyncio.Queue[ChannelCommandParams]
 
     async def process_command_queue(self) -> None:
@@ -104,7 +102,6 @@ class JsonMessageConnection(StringMessageConnection):
             "kind": type(self).__name__,
         }
 
-        self.envs = {"default": self.command}
         self.command.hooks.append(self._handle_remote_command)
 
         self.curr_id: int = 1
