@@ -50,6 +50,18 @@ class CommandParser(ArgumentParser):
             action="store_true",
             help="operate on a channel even if it's not commandable",
         )
+        self.add_argument(
+            "-r",
+            "--remote",
+            action="store_true",
+            help="attempt to send a remote command",
+        )
+        self.add_argument(
+            "-e",
+            "--env",
+            default="default",
+            help="channel environment to run command against",
+        )
 
         self.add_argument(
             "channel", type=str, help="channel to perform action on"

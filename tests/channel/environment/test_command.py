@@ -3,12 +3,26 @@ Test the 'channel.environment.command' module.
 """
 
 # built-in
+from argparse import Namespace
 from logging import getLogger
 from math import isclose
+from typing import Optional
 
 # module under test
 from runtimepy.channel.environment import ChannelEnvironment
-from runtimepy.channel.environment.command import ChannelCommandProcessor
+from runtimepy.channel.environment.command import (
+    ChannelCommandProcessor,
+    FieldOrChannel,
+)
+
+
+def sample_command_hook(
+    args: Namespace, channel: Optional[FieldOrChannel]
+) -> None:
+    """Perform extra command actions."""
+
+    del args
+    del channel
 
 
 def test_channel_command_processor_basic():
@@ -22,6 +36,7 @@ def test_channel_command_processor_basic():
     env.float_channel("float1")
 
     processor = ChannelCommandProcessor(env, getLogger(__name__))
+    processor.hooks.append(sample_command_hook)
 
     processor.parser.exit(message="null")
 

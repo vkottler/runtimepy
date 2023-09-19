@@ -4,7 +4,7 @@ A module implementing UI command processing.
 
 # built-in
 from argparse import Namespace
-from typing import Any, Optional, Union, cast
+from typing import Any, Callable, Optional, Union, cast
 
 # third-party
 from vcorelib.logging import LoggerType
@@ -21,6 +21,9 @@ from runtimepy.mixins.environment import ChannelEnvironmentMixin
 from runtimepy.primitives.bool import Bool
 from runtimepy.primitives.field import BitField
 
+FieldOrChannel = Union[BitField, AnyChannel]
+CommandHook = Callable[[Namespace, Optional[FieldOrChannel]], None]
+
 
 class ChannelCommandProcessor(ChannelEnvironmentMixin):
     """A command processing interface for channel environments."""
@@ -32,6 +35,7 @@ class ChannelCommandProcessor(ChannelEnvironmentMixin):
 
         super().__init__(env=env, **kwargs)
         self.logger = logger
+        self.hooks: list[CommandHook] = []
 
         self.parser_data: dict[str, Any] = {}
         self.parser = CommandParser()
@@ -73,7 +77,7 @@ class ChannelCommandProcessor(ChannelEnvironmentMixin):
         return result
 
     def do_toggle(
-        self, args: Namespace, channel: Union[BitField, AnyChannel]
+        self, args: Namespace, channel: FieldOrChannel
     ) -> CommandResult:
         """Attempt to toggle a channel."""
 
@@ -98,9 +102,16 @@ class ChannelCommandProcessor(ChannelEnvironmentMixin):
 
         result = SUCCESS
 
+        # Handle remote commands by processing hooks and returning (hooks
+        # implement remote command behavior and capability).
+        if args.remote:
+            for hook in self.hooks:
+                hook(args, None)
+            return result
+
         chan = self.env.get(args.channel)
 
-        channel: Union[BitField, AnyChannel]
+        channel: FieldOrChannel
 
         if chan is None:
             # Check if the name is a field.
@@ -126,6 +137,11 @@ class ChannelCommandProcessor(ChannelEnvironmentMixin):
             result = self.do_toggle(args, channel)
         elif args.command == ChannelCommand.SET:
             result = self.do_set(args)
+
+        # Perform extra command actions.
+        if result:
+            for hook in self.hooks:
+                hook(args, channel)
 
         return result
 

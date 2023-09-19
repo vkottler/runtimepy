@@ -31,6 +31,7 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
 
     uses_text_tx_queue = True
     uses_binary_tx_queue = True
+    connected = True
 
     byte_order: ByteOrder = DEFAULT_BYTE_ORDER
 
@@ -160,7 +161,7 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
         else:
             self.logger.info("Initialized.")
 
-        self.env.finalize()
+        self.env.finalize(strict=False)
         self.initialized.set()
 
     async def process(self, stop_sig: _asyncio.Event = None) -> None:
