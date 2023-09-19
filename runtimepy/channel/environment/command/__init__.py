@@ -4,7 +4,7 @@ A module implementing UI command processing.
 
 # built-in
 from argparse import Namespace
-from typing import Any, Optional, Union, cast
+from typing import Any, Callable, Optional, Union, cast
 
 # third-party
 from vcorelib.logging import LoggerType
@@ -21,6 +21,9 @@ from runtimepy.mixins.environment import ChannelEnvironmentMixin
 from runtimepy.primitives.bool import Bool
 from runtimepy.primitives.field import BitField
 
+FieldOrChannel = Union[BitField, AnyChannel]
+CommandHook = Callable[[Namespace, FieldOrChannel], None]
+
 
 class ChannelCommandProcessor(ChannelEnvironmentMixin):
     """A command processing interface for channel environments."""
@@ -32,6 +35,7 @@ class ChannelCommandProcessor(ChannelEnvironmentMixin):
 
         super().__init__(env=env, **kwargs)
         self.logger = logger
+        self.hooks: list[CommandHook] = []
 
         self.parser_data: dict[str, Any] = {}
         self.parser = CommandParser()
@@ -73,7 +77,7 @@ class ChannelCommandProcessor(ChannelEnvironmentMixin):
         return result
 
     def do_toggle(
-        self, args: Namespace, channel: Union[BitField, AnyChannel]
+        self, args: Namespace, channel: FieldOrChannel
     ) -> CommandResult:
         """Attempt to toggle a channel."""
 
@@ -100,7 +104,7 @@ class ChannelCommandProcessor(ChannelEnvironmentMixin):
 
         chan = self.env.get(args.channel)
 
-        channel: Union[BitField, AnyChannel]
+        channel: FieldOrChannel
 
         if chan is None:
             # Check if the name is a field.
@@ -127,7 +131,18 @@ class ChannelCommandProcessor(ChannelEnvironmentMixin):
         elif args.command == ChannelCommand.SET:
             result = self.do_set(args)
 
+        if result:
+            self.extra_command_hooks(args, channel)
+
         return result
+
+    def extra_command_hooks(
+        self, args: Namespace, channel: FieldOrChannel
+    ) -> None:
+        """Perform extra command actions."""
+
+        for hook in self.hooks:
+            hook(args, channel)
 
     def parse(self, value: str) -> Optional[Namespace]:
         """Attempt to parse arguments."""

@@ -160,7 +160,7 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
         else:
             self.logger.info("Initialized.")
 
-        self.env.finalize()
+        self.env.finalize(strict=False)
         self.initialized.set()
 
     async def process(self, stop_sig: _asyncio.Event = None) -> None:
