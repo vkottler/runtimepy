@@ -174,3 +174,21 @@ class ChannelCommandProcessor(ChannelEnvironmentMixin):
             result = self.handle_command(args)
 
         return result
+
+
+EnvironmentMap = dict[str, ChannelCommandProcessor]
+ENVIRONMENTS: EnvironmentMap = {}
+
+
+def clear_env() -> None:
+    """Reset the global environment mapping."""
+    ENVIRONMENTS.clear()
+
+
+def register_env(name: str, env: ChannelCommandProcessor) -> None:
+    """Register a channel environment globally."""
+
+    assert (
+        name not in ENVIRONMENTS or ENVIRONMENTS[name] is env
+    ), f"Can't register environment '{name}'!"
+    ENVIRONMENTS[name] = env

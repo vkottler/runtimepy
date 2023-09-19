@@ -223,4 +223,7 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
 
         # Update application configuration data if necessary.
         if config.config is not None:
+            root = self._config["root"]
             self._config = config.config
+            assert "root" not in config.config, config.config
+            config.config["root"] = root
