@@ -3,9 +3,6 @@ A module implementing various housekeeping tasks for the connection-arbiter
 runtime.
 """
 
-# built-in
-import asyncio
-
 # internal
 from runtimepy.net.arbiter.info import AppInfo as _AppInfo
 from runtimepy.net.arbiter.task import ArbiterTask as _ArbiterTask
@@ -34,15 +31,11 @@ class ConnectionMetricsPoller(_ArbiterTask):
         self.manager.poll_metrics()
 
         # Poll JSON commands.
-        conns = list(self.app.search(kind=JsonMessageConnection))
-        if conns:
-            await asyncio.gather(
-                *(
-                    conn.process_command_queue()
-                    for conn in conns
-                    if conn.connected
-                )
-            )
+        for conn in self.app.search(kind=JsonMessageConnection):
+            if conn.connected:
+                result = await conn.process_command_queue()
+                if result:
+                    self.logger.info("Processed command: %s.", result)
 
         return True
 

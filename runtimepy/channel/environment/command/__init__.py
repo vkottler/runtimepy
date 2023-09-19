@@ -28,14 +28,18 @@ CommandHook = Callable[[Namespace, Optional[FieldOrChannel]], None]
 class ChannelCommandProcessor(ChannelEnvironmentMixin):
     """A command processing interface for channel environments."""
 
+    hooks: list[CommandHook]
+
     def __init__(
         self, env: ChannelEnvironment, logger: LoggerType, **kwargs
     ) -> None:
         """Initialize this instance."""
 
         super().__init__(env=env, **kwargs)
+        if not hasattr(self, "hooks"):
+            self.hooks: list[CommandHook] = []
+
         self.logger = logger
-        self.hooks: list[CommandHook] = []
 
         self.parser_data: dict[str, Any] = {}
         self.parser = CommandParser()
@@ -105,6 +109,9 @@ class ChannelCommandProcessor(ChannelEnvironmentMixin):
         # Handle remote commands by processing hooks and returning (hooks
         # implement remote command behavior and capability).
         if args.remote:
+            self.logger.info(
+                "Handling remote command. (%s, %s)", self.hooks, self.env
+            )
             for hook in self.hooks:
                 hook(args, None)
             return result

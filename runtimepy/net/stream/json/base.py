@@ -39,7 +39,6 @@ from runtimepy.net.stream.json.types import (
     TypedHandler,
 )
 from runtimepy.net.stream.string import StringMessageConnection
-from runtimepy.net.udp import UdpConnection
 
 ChannelCommandParams = tuple[str, str, Optional[tuple[str, int]]]
 
@@ -62,8 +61,10 @@ class JsonMessageConnection(StringMessageConnection):
     envs: dict[str, ChannelCommandProcessor]
     outgoing_commands: asyncio.Queue[ChannelCommandParams]
 
-    async def process_command_queue(self) -> None:
+    async def process_command_queue(self) -> str:
         """Process any outgoing command requests."""
+
+        results = []
 
         while not self.outgoing_commands.empty():
             params = self.outgoing_commands.get_nowait()
@@ -72,7 +73,11 @@ class JsonMessageConnection(StringMessageConnection):
                 params[0], environment=params[1], addr=params[2]
             )
             self.outgoing_commands.task_done()
-            self.logger.info("Remote command: %s.", result)
+            result_str = str(result)
+            results.append(result_str)
+            self.logger.info("Remote command: %s.", result_str)
+
+        return ",".join(results)
 
     def _handle_remote_command(
         self, args: Namespace, channel: Optional[FieldOrChannel]
@@ -80,6 +85,8 @@ class JsonMessageConnection(StringMessageConnection):
         """Determine if a remote command should be queued up."""
 
         del channel
+
+        self.logger.info("THIS RAN")
 
         if args.remote:
             cli_args = [args.command]
@@ -95,6 +102,9 @@ class JsonMessageConnection(StringMessageConnection):
         """Initialize this instance."""
 
         super().init()
+        self.envs = {"default": self.command}
+        self.command.hooks.append(self._handle_remote_command)
+
         self.outgoing_commands = asyncio.Queue()
 
         self.targets = TargetResolver()
@@ -104,9 +114,6 @@ class JsonMessageConnection(StringMessageConnection):
             "version": VERSION,
             "kind": type(self).__name__,
         }
-
-        self.envs = {"default": self.command}
-        self.command.hooks.append(self._handle_remote_command)
 
         self.curr_id: int = 1
 
@@ -264,11 +271,7 @@ class JsonMessageConnection(StringMessageConnection):
         result = await super().async_init()
 
         # Only not-connected UDP connections can't do this.
-        if (
-            result
-            and hasattr("self", "remote_address")
-            or not isinstance(self, UdpConnection)
-        ):
+        if self.connected:
             result = await self.loopback()
 
             if result:
