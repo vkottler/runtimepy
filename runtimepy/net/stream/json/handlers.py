@@ -12,8 +12,44 @@ from vcorelib.io import ARBITER
 from vcorelib.paths import find_file
 
 # internal
-from runtimepy.net.stream.json.types import JsonMessage
+from runtimepy.channel.environment.command import ChannelCommandProcessor
+from runtimepy.net.stream.json.types import JsonMessage, TypedHandler
 from runtimepy.schemas import RuntimepyDictCodec
+
+
+class ChannelCommand(RuntimepyDictCodec, BasicDictCodec):
+    """A schema-validated find-file request."""
+
+    data: JsonMessage
+
+
+def channel_env_handler(
+    envs: dict[str, ChannelCommandProcessor]
+) -> TypedHandler[ChannelCommand]:
+    """Create a channel-environment map command handler."""
+
+    async def handler(outbox: JsonMessage, request: ChannelCommand) -> None:
+        """Handle a JSON command for channel environments."""
+
+        if request.data["is_request"]:
+            outbox["is_request"] = False
+
+            env_name = request.data["environment"]
+
+            # Run the command if we have the environment.
+            if env_name in envs:
+                result = envs[env_name].command(request.data["command"])
+                outbox["success"] = result.success
+                outbox["reason"] = result.reason
+
+            # Respond with an error (environment not found).
+            else:
+                outbox["success"] = False
+                outbox[
+                    "reason"
+                ] = f"No environment '{env_name}', options: {envs.keys()}."
+
+    return handler
 
 
 async def loopback_handler(outbox: JsonMessage, inbox: JsonMessage) -> None:

@@ -1,0 +1,20 @@
+---
+includes:
+  - has_request_flag.yaml
+
+type: object
+required: []
+additionalProperties: false
+
+properties:
+  environment:
+    type: string
+    default: default
+
+  command:
+    type: string
+
+  success:
+    type: boolean
+  reason:
+    type: [string, "null"]

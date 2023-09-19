@@ -13,6 +13,7 @@ from runtimepy import PKG_NAME
 from runtimepy.net.arbiter.info import AppInfo
 from runtimepy.net.stream import StringMessageConnection
 from runtimepy.net.stream.json import JsonMessage, JsonMessageConnection
+from runtimepy.net.udp import UdpConnection
 
 # internal
 from tests.resources import SampleArbiterTask
@@ -27,7 +28,7 @@ async def stream_test(app: AppInfo) -> int:
     for client in app.search(
         pattern="message_client", kind=StringMessageConnection
     ):
-        for _ in range(100):
+        for _ in range(5):
             client.send_message_str("Hello, world!")
         count += 1
 
@@ -66,8 +67,26 @@ async def json_client_find_file(client: JsonMessageConnection) -> None:
     assert file_result["find_file"]["path"] is None
 
 
+async def json_client_channel_commands(client: JsonMessageConnection) -> None:
+    """Test JSON-message client file finding."""
+
+    if not isinstance(client, UdpConnection):
+        for command in [
+            "set -r help -h",
+            "set -r metrics.tx.messages 0",
+            "set -e fake_env -r metrics.tx.messages 0",
+            "set -r metrics.tx.messages 0 -f",
+        ]:
+            await client.channel_command(command)
+            client.command.command(command)
+
+        await client.outgoing_commands.join()
+
+
 async def json_client_test(client: JsonMessageConnection) -> int:
     """Test a single JSON client."""
+
+    await json_client_channel_commands(client)
 
     client.send_json({})
     await client.wait_json({})

@@ -31,6 +31,7 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
 
     uses_text_tx_queue = True
     uses_binary_tx_queue = True
+    connected = True
 
     byte_order: ByteOrder = DEFAULT_BYTE_ORDER
 

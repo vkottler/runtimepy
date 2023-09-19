@@ -6,6 +6,7 @@ Test the 'channel.environment.command' module.
 from argparse import Namespace
 from logging import getLogger
 from math import isclose
+from typing import Optional
 
 # module under test
 from runtimepy.channel.environment import ChannelEnvironment
@@ -15,7 +16,9 @@ from runtimepy.channel.environment.command import (
 )
 
 
-def sample_command_hook(args: Namespace, channel: FieldOrChannel) -> None:
+def sample_command_hook(
+    args: Namespace, channel: Optional[FieldOrChannel]
+) -> None:
     """Perform extra command actions."""
 
     del args

@@ -3,6 +3,7 @@ A module implementing a base JSON messaging connection interface.
 """
 
 # built-in
+from argparse import Namespace
 import asyncio
 from copy import copy
 from json import JSONDecodeError, dumps, loads
@@ -15,8 +16,15 @@ from vcorelib.target.resolver import TargetResolver
 
 # internal
 from runtimepy import PKG_NAME, VERSION
+from runtimepy.channel.environment.command import (
+    ChannelCommandProcessor,
+    FieldOrChannel,
+)
+from runtimepy.channel.environment.command.result import CommandResult
 from runtimepy.net.stream.json.handlers import (
+    ChannelCommand,
     FindFile,
+    channel_env_handler,
     event_wait,
     find_file_request_handler,
     loopback_handler,
@@ -31,7 +39,8 @@ from runtimepy.net.stream.json.types import (
     TypedHandler,
 )
 from runtimepy.net.stream.string import StringMessageConnection
-from runtimepy.net.udp import UdpConnection
+
+ChannelCommandParams = tuple[str, str, Optional[tuple[str, int]]]
 
 
 class JsonMessageConnection(StringMessageConnection):
@@ -45,11 +54,47 @@ class JsonMessageConnection(StringMessageConnection):
 
         # Extra handlers.
         self.typed_handler("find_file", FindFile, find_file_request_handler)
+        self.typed_handler(
+            "channel_command", ChannelCommand, channel_env_handler(self.envs)
+        )
+
+    envs: dict[str, ChannelCommandProcessor]
+    outgoing_commands: asyncio.Queue[ChannelCommandParams]
+
+    async def process_command_queue(self) -> None:
+        """Process any outgoing command requests."""
+
+        while not self.outgoing_commands.empty():
+            params = self.outgoing_commands.get_nowait()
+
+            result = await self.channel_command(
+                params[0], environment=params[1], addr=params[2]
+            )
+            self.outgoing_commands.task_done()
+            self.logger.info("Remote command: %s.", result)
+
+    def _handle_remote_command(
+        self, args: Namespace, channel: Optional[FieldOrChannel]
+    ) -> None:
+        """Determine if a remote command should be queued up."""
+
+        del channel
+
+        if args.remote:
+            cli_args = [args.command]
+            if args.force:
+                cli_args.append("-f")
+            cli_args.append(args.channel)
+
+            command = " ".join(cli_args + args.extra)
+            self.outgoing_commands.put_nowait((command, args.env, None))
+            self.logger.info("Queued command: '%s' env=%s.", command, args.env)
 
     def init(self) -> None:
         """Initialize this instance."""
 
         super().init()
+        self.outgoing_commands = asyncio.Queue()
 
         self.targets = TargetResolver()
 
@@ -58,6 +103,9 @@ class JsonMessageConnection(StringMessageConnection):
             "version": VERSION,
             "kind": type(self).__name__,
         }
+
+        self.envs = {"default": self.command}
+        self.command.hooks.append(self._handle_remote_command)
 
         self.curr_id: int = 1
 
@@ -125,6 +173,30 @@ class JsonMessageConnection(StringMessageConnection):
             data["args"] = [*args]
         self._log_messages.append(data)
 
+    async def channel_command(
+        self,
+        command: str,
+        environment: str = "default",
+        addr: Tuple[str, int] = None,
+    ) -> CommandResult:
+        """Send a channel command to an endpoint."""
+
+        result = await self.wait_json(
+            {
+                "channel_command": {
+                    "environment": environment,
+                    "command": command,
+                    "is_request": True,
+                }
+            },
+            addr=addr,
+        )
+
+        return CommandResult(
+            result["channel_command"]["success"],
+            result["channel_command"].get("reason"),
+        )
+
     async def wait_json(
         self,
         data: Union[JsonMessage, JsonCodec],
@@ -191,11 +263,7 @@ class JsonMessageConnection(StringMessageConnection):
         result = await super().async_init()
 
         # Only not-connected UDP connections can't do this.
-        if (
-            result
-            and hasattr("self", "remote_address")
-            or not isinstance(self, UdpConnection)
-        ):
+        if self.connected:
             result = await self.loopback()
 
             if result:
