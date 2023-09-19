@@ -3,11 +3,15 @@ A module implementing various housekeeping tasks for the connection-arbiter
 runtime.
 """
 
+# built-in
+import asyncio
+
 # internal
 from runtimepy.net.arbiter.info import AppInfo as _AppInfo
 from runtimepy.net.arbiter.task import ArbiterTask as _ArbiterTask
 from runtimepy.net.arbiter.task import TaskFactory as _TaskFactory
 from runtimepy.net.manager import ConnectionManager as _ConnectionManager
+from runtimepy.net.stream.json import JsonMessageConnection
 
 
 class ConnectionMetricsPoller(_ArbiterTask):
@@ -28,6 +32,18 @@ class ConnectionMetricsPoller(_ArbiterTask):
         """Dispatch an iteration of this task."""
 
         self.manager.poll_metrics()
+
+        # Poll JSON commands.
+        conns = list(self.app.search(kind=JsonMessageConnection))
+        if conns:
+            await asyncio.gather(
+                *(
+                    conn.process_command_queue()
+                    for conn in conns
+                    if conn.connected
+                )
+            )
+
         return True
 
 
@@ -59,7 +75,7 @@ class ConnectionMetricsLoggerFactory(_TaskFactory[ConnectionMetricsLogger]):
 
 
 def metrics_poller(
-    manager: _ConnectionManager, period_s: float = 0.5
+    manager: _ConnectionManager, period_s: float = 0.1
 ) -> ConnectionMetricsPoller:
     """Create a metrics-polling task."""
 

@@ -22,7 +22,7 @@ from runtimepy.primitives.bool import Bool
 from runtimepy.primitives.field import BitField
 
 FieldOrChannel = Union[BitField, AnyChannel]
-CommandHook = Callable[[Namespace, FieldOrChannel], None]
+CommandHook = Callable[[Namespace, Optional[FieldOrChannel]], None]
 
 
 class ChannelCommandProcessor(ChannelEnvironmentMixin):
@@ -102,6 +102,13 @@ class ChannelCommandProcessor(ChannelEnvironmentMixin):
 
         result = SUCCESS
 
+        # Handle remote commands by processing hooks and returning (hooks
+        # implement remote command behavior and capability).
+        if args.remote:
+            for hook in self.hooks:
+                hook(args, None)
+            return result
+
         chan = self.env.get(args.channel)
 
         channel: FieldOrChannel
@@ -131,18 +138,12 @@ class ChannelCommandProcessor(ChannelEnvironmentMixin):
         elif args.command == ChannelCommand.SET:
             result = self.do_set(args)
 
+        # Perform extra command actions.
         if result:
-            self.extra_command_hooks(args, channel)
+            for hook in self.hooks:
+                hook(args, channel)
 
         return result
-
-    def extra_command_hooks(
-        self, args: Namespace, channel: FieldOrChannel
-    ) -> None:
-        """Perform extra command actions."""
-
-        for hook in self.hooks:
-            hook(args, channel)
 
     def parse(self, value: str) -> Optional[Namespace]:
         """Attempt to parse arguments."""

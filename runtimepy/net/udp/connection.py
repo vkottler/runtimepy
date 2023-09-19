@@ -71,6 +71,8 @@ class UdpConnection(_Connection, _TransportMixin):
         """Initialize this UDP connection."""
 
         _TransportMixin.__init__(self, transport)
+        if not self.remote_address:
+            self.connected = False
 
         # Re-assign with updated type information.
         self._transport: _DatagramTransport = transport
