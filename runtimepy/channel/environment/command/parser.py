@@ -13,6 +13,7 @@ class ChannelCommand(StrEnum):
 
     SET = "set"
     TOGGLE = "toggle"
+    GET = "get"
 
 
 class CommandParser(ArgumentParser):

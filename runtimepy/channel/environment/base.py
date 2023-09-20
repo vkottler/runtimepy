@@ -180,6 +180,10 @@ class BaseChannelEnvironment(_NamespaceMixin, FinalizeMixin):
 
         return value
 
+    def exists(self, val: _RegistryKey) -> bool:
+        """Determine if a channel exists."""
+        return self.fields.has_field(val) or self.get(val) is not None
+
     def get(self, val: _RegistryKey) -> _Optional[ChannelResult]:
         """Attempt to get a channel and its enumeration (if it has one)."""
 

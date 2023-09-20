@@ -44,11 +44,19 @@ class ConnectionArbiterConfig(_RuntimepyDictCodec):
 
         self.data = data
 
+        port_overrides: _Dict[str, int] = data.get(
+            "port_overrides",
+            {},  # type: ignore
+        )
+
         # Process ports.
         self.ports: _Dict[str, int] = {}
         for item in _cast(_List[_Dict[str, _Any]], data.get("ports", [])):
             self.ports[item["name"]] = get_free_socket_name(
-                local=normalize_host(item["host"], item["port"]),
+                local=normalize_host(
+                    item["host"],
+                    port_overrides.get(item["name"], item["port"]),
+                ),
                 kind=_socket.SOCK_STREAM
                 if item["type"] == "tcp"
                 else _socket.SOCK_DGRAM,
