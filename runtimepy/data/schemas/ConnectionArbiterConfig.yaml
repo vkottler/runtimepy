@@ -58,6 +58,16 @@ properties:
         kwargs:
           type: object
 
+  port_overrides:
+    type: object
+    required: []
+    additionalProperties: false
+    patternProperties:
+      "^.*$":
+        type: integer
+        minimum: 1
+        maximum: 65535
+
   ports:
     type: array
     items:

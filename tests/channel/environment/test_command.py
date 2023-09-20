@@ -55,6 +55,8 @@ def test_channel_command_processor_basic():
     assert not processor.command("toggle asdf")
     assert env.value("bool1")
 
+    assert processor.command("get bool1")
+
     assert env.value("int1") == 0
     assert not processor.command("set int1")
     assert processor.command("set int1 42")

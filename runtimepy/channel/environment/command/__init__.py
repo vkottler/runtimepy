@@ -109,6 +109,10 @@ class ChannelCommandProcessor(ChannelEnvironmentMixin):
                 hook(args, None)
             return result
 
+        if args.command == ChannelCommand.GET:
+            if self.env.exists(args.channel):
+                return CommandResult(True, str(self.env.value(args.channel)))
+
         chan = self.env.get(args.channel)
 
         channel: FieldOrChannel
