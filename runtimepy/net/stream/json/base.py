@@ -18,6 +18,7 @@ from vcorelib.target.resolver import TargetResolver
 from runtimepy import PKG_NAME, VERSION
 from runtimepy.channel.environment.command import ENVIRONMENTS, FieldOrChannel
 from runtimepy.channel.environment.command.result import CommandResult
+from runtimepy.mixins.async_command import AsyncCommandProcessingMixin
 from runtimepy.net.stream.json.handlers import (
     ChannelCommand,
     FindFile,
@@ -37,10 +38,10 @@ from runtimepy.net.stream.json.types import (
 )
 from runtimepy.net.stream.string import StringMessageConnection
 
-ChannelCommandParams = tuple[str, str, Optional[tuple[str, int]]]
 
-
-class JsonMessageConnection(StringMessageConnection):
+class JsonMessageConnection(
+    StringMessageConnection, AsyncCommandProcessingMixin
+):
     """A connection interface for JSON messaging."""
 
     _log_messages: List[Dict[str, Any]]
@@ -57,42 +58,11 @@ class JsonMessageConnection(StringMessageConnection):
             channel_env_handler(ENVIRONMENTS, self.command),
         )
 
-    outgoing_commands: asyncio.Queue[ChannelCommandParams]
-
-    async def process_command_queue(self) -> None:
-        """Process any outgoing command requests."""
-
-        while not self.outgoing_commands.empty():
-            params = self.outgoing_commands.get_nowait()
-
-            result = await self.channel_command(
-                params[0], environment=params[1], addr=params[2]
-            )
-            self.outgoing_commands.task_done()
-            self.logger.info("Remote command: %s.", result)
-
-    def _handle_remote_command(
-        self, args: Namespace, channel: Optional[FieldOrChannel]
-    ) -> None:
-        """Determine if a remote command should be queued up."""
-
-        del channel
-
-        if args.remote:
-            cli_args = [args.command]
-            if args.force:
-                cli_args.append("-f")
-            cli_args.append(args.channel)
-
-            command = " ".join(cli_args + args.extra)
-            self.outgoing_commands.put_nowait((command, args.env, None))
-            self.logger.info("Queued command: '%s' env=%s.", command, args.env)
-
     def init(self) -> None:
         """Initialize this instance."""
 
         super().init()
-        self.outgoing_commands = asyncio.Queue()
+        self._setup_async_commands()
 
         self.targets = TargetResolver()
 
@@ -101,8 +71,6 @@ class JsonMessageConnection(StringMessageConnection):
             "version": VERSION,
             "kind": type(self).__name__,
         }
-
-        self.command.hooks.append(self._handle_remote_command)
 
         self.curr_id: int = 1
 
@@ -169,6 +137,24 @@ class JsonMessageConnection(StringMessageConnection):
         if args:
             data["args"] = [*args]
         self._log_messages.append(data)
+
+    async def handle_command(
+        self, args: Namespace, channel: Optional[FieldOrChannel]
+    ) -> None:
+        """Handle a remote command asynchronously."""
+
+        if args.remote and self.connected:
+            cli_args = [args.command]
+            if args.force:
+                cli_args.append("-f")
+            cli_args.append(args.channel)
+
+            self.logger.info(
+                "Remote command: %s",
+                await self.channel_command(
+                    " ".join(cli_args + args.extra), environment=args.env
+                ),
+            )
 
     async def channel_command(
         self,

@@ -7,11 +7,11 @@ runtime.
 import asyncio
 
 # internal
+from runtimepy.mixins.async_command import AsyncCommandProcessingMixin
 from runtimepy.net.arbiter.info import AppInfo as _AppInfo
 from runtimepy.net.arbiter.task import ArbiterTask as _ArbiterTask
 from runtimepy.net.arbiter.task import TaskFactory as _TaskFactory
 from runtimepy.net.manager import ConnectionManager as _ConnectionManager
-from runtimepy.net.stream.json import JsonMessageConnection
 
 
 class ConnectionMetricsPoller(_ArbiterTask):
@@ -33,16 +33,15 @@ class ConnectionMetricsPoller(_ArbiterTask):
 
         self.manager.poll_metrics()
 
-        # Poll JSON commands.
-        conns = list(self.app.search(kind=JsonMessageConnection))
-        if conns:
-            await asyncio.gather(
-                *(
-                    conn.process_command_queue()
-                    for conn in conns
-                    if conn.connected
-                )
-            )
+        # Handle any incoming commands.
+        processors = []
+        for mapping in self.app.connections.values(), self.app.tasks.values():
+            for item in mapping:
+                if isinstance(item, AsyncCommandProcessingMixin):
+                    processors.append(item.process_command_queue())
+
+        if processors:
+            await asyncio.gather(*processors)
 
         return True
 
