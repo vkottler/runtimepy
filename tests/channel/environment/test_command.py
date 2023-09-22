@@ -35,6 +35,12 @@ def test_channel_command_processor_basic():
     env.bool_channel("bool1")
     env.float_channel("float1")
 
+    env.bool_channel(
+        "bool2",
+        enum=env.enum("OnOff", "bool", {"on": True, "off": False}),
+        commandable=True,
+    )
+
     processor = ChannelCommandProcessor(env, getLogger(__name__))
     processor.hooks.append(sample_command_hook)
 
@@ -76,3 +82,11 @@ def test_channel_command_processor_basic():
 
     assert processor.command("set bool1 false -f")
     assert not env.value("bool1")
+
+    # Ensure boolean enums work.
+    assert processor.command("set bool2 true")
+    assert processor.command("set bool2 false")
+    assert processor.command("set bool2 on")
+    assert processor.command("set bool2 off")
+    assert processor.command("toggle bool2")
+    assert processor.command("toggle bool2")

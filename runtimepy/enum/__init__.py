@@ -13,14 +13,14 @@ from typing import cast as _cast
 from vcorelib.io.types import JsonObject as _JsonObject
 from vcorelib.io.types import JsonValue as _JsonValue
 
+# internal
 from runtimepy.enum.type import EnumType as _EnumType
 from runtimepy.mapping import BoolMappingData as _BoolMappingData
 from runtimepy.mapping import IntMappingData as _IntMappingData
-
-# internal
 from runtimepy.registry.bool import BooleanRegistry as _BooleanRegistry
 from runtimepy.registry.item import RegistryItem as _RegistryItem
 from runtimepy.registry.name import NameRegistry as _NameRegistry
+from runtimepy.util import StrToBool
 
 
 class RuntimeEnum(_RegistryItem):
@@ -129,7 +129,14 @@ class RuntimeEnum(_RegistryItem):
 
     def as_bool(self, value: _Union[str, bool]) -> _Optional[bool]:
         """Attempt to get an enumeration boolean."""
-        return self.bools.identifier(value)
+
+        ident = self.bools.identifier(value)
+        if ident is None and isinstance(value, str):
+            parsed = StrToBool.parse(value)
+            if parsed.valid:
+                ident = parsed.result
+
+        return ident
 
     def get_bool(self, value: _Union[str, bool]) -> bool:
         """Get an enumeration boolean."""

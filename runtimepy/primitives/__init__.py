@@ -10,7 +10,7 @@ from typing import Union as _Union
 
 # internal
 from runtimepy.primitives.base import Primitive
-from runtimepy.primitives.bool import Bool, StrToBool
+from runtimepy.primitives.bool import Bool
 from runtimepy.primitives.float import Double, Float, Half
 from runtimepy.primitives.int import (
     Int8,
@@ -25,6 +25,7 @@ from runtimepy.primitives.int import (
     UnsignedInt,
 )
 from runtimepy.primitives.scaling import ChannelScaling, Numeric
+from runtimepy.util import StrToBool
 
 __all__ = [
     "ChannelScaling",
