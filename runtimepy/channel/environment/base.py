@@ -116,7 +116,7 @@ class BaseChannelEnvironment(_NamespaceMixin, FinalizeMixin):
                 is_int = chan.raw.kind.is_integer
 
                 if is_int or chan.raw.kind.is_float:
-                    kind = int if is_int and not chan.raw.scaled else float
+                    kind = int if is_int and not chan.raw.scaling else float
                     try:
                         value = kind(value)
                         resolved = True

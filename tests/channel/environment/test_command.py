@@ -25,6 +25,21 @@ def sample_command_hook(
     del channel
 
 
+def test_channel_command_scalings():
+    """Test commands against channels that have scalings."""
+
+    env = ChannelEnvironment()
+
+    env.int_channel("4_20ma", commandable=True, scaling=[0.0, 3.81469727e-07])
+
+    processor = ChannelCommandProcessor(env, getLogger(__name__))
+
+    val = 0.0
+    for _ in range(25):
+        assert processor.command(f"set 4_20ma {val}")
+        val += 0.01
+
+
 def test_channel_command_processor_basic():
     """Test basic interactions with the channel-command processor."""
 
