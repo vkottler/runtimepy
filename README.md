@@ -2,11 +2,11 @@
     =====================================
     generator=datazen
     version=3.1.3
-    hash=39722d56e689af4735e5eb11509d60c9
+    hash=f8a5c23e6166199774f2dc5e19dc76d0
     =====================================
 -->
 
-# runtimepy ([2.12.2](https://pypi.org/project/runtimepy/))
+# runtimepy ([2.12.3](https://pypi.org/project/runtimepy/))
 
 [![python](https://img.shields.io/pypi/pyversions/runtimepy.svg)](https://pypi.org/project/runtimepy/)
 ![Build Status](https://github.com/vkottler/runtimepy/workflows/Python%20Package/badge.svg)
@@ -75,14 +75,14 @@ commands:
 ```
 $ ./venv3.11/bin/runtimepy arbiter -h
 
-usage: runtimepy arbiter [-h] [--init_only] [-w] configs [configs ...]
+usage: runtimepy arbiter [-h] [-i] [-w] configs [configs ...]
 
 positional arguments:
   configs               the configuration to load
 
 options:
   -h, --help            show this help message and exit
-  --init_only, --init-only
+  -i, --init_only, --init-only
                         exit after completing initialization
   -w, --wait-for-stop, --wait_for_stop
                         ensure that a 'wait_for_stop' application method is

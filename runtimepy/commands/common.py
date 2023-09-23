@@ -6,10 +6,11 @@ A module for package command-line argument interfaces.
 from argparse import ArgumentParser as _ArgumentParser
 
 
-def arbiter_args(parser: _ArgumentParser, nargs: str = "+") -> None:
-    """Add common connection-arbiter parameters.."""
+def arbiter_flags(parser: _ArgumentParser) -> None:
+    """Add arbiter command-line flag arguments."""
 
     parser.add_argument(
+        "-i",
         "--init_only",
         "--init-only",
         action="store_true",
@@ -22,6 +23,12 @@ def arbiter_args(parser: _ArgumentParser, nargs: str = "+") -> None:
         action="store_true",
         help="ensure that a 'wait_for_stop' application method is run last",
     )
+
+
+def arbiter_args(parser: _ArgumentParser, nargs: str = "+") -> None:
+    """Add common connection-arbiter parameters.."""
+
+    arbiter_flags(parser)
     parser.add_argument(
         "configs", nargs=nargs, help="the configuration to load"
     )
