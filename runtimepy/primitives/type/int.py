@@ -12,6 +12,7 @@ from runtimepy.primitives.type.base import Uint8Ctype as _Uint8Ctype
 from runtimepy.primitives.type.base import Uint16Ctype as _Uint16Ctype
 from runtimepy.primitives.type.base import Uint32Ctype as _Uint32Ctype
 from runtimepy.primitives.type.base import Uint64Ctype as _Uint64Ctype
+from runtimepy.primitives.type.bounds import IntegerBounds
 
 
 class Int8Type(_PrimitiveType[_Int8Ctype]):
@@ -24,6 +25,7 @@ class Int8Type(_PrimitiveType[_Int8Ctype]):
         """Initialize this type."""
         super().__init__("b")
         assert self.is_integer
+        self.int_bounds = IntegerBounds.create(1, True)
 
 
 Int8 = Int8Type()
@@ -39,6 +41,7 @@ class Int16Type(_PrimitiveType[_Int16Ctype]):
         """Initialize this type."""
         super().__init__("h")
         assert self.is_integer
+        self.int_bounds = IntegerBounds.create(2, True)
 
 
 Int16 = Int16Type()
@@ -54,6 +57,7 @@ class Int32Type(_PrimitiveType[_Int32Ctype]):
         """Initialize this type."""
         super().__init__("i")
         assert self.is_integer
+        self.int_bounds = IntegerBounds.create(4, True)
 
 
 Int32 = Int32Type()
@@ -69,6 +73,7 @@ class Int64Type(_PrimitiveType[_Int64Ctype]):
         """Initialize this type."""
         super().__init__("q")
         assert self.is_integer
+        self.int_bounds = IntegerBounds.create(8, True)
 
 
 Int64 = Int64Type()
@@ -84,6 +89,7 @@ class Uint8Type(_PrimitiveType[_Uint8Ctype]):
         """Initialize this type."""
         super().__init__("B", signed=False)
         assert self.is_integer
+        self.int_bounds = IntegerBounds.create(1, False)
 
 
 Uint8 = Uint8Type()
@@ -99,6 +105,7 @@ class Uint16Type(_PrimitiveType[_Uint16Ctype]):
         """Initialize this type."""
         super().__init__("H", signed=False)
         assert self.is_integer
+        self.int_bounds = IntegerBounds.create(2, False)
 
 
 Uint16 = Uint16Type()
@@ -114,6 +121,7 @@ class Uint32Type(_PrimitiveType[_Uint32Ctype]):
         """Initialize this type."""
         super().__init__("I", signed=False)
         assert self.is_integer
+        self.int_bounds = IntegerBounds.create(4, False)
 
 
 Uint32 = Uint32Type()
@@ -129,6 +137,7 @@ class Uint64Type(_PrimitiveType[_Uint64Ctype]):
         """Initialize this type."""
         super().__init__("Q", signed=False)
         assert self.is_integer
+        self.int_bounds = IntegerBounds.create(8, False)
 
 
 Uint64 = Uint64Type()

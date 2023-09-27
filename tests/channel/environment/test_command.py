@@ -30,7 +30,12 @@ def test_channel_command_scalings():
 
     env = ChannelEnvironment()
 
-    env.int_channel("4_20ma", commandable=True, scaling=[0.0, 3.81469727e-07])
+    env.int_channel(
+        "4_20ma",
+        commandable=True,
+        scaling=[0.0, 3.81469727e-07],
+        kind="uint16",
+    )
 
     processor = ChannelCommandProcessor(env, getLogger(__name__))
 
@@ -38,6 +43,10 @@ def test_channel_command_scalings():
     for _ in range(25):
         assert processor.command(f"set 4_20ma {val}")
         val += 0.01
+
+    # Ensure that clamping works.
+    assert processor.command("set 4_20ma 0.030")
+    assert isclose(env.value("4_20ma"), 0.025, rel_tol=0.001)  # type: ignore
 
 
 def test_channel_command_processor_basic():

@@ -131,9 +131,14 @@ class Primitive(_Generic[T]):
     def scaled(self, value: T) -> None:
         """Set this value but invert scaling information."""
 
-        self.value = invert(  # type: ignore
+        val = invert(
             value, scaling=self.scaling, should_round=self.kind.is_integer
         )
+
+        if self.kind.int_bounds is not None:
+            val = self.kind.int_bounds.clamp(val)  # type: ignore
+
+        self.value = val  # type: ignore
 
     def __call__(self, value: T = None) -> T:
         """

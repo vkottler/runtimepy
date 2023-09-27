@@ -9,6 +9,7 @@ from struct import pack as _pack
 from struct import unpack as _unpack
 from typing import BinaryIO as _BinaryIO
 from typing import Generic as _Generic
+from typing import Optional as _Optional
 from typing import Type as _Type
 from typing import TypeVar as _TypeVar
 from typing import Union as _Union
@@ -19,6 +20,7 @@ from runtimepy.primitives.byte_order import (
     DEFAULT_BYTE_ORDER as _DEFAULT_BYTE_ORDER,
 )
 from runtimepy.primitives.byte_order import ByteOrder as _ByteOrder
+from runtimepy.primitives.type.bounds import IntegerBounds
 
 # Integer type aliases.
 Int8Ctype = _ctypes.c_byte
@@ -73,6 +75,7 @@ class PrimitiveType(_Generic[T]):
 
         self.format = struct_format
         self.signed = signed
+        self.int_bounds: _Optional[IntegerBounds] = None
 
         # Make sure that the struct size and ctype size match. There's
         # unfortunately no obvious (or via public interfaces) way to just
