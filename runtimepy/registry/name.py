@@ -45,7 +45,7 @@ class NameRegistry(_TwoWayNameMapping[int]):
             return curr
 
         # Ensure the name is valid.
-        if not self.validate_name(name):
+        if not self.validate_name(name, self.logger):
             return None
 
         # Find the next valid identifier.

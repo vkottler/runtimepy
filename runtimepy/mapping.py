@@ -14,6 +14,9 @@ from typing import TypeVar as _TypeVar
 from typing import Union as _Union
 from typing import cast as _cast
 
+# third-party
+from vcorelib.logging import LoggerMixin
+
 # internal
 from runtimepy.mixins.regex import RegexMixin as _RegexMixin
 
@@ -37,7 +40,7 @@ EnumMappingData = _Union[
 ]
 
 
-class TwoWayNameMapping(_RegexMixin, _Generic[T]):
+class TwoWayNameMapping(_RegexMixin, LoggerMixin, _Generic[T]):
     """A class interface for managing two-way mappings."""
 
     def __init__(
@@ -50,6 +53,7 @@ class TwoWayNameMapping(_RegexMixin, _Generic[T]):
         self._mapping: _Dict[T, str] = {}
         self._reverse: _Dict[str, T] = {}
         self.registered_order: _List[str] = []
+        LoggerMixin.__init__(self)
 
         if mapping is not None:
             self.load_key_to_name(mapping)
