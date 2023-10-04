@@ -7,6 +7,9 @@ validate names with.
 from re import Pattern as _Pattern
 from re import compile as _compile
 
+# third-party
+from vcorelib.logging import LoggerType
+
 DEFAULT_PATTERN = _compile("^[\\w\\:.-]+$")
 CHANNEL_PATTERN = _compile("^[a-z0-9_.-]+$")
 
@@ -18,6 +21,14 @@ class RegexMixin:
     name_regex: _Pattern = DEFAULT_PATTERN  # type: ignore
 
     @classmethod
-    def validate_name(cls, name: str) -> bool:
+    def validate_name(cls, name: str, logger: LoggerType = None) -> bool:
         """Determine if a name is valid for this class."""
-        return cls.name_regex.fullmatch(name) is not None
+
+        result = cls.name_regex.fullmatch(name) is not None
+
+        if not result and logger is not None:
+            logger.warning(
+                "Name '%s' didn't match '%s'.", name, cls.name_regex
+            )
+
+        return result
