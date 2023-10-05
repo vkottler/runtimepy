@@ -180,11 +180,13 @@ class PrimitiveArray(Serializable):
         """Access underlying primitives by index."""
         return self._primitives[index]
 
-    def add_primitive(self, kind: _Primitivelike) -> int:
+    def add_primitive(
+        self, kind: _Primitivelike, array_length: int = None
+    ) -> int:
         """Add to the array by specifying the type of element to add."""
-        return self.add(_create(kind))
+        return self.add(_create(kind), array_length=array_length)
 
-    def add(self, primitive: _AnyPrimitive) -> int:
+    def add(self, primitive: _AnyPrimitive, array_length: int = None) -> int:
         """Add another primitive to manage."""
 
         end = self.end
@@ -194,13 +196,22 @@ class PrimitiveArray(Serializable):
                 self._format += primitive.kind.format
                 self.size += primitive.size
 
+                # Handle array length.
+                if array_length is not None:
+                    for _ in range(array_length - 1):
+                        self._primitives.append(
+                            primitive.copy(),  # type: ignore
+                        )
+                        self._format += primitive.kind.format
+                        self.size += primitive.size
+
                 # Add tracking information for the current tail.
                 curr_idx = len(self._primitives)
                 self._bytes_to_index[self.size] = curr_idx
                 self._index_to_bytes[curr_idx] = self.size
                 result = self.size
             else:
-                result = end.add(primitive)
+                result = end.add(primitive, array_length=array_length)
 
         # Add a new primitive array to the end of this chain for this
         # primitive.
@@ -208,7 +219,7 @@ class PrimitiveArray(Serializable):
             new_array = PrimitiveArray(byte_order=self.byte_order)
             end.assign(new_array)
 
-            result = new_array.add(primitive)
+            result = new_array.add(primitive, array_length=array_length)
 
         return result
 

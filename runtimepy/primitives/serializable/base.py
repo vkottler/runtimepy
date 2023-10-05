@@ -111,7 +111,12 @@ class Serializable(ABC):
         assert self.chain is None, self.chain
         self.chain = chain
 
-    def add_to_end(self, chain: T) -> None:
+    def add_to_end(self, chain: T, array_length: int = None) -> None:
         """Add a new serializable to the end of this chain."""
 
         self.end.assign(chain)
+
+        # Add additional array elements as copies.
+        if array_length is not None:
+            for _ in range(array_length - 1):
+                self.end.assign(chain.copy())

@@ -26,6 +26,19 @@ def get_test_system() -> TypeSystem:
     return system
 
 
+def test_type_system_arrays():
+    """Test a custom type system with array elements."""
+
+    system = get_test_system()
+
+    system.register("SampleStruct2")
+    system.add("SampleStruct2", "array_field", "SampleStruct", array_length=2)
+    assert system.size("SampleStruct2") == 14
+
+    system.add("SampleStruct2", "array_field2", "uint32", array_length=10)
+    assert system.size("SampleStruct2") == 54
+
+
 def test_type_system_compound_types():
     """Test a custom type system with multiple complex types."""
 

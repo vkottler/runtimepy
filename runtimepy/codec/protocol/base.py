@@ -42,6 +42,7 @@ class FieldSpec(NamedTuple):
     name: str
     kind: _Primitivelike
     enum: _Optional[_RegistryKey] = None
+    array_length: _Optional[int] = None
 
     def asdict(self) -> _JsonObject:
         """Obtain a dictionary representing this instance."""
@@ -49,6 +50,7 @@ class FieldSpec(NamedTuple):
         result: _JsonObject = {
             "name": self.name,
             "kind": _create(self.kind).kind.name,
+            "array_length": self.array_length,
         }
         if self.enum is not None:
             result["enum"] = self.enum
@@ -109,7 +111,11 @@ class ProtocolBase:
                 self._add_bit_fields(self._fields.fields[item], track=False)
             else:
                 self.add_field(
-                    item.name, item.kind, enum=item.enum, track=False
+                    item.name,
+                    item.kind,
+                    enum=item.enum,
+                    track=False,
+                    array_length=item.array_length,
                 )
 
         # Keep track of named serializables.
@@ -137,6 +143,7 @@ class ProtocolBase:
         enum: _RegistryKey = None,
         serializable: Serializable = None,
         track: bool = True,
+        array_length: int = None,
     ) -> None:
         """Add a new field to the protocol."""
 
@@ -148,7 +155,7 @@ class ProtocolBase:
         if serializable is not None:
             assert kind is None and enum is None
             self.serializables[name] = serializable
-            self.array.add_to_end(serializable)
+            self.array.add_to_end(serializable, array_length=array_length)
             return
 
         if enum is not None:
@@ -163,11 +170,13 @@ class ProtocolBase:
         assert kind is not None
         new = _create(kind)
 
-        self.array.add(new)
+        self.array.add(new, array_length=array_length)
         self._regular_fields[name] = new
 
         if track:
-            self._build.append(FieldSpec(name, kind, enum))
+            self._build.append(
+                FieldSpec(name, kind, enum, array_length=array_length)
+            )
 
     def _add_bit_fields(self, fields: _BitFields, track: bool = True) -> None:
         """Add a bit-fields instance."""
