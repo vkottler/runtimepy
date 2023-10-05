@@ -15,6 +15,7 @@ from typing import Union as _Union
 
 # third-party
 from vcorelib.io.types import JsonObject as _JsonObject
+from vcorelib.logging import LoggerType
 
 # internal
 from runtimepy.enum import RuntimeEnum as _RuntimeEnum
@@ -42,6 +43,7 @@ class FieldSpec(NamedTuple):
     name: str
     kind: _Primitivelike
     enum: _Optional[_RegistryKey] = None
+    array_length: _Optional[int] = None
 
     def asdict(self) -> _JsonObject:
         """Obtain a dictionary representing this instance."""
@@ -49,6 +51,7 @@ class FieldSpec(NamedTuple):
         result: _JsonObject = {
             "name": self.name,
             "kind": _create(self.kind).kind.name,
+            "array_length": self.array_length,
         }
         if self.enum is not None:
             result["enum"] = self.enum
@@ -89,10 +92,10 @@ class ProtocolBase:
 
         if names is None:
             names = _NameRegistry()
-        self._names = names
+        self.names = names
 
         if fields is None:
-            fields = BitFieldsManager(self._names, self._enum_registry)
+            fields = BitFieldsManager(self.names, self._enum_registry)
         self._fields = fields
 
         self._regular_fields: _Dict[str, _AnyPrimitive] = {}
@@ -109,7 +112,11 @@ class ProtocolBase:
                 self._add_bit_fields(self._fields.fields[item], track=False)
             else:
                 self.add_field(
-                    item.name, item.kind, enum=item.enum, track=False
+                    item.name,
+                    item.kind,
+                    enum=item.enum,
+                    track=False,
+                    array_length=item.array_length,
                 )
 
         # Keep track of named serializables.
@@ -123,12 +130,28 @@ class ProtocolBase:
 
         return self.__class__(
             self._enum_registry,
-            names=self._names,
+            names=self.names,
             fields=_copy(self._fields),
             build=self._build,
             byte_order=self.array.byte_order,
             serializables=self.serializables,
         )
+
+    def register_name(self, name: str) -> int:
+        """Register the field name."""
+
+        ident = self.names.register_name(name)
+        assert ident is not None, f"Couldn't register field '{name}'!"
+        return ident
+
+    def add_serializable(
+        self, name: str, serializable: Serializable, array_length: int = None
+    ) -> int:
+        """Add a serializable instance."""
+
+        self.register_name(name)
+        self.serializables[name] = serializable
+        return self.array.add_to_end(serializable, array_length=array_length)
 
     def add_field(
         self,
@@ -137,19 +160,18 @@ class ProtocolBase:
         enum: _RegistryKey = None,
         serializable: Serializable = None,
         track: bool = True,
-    ) -> None:
+        array_length: int = None,
+    ) -> int:
         """Add a new field to the protocol."""
-
-        # Register the field name.
-        ident = self._names.register_name(name)
-        assert ident is not None, f"Couldn't register field '{name}'!"
 
         # Add the serializable to the end of this protocol.
         if serializable is not None:
             assert kind is None and enum is None
-            self.serializables[name] = serializable
-            self.array.add_to_end(serializable)
-            return
+            return self.add_serializable(
+                name, serializable, array_length=array_length
+            )
+
+        self.register_name(name)
 
         if enum is not None:
             runtime_enum = self._enum_registry[enum]
@@ -163,11 +185,15 @@ class ProtocolBase:
         assert kind is not None
         new = _create(kind)
 
-        self.array.add(new)
+        result = self.array.add(new, array_length=array_length)
         self._regular_fields[name] = new
 
         if track:
-            self._build.append(FieldSpec(name, kind, enum))
+            self._build.append(
+                FieldSpec(name, kind, enum, array_length=array_length)
+            )
+
+        return result
 
     def _add_bit_fields(self, fields: _BitFields, track: bool = True) -> None:
         """Add a bit-fields instance."""
@@ -208,15 +234,23 @@ class ProtocolBase:
         """Get this protocol's size in bytes."""
         return self.array.length()
 
+    def trace_size(self, logger: LoggerType) -> None:
+        """Log a size trace."""
+        logger.info("%s: %s", self, self.array.length_trace())
+
     def __str__(self) -> str:
         """Get this instance as a string."""
 
-        return f"({self.size})\t" + "\t".join(
-            f"{name}={self[name]}" for name in self._names.registered_order
+        return f"({self.size}) " + " ".join(
+            f"{name}={self[name]}" for name in self.names.registered_order
         )
 
     def __getitem__(self, name: str) -> ProtocolPrimitive:
         """Get the value of a protocol field."""
+
+        if name in self.serializables:
+            return str(self.serializables[name].__class__.__name__)
+
         return self.value(name)
 
     def __setitem__(self, name: str, val: ProtocolPrimitive) -> None:

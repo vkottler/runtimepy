@@ -6,6 +6,7 @@ A basic type-system implementation.
 from typing import Dict, Optional, Type
 
 # third-party
+from vcorelib.logging import LoggerMixin
 from vcorelib.namespace import CPP_DELIM, Namespace
 
 # internal
@@ -21,11 +22,13 @@ from runtimepy.primitives.byte_order import ByteOrder
 from runtimepy.primitives.type import AnyPrimitiveType, PrimitiveTypes
 
 
-class TypeSystem:
+class TypeSystem(LoggerMixin):
     """A class for managing a custom type system."""
 
     def __init__(self, *namespace: str) -> None:
         """Initialize this instance."""
+
+        super().__init__()
 
         self.primitives: Dict[str, AnyPrimitiveType] = {}
         self.custom: Dict[str, Protocol] = {}
@@ -91,7 +94,13 @@ class TypeSystem:
         assert found is not None
         return self.custom[found]
 
-    def add(self, custom_type: str, field_name: str, field_type: str) -> None:
+    def add(
+        self,
+        custom_type: str,
+        field_name: str,
+        field_type: str,
+        array_length: int = None,
+    ) -> None:
         """Add a field to a custom type."""
 
         type_name = self._find_name(custom_type, strict=True)
@@ -105,17 +114,24 @@ class TypeSystem:
         # Handle enumerations.
         enum = self._enums.get(field_type_name)
         if enum is not None:
-            custom.add_field(field_name, enum=field_type_name)
+            custom.add_field(
+                field_name, enum=field_type_name, array_length=array_length
+            )
             return
 
         # Lookup field type.
         if field_type_name in self.custom:
-            custom.array.add_to_end(self.custom[field_type_name].array.copy())
-            return
-
-        custom.add_field(
-            field_name, kind=self.primitives[field_type_name].name
-        )
+            custom.add_serializable(
+                field_name,
+                self.custom[field_type_name].array.copy(),
+                array_length=array_length,
+            )
+        else:
+            custom.add_field(
+                field_name,
+                kind=self.primitives[field_type_name].name,
+                array_length=array_length,
+            )
 
     def _find_name(
         self, name: str, *namespace: str, strict: bool = False
@@ -126,6 +142,10 @@ class TypeSystem:
             return name
 
         with self.root_namespace.pushed(*namespace):
+            candidate = self.root_namespace.namespace(name, track=False)
+            if candidate in self.custom:
+                return candidate
+
             matches = list(self.root_namespace.search(pattern=name))
 
         assert (
@@ -158,7 +178,7 @@ class TypeSystem:
         assert name not in self.primitives, name
         self.primitives[name] = PrimitiveTypes[kind]
 
-    def size(self, name: str, *namespace: str) -> int:
+    def size(self, name: str, *namespace: str, trace: bool = False) -> int:
         """Get the size of a named type."""
 
         found = self._find_name(name, *namespace, strict=True)
@@ -167,4 +187,8 @@ class TypeSystem:
         if found in self.primitives:
             return self.primitives[found].size
 
-        return self.custom[found].size
+        result = self.custom[found].size
+        if trace:
+            self.custom[found].trace_size(self.logger)
+
+        return result
