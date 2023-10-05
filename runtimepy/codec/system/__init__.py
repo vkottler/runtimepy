@@ -49,10 +49,12 @@ class TypeSystem(LoggerMixin):
 
         self.root_namespace = global_namespace.child(*namespace)
 
-    def get_enum(self, name: str, *namespace: str) -> RuntimeEnum:
+    def get_enum(
+        self, name: str, *namespace: str, exact: bool = True
+    ) -> RuntimeEnum:
         """Lookup an enum type at runtime."""
 
-        found = self._find_name(name, *namespace, strict=True)
+        found = self._find_name(name, *namespace, strict=True, exact=exact)
         assert found is not None
         return self._enums[found]
 
@@ -87,10 +89,12 @@ class TypeSystem(LoggerMixin):
         ] = new_type
         return new_type
 
-    def get_protocol(self, name: str, *namespace: str) -> Protocol:
+    def get_protocol(
+        self, name: str, *namespace: str, exact: bool = True
+    ) -> Protocol:
         """Get a custom protocol by name."""
 
-        found = self._find_name(name, *namespace, strict=True)
+        found = self._find_name(name, *namespace, strict=True, exact=exact)
         assert found is not None
         return self.custom[found]
 
@@ -100,12 +104,13 @@ class TypeSystem(LoggerMixin):
         field_name: str,
         field_type: str,
         array_length: int = None,
+        exact: bool = True,
     ) -> None:
         """Add a field to a custom type."""
 
-        type_name = self._find_name(custom_type, strict=True)
+        type_name = self._find_name(custom_type, strict=True, exact=exact)
         assert type_name is not None
-        field_type_name = self._find_name(field_type, strict=True)
+        field_type_name = self._find_name(field_type, strict=True, exact=exact)
         assert field_type_name is not None
 
         assert type_name in self.custom, type_name
@@ -134,7 +139,11 @@ class TypeSystem(LoggerMixin):
             )
 
     def _find_name(
-        self, name: str, *namespace: str, strict: bool = False
+        self,
+        name: str,
+        *namespace: str,
+        strict: bool = False,
+        exact: bool = True,
     ) -> Optional[str]:
         """Attempt to find a registered name."""
 
@@ -149,7 +158,7 @@ class TypeSystem(LoggerMixin):
             matches = list(
                 x
                 for x in self.root_namespace.search(pattern=name)
-                if x == candidate
+                if not exact or x == candidate
             )
 
         assert (
@@ -184,10 +193,16 @@ class TypeSystem(LoggerMixin):
         assert name not in self.primitives, name
         self.primitives[name] = PrimitiveTypes[kind]
 
-    def size(self, name: str, *namespace: str, trace: bool = False) -> int:
+    def size(
+        self,
+        name: str,
+        *namespace: str,
+        trace: bool = False,
+        exact: bool = True,
+    ) -> int:
         """Get the size of a named type."""
 
-        found = self._find_name(name, *namespace, strict=True)
+        found = self._find_name(name, *namespace, strict=True, exact=exact)
         assert found is not None
 
         if found in self.primitives:
