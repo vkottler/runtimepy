@@ -113,18 +113,28 @@ class Serializable(ABC):
 
         return result
 
-    def assign(self, chain: T) -> None:
+    def assign(self, chain: T) -> int:
         """Assign a next serializable."""
 
         assert self.chain is None, self.chain
         self.chain = chain
+        return self.chain.size
 
-    def add_to_end(self, chain: T, array_length: int = None) -> None:
+    def add_to_end(self, chain: T, array_length: int = None) -> int:
         """Add a new serializable to the end of this chain."""
 
-        self.end.assign(chain)
+        # Copy the chain element before it becomes part of the current chain
+        # if an array is created.
+        copy_base = None
+        if array_length is not None:
+            copy_base = chain.copy()
+
+        size = self.end.assign(chain)
 
         # Add additional array elements as copies.
         if array_length is not None:
+            assert copy_base is not None
             for _ in range(array_length - 1):
-                self.end.assign(chain.copy())
+                size += self.end.assign(copy_base.copy())
+
+        return size

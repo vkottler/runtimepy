@@ -146,12 +146,12 @@ class ProtocolBase:
 
     def add_serializable(
         self, name: str, serializable: Serializable, array_length: int = None
-    ) -> None:
+    ) -> int:
         """Add a serializable instance."""
 
         self.register_name(name)
         self.serializables[name] = serializable
-        self.array.add_to_end(serializable, array_length=array_length)
+        return self.array.add_to_end(serializable, array_length=array_length)
 
     def add_field(
         self,
@@ -161,16 +161,15 @@ class ProtocolBase:
         serializable: Serializable = None,
         track: bool = True,
         array_length: int = None,
-    ) -> None:
+    ) -> int:
         """Add a new field to the protocol."""
 
         # Add the serializable to the end of this protocol.
         if serializable is not None:
             assert kind is None and enum is None
-            self.add_serializable(
+            return self.add_serializable(
                 name, serializable, array_length=array_length
             )
-            return
 
         self.register_name(name)
 
@@ -186,13 +185,15 @@ class ProtocolBase:
         assert kind is not None
         new = _create(kind)
 
-        self.array.add(new, array_length=array_length)
+        result = self.array.add(new, array_length=array_length)
         self._regular_fields[name] = new
 
         if track:
             self._build.append(
                 FieldSpec(name, kind, enum, array_length=array_length)
             )
+
+        return result
 
     def _add_bit_fields(self, fields: _BitFields, track: bool = True) -> None:
         """Add a bit-fields instance."""
