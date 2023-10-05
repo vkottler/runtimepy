@@ -146,7 +146,11 @@ class TypeSystem(LoggerMixin):
             if candidate in self.custom:
                 return candidate
 
-            matches = list(self.root_namespace.search(pattern=name))
+            matches = list(
+                x
+                for x in self.root_namespace.search(pattern=name)
+                if x == candidate
+            )
 
         assert (
             0 <= len(matches) <= 1
@@ -166,6 +170,8 @@ class TypeSystem(LoggerMixin):
                 resolved = self._find_name(name)
                 assert (
                     resolved is None
+                    or self.root_namespace.namespace(name, track=False)
+                    != resolved
                 ), f"Name '{name}' not available! found '{resolved}'"
 
             result = self.root_namespace.namespace(name)
