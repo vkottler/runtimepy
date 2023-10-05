@@ -61,7 +61,7 @@ class JsonProtocol(ProtocolBase):
         json_obj = data[NAMES_KEY]
         json_obj.update(
             {
-                name: self._names.identifier(name)
+                name: self.names.identifier(name)
                 for name in self._regular_fields
             }
         )

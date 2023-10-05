@@ -43,6 +43,14 @@ class Serializable(ABC):
             result += self.chain.length()
         return result
 
+    def length_trace(self) -> str:
+        """Get a length-tracing string for this instance."""
+
+        current = f"{self.__class__.__name__}({self.size})"
+        if self.chain is not None:
+            current += " -> " + self.chain.length_trace()
+        return current
+
     @property
     def end(self) -> "Serializable":
         """Get the end of this chain."""

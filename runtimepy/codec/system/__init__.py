@@ -6,6 +6,7 @@ A basic type-system implementation.
 from typing import Dict, Optional, Type
 
 # third-party
+from vcorelib.logging import LoggerMixin
 from vcorelib.namespace import CPP_DELIM, Namespace
 
 # internal
@@ -21,11 +22,13 @@ from runtimepy.primitives.byte_order import ByteOrder
 from runtimepy.primitives.type import AnyPrimitiveType, PrimitiveTypes
 
 
-class TypeSystem:
+class TypeSystem(LoggerMixin):
     """A class for managing a custom type system."""
 
     def __init__(self, *namespace: str) -> None:
         """Initialize this instance."""
+
+        super().__init__()
 
         self.primitives: Dict[str, AnyPrimitiveType] = {}
         self.custom: Dict[str, Protocol] = {}
@@ -118,17 +121,17 @@ class TypeSystem:
 
         # Lookup field type.
         if field_type_name in self.custom:
-            custom.array.add_to_end(
+            custom.add_serializable(
+                field_name,
                 self.custom[field_type_name].array.copy(),
                 array_length=array_length,
             )
-            return
-
-        custom.add_field(
-            field_name,
-            kind=self.primitives[field_type_name].name,
-            array_length=array_length,
-        )
+        else:
+            custom.add_field(
+                field_name,
+                kind=self.primitives[field_type_name].name,
+                array_length=array_length,
+            )
 
     def _find_name(
         self, name: str, *namespace: str, strict: bool = False
@@ -175,7 +178,7 @@ class TypeSystem:
         assert name not in self.primitives, name
         self.primitives[name] = PrimitiveTypes[kind]
 
-    def size(self, name: str, *namespace: str) -> int:
+    def size(self, name: str, *namespace: str, trace: bool = False) -> int:
         """Get the size of a named type."""
 
         found = self._find_name(name, *namespace, strict=True)
@@ -184,4 +187,8 @@ class TypeSystem:
         if found in self.primitives:
             return self.primitives[found].size
 
-        return self.custom[found].size
+        result = self.custom[found].size
+        if trace:
+            self.custom[found].trace_size(self.logger)
+
+        return result

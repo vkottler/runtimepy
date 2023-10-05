@@ -32,11 +32,17 @@ def test_type_system_arrays():
     system = get_test_system()
 
     system.register("SampleStruct2")
-    system.add("SampleStruct2", "array_field", "SampleStruct", array_length=2)
+    system.add("SampleStruct2", "array_field1", "SampleStruct", array_length=2)
     assert system.size("SampleStruct2") == 14
 
     system.add("SampleStruct2", "array_field2", "uint32", array_length=10)
-    assert system.size("SampleStruct2") == 54
+    assert system.size("SampleStruct2", trace=True) == 54
+
+    system.add("SampleStruct2", "array_field3", "SampleStruct", array_length=2)
+    assert system.size("SampleStruct2", trace=True) == 68
+
+    system.add("SampleStruct2", "array_field4", "SampleStruct", array_length=2)
+    assert system.size("SampleStruct2", trace=True) == 68 + 14
 
 
 def test_type_system_compound_types():
