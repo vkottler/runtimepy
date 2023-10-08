@@ -3,7 +3,7 @@ A basic type-system implementation.
 """
 
 # built-in
-from typing import Dict, Optional, Type
+from typing import Dict, Iterable, Optional, Type
 
 # third-party
 from vcorelib.logging import LoggerMixin
@@ -20,6 +20,24 @@ from runtimepy.enum.registry import (
 )
 from runtimepy.primitives.byte_order import ByteOrder
 from runtimepy.primitives.type import AnyPrimitiveType, PrimitiveTypes
+
+
+def resolve_name(matches: Iterable[str]) -> str:
+    """Resolve a possible name conflict."""
+
+    by_len: dict[int, list[str]] = {}
+    shortest = -1
+    for match in matches:
+        length = len(match)
+        if shortest == -1 or length < shortest:
+            shortest = length
+
+        by_len.setdefault(length, [])
+        by_len[length].append(match)
+
+    result = by_len[shortest]
+    assert len(result) == 1, result
+    return result[0]
 
 
 class TypeSystem(LoggerMixin):
@@ -161,13 +179,14 @@ class TypeSystem(LoggerMixin):
                 if not exact or x == candidate
             )
 
-        assert (
-            0 <= len(matches) <= 1
-        ), f"Duplicate type names! {name}: {matches}"
+        match = (
+            resolve_name(matches)
+            if not 0 <= len(matches) <= 1
+            else (matches[0] if matches else None)
+        )
 
-        assert not strict or matches, f"Name '{name}' not found."
-
-        return matches[0] if matches else None
+        assert not strict or match, f"Name '{name}' not found."
+        return match
 
     def _name(
         self, name: str, *namespace: str, check_available: bool = False
