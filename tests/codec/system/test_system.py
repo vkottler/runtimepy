@@ -3,7 +3,13 @@ Ttest the 'codec.system' module.
 """
 
 # module under test
-from runtimepy.codec.system import TypeSystem
+from runtimepy.codec.system import TypeSystem, resolve_name
+
+
+def test_system_name_resolving() -> None:
+    """Test a name resolution scenario."""
+
+    assert resolve_name(["Test1Asdf", "Test1"]) == "Test1"
 
 
 def get_test_system() -> TypeSystem:
