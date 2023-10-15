@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta:__legacy__"
 
 [project]
 name = "runtimepy"
-version = "2.13.3"
+version = "2.13.4"
 description = "A framework for implementing Python services."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -16,6 +16,7 @@ maintainers = [
 ]
 classifiers = [
   "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
   "Operating System :: Microsoft :: Windows",
   "Operating System :: MacOS",
   "Operating System :: POSIX :: Linux",
