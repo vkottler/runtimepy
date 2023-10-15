@@ -20,23 +20,22 @@ from tests.resources import SampleTcpConnection, release_after
 async def test_tcp_connection_basic():
     """Test basic interactions with a TCP connection."""
 
-    conn1, conn2 = await SampleTcpConnection.create_pair()
+    async with SampleTcpConnection.create_pair() as (conn1, conn2):
+        conn1.send_text("Hello!\n")
+        conn2.send_text("Hello!\n")
+        for idx in range(10):
+            conn1.send_binary((str(idx) + "\n").encode())
+            conn2.send_binary((str(idx) + "\n").encode())
+        conn1.send_text("stop\n")
+        conn2.send_text("stop\n")
 
-    conn1.send_text("Hello!\n")
-    conn2.send_text("Hello!\n")
-    for idx in range(10):
-        conn1.send_binary((str(idx) + "\n").encode())
-        conn2.send_binary((str(idx) + "\n").encode())
-    conn1.send_text("stop\n")
-    conn2.send_text("stop\n")
-
-    await asyncio.wait(
-        [
-            asyncio.create_task(conn1.process()),
-            asyncio.create_task(conn2.process()),
-        ],
-        return_when=asyncio.ALL_COMPLETED,
-    )
+        await asyncio.wait(
+            [
+                asyncio.create_task(conn1.process()),
+                asyncio.create_task(conn2.process()),
+            ],
+            return_when=asyncio.ALL_COMPLETED,
+        )
 
 
 @mark.asyncio
