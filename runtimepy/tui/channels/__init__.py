@@ -3,9 +3,13 @@ A module implementing a channel-environment user interface.
 """
 
 # built-in
-import curses as _curses
 from typing import List as _List
 from typing import Optional as _Optional
+
+try:
+    import curses as _curses
+except ModuleNotFoundError:  # pragma: nocover
+    _curses = {}  # type: ignore
 
 # internal
 from runtimepy import PKG_NAME as _PKG_NAME

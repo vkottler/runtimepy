@@ -6,19 +6,20 @@ An entry-point for the 'tui' command.
 from argparse import ArgumentParser as _ArgumentParser
 from argparse import Namespace as _Namespace
 import asyncio as _asyncio
-import curses as _curses
-from typing import Optional
 
 # third-party
 from vcorelib.args import CommandFunction as _CommandFunction
 from vcorelib.asyncio import run_handle_stop as _run_handle_stop
 
-# internal
 from runtimepy.channel.environment import (
     ChannelEnvironment as _ChannelEnvironment,
 )
-from runtimepy.tui.channels import CursesWindow as _CursesWindow
+
+# internal
+from runtimepy.commands.common import curses_wrap_if
 from runtimepy.tui.task import TuiTask as _TuiTask
+
+__all__ = ("curses_wrap_if", "start", "tui_cmd", "add_tui_cmd")
 
 
 def start(args: _Namespace) -> int:
@@ -43,30 +44,6 @@ def start(args: _Namespace) -> int:
     )
 
     return 0
-
-
-def curses_wrap_if(method: _CommandFunction, args: _Namespace) -> int:
-    """Run a method in TUI mode if a condition is met."""
-
-    assert not hasattr(args, "window"), args
-    args.window = None
-
-    result = -1
-
-    if getattr(args, "curses", False):
-
-        def wrapper(window: Optional[_CursesWindow], args: _Namespace) -> None:
-            """Set the window attribute."""
-
-            args.window = window
-            nonlocal result
-            result = method(args)
-
-        getattr(_curses, "wrapper")(wrapper, args)
-    else:
-        result = method(args)
-
-    return result
 
 
 def tui_cmd(args: _Namespace) -> int:
