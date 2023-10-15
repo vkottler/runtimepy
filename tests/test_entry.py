@@ -3,6 +3,7 @@ runtimepy - Test the program's entry-point.
 """
 
 # built-in
+import importlib
 from subprocess import check_output
 from sys import executable
 from unittest.mock import patch
@@ -35,8 +36,15 @@ def test_package_entry():
 def test_entry_tui_cmd():
     """Test basic usages of the 'tui' command."""
 
-    base = base_args("tui")
+    try:
+        # Only run these tests if the curses module is present.
+        importlib.import_module("curses")
+        base = base_args("tui")
 
-    with patch("runtimepy.commands.tui._curses.wrapper", new=wrapper_mock):
-        # Only run 20 iterations.
-        assert runtimepy_main(base + ["-i", "20"]) == 0
+        with patch(
+            "runtimepy.commands.common._curses.wrapper", new=wrapper_mock
+        ):
+            # Only run 20 iterations.
+            assert runtimepy_main(base + ["-i", "20"]) == 0
+    except ModuleNotFoundError:
+        pass

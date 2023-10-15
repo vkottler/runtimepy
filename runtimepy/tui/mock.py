@@ -3,10 +3,14 @@ A module implementing a simple window mock.
 """
 
 # built-in
-import curses
 from os import environ
 from sys import platform
 from typing import Tuple
+
+try:
+    import curses
+except ModuleNotFoundError:  # pragma: nocover
+    curses = {}  # type: ignore
 
 
 class WindowMock:

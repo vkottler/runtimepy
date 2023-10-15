@@ -19,6 +19,7 @@ jobs:
       matrix:
         python-version:
           - "3.11"
+          - "3.12"
         system:
           - ubuntu-latest
           - macos-latest
@@ -67,7 +68,7 @@ jobs:
 
       - run: |
           mk python-release owner=vkottler \
-                            repo=runtimepy version=2.13.3
+                            repo=runtimepy version=2.13.4
         if: |
           matrix.python-version == '3.11'
           && matrix.system == 'ubuntu-latest'

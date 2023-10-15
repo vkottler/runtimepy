@@ -182,7 +182,8 @@ class TcpConnection(_Connection, _TransportMixin):
         LOG.info("TCP Server closed.")
 
     @classmethod
-    async def create_pair(cls: _Type[T]) -> _Tuple[T, T]:
+    @_asynccontextmanager
+    async def create_pair(cls: _Type[T]) -> _AsyncIterator[_Tuple[T, T]]:
         """Create a connection pair."""
 
         cond = _Semaphore(0)
@@ -199,8 +200,8 @@ class TcpConnection(_Connection, _TransportMixin):
             conn2 = await cls.create_connection(host="localhost", port=host[1])
             await cond.acquire()
 
-        assert conn1 is not None
-        return conn1, conn2
+            assert conn1 is not None
+            yield conn1, conn2
 
     async def close(self) -> None:
         """Close this connection."""

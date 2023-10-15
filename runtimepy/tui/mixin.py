@@ -3,8 +3,12 @@ A module for terminal user-interface application mixins.
 """
 
 # built-in
-import curses as _curses
 from typing import Optional
+
+try:
+    import curses as _curses
+except ModuleNotFoundError:  # pragma: nocover
+    _curses = {}  # type: ignore
 
 # internal
 from runtimepy.tui.cursor import CursesWindow, Cursor

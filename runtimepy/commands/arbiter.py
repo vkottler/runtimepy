@@ -12,8 +12,7 @@ from vcorelib.args import CommandFunction as _CommandFunction
 from vcorelib.asyncio import run_handle_stop as _run_handle_stop
 
 # internal
-from runtimepy.commands.common import arbiter_args
-from runtimepy.commands.tui import curses_wrap_if
+from runtimepy.commands.common import arbiter_args, curses_wrap_if
 from runtimepy.net.arbiter import ConnectionArbiter
 from runtimepy.tui.channels import CursesWindow as _CursesWindow
 
