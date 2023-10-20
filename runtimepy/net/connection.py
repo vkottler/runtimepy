@@ -59,6 +59,7 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
 
         self._tasks: _List[_asyncio.Task[None]] = []
         self.initialized = _asyncio.Event()
+        self.exited = _asyncio.Event()
 
         self.metrics = ConnectionMetrics()
 
@@ -236,12 +237,14 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
         if stop_sig is not None:
             self._tasks.append(_asyncio.create_task(self._wait_sig(stop_sig)))
 
+        self.exited.clear()
         await _asyncio.wait(self._tasks, return_when=_asyncio.ALL_COMPLETED)
 
         # Ensure that tasks have their exceptions retrieved.
         _log_exceptions(self._tasks, self.logger)
 
         await self.close()
+        self.exited.set()
 
     async def _process_read(self) -> None:
         """Process incoming messages while this connection is active."""

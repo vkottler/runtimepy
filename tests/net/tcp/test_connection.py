@@ -97,7 +97,8 @@ async def test_tcp_connection_manager_auto_restart():
         conn.env.set("auto_restart", True)
 
         # Disable the connection.
-        conn.disable("testing restart")
+        conn.send_text("stop\n")
+        await conn.exited.wait()
 
         # Wait for re-connect.
         await conn.initialized.wait()
@@ -107,7 +108,8 @@ async def test_tcp_connection_manager_auto_restart():
 
         # End test.
         conn.env.set("auto_restart", False)
-        conn.disable("ending test")
+        conn.send_text("stop\n")
+        await conn.exited.wait()
         sig.set()
 
     await asyncio.wait(
@@ -152,19 +154,20 @@ async def test_tcp_connection_app():
 
         for idx in range(10):
             try:
-                conn = await SampleTcpConnection.create_connection(
-                    host="localhost", port=host.port
-                )
+                if not sig.is_set():
+                    conn = await SampleTcpConnection.create_connection(
+                        host="localhost", port=host.port
+                    )
 
-                if idx % 2 == 0:
-                    conn.send_text("stop\n")
+                    if idx % 2 == 0:
+                        conn.send_text("stop\n")
 
-                # Allow the connection manager to manage this connection.
-                await manager.queue.put(conn)
+                    # Allow the connection manager to manage this connection.
+                    await manager.queue.put(conn)
 
-                if manager.num_connections:
-                    manager.reset_metrics()
-                    manager.poll_metrics()
+                    if manager.num_connections:
+                        manager.reset_metrics()
+                        manager.poll_metrics()
 
             # Don't require every iteration to connection.
             except ConnectionRefusedError:
@@ -176,7 +179,7 @@ async def test_tcp_connection_app():
         [
             asyncio.create_task(x)
             for x in [
-                release_after(sig, 0.1),
+                release_after(sig, 0.2),
                 connect(),
                 SampleTcpConnection.app(
                     sig,
