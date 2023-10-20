@@ -37,3 +37,7 @@ async def test_connection_basic():
         await conn._send_binay_message(  # pylint: disable=protected-access
             "test".encode()
         )
+
+    conn.disable("testing")
+    with raises(NotImplementedError):
+        await conn.process()

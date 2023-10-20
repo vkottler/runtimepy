@@ -1,6 +1,6 @@
 [DESIGN]
 max-args=8
-max-attributes=12
+max-attributes=13
 max-parents=12
 
 [MESSAGES CONTROL]

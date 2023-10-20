@@ -29,9 +29,10 @@ class TransportMixin:
     """A class simplifying evaluation of local and remote addresses."""
 
     _transport: _asyncio.BaseTransport
+    remote_address: _Optional[_IpHost]
 
-    def __init__(self, transport: _asyncio.BaseTransport) -> None:
-        """Initialize this instance."""
+    def set_transport(self, transport: _asyncio.BaseTransport) -> None:
+        """Set the transport for this instance."""
 
         self._transport = transport
 
@@ -44,6 +45,11 @@ class TransportMixin:
         # sendto to be required. Save a copy of the remote address (may be
         # None).
         self.remote_address = self._remote_address()
+
+    def __init__(self, transport: _asyncio.BaseTransport) -> None:
+        """Initialize this instance."""
+
+        self.set_transport(transport)
 
     @property
     def socket(self) -> _SocketType:

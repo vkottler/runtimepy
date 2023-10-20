@@ -85,10 +85,18 @@ class TcpConnection(_Connection, _TransportMixin):
 
         # Re-assign with updated type information.
         self._transport: _Transport = transport
+        self._set_protocol(protocol)
+
+        super().__init__(_getLogger(self.logger_name("TCP ")))
+
+        # Store connection-instantiation arguments.
+        self._conn_kwargs: dict[str, _Any] = {}
+
+    def _set_protocol(self, protocol: QueueProtocol) -> None:
+        """Set a new protocol for this instance."""
 
         self._protocol = protocol
         self._protocol.conn = self
-        super().__init__(_getLogger(self.logger_name("TCP ")))
 
     async def _await_message(self) -> _Optional[_Union[_BinaryMessage, str]]:
         """Await the next message. Return None on error or failure."""
@@ -108,8 +116,13 @@ class TcpConnection(_Connection, _TransportMixin):
         self.metrics.tx.increment(len(data))
 
     @classmethod
-    async def create_connection(cls: _Type[T], **kwargs) -> T:
-        """Create a TCP connection."""
+    async def _transport_protocol(
+        cls: _Type[T], **kwargs
+    ) -> tuple[_Transport, QueueProtocol]:
+        """
+        Create a transport and protocol pair relevant for this class's
+        implementation.
+        """
 
         eloop = _get_event_loop()
 
@@ -117,7 +130,34 @@ class TcpConnection(_Connection, _TransportMixin):
         transport, protocol = await eloop.create_connection(
             QueueProtocol, **kwargs
         )
-        return cls(transport, protocol)
+        return transport, protocol
+
+    async def restart(self) -> bool:
+        """
+        Reset necessary underlying state for this connection to 'process'
+        again.
+        """
+
+        transport, protocol = await self._transport_protocol(
+            **self._conn_kwargs
+        )
+        self.set_transport(transport)
+        self._set_protocol(protocol)
+
+        return True
+
+    @classmethod
+    async def create_connection(cls: _Type[T], **kwargs) -> T:
+        """Create a TCP connection."""
+
+        transport, protocol = await cls._transport_protocol(**kwargs)
+        inst = cls(transport, protocol)
+
+        # Is there a better way to do this? We can't restart a server's side
+        # of a connection (seems okay).
+        inst._conn_kwargs = {**kwargs}
+
+        return inst
 
     @classmethod
     @_asynccontextmanager
