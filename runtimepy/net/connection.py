@@ -20,7 +20,7 @@ from runtimepy.channel.environment.command import ChannelCommandProcessor
 from runtimepy.metrics import ConnectionMetrics
 from runtimepy.mixins.environment import ChannelEnvironmentMixin
 from runtimepy.mixins.logging import LoggerMixinLevelControl
-from runtimepy.primitives import Bool
+from runtimepy.primitives import Bool, Uint8
 from runtimepy.primitives.byte_order import DEFAULT_BYTE_ORDER, ByteOrder
 
 BinaryMessage = _Union[bytes, bytearray, memoryview]
@@ -44,7 +44,6 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
         """Initialize this connection."""
 
         LoggerMixinLevelControl.__init__(self, logger=logger)
-        self._enabled = Bool(True)
 
         # A queue for out-going text messages. Connections that don't use
         # this can set 'uses_text_tx_queue' to False to avoid scheduling a
@@ -60,7 +59,6 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
 
         self._tasks: _List[_asyncio.Task[None]] = []
         self.initialized = _asyncio.Event()
-        self.disabled_event = _asyncio.Event()
 
         self.metrics = ConnectionMetrics()
 
@@ -71,9 +69,23 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
             self.register_connection_metrics(self.metrics)
 
         # State.
+        self._enabled = Bool()
+        self.disabled_event = _asyncio.Event()
         self.env.channel("enabled", self._enabled)
+        self._set_enabled(True)
+
+        self._restarts = Uint8()
+        self.env.channel("restarts", self._restarts)
+
+        self._auto_restart = Bool()
+        self.env.channel("auto_restart", self._auto_restart)
 
         self.init()
+
+    @property
+    def auto_restart(self) -> bool:
+        """Determine if this connection should be automatically restarted."""
+        return bool(self._auto_restart)
 
     def init(self) -> None:
         """Initialize this instance."""
@@ -132,13 +144,22 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
     def disable_extra(self) -> None:
         """Additional tasks to perform when disabling."""
 
+    def _set_enabled(self, state: bool) -> None:
+        """Set the enabled state for this connection."""
+
+        self._enabled.value = state
+        if not state:
+            self.disabled_event.set()
+            self.initialized.clear()
+        else:
+            self.disabled_event.clear()
+
     def disable(self, reason: str) -> None:
         """Disable this connection."""
 
         if self._enabled:
             self.logger.info("Disabling connection: '%s'.", reason)
             self.disable_extra()
-            self._enabled.value = False
 
             # Cancel tasks.
             for task in self._tasks:
@@ -146,10 +167,11 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
                     task.cancel()
 
             # Signal that this connection has been disabled.
-            self.disabled_event.set()
+            self._set_enabled(False)
 
     async def _wait_sig(self, stop_sig: _asyncio.Event) -> None:
         """Disable the connection if a stop signal gets set."""
+
         await stop_sig.wait()
         self.disable("stop signal")
 
@@ -164,15 +186,42 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
         self.env.finalize(strict=False)
         self.initialized.set()
 
-    async def process(self, stop_sig: _asyncio.Event = None) -> None:
+    async def restart(self) -> bool:
+        """
+        Reset necessary underlying state for this connection to 'process'
+        again.
+        """
+        raise NotImplementedError
+
+    async def disable_in(self, time: float) -> None:
+        """A method for disabling a connection after some delay."""
+
+        await _asyncio.sleep(time)
+        self.disable(f"timed disable ({time}s)")
+
+    async def process(
+        self, stop_sig: _asyncio.Event = None, disable_time: float = None
+    ) -> None:
         """
         Process tasks for this connection while the connection is active.
         """
+
+        # Try to re-enable the connection if necessary.
+        if self.disabled and (stop_sig is None or not stop_sig.is_set()):
+            assert await self.restart()
+            self._set_enabled(True)
+            self._restarts.raw.value += 1
 
         self._tasks = [
             _asyncio.create_task(self._process_read()),
             _asyncio.create_task(self._async_init()),
         ]
+
+        # Disable the connection automatically if requested.
+        if disable_time is not None:
+            self._tasks.append(
+                _asyncio.create_task(self.disable_in(disable_time))
+            )
 
         if self.uses_text_tx_queue:
             self._tasks.append(

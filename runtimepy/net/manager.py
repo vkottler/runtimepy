@@ -76,7 +76,19 @@ class ConnectionManager:
             next_tasks = _log_exceptions(tasks)
 
             # Filter out disabled connections.
-            self._conns = [x for x in self._conns if not x.disabled]
+            enabled = []
+            for conn in self._conns:
+                if not conn.disabled:
+                    enabled.append(conn)
+
+                # Check if this connection should be restarted.
+                elif conn.auto_restart:
+                    next_tasks.append(
+                        _asyncio.create_task(conn.process(stop_sig=stop_sig))
+                    )
+                    enabled.append(conn)
+
+            self._conns = enabled
 
             # If a new connection was made, register a task for processing
             # it.
