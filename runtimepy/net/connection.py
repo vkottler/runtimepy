@@ -35,6 +35,8 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
 
     byte_order: ByteOrder = DEFAULT_BYTE_ORDER
 
+    default_auto_restart = False
+
     def __init__(
         self,
         logger: _LoggerType,
@@ -78,7 +80,7 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
         self._restarts = Uint8()
         self.env.channel("restarts", self._restarts)
 
-        self._auto_restart = Bool()
+        self._auto_restart = Bool(self.default_auto_restart)
         self.env.channel("auto_restart", self._auto_restart, commandable=True)
 
         self.init()
