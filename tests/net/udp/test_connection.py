@@ -10,7 +10,7 @@ import socket
 from pytest import mark
 
 # module under test
-from runtimepy.net import get_free_socket
+from runtimepy.net import get_free_socket, get_free_socket_name, normalize_host
 from runtimepy.net.connection import Connection
 
 # internal
@@ -71,6 +71,40 @@ async def test_udp_connection_basic():
         ],
         return_when=asyncio.ALL_COMPLETED,
     )
+
+
+@mark.asyncio
+async def test_udp_connection_restart():
+    """Test that a UDP connection can be restarted."""
+
+    host = "127.0.0.1"
+    port = get_free_socket_name(
+        local=normalize_host(host), kind=socket.SOCK_DGRAM
+    ).port
+
+    server = await SampleUdpConnection.create_connection(
+        local_addr=(host, port)
+    )
+
+    # Start the server.
+    task = asyncio.create_task(server.process())
+
+    client = await SampleUdpConnection.create_connection(
+        remote_addr=(host, port)
+    )
+
+    # Run the connection for a bit.
+    await client.process(disable_time=0.1)
+
+    # Run the connection again (triggering a restart).
+    await client.process(disable_time=0.1)
+
+    # Confirm the connection did restart.
+    assert client.env.value("restarts") == 1
+
+    # Stop the server.
+    server.disable("end test")
+    await task
 
 
 @mark.asyncio

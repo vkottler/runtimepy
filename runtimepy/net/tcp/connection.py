@@ -124,10 +124,8 @@ class TcpConnection(_Connection, _TransportMixin):
         implementation.
         """
 
-        eloop = _get_event_loop()
-
         transport: _Transport
-        transport, protocol = await eloop.create_connection(
+        transport, protocol = await _get_event_loop().create_connection(
             QueueProtocol, **kwargs
         )
         return transport, protocol

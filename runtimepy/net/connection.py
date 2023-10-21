@@ -79,7 +79,7 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
         self.env.channel("restarts", self._restarts)
 
         self._auto_restart = Bool()
-        self.env.channel("auto_restart", self._auto_restart)
+        self.env.channel("auto_restart", self._auto_restart, commandable=True)
 
         self.init()
 
