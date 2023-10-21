@@ -93,7 +93,9 @@ class WebsocketConnection(Connection):
     @classmethod
     async def create_connection(cls: _Type[T], uri: str, **kwargs) -> T:
         """Connect a client to an endpoint."""
-        return cls(await getattr(websockets, "connect")(uri, **kwargs))
+
+        protocol = await getattr(websockets, "connect")(uri, **kwargs)
+        return cls(protocol)
 
     @classmethod
     @_asynccontextmanager

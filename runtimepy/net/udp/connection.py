@@ -12,6 +12,7 @@ from asyncio import DatagramTransport as _DatagramTransport
 from contextlib import suppress as _suppress
 from logging import getLogger as _getLogger
 import socket as _socket
+from typing import Any as _Any
 from typing import Tuple as _Tuple
 from typing import Type as _Type
 from typing import TypeVar as _TypeVar
@@ -35,6 +36,7 @@ class UdpQueueProtocol(_DatagramProtocol):
     """A simple UDP protocol that populates a message queue."""
 
     logger: _LoggerType
+    conn: _Connection
 
     def __init__(self) -> None:
         """Initialize this protocol."""
@@ -52,7 +54,12 @@ class UdpQueueProtocol(_DatagramProtocol):
 
     def error_received(self, exc: Exception) -> None:
         """Log any received errors."""
+
         self.logger.error(exc)
+
+        # Most of the time this error occurs when sending to a loopback
+        # destination (localhost) that is no longer listening.
+        self.conn.disable(str(exc))
 
 
 T = _TypeVar("T", bound="UdpConnection")
@@ -77,9 +84,18 @@ class UdpConnection(_Connection, _TransportMixin):
         # Re-assign with updated type information.
         self._transport: _DatagramTransport = transport
 
-        self._protocol = protocol
         super().__init__(_getLogger(self.logger_name("UDP ")))
+        self._set_protocol(protocol)
+
+        # Store connection-instantiation arguments.
+        self._conn_kwargs: dict[str, _Any] = {}
+
+    def _set_protocol(self, protocol: UdpQueueProtocol) -> None:
+        """Set a protocol instance for this connection."""
+
+        self._protocol = protocol
         self._protocol.logger = self.logger
+        self._protocol.conn = self
 
     def set_remote_address(self, addr: IpHost) -> None:
         """
@@ -122,12 +138,43 @@ class UdpConnection(_Connection, _TransportMixin):
         self.sendto(data, addr=self.remote_address)
 
     @classmethod
+    async def _transport_protocol(
+        cls: _Type[T], **kwargs
+    ) -> tuple[_DatagramTransport, UdpQueueProtocol]:
+        """
+        Create a transport and protocol pair relevant for this class's
+        implementation.
+        """
+
+        transport: _DatagramTransport
+        (
+            transport,
+            protocol,
+        ) = await _asyncio.get_event_loop().create_datagram_endpoint(
+            UdpQueueProtocol, **kwargs
+        )
+
+        return transport, protocol
+
+    async def restart(self) -> bool:
+        """
+        Reset necessary underlying state for this connection to 'process'
+        again.
+        """
+
+        transport, protocol = await self._transport_protocol(
+            **self._conn_kwargs
+        )
+        self.set_transport(transport)
+        self._set_protocol(protocol)
+
+        return True
+
+    @classmethod
     async def create_connection(
         cls: _Type[T], connect: bool = True, **kwargs
     ) -> T:
         """Create a UDP connection."""
-
-        eloop = _asyncio.get_event_loop()
 
         LOG.debug("kwargs: %s", kwargs)
 
@@ -145,13 +192,10 @@ class UdpConnection(_Connection, _TransportMixin):
                 kwargs["local_addr"] = ("0.0.0.0", 0)
                 kwargs.setdefault("family", _socket.AF_INET)
 
-        transport: _DatagramTransport
-        (
-            transport,
-            protocol,
-        ) = await eloop.create_datagram_endpoint(UdpQueueProtocol, **kwargs)
-
+        # Create the underlying connection.
+        transport, protocol = await cls._transport_protocol(**kwargs)
         conn = cls(transport, protocol)
+        conn._conn_kwargs = {**kwargs}
 
         # Set the remote address manually if necessary.
         if not connect and remote_addr is not None:
