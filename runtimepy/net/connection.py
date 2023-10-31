@@ -210,7 +210,7 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
         self,
         stop_sig: _asyncio.Event = None,
         backoff: ExponentialBackoff = None,
-    ) -> bool:
+    ) -> None:
         """Handle exponential backoff when restoring connections."""
 
         if backoff is None:
@@ -228,8 +228,6 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
 
             self._restart_attempts.raw.value += 1
 
-        return not self.disabled
-
     async def process(
         self,
         stop_sig: _asyncio.Event = None,
@@ -240,7 +238,8 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
         Process tasks for this connection while the connection is active.
         """
 
-        if not await self._handle_restart(stop_sig=stop_sig, backoff=backoff):
+        await self._handle_restart(stop_sig=stop_sig, backoff=backoff)
+        if self.disabled:
             return
 
         self._tasks = [

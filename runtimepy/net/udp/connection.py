@@ -116,12 +116,10 @@ class UdpConnection(_Connection, _TransportMixin):
             self.set_transport(transport_protocol[0])
             self._set_protocol(transport_protocol[1])
 
-        return (
-            await try_udp_transport_protocol(
-                callback=callback, **self._conn_kwargs
-            )
-            is not None
+        result = await try_udp_transport_protocol(
+            callback=callback, **self._conn_kwargs
         )
+        return result is not None
 
     @classmethod
     async def create_connection(

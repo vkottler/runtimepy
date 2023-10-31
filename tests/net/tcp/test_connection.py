@@ -9,7 +9,12 @@ import asyncio
 from pytest import mark
 
 # module under test
-from runtimepy.net import get_free_socket_name, normalize_host, sockname
+from runtimepy.net import (
+    ExponentialBackoff,
+    get_free_socket_name,
+    normalize_host,
+    sockname,
+)
 from runtimepy.net.manager import ConnectionManager
 
 # internal
@@ -58,6 +63,11 @@ async def test_tcp_connection_restart():
 
         # Confirm the connection did restart.
         assert client.env.value("restarts") == 1
+
+    # Trigger another restart.
+    await asyncio.sleep(0.01)
+    await client.process(backoff=ExponentialBackoff(max_tries=3))
+    await client.process(backoff=ExponentialBackoff(max_tries=0))
 
 
 @mark.asyncio

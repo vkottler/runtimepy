@@ -1,52 +1,48 @@
 """
 A module for instantiating the underlying networking resources for
-UdpConnection.
+TcpConnection.
 """
 
 # built-in
 import asyncio as _asyncio
-from asyncio import DatagramTransport as _DatagramTransport
+from asyncio import Transport as _Transport
 from logging import getLogger as _getLogger
 from typing import Callable, Optional
 
 # internal
 from runtimepy.net.backoff import ExponentialBackoff
-from runtimepy.net.udp.protocol import UdpQueueProtocol
+from runtimepy.net.tcp.protocol import QueueProtocol
 from runtimepy.net.util import try_log_connection_error
 
-UdpTransportProtocol = tuple[_DatagramTransport, UdpQueueProtocol]
+TcpTransportProtocol = tuple[_Transport, QueueProtocol]
 LOG = _getLogger(__name__)
 
 
-async def udp_transport_protocol(**kwargs) -> UdpTransportProtocol:
+async def tcp_transport_protocol(**kwargs) -> TcpTransportProtocol:
     """
     Create a transport and protocol pair relevant for this class's
     implementation.
     """
 
-    transport: _DatagramTransport
-    (
-        transport,
-        protocol,
-    ) = await _asyncio.get_event_loop().create_datagram_endpoint(
-        UdpQueueProtocol, **kwargs
+    transport: _Transport
+    transport, protocol = await _asyncio.get_event_loop().create_connection(
+        QueueProtocol, **kwargs
     )
-
     return transport, protocol
 
 
-UdpTransportProtocolCallback = Callable[[UdpTransportProtocol], None]
+TcpTransportProtocolCallback = Callable[[TcpTransportProtocol], None]
 
 
-async def try_udp_transport_protocol(
-    callback: UdpTransportProtocolCallback = None,
+async def try_tcp_transport_protocol(
+    callback: TcpTransportProtocolCallback = None,
     **kwargs,
-) -> Optional[UdpTransportProtocol]:
+) -> Optional[TcpTransportProtocol]:
     """Attempt to create a transport and protocol pair."""
 
     result = await try_log_connection_error(
-        udp_transport_protocol(**kwargs),
-        "Error creating UDP endpoint:",
+        tcp_transport_protocol(**kwargs),
+        "Error creating TCP connection:",
         logger=LOG,
     )
 
@@ -56,10 +52,9 @@ async def try_udp_transport_protocol(
     return result
 
 
-async def udp_transport_protocol_backoff(
-    backoff: ExponentialBackoff = None,
-    **kwargs,
-) -> UdpTransportProtocol:
+async def tcp_transport_protocol_backoff(
+    backoff: ExponentialBackoff = None, **kwargs
+) -> TcpTransportProtocol:
     """
     Create a transport and protocol pair relevant for this class's
     implementation.
@@ -72,7 +67,7 @@ async def udp_transport_protocol_backoff(
 
     while result is None and not backoff.give_up:
         await backoff.sleep()
-        result = await try_udp_transport_protocol(**kwargs)
+        result = await try_tcp_transport_protocol(**kwargs)
 
-    assert result is not None, f"Couldn't create UDP connection '{kwargs}'."
+    assert result is not None, f"Couldn't create TCP connection '{kwargs}'."
     return result
