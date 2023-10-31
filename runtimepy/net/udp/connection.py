@@ -2,12 +2,8 @@
 A module implementing a UDP connection interface.
 """
 
-from __future__ import annotations
-
 # built-in
 from abc import abstractmethod as _abstractmethod
-import asyncio as _asyncio
-from asyncio import DatagramProtocol as _DatagramProtocol
 from asyncio import DatagramTransport as _DatagramTransport
 from contextlib import suppress as _suppress
 from logging import getLogger as _getLogger
@@ -18,9 +14,6 @@ from typing import Type as _Type
 from typing import TypeVar as _TypeVar
 from typing import Union as _Union
 
-# third-party
-from vcorelib.logging import LoggerType as _LoggerType
-
 # internal
 from runtimepy.net import IpHost, get_free_socket, normalize_host
 from runtimepy.net.connection import BinaryMessage as _BinaryMessage
@@ -28,40 +21,14 @@ from runtimepy.net.connection import Connection as _Connection
 from runtimepy.net.connection import EchoConnection as _EchoConnection
 from runtimepy.net.connection import NullConnection as _NullConnection
 from runtimepy.net.mixin import TransportMixin as _TransportMixin
+from runtimepy.net.udp.create import (
+    UdpTransportProtocol,
+    try_udp_transport_protocol,
+    udp_transport_protocol_backoff,
+)
+from runtimepy.net.udp.protocol import UdpQueueProtocol
 
 LOG = _getLogger(__name__)
-
-
-class UdpQueueProtocol(_DatagramProtocol):
-    """A simple UDP protocol that populates a message queue."""
-
-    logger: _LoggerType
-    conn: _Connection
-
-    def __init__(self) -> None:
-        """Initialize this protocol."""
-
-        self.queue: _asyncio.Queue[
-            _Tuple[_BinaryMessage, _Tuple[str, int]]
-        ] = _asyncio.Queue()
-        self.queue_hwm: int = 0
-
-    def datagram_received(self, data: bytes, addr: _Tuple[str, int]) -> None:
-        """Handle incoming data."""
-
-        self.queue.put_nowait((data, addr))
-        self.queue_hwm = max(self.queue_hwm, self.queue.qsize())
-
-    def error_received(self, exc: Exception) -> None:
-        """Log any received errors."""
-
-        self.logger.error(exc)
-
-        # Most of the time this error occurs when sending to a loopback
-        # destination (localhost) that is no longer listening.
-        self.conn.disable(str(exc))
-
-
 T = _TypeVar("T", bound="UdpConnection")
 
 
@@ -137,38 +104,22 @@ class UdpConnection(_Connection, _TransportMixin):
         """Enqueue a binary message tos end."""
         self.sendto(data, addr=self.remote_address)
 
-    @classmethod
-    async def _transport_protocol(
-        cls: _Type[T], **kwargs
-    ) -> tuple[_DatagramTransport, UdpQueueProtocol]:
-        """
-        Create a transport and protocol pair relevant for this class's
-        implementation.
-        """
-
-        transport: _DatagramTransport
-        (
-            transport,
-            protocol,
-        ) = await _asyncio.get_event_loop().create_datagram_endpoint(
-            UdpQueueProtocol, **kwargs
-        )
-
-        return transport, protocol
-
     async def restart(self) -> bool:
         """
         Reset necessary underlying state for this connection to 'process'
         again.
         """
 
-        transport, protocol = await self._transport_protocol(
-            **self._conn_kwargs
-        )
-        self.set_transport(transport)
-        self._set_protocol(protocol)
+        def callback(transport_protocol: UdpTransportProtocol) -> None:
+            """Callback if the socket creation succeeds."""
 
-        return True
+            self.set_transport(transport_protocol[0])
+            self._set_protocol(transport_protocol[1])
+
+        result = await try_udp_transport_protocol(
+            callback=callback, **self._conn_kwargs
+        )
+        return result is not None
 
     @classmethod
     async def create_connection(
@@ -193,7 +144,7 @@ class UdpConnection(_Connection, _TransportMixin):
                 kwargs.setdefault("family", _socket.AF_INET)
 
         # Create the underlying connection.
-        transport, protocol = await cls._transport_protocol(**kwargs)
+        transport, protocol = await udp_transport_protocol_backoff(**kwargs)
         conn = cls(transport, protocol)
         conn._conn_kwargs = {**kwargs}
 

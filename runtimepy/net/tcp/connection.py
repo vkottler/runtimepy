@@ -4,8 +4,6 @@ A module implementing a TCP connection interface.
 
 # built-in
 import asyncio as _asyncio
-from asyncio import BaseTransport as _BaseTransport
-from asyncio import Protocol as _Protocol
 from asyncio import Semaphore as _Semaphore
 from asyncio import Transport as _Transport
 from asyncio import get_event_loop as _get_event_loop
@@ -21,9 +19,6 @@ from typing import Type as _Type
 from typing import TypeVar as _TypeVar
 from typing import Union as _Union
 
-# third-party
-from vcorelib.logging import LoggerType as _LoggerType
-
 # internal
 from runtimepy.net import sockname as _sockname
 from runtimepy.net.connection import BinaryMessage as _BinaryMessage
@@ -31,42 +26,15 @@ from runtimepy.net.connection import Connection as _Connection
 from runtimepy.net.connection import EchoConnection as _EchoConnection
 from runtimepy.net.connection import NullConnection as _NullConnection
 from runtimepy.net.manager import ConnectionManager as _ConnectionManager
-from runtimepy.net.mixin import (
-    BinaryMessageQueueMixin as _BinaryMessageQueueMixin,
-)
 from runtimepy.net.mixin import TransportMixin as _TransportMixin
+from runtimepy.net.tcp.create import (
+    TcpTransportProtocol,
+    tcp_transport_protocol_backoff,
+    try_tcp_transport_protocol,
+)
+from runtimepy.net.tcp.protocol import QueueProtocol
 
 LOG = _getLogger(__name__)
-
-
-class QueueProtocol(_BinaryMessageQueueMixin, _Protocol):
-    """A simple streaming protocol that populates a message queue."""
-
-    logger: _LoggerType
-    conn: _Connection
-
-    def data_received(self, data: _BinaryMessage) -> None:
-        """Handle incoming data."""
-
-        self.queue.put_nowait(data)
-        self.queue_hwm = max(self.queue_hwm, self.queue.qsize())
-
-    def connection_made(self, transport: _BaseTransport) -> None:
-        """Log the connection establishment."""
-
-        self.logger = _getLogger(
-            _TransportMixin(transport).logger_name("TCP ")
-        )
-        self.logger.info("Connected.")
-
-    def connection_lost(self, exc: _Optional[Exception]) -> None:
-        """Log the disconnection."""
-
-        msg = "Disconnected." if exc is None else f"Disconnected: '{exc}'."
-        self.logger.info(msg)
-        self.conn.disable("disconnected")
-
-
 T = _TypeVar("T", bound="TcpConnection")
 ConnectionCallback = _Callable[[T], None]
 
@@ -115,40 +83,28 @@ class TcpConnection(_Connection, _TransportMixin):
         self._transport.write(data)
         self.metrics.tx.increment(len(data))
 
-    @classmethod
-    async def _transport_protocol(
-        cls: _Type[T], **kwargs
-    ) -> tuple[_Transport, QueueProtocol]:
-        """
-        Create a transport and protocol pair relevant for this class's
-        implementation.
-        """
-
-        transport: _Transport
-        transport, protocol = await _get_event_loop().create_connection(
-            QueueProtocol, **kwargs
-        )
-        return transport, protocol
-
     async def restart(self) -> bool:
         """
         Reset necessary underlying state for this connection to 'process'
         again.
         """
 
-        transport, protocol = await self._transport_protocol(
-            **self._conn_kwargs
-        )
-        self.set_transport(transport)
-        self._set_protocol(protocol)
+        def callback(transport_protocol: TcpTransportProtocol) -> None:
+            """Callback if the socket creation succeeds."""
 
-        return True
+            self.set_transport(transport_protocol[0])
+            self._set_protocol(transport_protocol[1])
+
+        result = await try_tcp_transport_protocol(
+            callback=callback, **self._conn_kwargs
+        )
+        return result is not None
 
     @classmethod
     async def create_connection(cls: _Type[T], **kwargs) -> T:
         """Create a TCP connection."""
 
-        transport, protocol = await cls._transport_protocol(**kwargs)
+        transport, protocol = await tcp_transport_protocol_backoff(**kwargs)
         inst = cls(transport, protocol)
 
         # Is there a better way to do this? We can't restart a server's side

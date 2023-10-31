@@ -20,6 +20,7 @@ from runtimepy.channel.environment.command import ChannelCommandProcessor
 from runtimepy.metrics import ConnectionMetrics
 from runtimepy.mixins.environment import ChannelEnvironmentMixin
 from runtimepy.mixins.logging import LoggerMixinLevelControl
+from runtimepy.net.backoff import ExponentialBackoff
 from runtimepy.primitives import Bool, Uint8
 from runtimepy.primitives.byte_order import DEFAULT_BYTE_ORDER, ByteOrder
 
@@ -77,8 +78,11 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
         self.env.channel("enabled", self._enabled)
         self._set_enabled(True)
 
+        # Restart state and behavior.
         self._restarts = Uint8()
+        self._restart_attempts = Uint8()
         self.env.channel("restarts", self._restarts)
+        self.env.channel("restart_attempts", self._restarts)
 
         self._auto_restart = Bool(self.default_auto_restart)
         self.env.channel("auto_restart", self._auto_restart, commandable=True)
@@ -202,18 +206,41 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
         await _asyncio.sleep(time)
         self.disable(f"timed disable ({time}s)")
 
+    async def _handle_restart(
+        self,
+        stop_sig: _asyncio.Event = None,
+        backoff: ExponentialBackoff = None,
+    ) -> None:
+        """Handle exponential backoff when restoring connections."""
+
+        if backoff is None:
+            backoff = ExponentialBackoff()
+
+        while (
+            self.disabled
+            and not backoff.give_up
+            and (stop_sig is None or not stop_sig.is_set())
+        ):
+            await backoff.sleep()
+            if await self.restart():
+                self._set_enabled(True)
+                self._restarts.raw.value += 1
+
+            self._restart_attempts.raw.value += 1
+
     async def process(
-        self, stop_sig: _asyncio.Event = None, disable_time: float = None
+        self,
+        stop_sig: _asyncio.Event = None,
+        disable_time: float = None,
+        backoff: ExponentialBackoff = None,
     ) -> None:
         """
         Process tasks for this connection while the connection is active.
         """
 
-        # Try to re-enable the connection if necessary.
-        if self.disabled and (stop_sig is None or not stop_sig.is_set()):
-            assert await self.restart()
-            self._set_enabled(True)
-            self._restarts.raw.value += 1
+        await self._handle_restart(stop_sig=stop_sig, backoff=backoff)
+        if self.disabled:
+            return
 
         self._tasks = [
             _asyncio.create_task(self._process_read()),
