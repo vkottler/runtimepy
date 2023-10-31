@@ -5,8 +5,11 @@ A module implementing various networking utilities.
 # built-in
 from contextlib import suppress as _suppress
 import socket as _socket
-from typing import NamedTuple
+from typing import Awaitable, NamedTuple, Optional, TypeVar
 from typing import Union as _Union
+
+# third-party
+from vcorelib.logging import LoggerType
 
 
 class IPv4Host(NamedTuple):
@@ -103,3 +106,24 @@ def get_free_socket_name(
     name = sockname(sock)
     sock.close()
     return name
+
+
+T = TypeVar("T")
+
+
+async def try_log_connection_error(
+    future: Awaitable[T], message: str, logger: LoggerType = None
+) -> Optional[T]:
+    """
+    Attempt to resolve a future but log any connection-related exceptions.
+    """
+
+    result = None
+
+    try:
+        result = await future
+    except ConnectionError as exc:
+        if logger:
+            logger.exception(message, exc_info=exc)
+
+    return result

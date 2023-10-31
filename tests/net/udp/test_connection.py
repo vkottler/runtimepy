@@ -122,13 +122,10 @@ async def test_udp_connection_endpoint_down():
     sock.close()
     conn3.send_text("Hello!")
 
-    await asyncio.wait(
-        [
-            asyncio.create_task(conn3.process()),
-            asyncio.create_task(close_after(conn3, 0.01)),
-        ],
-        return_when=asyncio.ALL_COMPLETED,
-    )
+    await conn3.process()
+
+    # Try restarting.
+    await conn3.process(disable_time=0.01)
 
 
 @mark.asyncio

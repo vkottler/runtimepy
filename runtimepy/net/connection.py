@@ -206,21 +206,23 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
         await _asyncio.sleep(time)
         self.disable(f"timed disable ({time}s)")
 
-    async def _handle_restart(self, stop_sig: _asyncio.Event = None) -> bool:
+    async def _handle_restart(
+        self,
+        stop_sig: _asyncio.Event = None,
+        backoff: ExponentialBackoff = None,
+    ) -> bool:
         """Handle exponential backoff when restoring connections."""
 
-        backoff = ExponentialBackoff()
+        if backoff is None:
+            backoff = ExponentialBackoff()
 
-        while self.disabled and (stop_sig is None or not stop_sig.is_set()):
+        while (
+            self.disabled
+            and not backoff.give_up
+            and (stop_sig is None or not stop_sig.is_set())
+        ):
             await backoff.sleep()
-
-            if not await self.restart():
-                self.logger.error(
-                    "Couldn't restart connection (attempt %d, %fs).",
-                    backoff.attempt,
-                    backoff.wait,
-                )
-            else:
+            if await self.restart():
                 self._set_enabled(True)
                 self._restarts.raw.value += 1
 
@@ -229,13 +231,16 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
         return not self.disabled
 
     async def process(
-        self, stop_sig: _asyncio.Event = None, disable_time: float = None
+        self,
+        stop_sig: _asyncio.Event = None,
+        disable_time: float = None,
+        backoff: ExponentialBackoff = None,
     ) -> None:
         """
         Process tasks for this connection while the connection is active.
         """
 
-        if not await self._handle_restart(stop_sig=stop_sig):
+        if not await self._handle_restart(stop_sig=stop_sig, backoff=backoff):
             return
 
         self._tasks = [
