@@ -162,13 +162,17 @@ class UdpConnection(_Connection, _TransportMixin):
         again.
         """
 
-        transport, protocol = await self._transport_protocol(
-            **self._conn_kwargs
-        )
-        self.set_transport(transport)
-        self._set_protocol(protocol)
+        result = False
 
-        return True
+        with _suppress(ConnectionRefusedError):
+            transport, protocol = await self._transport_protocol(
+                **self._conn_kwargs
+            )
+            self.set_transport(transport)
+            self._set_protocol(protocol)
+            result = True
+
+        return result
 
     @classmethod
     async def create_connection(

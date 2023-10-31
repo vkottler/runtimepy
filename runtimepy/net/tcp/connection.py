@@ -10,6 +10,7 @@ from asyncio import Semaphore as _Semaphore
 from asyncio import Transport as _Transport
 from asyncio import get_event_loop as _get_event_loop
 from contextlib import asynccontextmanager as _asynccontextmanager
+from contextlib import suppress as _suppress
 from logging import getLogger as _getLogger
 import socket as _socket
 from typing import Any as _Any
@@ -136,13 +137,17 @@ class TcpConnection(_Connection, _TransportMixin):
         again.
         """
 
-        transport, protocol = await self._transport_protocol(
-            **self._conn_kwargs
-        )
-        self.set_transport(transport)
-        self._set_protocol(protocol)
+        result = False
 
-        return True
+        with _suppress(ConnectionRefusedError):
+            transport, protocol = await self._transport_protocol(
+                **self._conn_kwargs
+            )
+            self.set_transport(transport)
+            self._set_protocol(protocol)
+            result = True
+
+        return result
 
     @classmethod
     async def create_connection(cls: _Type[T], **kwargs) -> T:
