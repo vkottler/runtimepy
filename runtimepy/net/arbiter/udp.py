@@ -24,8 +24,9 @@ class UdpConnectionFactory(
 
     kind: _Type[T]
 
-    async def client(self, *args, **kwargs) -> _Connection:
+    async def client(self, name: str, *args, **kwargs) -> _Connection:
         """Create a client connection."""
 
+        del name
         assert not [*args], "Only keyword arguments are used!"
         return await self.kind.create_connection(**kwargs)

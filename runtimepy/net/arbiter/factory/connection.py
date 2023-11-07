@@ -23,7 +23,7 @@ from runtimepy.net.manager import ConnectionManager as _ConnectionManager
 class ConnectionFactory:
     """An interface for creating client connections."""
 
-    async def client(self, *args, **kwargs) -> _Connection:
+    async def client(self, name: str, *args, **kwargs) -> _Connection:
         """Create a client connection."""
         raise NotImplementedError
 
@@ -91,7 +91,7 @@ class FactoryConnectionArbiter(_BaseConnectionArbiter):
         if factory in self._conn_factories:
             factory_inst = self._conn_factories[factory]
 
-            conn = factory_inst.client(*args, **kwargs)
+            conn = factory_inst.client(name, *args, **kwargs)
             if not defer:
                 conn = await conn  # type: ignore
 
