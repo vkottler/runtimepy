@@ -26,7 +26,7 @@ from vcorelib.namespace import NamespaceMixin as _NamespaceMixin
 from runtimepy.channel.environment.command import clear_env, register_env
 from runtimepy.net.arbiter.housekeeping import metrics_poller
 from runtimepy.net.arbiter.info import AppInfo, ConnectionMap
-from runtimepy.net.arbiter.result import AppResult, ResultState, log_results
+from runtimepy.net.arbiter.result import AppResult, ResultState
 from runtimepy.net.arbiter.task import (
     ArbiterTaskManager as _ArbiterTaskManager,
 )
@@ -254,7 +254,7 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
             self.stop_sig.set()
 
             # Summarize results.
-            log_results(info.results, self.logger)
+            info.result(logger=self.logger)
 
         return result
 

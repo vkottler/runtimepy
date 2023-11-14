@@ -20,7 +20,7 @@ from vcorelib.logging import LoggerType as _LoggerType
 from vcorelib.namespace import Namespace as _Namespace
 
 # internal
-from runtimepy.net.arbiter.result import OverallResult
+from runtimepy.net.arbiter.result import OverallResult, results
 from runtimepy.net.connection import Connection as _Connection
 from runtimepy.task import PeriodicTask
 from runtimepy.tui.mixin import TuiMixin
@@ -126,3 +126,7 @@ class AppInfo:
                 + list(self.tasks.values())
             )
         )
+
+    def result(self, logger: _LoggerType = None) -> bool:
+        """Get the overall boolean result for the application."""
+        return results(self.results, logger=logger)

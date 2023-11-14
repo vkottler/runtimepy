@@ -69,22 +69,37 @@ StageResult = list[AppResult]
 
 
 def log_stage(
-    overall_idx: int, result: StageResult, logger: LoggerType
-) -> None:
+    overall_idx: int, result: StageResult, logger: LoggerType = None
+) -> bool:
     """Log the results of a stage."""
 
+    success = True
+
     for idx, instance in enumerate(result):
-        instance.log(overall_idx, idx, logger)
+        if logger is not None:
+            instance.log(overall_idx, idx, logger)
+
+        success &= bool(instance.state)
+
+    return success
 
 
 # The overall application's result is a collection of stage results.
 OverallResult = list[StageResult]
 
 
-def log_results(result: OverallResult, logger: LoggerType) -> None:
+def results(result: OverallResult, logger: LoggerType = None) -> bool:
     """Log overall results."""
 
-    logger.info("========================================")
+    if logger is not None:
+        logger.info("========================================")
+
+    success = True
+
     for idx, instance in enumerate(result):
-        log_stage(idx, instance, logger)
-    logger.info("========================================")
+        success &= log_stage(idx, instance, logger=logger)
+
+    if logger is not None:
+        logger.info("========================================")
+
+    return success
