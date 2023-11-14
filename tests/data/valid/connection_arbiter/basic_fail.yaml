@@ -1,0 +1,5 @@
+---
+app:
+  - runtimepy.net.apps.noop
+  - [runtimepy.net.apps.noop, runtimepy.net.apps.fail]
+  - runtimepy.net.apps.noop

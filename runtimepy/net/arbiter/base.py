@@ -26,6 +26,7 @@ from vcorelib.namespace import NamespaceMixin as _NamespaceMixin
 from runtimepy.channel.environment.command import clear_env, register_env
 from runtimepy.net.arbiter.housekeeping import metrics_poller
 from runtimepy.net.arbiter.info import AppInfo, ConnectionMap
+from runtimepy.net.arbiter.result import AppResult, ResultState, log_results
 from runtimepy.net.arbiter.task import (
     ArbiterTaskManager as _ArbiterTaskManager,
 )
@@ -211,6 +212,7 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
                         config if config is not None else self._config,
                         self,
                         tasks,  # type: ignore
+                        [],
                     )
 
                     # Initialize tasks.
@@ -240,10 +242,19 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
                         if result == 0:
                             result = await self._run_apps(curr_app, info)
 
+                        # Populate "not run" statuses.
+                        else:
+                            info.results.append(
+                                [AppResult(app.__name__) for app in curr_app]
+                            )
+
         finally:
             for conn in self._connections.values():
                 conn.disable(f"app exit {result}")
             self.stop_sig.set()
+
+            # Summarize results.
+            log_results(info.results, self.logger)
 
         return result
 
@@ -253,6 +264,9 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
         """Run application methods in parallel."""
 
         pairs = [(app, info.with_new_logger(app.__name__)) for app in apps]
+
+        # Pre-populate stage results with "not run" placeholders.
+        stage_results = [AppResult(app.__name__) for app in apps]
 
         for _, inf in pairs:
             inf.logger.info("Starting.")
@@ -264,9 +278,21 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
                 pairs[idx][1].logger.info("Returned %d.", result)
                 total += result
 
-        except AssertionError as exc:
-            info.logger.exception("Failed an assertion:", exc_info=exc)
+                # Capture a normal result.
+                stage_results[idx] = AppResult(
+                    apps[idx].__name__, ResultState.from_int(result), result
+                )
+
+        # Keep track of stages that raise an exception.
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            stage_results = [
+                AppResult(app.__name__, ResultState.EXCEPTION, exception=exc)
+                for app in apps
+            ]
             total = -1
+
+        # Keep track of this stage's results.
+        info.results.append(stage_results)
 
         return total
 
@@ -287,6 +313,8 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
             self.manager.manage(self.stop_sig),
             *self._servers,
         )
+        assert result is not None
+        assert result[0] is not None
         return int(result[0])
 
     def run(

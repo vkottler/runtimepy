@@ -33,6 +33,16 @@ async def test_connection_arbiter_config_basic():
     assert await arbiter.app() == 0
 
 
+@mark.asyncio
+async def test_connection_arbiter_config_fails():
+    """Test failure handing."""
+
+    for config in ["basic_fail.yaml", "basic_exception.yaml"]:
+        arbiter = ConnectionArbiter()
+        await arbiter.load_configs([resource("connection_arbiter", config)])
+        assert await arbiter.app() != 0
+
+
 async def echo_message_test_app(app: AppInfo) -> int:
     """Test message connections."""
 
