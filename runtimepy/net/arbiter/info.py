@@ -20,6 +20,7 @@ from vcorelib.logging import LoggerType as _LoggerType
 from vcorelib.namespace import Namespace as _Namespace
 
 # internal
+from runtimepy.net.arbiter.result import OverallResult, results
 from runtimepy.net.connection import Connection as _Connection
 from runtimepy.task import PeriodicTask
 from runtimepy.tui.mixin import TuiMixin
@@ -57,6 +58,9 @@ class AppInfo:
 
     tasks: Dict[str, PeriodicTask]
 
+    # Keep track of application state.
+    results: OverallResult
+
     def with_new_logger(self, name: str) -> "AppInfo":
         """Get a copy of this AppInfo instance, but with a new logger."""
 
@@ -69,6 +73,7 @@ class AppInfo:
             self.config,
             self.tui,
             self.tasks,
+            self.results,
         )
 
     def search(
@@ -121,3 +126,7 @@ class AppInfo:
                 + list(self.tasks.values())
             )
         )
+
+    def result(self, logger: _LoggerType = None) -> bool:
+        """Get the overall boolean result for the application."""
+        return results(self.results, logger=logger)
