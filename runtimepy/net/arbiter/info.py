@@ -127,6 +127,23 @@ class AppInfo:
             )
         )
 
+    def exceptions(self) -> _Iterator[Exception]:
+        """Iterate over exceptions raised by the application."""
+
+        for stage in self.results:
+            for result in stage:
+                if result.exception is not None:
+                    yield result.exception
+
+    @property
+    def raised_exception(self) -> bool:
+        """Determine if the application raised any exception."""
+        return bool(list(self.exceptions()))
+
     def result(self, logger: _LoggerType = None) -> bool:
         """Get the overall boolean result for the application."""
+
+        if logger is not None and self.raised_exception:
+            logger.error("An exception was not caught at runtime!")
+
         return results(self.results, logger=logger)
