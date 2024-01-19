@@ -49,6 +49,9 @@ async def echo_message_test_app(app: AppInfo) -> int:
     senders = list(app.search(pattern="null", kind=PrefixedMessageConnection))
     assert len(senders) == 2
 
+    # Test that we can find the server-side connection(s).
+    assert len(list(app.search(kind=PrefixedMessageConnection))) > len(senders)
+
     for _ in range(2):
         for idx in range(4096):
             msg = f"Hello, world! ({idx})"

@@ -6,8 +6,11 @@ from __future__ import annotations
 
 # built-in
 import asyncio as _asyncio
+from typing import Iterator as _Iterator
 from typing import List as _List
 from typing import Optional as _Optional
+from typing import Type as _Type
+from typing import TypeVar as _TypeVar
 
 # third-party
 from vcorelib.asyncio import log_exceptions as _log_exceptions
@@ -15,6 +18,8 @@ from vcorelib.math import default_time_ns as _default_time_ns
 
 # internal
 from runtimepy.net.connection import Connection as _Connection
+
+T = _TypeVar("T", bound=_Connection)
 
 
 class ConnectionManager:
@@ -30,6 +35,12 @@ class ConnectionManager:
     def num_connections(self) -> int:
         """Return the number of managed connections."""
         return len(self._conns)
+
+    def by_type(self, kind: _Type[T]) -> _Iterator[T]:
+        """Iterate over connections of a specific type."""
+        for conn in self._conns:
+            if isinstance(conn, kind):
+                yield conn
 
     def reset_metrics(self) -> None:
         """Reset connection metrics."""
