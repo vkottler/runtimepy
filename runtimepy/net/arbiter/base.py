@@ -207,11 +207,13 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
                         self.logger,
                         stack,
                         self._connections,
+                        self.manager,
                         self._namespace,
                         self.stop_sig,
                         config if config is not None else self._config,
                         self,
                         tasks,  # type: ignore
+                        self.task_manager,
                         [],
                     )
 

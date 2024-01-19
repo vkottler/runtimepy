@@ -8,7 +8,7 @@ from contextlib import AsyncExitStack as _AsyncExitStack
 from dataclasses import dataclass
 from logging import getLogger as _getLogger
 from re import compile as _compile
-from typing import Dict
+from typing import Any, Dict
 from typing import Iterator as _Iterator
 from typing import MutableMapping as _MutableMapping
 from typing import Type as _Type
@@ -22,12 +22,15 @@ from vcorelib.namespace import Namespace as _Namespace
 # internal
 from runtimepy.net.arbiter.result import OverallResult, results
 from runtimepy.net.connection import Connection as _Connection
-from runtimepy.task import PeriodicTask
+from runtimepy.net.manager import ConnectionManager
+from runtimepy.task import PeriodicTask, PeriodicTaskManager
 from runtimepy.tui.mixin import TuiMixin
 
 ConnectionMap = _MutableMapping[str, _Connection]
 T = _TypeVar("T", bound=_Connection)
 V = _TypeVar("V", bound=PeriodicTask)
+
+DEFAULT_PATTERN = ".*"
 
 
 @dataclass
@@ -43,6 +46,7 @@ class AppInfo:
 
     # A connection map (names to instances).
     connections: ConnectionMap
+    conn_manager: ConnectionManager
 
     # Connection names.
     names: _Namespace
@@ -57,6 +61,7 @@ class AppInfo:
     tui: TuiMixin
 
     tasks: Dict[str, PeriodicTask]
+    task_manager: PeriodicTaskManager[Any]
 
     # Keep track of application state.
     results: OverallResult
@@ -68,18 +73,20 @@ class AppInfo:
             _getLogger(name),
             self.stack,
             self.connections,
+            self.conn_manager,
             self.names,
             self.stop,
             self.config,
             self.tui,
             self.tasks,
+            self.task_manager,
             self.results,
         )
 
     def search(
         self,
         *names: str,
-        pattern: str = ".*",
+        pattern: str = DEFAULT_PATTERN,
         kind: _Type[T] = _Connection,  # type: ignore
     ) -> _Iterator[T]:
         """
@@ -87,10 +94,21 @@ class AppInfo:
         specific kind (or both).
         """
 
+        seen: set[T] = set()
+
         for name in self.names.search(*names, pattern=pattern):
             conn = self.connections[name]
             if isinstance(conn, kind):
                 yield conn
+                seen.add(conn)
+
+        # Also check the connection manager (for server connections) if the
+        # default pattern is used.
+        if pattern == DEFAULT_PATTERN:
+            for conn in self.conn_manager.by_type(kind):
+                if conn not in seen:
+                    yield conn
+                    seen.add(conn)
 
     def search_tasks(
         self, kind: _Type[V], pattern: str = ".*"
