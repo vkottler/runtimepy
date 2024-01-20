@@ -42,7 +42,7 @@ async def try_tcp_transport_protocol(
 
     result = await try_log_connection_error(
         tcp_transport_protocol(**kwargs),
-        "Error creating TCP connection:",
+        f"Error creating TCP connection ({kwargs}):",
         logger=LOG,
     )
 

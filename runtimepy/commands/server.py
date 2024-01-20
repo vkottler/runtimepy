@@ -5,17 +5,20 @@ An entry-point for the 'server' command.
 # built-in
 from argparse import ArgumentParser as _ArgumentParser
 from argparse import Namespace as _Namespace
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 # third-party
 from vcorelib.args import CommandFunction as _CommandFunction
-from vcorelib.io import ARBITER
-from vcorelib.paths.context import tempfile
 
 # internal
 from runtimepy import PKG_NAME
 from runtimepy.commands.arbiter import arbiter_cmd
-from runtimepy.commands.common import arbiter_args
+from runtimepy.commands.common import arbiter_args, cmd_with_jit
+
+
+def port_name(args: _Namespace, port: str = "port") -> str:
+    """Get the name for a connection factory's port."""
+    return f"{args.factory}_{'udp' if args.udp else 'tcp'}_{port}"
 
 
 def server_data(args: _Namespace) -> Dict[str, Any]:
@@ -23,26 +26,83 @@ def server_data(args: _Namespace) -> Dict[str, Any]:
 
     return {
         "factory": args.factory,
-        "kwargs": {"port": args.port, "host": args.host},
+        "kwargs": {"port": f"${port_name(args)}", "host": args.host},
+    }
+
+
+def is_websocket(args: _Namespace) -> bool:
+    """Determine if the specified factory uses WebSocket or not."""
+    return "websocket" in args.factory.lower()
+
+
+def client_data(args: _Namespace) -> Dict[str, Any]:
+    """Get client data based on command-line arguments."""
+
+    port = f"${port_name(args)}"
+
+    arg_list: List[Any] = []
+    kwargs: Dict[str, Any] = {}
+
+    if is_websocket(args):
+        arg_list.append(f"ws://localhost:{port}")
+    elif not args.udp:
+        kwargs["host"] = "localhost"
+        kwargs["port"] = port
+    else:
+        kwargs["remote_addr"] = ["localhost", port]
+
+    result = {
+        "name": port_name(args, port="client"),
+        "defer": True,
+        "factory": args.factory,
+    }
+    if arg_list:
+        result["args"] = arg_list
+    if kwargs:
+        result["kwargs"] = kwargs
+
+    return result
+
+
+def config_data(args: _Namespace) -> Dict[str, Any]:
+    """Get configuration data for the 'server' command."""
+
+    servers = []
+    clients = []
+
+    if not args.udp:
+        servers.append(server_data(args))
+    else:
+        clients.append(
+            {
+                "name": port_name(args, port="server"),
+                "factory": args.factory,
+                "kwargs": {"local_addr": ["0.0.0.0", f"${port_name(args)}"]},
+            }
+        )
+
+    # Add a loopback connection if specified.
+    if args.loopback:
+        clients.append(client_data(args))
+
+    return {
+        "includes": [f"package://{PKG_NAME}/factories.yaml"],
+        "clients": clients,
+        "servers": servers,
+        "ports": [
+            {
+                "name": port_name(args),
+                "port": args.port,
+                "type": "udp" if args.udp else "tcp",
+            }
+        ],
     }
 
 
 def server_cmd(args: _Namespace) -> int:
     """Execute the server command."""
 
-    with tempfile(suffix=".yaml") as temp_config:
-        ARBITER.encode(
-            temp_config,
-            {
-                "includes": [f"package://{PKG_NAME}/factories.yaml"],
-                "servers": [server_data(args)],  # type: ignore
-                "app": ["runtimepy.net.apps.wait_for_stop"],
-            },
-        )
-
-        # Ensure injected data is loaded.
-        args.configs.append(str(temp_config))
-        return arbiter_cmd(args)
+    return cmd_with_jit(arbiter_cmd, args, config_data(args))
 
 
 def add_server_cmd(parser: _ArgumentParser) -> _CommandFunction:
@@ -52,7 +112,7 @@ def add_server_cmd(parser: _ArgumentParser) -> _CommandFunction:
         parser.add_argument(
             "--host",
             default="0.0.0.0",
-            help="host address to listen on (default: %(default)s)",
+            help="host address to listen on (default: '%(default)s')",
         )
         parser.add_argument(
             "-p",
@@ -60,6 +120,19 @@ def add_server_cmd(parser: _ArgumentParser) -> _CommandFunction:
             default=0,
             type=int,
             help="port to listen on (default: %(default)s)",
+        )
+        parser.add_argument(
+            "-u",
+            "--udp",
+            action="store_true",
+            help="whether or not this is a UDP-based server "
+            "(otherwise it must be a TCP-based server)",
+        )
+        parser.add_argument(
+            "-l",
+            "--loopback",
+            action="store_true",
+            help="if true a client of the same connection type is added",
         )
         parser.add_argument(
             "factory", help="name of connection factory to create server for"
