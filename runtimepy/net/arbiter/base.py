@@ -42,7 +42,7 @@ ServerTask = _Awaitable[None]
 async def init_only(app: AppInfo) -> int:
     """A network application that doesn't do anything."""
 
-    del app
+    await app.all_finalized()
     return 0
 
 

@@ -2,11 +2,11 @@
     =====================================
     generator=datazen
     version=3.1.4
-    hash=9b18ce1eb0aae0302d80507c5320b7d8
+    hash=0d6665c7ac3ba698d04b5d988a8687fa
     =====================================
 -->
 
-# runtimepy ([3.1.2](https://pypi.org/project/runtimepy/))
+# runtimepy ([3.2.0](https://pypi.org/project/runtimepy/))
 
 [![python](https://img.shields.io/pypi/pyversions/runtimepy.svg)](https://pypi.org/project/runtimepy/)
 ![Build Status](https://github.com/vkottler/runtimepy/workflows/Python%20Package/badge.svg)
@@ -48,24 +48,26 @@ This package is tested on the following platforms:
 $ ./venv3.11/bin/runtimepy -h
 
 usage: runtimepy [-h] [--version] [-v] [-q] [--curses] [--no-uvloop] [-C DIR]
-                 {arbiter,tui,noop} ...
+                 {arbiter,server,tui,noop} ...
 
 A framework for implementing Python services.
 
 options:
-  -h, --help          show this help message and exit
-  --version           show program's version number and exit
-  -v, --verbose       set to increase logging verbosity
-  -q, --quiet         set to reduce output
-  --curses            whether or not to use curses.wrapper when starting
-  --no-uvloop         whether or not to disable uvloop as event loop driver
-  -C DIR, --dir DIR   execute from a specific directory
+  -h, --help            show this help message and exit
+  --version             show program's version number and exit
+  -v, --verbose         set to increase logging verbosity
+  -q, --quiet           set to reduce output
+  --curses              whether or not to use curses.wrapper when starting
+  --no-uvloop           whether or not to disable uvloop as event loop driver
+  -C DIR, --dir DIR     execute from a specific directory
 
 commands:
-  {arbiter,tui,noop}  set of available commands
-    arbiter           run a connection-arbiter application from a config
-    tui               run a terminal interface for the channel environment
-    noop              command stub (does nothing)
+  {arbiter,server,tui,noop}
+                        set of available commands
+    arbiter             run a connection-arbiter application from a config
+    server              run a server for a specific connection factory
+    tui                 run a terminal interface for the channel environment
+    noop                command stub (does nothing)
 
 ```
 
@@ -88,6 +90,30 @@ options:
   -w, --wait-for-stop, --wait_for_stop
                         ensure that a 'wait_for_stop' application method is
                         run last
+
+```
+
+### `server`
+
+```
+$ ./venv3.11/bin/runtimepy server -h
+
+usage: runtimepy server [-h] [-i] [-w] [--host HOST] [-p PORT]
+                        factory [configs ...]
+
+positional arguments:
+  factory               name of connection factory to create server for
+  configs               the configuration to load
+
+options:
+  -h, --help            show this help message and exit
+  -i, --init_only, --init-only
+                        exit after completing initialization
+  -w, --wait-for-stop, --wait_for_stop
+                        ensure that a 'wait_for_stop' application method is
+                        run last
+  --host HOST           host address to listen on (default: 0.0.0.0)
+  -p PORT, --port PORT  port to listen on (default: 0)
 
 ```
 

@@ -2,6 +2,7 @@
 includes:
   - ports.yaml
   - basic_factories.yaml
+  - package://runtimepy/factories.yaml
 
 clients:
   - factory: sample_tcp_conn

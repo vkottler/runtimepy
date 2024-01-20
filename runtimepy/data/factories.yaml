@@ -1,9 +1,23 @@
 ---
+# Connection factories.
 factories:
-  # Connection factories.
+  # JSON messaging.
   - {name: runtimepy.net.factories.TcpJson}
   - {name: runtimepy.net.factories.UdpJson}
   - {name: runtimepy.net.factories.WebsocketJson}
+
+  # Echo and null connections (useful for testing and debugging).
+  - {name: runtimepy.net.factories.TcpEcho, namespaces: [tcp, echo]}
+  - {name: runtimepy.net.factories.UdpEcho, namespaces: [udp, echo]}
+  - name: runtimepy.net.factories.WebsocketEcho
+    namespaces: [websocket, echo]
+  - {name: runtimepy.net.factories.TcpNull, namespaces: [tcp, "null"]}
+  - {name: runtimepy.net.factories.UdpNull, namespaces: [udp, "null"]}
+  - name: runtimepy.net.factories.WebsocketNull
+    namespaces: [websocket, "null"]
+
+  # Useful protocols.
+  - {name: runtimepy.net.factories.Http}
 
 ports:
   # Reserve ports for JSON listeners.

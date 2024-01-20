@@ -177,7 +177,7 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
                 **dict_resolve_env_vars(
                     factory.get("kwargs", {}), env=config.ports  # type: ignore
                 ),
-            ), "Couldn't register factory '{name}'!"
+            ), f"Couldn't register factory '{factory}'!"
 
         # Register clients.
         for client in config.clients:

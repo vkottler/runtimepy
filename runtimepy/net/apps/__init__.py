@@ -19,10 +19,9 @@ __all__ = [
 async def wait_for_stop(app: AppInfo) -> int:
     """Waits for the stop signal to be set."""
 
-    await app.all_finalized()
+    result = await init_only(app)
     await app.stop.wait()
-
-    return 0
+    return result
 
 
 noop = init_only

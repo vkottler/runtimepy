@@ -18,6 +18,8 @@ dev_requirements:
 commands:
   - name: arbiter
     description: "run a connection-arbiter application from a config"
+  - name: server
+    description: "run a server for a specific connection factory"
   - name: tui
     description: "run a terminal interface for the channel environment"
 
