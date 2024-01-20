@@ -5,6 +5,8 @@ A module for package command-line argument interfaces.
 # built-in
 from argparse import ArgumentParser as _ArgumentParser
 from argparse import Namespace as _Namespace
+from contextlib import contextmanager
+from typing import Iterator
 
 # third-party
 from vcorelib.args import CommandFunction as _CommandFunction
@@ -58,10 +60,12 @@ def curses_wrap_if(method: _CommandFunction, args: _Namespace) -> int:
     return result
 
 
-def arbiter_args(parser: _ArgumentParser, nargs: str = "+") -> None:
-    """Add common connection-arbiter parameters.."""
+@contextmanager
+def arbiter_args(parser: _ArgumentParser, nargs: str = "+") -> Iterator[None]:
+    """Add common connection-arbiter parameters."""
 
     arbiter_flags(parser)
+    yield
     parser.add_argument(
         "configs", nargs=nargs, help="the configuration to load"
     )

@@ -2,6 +2,7 @@
 includes:
   - ports.yaml
   - basic_factories.yaml
+  - package://runtimepy/factories.yaml
 
 app: tests.net.test_null.spam_app
 

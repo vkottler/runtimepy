@@ -22,6 +22,7 @@ from runtimepy.net.tcp import (
     NullTcpConnection,
     TcpConnection,
 )
+from runtimepy.net.tcp.http import HttpConnection
 from runtimepy.net.udp import (
     EchoUdpConnection,
     NullUdpConnection,
@@ -51,6 +52,7 @@ __all__ = [
     "WebsocketConnectionFactory",
     "WebsocketEcho",
     "WebsocketNull",
+    "HttpConnection",
 ]
 
 
@@ -132,3 +134,9 @@ class WebsocketJson(
     """WebSocket JSON-connection factory."""
 
     kind = WebsocketJsonMessageConnection
+
+
+class Http(TcpConnectionFactory[HttpConnection]):
+    """HTTP connection factory.."""
+
+    kind = HttpConnection

@@ -1,19 +1,11 @@
 ---
 factories:
-  - {name: runtimepy.net.factories.UdpEcho, namespaces: [udp, echo]}
-  - {name: runtimepy.net.factories.TcpEcho, namespaces: [tcp, echo]}
   - name: runtimepy.net.factories.UdpMessageEcho
     namespaces: [message, udp, echo]
   - name: runtimepy.net.factories.TcpMessageEcho
     namespaces: [message, tcp, echo]
-  - name: runtimepy.net.factories.WebsocketEcho
-    namespaces: [websocket, echo]
 
-  - {name: runtimepy.net.factories.UdpNull, namespaces: [udp, "null"]}
-  - {name: runtimepy.net.factories.TcpNull, namespaces: [tcp, "null"]}
   - name: runtimepy.net.factories.UdpMessage
     namespaces: [message, udp, "null"]
   - name: runtimepy.net.factories.TcpMessage
     namespaces: [message, tcp, "null"]
-  - name: runtimepy.net.factories.WebsocketNull
-    namespaces: [websocket, "null"]

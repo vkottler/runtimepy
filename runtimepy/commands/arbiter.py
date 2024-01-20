@@ -53,5 +53,7 @@ def arbiter_cmd(args: _Namespace) -> int:
 def add_arbiter_cmd(parser: _ArgumentParser) -> _CommandFunction:
     """Add arbiter-command arguments to its parser."""
 
-    arbiter_args(parser)
+    with arbiter_args(parser):
+        pass
+
     return arbiter_cmd
