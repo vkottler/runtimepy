@@ -10,23 +10,12 @@ from typing import Optional, Tuple
 class RequestTarget:
     """A class implementing HTTP's request-target definition."""
 
-    def __str__(self) -> str:
-        """Get this request target as a string."""
-
-        result = "*"
-
-        for attr in ["origin_form", "authority_form", "absolute_form"]:
-            val = getattr(self, attr, None)
-            if val is not None:
-                result = str(val)
-                break
-
-        return result
-
     def __init__(
         self, method: http.HTTPMethod, request_target_raw: str
     ) -> None:
         """Initialize this instance."""
+
+        self.raw = request_target_raw
 
         # Host and port.
         self.authority_form: Optional[Tuple[str, int]] = None

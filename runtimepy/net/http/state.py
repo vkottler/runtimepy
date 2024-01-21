@@ -4,14 +4,15 @@ A module implementing an HTTP-header processing state interface.
 
 # built-in
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Optional, Type, TypeVar
 
 # third-party
 from vcorelib import DEFAULT_ENCODING
 from vcorelib.io import ByteFifo
 
-# internal
-from runtimepy.net.http.header import HttpHeader
+from runtimepy.net.http.common import HeadersMixin
+
+T = TypeVar("T", bound=HeadersMixin)
 
 
 @dataclass
@@ -26,7 +27,7 @@ class HeaderProcessingState:
         """Create a default instance."""
         return HeaderProcessingState([], "")
 
-    def service(self, buffer: ByteFifo) -> Optional[HttpHeader]:
+    def service(self, buffer: ByteFifo, kind: Type[T]) -> Optional[T]:
         """
         Continue processing the input fifo as if it contains request-header
         data.
@@ -48,7 +49,8 @@ class HeaderProcessingState:
                     # Two sequences in a row signifies the end of the header
                     # section.
                     else:
-                        result = HttpHeader(self.lines)
+                        result = kind()
+                        result.from_lines(self.lines)
                         self.lines = []
 
                 elif curr != "\r":

@@ -3,14 +3,13 @@ A module implementing an HTTP-message processing interface.
 """
 
 # built-in
-from typing import Iterator, Optional, Tuple
+from typing import Iterator, Optional, Tuple, Type
 
 # third-party
 from vcorelib.io import ByteFifo
 
 # internal
-from runtimepy.net.http.header import HttpHeader
-from runtimepy.net.http.state import HeaderProcessingState
+from runtimepy.net.http.state import HeaderProcessingState, T
 
 
 class HttpMessageProcessor:
@@ -27,14 +26,14 @@ class HttpMessageProcessor:
         self.header = HeaderProcessingState.create()
 
     def ingest(
-        self, data: bytes
-    ) -> Iterator[Tuple[HttpHeader, Optional[bytes]]]:
+        self, data: bytes, kind: Type[T]
+    ) -> Iterator[Tuple[T, Optional[bytes]]]:
         """Process a binary frame."""
 
         self.buffer.ingest(data)
 
         while self.buffer.size:
-            header = self.header.service(self.buffer)
+            header = self.header.service(self.buffer, kind)
             if header is not None:
                 payload = None
                 if self.buffer.size:
