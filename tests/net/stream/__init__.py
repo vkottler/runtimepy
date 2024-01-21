@@ -4,6 +4,9 @@ Test the 'net.stream' module.
 
 # built-in
 import asyncio
+import http
+import random
+from typing import Optional
 
 # third-party
 from vcorelib.dict.codec import BasicDictCodec
@@ -11,16 +14,74 @@ from vcorelib.dict.codec import BasicDictCodec
 # module under test
 from runtimepy import PKG_NAME
 from runtimepy.net.arbiter.info import AppInfo
+from runtimepy.net.http.header import RequestHeader
+from runtimepy.net.http.response import ResponseHeader
 from runtimepy.net.stream import StringMessageConnection
 from runtimepy.net.stream.json import JsonMessage, JsonMessageConnection
+from runtimepy.net.tcp.http import HttpConnection
 from runtimepy.net.udp import UdpConnection
 
 # internal
 from tests.resources import SampleArbiterTask
 
 
+async def sample_handler(
+    response: ResponseHeader,
+    request: RequestHeader,
+    request_data: Optional[bytes],
+) -> Optional[bytes]:
+    """Sample handler."""
+
+    del response
+    del request
+    del request_data
+
+    return None
+
+
+async def http_test_loopback(
+    client: HttpConnection, server: HttpConnection
+) -> int:
+    """Test a loopback http connection."""
+
+    assert await client.request(RequestHeader(), random.randbytes(1024))
+
+    # Add GET handler to server.
+    server.handlers[http.HTTPMethod.GET] = sample_handler
+
+    assert await client.request(RequestHeader(target="*"))
+
+    assert await client.request(
+        RequestHeader(method="CONNECT", target="localhost:80")
+    )
+
+    assert await client.request(RequestHeader(target="/index.html?param=true"))
+
+    result = await client.request(RequestHeader(target="google.com"))
+    assert result[0]["Content-Type"]
+
+    return 0
+
+
+async def http_test(app: AppInfo) -> int:
+    """A network application that tests HTTP connections."""
+
+    client = app.single(pattern="client", kind=HttpConnection)
+
+    conns = list(app.search(kind=HttpConnection))
+    assert len(conns) == 2
+
+    server = None
+    for conn in conns:
+        if conn is not client:
+            server = conn
+    assert server is not None
+
+    return await http_test_loopback(client, server)
+
+
 async def stream_test(app: AppInfo) -> int:
-    """A network application that doesn't do anything."""
+    """A network application that tests string messaging."""
 
     assert list(app.search_tasks(SampleArbiterTask))
 

@@ -2,11 +2,11 @@
     =====================================
     generator=datazen
     version=3.1.4
-    hash=0d6665c7ac3ba698d04b5d988a8687fa
+    hash=0ff4d3410b127b8f74d8ff0190c6878a
     =====================================
 -->
 
-# runtimepy ([3.2.0](https://pypi.org/project/runtimepy/))
+# runtimepy ([3.3.0](https://pypi.org/project/runtimepy/))
 
 [![python](https://img.shields.io/pypi/pyversions/runtimepy.svg)](https://pypi.org/project/runtimepy/)
 ![Build Status](https://github.com/vkottler/runtimepy/workflows/Python%20Package/badge.svg)
@@ -98,7 +98,7 @@ options:
 ```
 $ ./venv3.11/bin/runtimepy server -h
 
-usage: runtimepy server [-h] [-i] [-w] [--host HOST] [-p PORT]
+usage: runtimepy server [-h] [-i] [-w] [--host HOST] [-p PORT] [-u] [-l]
                         factory [configs ...]
 
 positional arguments:
@@ -112,8 +112,11 @@ options:
   -w, --wait-for-stop, --wait_for_stop
                         ensure that a 'wait_for_stop' application method is
                         run last
-  --host HOST           host address to listen on (default: 0.0.0.0)
+  --host HOST           host address to listen on (default: '0.0.0.0')
   -p PORT, --port PORT  port to listen on (default: 0)
+  -u, --udp             whether or not this is a UDP-based server (otherwise
+                        it must be a TCP-based server)
+  -l, --loopback        if true a client of the same connection type is added
 
 ```
 
