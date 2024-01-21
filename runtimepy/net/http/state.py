@@ -10,6 +10,7 @@ from typing import List, Optional, Type, TypeVar
 from vcorelib import DEFAULT_ENCODING
 from vcorelib.io import ByteFifo
 
+# internal
 from runtimepy.net.http.common import HeadersMixin
 
 T = TypeVar("T", bound=HeadersMixin)

@@ -3,12 +3,13 @@ A module implementing an HTTP-message processing interface.
 """
 
 # built-in
-from typing import Iterator, Optional, Tuple, Type
+from typing import Iterator, Optional, Tuple, Type, cast
 
 # third-party
 from vcorelib.io import ByteFifo
 
 # internal
+from runtimepy.net.http.common import HeadersMixin
 from runtimepy.net.http.state import HeaderProcessingState, T
 
 
@@ -25,6 +26,8 @@ class HttpMessageProcessor:
         self.buffer = ByteFifo()
         self.header = HeaderProcessingState.create()
 
+        self.current_header: Optional[HeadersMixin] = None
+
     def ingest(
         self, data: bytes, kind: Type[T]
     ) -> Iterator[Tuple[T, Optional[bytes]]]:
@@ -32,10 +35,24 @@ class HttpMessageProcessor:
 
         self.buffer.ingest(data)
 
-        while self.buffer.size:
-            header = self.header.service(self.buffer, kind)
-            if header is not None:
+        can_read_payload = True
+        while self.buffer.size > 0 and can_read_payload:
+            # Finish parsing header if necessary.
+            if self.current_header is None:
+                self.current_header = self.header.service(self.buffer, kind)
+
+            # Read payload data.
+            if self.current_header is not None:
                 payload = None
-                if self.buffer.size:
-                    payload = self.buffer.pop(self.buffer.size)
-                yield header, payload
+
+                # Determine if any data payload is expected, and if so if we
+                # have enough bytes to fully read it.
+                payload_len = self.current_header.content_length
+                can_read_payload = (
+                    payload_len == 0 or self.buffer.size >= payload_len
+                )
+                if can_read_payload:
+                    if payload_len > 0:
+                        payload = self.buffer.pop(payload_len)
+                    yield cast(T, self.current_header), payload
+                    self.current_header = None

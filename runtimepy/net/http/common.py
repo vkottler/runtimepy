@@ -5,7 +5,7 @@ A module containing shared interfaces for HTTP.
 # built-in
 from abc import ABC, abstractmethod
 import http
-from typing import TextIO, Union
+from typing import Optional, TextIO, Union
 
 # third-party
 from vcorelib import DEFAULT_ENCODING
@@ -41,6 +41,15 @@ class HeadersMixin(ABC):
     def __setitem__(self, key: str, value: str) -> None:
         """Set a header key."""
         self.headers[key.lower()] = value.strip()
+
+    def get(self, key: str, default: str = None) -> Optional[str]:
+        """Get a possible header value."""
+        return self.headers.get(key.lower(), default)
+
+    @property
+    def content_length(self) -> int:
+        """Get a value for context length."""
+        return int(self.get("content-length", "0"))  # type: ignore
 
     def write_field_lines(self, stream: TextIO) -> None:
         """Write field lines to a stream."""

@@ -44,7 +44,7 @@ async def http_test_loopback(
 ) -> int:
     """Test a loopback http connection."""
 
-    assert await client.request(RequestHeader(), random.randbytes(10))
+    assert await client.request(RequestHeader(), random.randbytes(1024))
 
     # Add GET handler to server.
     server.handlers[http.HTTPMethod.GET] = sample_handler
