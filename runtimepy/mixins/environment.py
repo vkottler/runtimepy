@@ -16,9 +16,10 @@ class ChannelEnvironmentMixin:
     def __init__(self, env: ChannelEnvironment = None, **kwargs) -> None:
         """Initialize this instance."""
 
-        if env is None:
-            env = ChannelEnvironment(**kwargs)
-        self.env = env
+        if not hasattr(self, "env"):
+            if env is None:
+                env = ChannelEnvironment(**kwargs)
+            self.env = env
 
     def register_task_metrics(
         self, metrics: PeriodicTaskMetrics, namespace: str = METRICS_NAME
