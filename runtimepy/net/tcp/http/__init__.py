@@ -36,12 +36,15 @@ class HttpConnection(_TcpConnection):
 
     expecting_response: bool
 
+    # Handlers registered at the class level so that instances created at
+    # runtime don't need additional initialization.
+    handlers: dict[http.HTTPMethod, HttpRequestHandler] = {}
+
     def init(self) -> None:
         """Initialize this instance."""
 
         # Incoming request handling.
         self.processor = HttpMessageProcessor()
-        self.handlers: dict[http.HTTPMethod, HttpRequestHandler] = {}
 
         # Outgoing request handling.
         self.request_ready = asyncio.BoundedSemaphore()
