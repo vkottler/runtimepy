@@ -3,7 +3,7 @@
 default_dirs: false
 
 commands:
-{% for command in ["arbiter", "server", "tui"] %}
+{% for command in ["arbiter", "server", "task", "tui"] %}
   - name: help-{{command}}
     command: "./venv{{python_version}}/bin/{{entry}}"
     force: true

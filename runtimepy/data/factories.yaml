@@ -19,6 +19,9 @@ factories:
   # Useful protocols.
   - {name: runtimepy.net.factories.Http}
 
+  # Useful tasks.
+  - {name: runtimepy.task.trig.Sinusoid}
+
 ports:
   # Reserve ports for JSON listeners.
   - {name: udp_json, type: udp}
