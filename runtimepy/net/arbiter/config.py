@@ -57,9 +57,11 @@ class ConnectionArbiterConfig(_RuntimepyDictCodec):
                     item["host"],
                     port_overrides.get(item["name"], item["port"]),
                 ),
-                kind=_socket.SOCK_STREAM
-                if item["type"] == "tcp"
-                else _socket.SOCK_DGRAM,
+                kind=(
+                    _socket.SOCK_STREAM
+                    if item["type"] == "tcp"
+                    else _socket.SOCK_DGRAM
+                ),
             ).port
 
         self.app: _Optional[str] = data.get("app")  # type: ignore
@@ -168,16 +170,24 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
     ) -> None:
         """Register clients and servers from a configuration object."""
 
+        names = set()
+
         # Registier factories.
         for factory in config.factories:
             name = factory["name"]
-            assert self.register_module_factory(
-                name,
-                *factory.get("namespaces", []),
-                **dict_resolve_env_vars(
-                    factory.get("kwargs", {}), env=config.ports  # type: ignore
-                ),
-            ), f"Couldn't register factory '{factory}'!"
+
+            # Double specifying a factory (because of include shenanigans)
+            # should be fine.
+            if name not in names:
+                assert self.register_module_factory(
+                    name,
+                    *factory.get("namespaces", []),
+                    **dict_resolve_env_vars(
+                        factory.get("kwargs", {}),
+                        env=config.ports,  # type: ignore
+                    ),
+                ), f"Couldn't register factory '{factory}'!"
+                names.add(name)
 
         # Register clients.
         for client in config.clients:

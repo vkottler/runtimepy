@@ -2,11 +2,11 @@
     =====================================
     generator=datazen
     version=3.1.4
-    hash=8abaee2821e021cb2521ae3ee0a9f79d
+    hash=c6a4e8d162ebe8d48c6bce5ffcd9a663
     =====================================
 -->
 
-# runtimepy ([3.3.1](https://pypi.org/project/runtimepy/))
+# runtimepy ([3.4.0](https://pypi.org/project/runtimepy/))
 
 [![python](https://img.shields.io/pypi/pyversions/runtimepy.svg)](https://pypi.org/project/runtimepy/)
 ![Build Status](https://github.com/vkottler/runtimepy/workflows/Python%20Package/badge.svg)
@@ -48,7 +48,7 @@ This package is tested on the following platforms:
 $ ./venv3.11/bin/runtimepy -h
 
 usage: runtimepy [-h] [--version] [-v] [-q] [--curses] [--no-uvloop] [-C DIR]
-                 {arbiter,server,tui,noop} ...
+                 {arbiter,server,task,tui,noop} ...
 
 A framework for implementing Python services.
 
@@ -62,10 +62,11 @@ options:
   -C DIR, --dir DIR     execute from a specific directory
 
 commands:
-  {arbiter,server,tui,noop}
+  {arbiter,server,task,tui,noop}
                         set of available commands
     arbiter             run a connection-arbiter application from a config
     server              run a server for a specific connection factory
+    task                run a task from a specific task factory
     tui                 run a terminal interface for the channel environment
     noop                command stub (does nothing)
 
@@ -117,6 +118,27 @@ options:
   -u, --udp             whether or not this is a UDP-based server (otherwise
                         it must be a TCP-based server)
   -l, --loopback        if true a client of the same connection type is added
+
+```
+
+### `task`
+
+```
+$ ./venv3.11/bin/runtimepy task -h
+
+usage: runtimepy task [-h] [-i] [-w] factory [configs ...]
+
+positional arguments:
+  factory               name of task factory to create task with
+  configs               the configuration to load
+
+options:
+  -h, --help            show this help message and exit
+  -i, --init_only, --init-only
+                        exit after completing initialization
+  -w, --wait-for-stop, --wait_for_stop
+                        ensure that a 'wait_for_stop' application method is
+                        run last
 
 ```
 

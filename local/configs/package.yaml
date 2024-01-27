@@ -20,6 +20,8 @@ commands:
     description: "run a connection-arbiter application from a config"
   - name: server
     description: "run a server for a specific connection factory"
+  - name: task
+    description: "run a task from a specific task factory"
   - name: tui
     description: "run a terminal interface for the channel environment"
 
