@@ -102,9 +102,9 @@ class TypeSystem(LoggerMixin):
         """Register a custom type."""
 
         new_type = Protocol(self._enums)
-        self.custom[
-            self._name(name, *namespace, check_available=True)
-        ] = new_type
+        self.custom[self._name(name, *namespace, check_available=True)] = (
+            new_type
+        )
         return new_type
 
     def get_protocol(

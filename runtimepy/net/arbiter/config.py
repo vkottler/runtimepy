@@ -57,9 +57,11 @@ class ConnectionArbiterConfig(_RuntimepyDictCodec):
                     item["host"],
                     port_overrides.get(item["name"], item["port"]),
                 ),
-                kind=_socket.SOCK_STREAM
-                if item["type"] == "tcp"
-                else _socket.SOCK_DGRAM,
+                kind=(
+                    _socket.SOCK_STREAM
+                    if item["type"] == "tcp"
+                    else _socket.SOCK_DGRAM
+                ),
             ).port
 
         self.app: _Optional[str] = data.get("app")  # type: ignore

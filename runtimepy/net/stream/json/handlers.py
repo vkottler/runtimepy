@@ -49,9 +49,9 @@ def channel_env_handler(
             # Respond with an error (environment not found).
             else:
                 outbox["success"] = False
-                outbox[
-                    "reason"
-                ] = f"No environment '{env_name}', options: {envs.keys()}."
+                outbox["reason"] = (
+                    f"No environment '{env_name}', options: {envs.keys()}."
+                )
 
     return handler
 
@@ -108,9 +108,11 @@ async def find_file_request_handler(
                     path,
                     includes_key=request.data["includes_key"],
                     expect_overwrite=request.data["expect_overwrite"],
-                    strategy=MergeStrategy.UPDATE
-                    if request.data["update"]
-                    else MergeStrategy.RECURSIVE,
+                    strategy=(
+                        MergeStrategy.UPDATE
+                        if request.data["update"]
+                        else MergeStrategy.RECURSIVE
+                    ),
                 )
                 decoded["success"] = result.success
                 decoded["data"] = result.data
