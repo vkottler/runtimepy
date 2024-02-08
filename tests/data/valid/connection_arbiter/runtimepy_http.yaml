@@ -1,0 +1,19 @@
+---
+includes:
+  - package://runtimepy/factories.yaml
+
+app: tests.net.stream.runtimepy_http_test
+
+ports:
+  - {name: runtimepy_http_server, type: tcp}
+
+clients:
+  - factory: runtimepy_http
+    name: runtimepy_http_client
+    defer: true
+    kwargs: {host: localhost, port: "$runtimepy_http_server"}
+
+servers:
+  - factory: runtimepy_http
+    kwargs:
+      port: "$runtimepy_http_server"

@@ -18,6 +18,7 @@ factories:
 
   # Useful protocols.
   - {name: runtimepy.net.factories.Http}
+  - {name: runtimepy.net.factories.RuntimepyHttp}
 
   # Useful tasks.
   - {name: runtimepy.task.trig.Sinusoid}

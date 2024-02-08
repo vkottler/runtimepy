@@ -6,6 +6,8 @@ A module implementing a simple request-target (3.2) interface.
 import http
 from typing import Optional, Tuple
 
+PathMaybeQuery = Tuple[str, Optional[str]]
+
 
 class RequestTarget:
     """A class implementing HTTP's request-target definition."""
@@ -21,7 +23,7 @@ class RequestTarget:
         self.authority_form: Optional[Tuple[str, int]] = None
 
         # Path and optional query.
-        self.origin_form: Optional[Tuple[str, Optional[str]]] = None
+        self.origin_form: Optional[PathMaybeQuery] = None
 
         self.absolute_form: Optional[str] = None
 
@@ -48,3 +50,10 @@ class RequestTarget:
         # 3.2.2 absolute-form
         else:
             self.absolute_form = request_target_raw
+
+    @property
+    def path(self) -> str:
+        """Get the path for this request."""
+
+        assert self.origin_form is not None
+        return self.origin_form[0]
