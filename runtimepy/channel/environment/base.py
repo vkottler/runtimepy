@@ -40,6 +40,8 @@ BitfieldResult = _Tuple[_BitField, _Optional[_RuntimeEnum]]
 BoolChannelResult = _Tuple[_BoolChannel, _Optional[_RuntimeEnum]]
 IntChannelResult = _Tuple[_IntChannel, _Optional[_RuntimeEnum]]
 
+FieldOrChannel = _Union[_BitField, _AnyChannel]
+
 
 class BaseChannelEnvironment(_NamespaceMixin, FinalizeMixin):
     """A class integrating channel and enumeration registries."""
@@ -183,6 +185,22 @@ class BaseChannelEnvironment(_NamespaceMixin, FinalizeMixin):
     def exists(self, val: _RegistryKey) -> bool:
         """Determine if a channel exists."""
         return self.fields.has_field(val) or self.get(val) is not None
+
+    def field_or_channel(self, val: _RegistryKey) -> _Optional[FieldOrChannel]:
+        """Attempt to look up a field or channel for a given registry key."""
+
+        channel: _Optional[FieldOrChannel] = None
+
+        chan = self.get(val)
+        if chan is None:
+            # Check if the name is a field.
+            field = self.fields.get_field(val)
+            if field is not None:
+                channel = field
+        else:
+            channel, _ = chan
+
+        return channel
 
     def get(self, val: _RegistryKey) -> _Optional[ChannelResult]:
         """Attempt to get a channel and its enumeration (if it has one)."""
