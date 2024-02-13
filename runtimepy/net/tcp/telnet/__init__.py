@@ -8,6 +8,9 @@ from contextlib import ExitStack as _ExitStack
 from io import BytesIO as _BytesIO
 from typing import BinaryIO as _BinaryIO
 
+# third-party
+from vcorelib import DEFAULT_ENCODING
+
 # internal
 from runtimepy.net.tcp.connection import TcpConnection as _TcpConnection
 from runtimepy.net.tcp.telnet.codes import (
@@ -32,7 +35,7 @@ class Telnet(_TcpConnection):
 
     async def process_telnet_message(self, data: bytes) -> bool:
         """By default, treat all incoming data bytes as text."""
-        return await self.process_text(data.decode())
+        return await self.process_text(data.decode(encoding=DEFAULT_ENCODING))
 
     @_abstractmethod
     async def process_command(self, code: TelnetCode) -> None:
