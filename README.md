@@ -2,11 +2,11 @@
     =====================================
     generator=datazen
     version=3.1.4
-    hash=c6a4e8d162ebe8d48c6bce5ffcd9a663
+    hash=e249f3854eb9586ba137f0d4cb7089b9
     =====================================
 -->
 
-# runtimepy ([3.4.0](https://pypi.org/project/runtimepy/))
+# runtimepy ([3.4.1](https://pypi.org/project/runtimepy/))
 
 [![python](https://img.shields.io/pypi/pyversions/runtimepy.svg)](https://pypi.org/project/runtimepy/)
 ![Build Status](https://github.com/vkottler/runtimepy/workflows/Python%20Package/badge.svg)
@@ -126,7 +126,7 @@ options:
 ```
 $ ./venv3.11/bin/runtimepy task -h
 
-usage: runtimepy task [-h] [-i] [-w] factory [configs ...]
+usage: runtimepy task [-h] [-i] [-w] [-r RATE] factory [configs ...]
 
 positional arguments:
   factory               name of task factory to create task with
@@ -139,6 +139,7 @@ options:
   -w, --wait-for-stop, --wait_for_stop
                         ensure that a 'wait_for_stop' application method is
                         run last
+  -r RATE, --rate RATE  rate (in Hz) that the task should run (default: 10)
 
 ```
 

@@ -33,6 +33,7 @@ def start(args: _Namespace) -> int:
         _ChannelEnvironment(),
         max_iterations=args.iterations,
     )
+
     stop_sig = _asyncio.Event()
     _run_handle_stop(
         stop_sig,
@@ -40,6 +41,7 @@ def start(args: _Namespace) -> int:
             args.window,
             stop_sig=stop_sig,
         ),
+        eloop=_asyncio.new_event_loop(),
         enable_uvloop=not getattr(args, "no_uvloop", False),
     )
 

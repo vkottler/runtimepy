@@ -4,14 +4,14 @@ A module implementing UI command processing.
 
 # built-in
 from argparse import Namespace
-from typing import Any, Callable, Optional, Union, cast
+from typing import Any, Callable, Optional, cast
 
 # third-party
 from vcorelib.logging import LoggerType
 
 # internal
-from runtimepy.channel import AnyChannel
 from runtimepy.channel.environment import ChannelEnvironment
+from runtimepy.channel.environment.base import FieldOrChannel
 from runtimepy.channel.environment.command.parser import (
     ChannelCommand,
     CommandParser,
@@ -21,8 +21,18 @@ from runtimepy.mixins.environment import ChannelEnvironmentMixin
 from runtimepy.primitives.bool import Bool
 from runtimepy.primitives.field import BitField
 
-FieldOrChannel = Union[BitField, AnyChannel]
 CommandHook = Callable[[Namespace, Optional[FieldOrChannel]], None]
+
+# Declared so we re-export FieldOrChannel after moving where it's declared.
+__all__ = [
+    "CommandHook",
+    "FieldOrChannel",
+    "ChannelCommandProcessor",
+    "EnvironmentMap",
+    "ENVIRONMENTS",
+    "clear_env",
+    "register_env",
+]
 
 
 class ChannelCommandProcessor(ChannelEnvironmentMixin):
@@ -50,7 +60,19 @@ class ChannelCommandProcessor(ChannelEnvironmentMixin):
 
         args = self.parse(value)
         if args is not None:
-            result = self.env.namespace_suggest(args.channel, delta=False)
+            candidates = self.env.ns.length_sorted_suggestions(
+                args.channel, delta=False
+            )
+            if candidates:
+                result = candidates[0]
+
+                # Try to find a commandable suggestion.
+                for candidate in candidates:
+                    chan = self.env.field_or_channel(candidate)
+                    if chan is not None and chan.commandable:
+                        result = candidate
+                        break
+
             if result is not None:
                 result = args.command + " " + result
 
@@ -113,18 +135,9 @@ class ChannelCommandProcessor(ChannelEnvironmentMixin):
             if self.env.exists(args.channel):
                 return CommandResult(True, str(self.env.value(args.channel)))
 
-        chan = self.env.get(args.channel)
-
-        channel: FieldOrChannel
-
-        if chan is None:
-            # Check if the name is a field.
-            field = self.env.fields.get_field(args.channel)
-            if field is None:
-                return CommandResult(False, f"No channel '{args.channel}'.")
-            channel = field
-        else:
-            channel, _ = chan
+        channel = self.env.field_or_channel(args.channel)
+        if channel is None:
+            return CommandResult(False, f"No channel '{args.channel}'.")
 
         # Check if channel is commandable (or if a -f/--force flag is
         # set?).
