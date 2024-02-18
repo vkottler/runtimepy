@@ -16,6 +16,7 @@ from runtimepy import PKG_NAME
 from runtimepy.net.arbiter.info import AppInfo
 from runtimepy.net.http.header import RequestHeader
 from runtimepy.net.http.response import ResponseHeader
+from runtimepy.net.server import RuntimepyServerConnection
 from runtimepy.net.stream import StringMessageConnection
 from runtimepy.net.stream.json import JsonMessage, JsonMessageConnection
 from runtimepy.net.tcp.http import HttpConnection
@@ -70,7 +71,6 @@ async def http_test(app: AppInfo) -> int:
 
     conns = list(app.search(kind=HttpConnection))
     assert len(conns) == 2
-
     server = None
     for conn in conns:
         if conn is not client:
@@ -78,6 +78,42 @@ async def http_test(app: AppInfo) -> int:
     assert server is not None
 
     return await http_test_loopback(client, server)
+
+
+async def runtimepy_http_test(app: AppInfo) -> int:
+    """A network application that tests this package's HTTP connection."""
+
+    client = app.single(pattern="client", kind=RuntimepyServerConnection)
+
+    conns = list(app.search(kind=RuntimepyServerConnection))
+    assert len(conns) == 2
+    server = None
+    for conn in conns:
+        if conn is not client:
+            server = conn
+    assert server is not None
+
+    # Make requests in parallel.
+    await asyncio.gather(
+        *(
+            # Application.
+            client.request(RequestHeader(target="/")),
+            # favicon.ico.
+            client.request(RequestHeader(target="/favicon.ico")),
+            # JSON queries.
+            client.request(RequestHeader(target="/json")),
+            client.request(RequestHeader(target="/json//////")),
+            client.request(RequestHeader(target="/json/a")),
+            client.request(RequestHeader(target="/json/test")),
+            client.request(RequestHeader(target="/json/test/a")),
+            client.request(RequestHeader(target="/json/test/a/b")),
+            client.request(RequestHeader(target="/json/test/d")),
+        )
+    )
+
+    del server
+
+    return 0
 
 
 async def stream_test(app: AppInfo) -> int:

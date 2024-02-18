@@ -4,6 +4,7 @@ A module implementing a basic HTTP (multiple RFC's) connection interface.
 
 # built-in
 import asyncio
+from copy import copy
 import http
 from typing import Awaitable, Callable, Optional, Tuple, Union
 
@@ -28,6 +29,8 @@ HttpRequestHandler = Callable[
 ]
 HttpResponse = Tuple[ResponseHeader, Optional[bytes]]
 
+HttpRequestHandlers = dict[http.HTTPMethod, HttpRequestHandler]
+
 
 class HttpConnection(_TcpConnection):
     """A class implementing a basic HTTP interface."""
@@ -38,7 +41,7 @@ class HttpConnection(_TcpConnection):
 
     # Handlers registered at the class level so that instances created at
     # runtime don't need additional initialization.
-    handlers: dict[http.HTTPMethod, HttpRequestHandler] = {}
+    handlers: HttpRequestHandlers = {}
 
     def init(self) -> None:
         """Initialize this instance."""
@@ -50,6 +53,17 @@ class HttpConnection(_TcpConnection):
         self.request_ready = asyncio.BoundedSemaphore()
         self.expecting_response = False
         self.responses: asyncio.Queue[HttpResponse] = asyncio.Queue(maxsize=1)
+
+        self.handlers = copy(self.handlers)
+        self.handlers[http.HTTPMethod.GET] = self.get_handler
+
+    async def get_handler(
+        self,
+        response: ResponseHeader,
+        request: RequestHeader,
+        request_data: Optional[bytes],
+    ) -> Optional[bytes]:
+        """Sample handler."""
 
     async def _process_request(
         self,
