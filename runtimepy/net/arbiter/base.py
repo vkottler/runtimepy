@@ -23,7 +23,11 @@ from vcorelib.namespace import Namespace as _Namespace
 from vcorelib.namespace import NamespaceMixin as _NamespaceMixin
 
 # internal
-from runtimepy.channel.environment.command import clear_env, register_env
+from runtimepy.channel.environment.command import (
+    clear_env,
+    env_json_data,
+    register_env,
+)
 from runtimepy.net.arbiter.housekeeping import metrics_poller
 from runtimepy.net.arbiter.info import AppInfo, ConnectionMap
 from runtimepy.net.arbiter.result import AppResult, ResultState
@@ -32,6 +36,7 @@ from runtimepy.net.arbiter.task import (
 )
 from runtimepy.net.connection import Connection as _Connection
 from runtimepy.net.manager import ConnectionManager as _ConnectionManager
+from runtimepy.net.server import RuntimepyServerConnection
 from runtimepy.tui.mixin import CursesWindow, TuiMixin
 
 NetworkApplication = _Callable[[AppInfo], _Awaitable[int]]
@@ -154,6 +159,17 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
 
         return result
 
+    def _setup_server_json(self, info: AppInfo) -> None:
+        """Add runtime data to the server's JSON data structure."""
+
+        cls = RuntimepyServerConnection
+
+        # Connect configuration data.
+        cls.json_data["config"] = info.original_config()
+
+        # Connect environment data.
+        cls.json_data["environments"] = env_json_data()
+
     async def _entry(
         self,
         app: NetworkApplicationlike = None,
@@ -225,6 +241,9 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
                     for task in self.task_manager.tasks:
                         task.env.finalize(strict=False)
                     self.logger.debug("Periodic tasks initialized.")
+
+                    # Wire runtime data to server JSON.
+                    self._setup_server_json(info)
 
                     # Start tasks.
                     self.logger.debug("Starting periodic tasks...")
