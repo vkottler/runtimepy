@@ -93,6 +93,9 @@ async def runtimepy_http_test(app: AppInfo) -> int:
             server = conn
     assert server is not None
 
+    env = "connection_metrics_poller"
+    env_path = f"/json/environments/{env}"
+
     # Make requests in parallel.
     await asyncio.gather(
         *(
@@ -101,13 +104,15 @@ async def runtimepy_http_test(app: AppInfo) -> int:
             # favicon.ico.
             client.request(RequestHeader(target="/favicon.ico")),
             # JSON queries.
-            client.request(RequestHeader(target="/json")),
-            client.request(RequestHeader(target="/json//////")),
-            client.request(RequestHeader(target="/json/a")),
-            client.request(RequestHeader(target="/json/test")),
-            client.request(RequestHeader(target="/json/test/a")),
-            client.request(RequestHeader(target="/json/test/a/b")),
-            client.request(RequestHeader(target="/json/test/d")),
+            client.request_json(RequestHeader(target="/json")),
+            client.request_json(RequestHeader(target="/json//////")),
+            client.request_json(RequestHeader(target="/json/a")),
+            client.request_json(RequestHeader(target="/json/test")),
+            client.request_json(RequestHeader(target="/json/test/a")),
+            client.request_json(RequestHeader(target="/json/test/a/b")),
+            client.request_json(RequestHeader(target="/json/test/d")),
+            client.request_json(RequestHeader(target=env_path)),
+            client.request_json(RequestHeader(target=f"{env_path}/values")),
         )
     )
 

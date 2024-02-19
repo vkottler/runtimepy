@@ -52,7 +52,7 @@ class ConnectionArbiterConfig(_RuntimepyDictCodec):
         # Process ports.
         self.ports: _Dict[str, int] = {}
         for item in _cast(_List[_Dict[str, _Any]], data.get("ports", [])):
-            self.ports[item["name"]] = get_free_socket_name(
+            port = get_free_socket_name(
                 local=normalize_host(
                     item["host"],
                     port_overrides.get(item["name"], item["port"]),
@@ -63,6 +63,10 @@ class ConnectionArbiterConfig(_RuntimepyDictCodec):
                     else _socket.SOCK_DGRAM
                 ),
             ).port
+
+            # Update the original structure.
+            self.ports[item["name"]] = port
+            item["port"] = port
 
         self.app: _Optional[str] = data.get("app")  # type: ignore
         self.config: _Optional[_JsonObject] = _cast(

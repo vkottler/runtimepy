@@ -202,6 +202,11 @@ def clear_env() -> None:
     ENVIRONMENTS.clear()
 
 
+def env_json_data() -> dict[str, Any]:
+    """Get JSON data for each environment."""
+    return {key: cmd.env.export_json for key, cmd in ENVIRONMENTS.items()}
+
+
 def register_env(name: str, env: ChannelCommandProcessor) -> None:
     """Register a channel environment globally."""
 

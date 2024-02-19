@@ -6,7 +6,11 @@ A module implementing a basic HTTP (multiple RFC's) connection interface.
 import asyncio
 from copy import copy
 import http
-from typing import Awaitable, Callable, Optional, Tuple, Union
+from json import loads
+from typing import Any, Awaitable, Callable, Optional, Tuple, Union
+
+# third-party
+from vcorelib import DEFAULT_ENCODING
 
 # internal
 from runtimepy import PKG_NAME, VERSION
@@ -30,6 +34,20 @@ HttpRequestHandler = Callable[
 HttpResponse = Tuple[ResponseHeader, Optional[bytes]]
 
 HttpRequestHandlers = dict[http.HTTPMethod, HttpRequestHandler]
+
+
+def to_json(response: HttpResponse) -> Any:
+    """Get JSON data from an HTTP response."""
+
+    # Make sure the response is JSON.
+    header = response[0]
+    assert header["content-type"].startswith("application/json"), header[
+        "content-type"
+    ]
+
+    return loads(
+        response[1].decode(encoding=DEFAULT_ENCODING),  # type: ignore
+    )
 
 
 class HttpConnection(_TcpConnection):
@@ -108,6 +126,15 @@ class HttpConnection(_TcpConnection):
             self.expecting_response = False
 
         return result
+
+    async def request_json(
+        self, request: RequestHeader, data: Optional[bytes] = None
+    ) -> Any:
+        """
+        Perform a request and convert the response to a data structure by
+        decoding it as JSON.
+        """
+        return to_json(await self.request(request, data))
 
     def _send(
         self,

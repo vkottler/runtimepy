@@ -165,3 +165,20 @@ class AppInfo:
             logger.error("An exception was not caught at runtime!")
 
         return results(self.results, logger=logger)
+
+    def original_config(self) -> dict[str, Any]:
+        """
+        Re-assemble a dictionary closer to the original configuration data
+        (than the .config attribute).
+        """
+
+        result: dict[str, Any] = {"config": {}}
+        for key, val in self.config.items():
+            if key != "root":
+                result["config"][key] = val
+
+        for key, val in self.config.get("root", {}).items():  # type: ignore
+            if key != "config":
+                result[key] = val
+
+        return result

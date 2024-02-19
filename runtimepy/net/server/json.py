@@ -3,6 +3,7 @@ A module implementing basic JSON-object response handling.
 """
 
 # built-in
+from json import JSONEncoder
 from typing import Any, Optional, TextIO
 
 # third-party
@@ -12,6 +13,18 @@ from vcorelib.io import ARBITER, JsonObject
 # internal
 from runtimepy.net.http.header import RequestHeader
 from runtimepy.net.http.response import ResponseHeader
+
+
+class Encoder(JSONEncoder):
+    """A custom JSON encoder."""
+
+    def default(self, o):
+        """A simple override for default encoding behavior."""
+
+        if callable(o):
+            o = o()
+
+        return o
 
 
 def json_handler(
@@ -40,6 +53,9 @@ def json_handler(
 
         curr_path.append(part)
 
+        if callable(data):
+            data = data()
+
         # Handle error.
         if not isinstance(data, dict):
             error["path"]["part"] = part
@@ -58,9 +74,12 @@ def json_handler(
 
         data = data[part]  # type: ignore
 
+    if callable(data):
+        data = data()
+
     # Use a convention for indexing data to non-dictionary leaf nodes.
     if not isinstance(data, dict):
         data = {"__raw__": data}
 
-    ARBITER.encode_stream(response_type, stream, data)
+    ARBITER.encode_stream(response_type, stream, data, cls=Encoder)
     stream.write("\n")
