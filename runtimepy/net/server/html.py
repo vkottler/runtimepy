@@ -6,8 +6,8 @@ A module implementing HTML interfaces for web applications.
 from typing import Awaitable, Callable, Optional, TextIO
 
 # third-party
-from svgen.attribute import attributes
 from svgen.element import Element
+from svgen.element.html import Html
 from vcorelib import DEFAULT_ENCODING
 
 # internal
@@ -16,49 +16,24 @@ from runtimepy.net.http.response import ResponseHeader
 from runtimepy.net.tcp.http import HttpConnection
 
 HtmlApp = Callable[
-    [Element, Element, RequestHeader, ResponseHeader, Optional[bytes]],
-    Awaitable[None],
+    [Html, RequestHeader, ResponseHeader, Optional[bytes]], Awaitable[None]
 ]
 HtmlApps = dict[str, HtmlApp]
 
 
 async def default_html_app(
-    head: Element,
-    body: Element,
+    document: Html,
     request: RequestHeader,
     response: ResponseHeader,
     request_data: Optional[bytes],
 ) -> None:
     """A simple 'Hello, world!' application."""
 
-    del head
     del request
     del response
     del request_data
 
-    body.children.append(Element(tag="div", text="Hello, world!"))
-
-
-# A default 'head' section to use in the HTML document.
-HEAD = Element(
-    tag="head",
-    children=[
-        Element(
-            tag="meta",
-            attrib=attributes({"charset": DEFAULT_ENCODING}),
-        ),
-        Element(
-            tag="meta",
-            attrib=attributes(
-                {
-                    "name": "viewport",
-                    "content": "width=device-width, initial-scale=1",
-                }
-            ),
-        ),
-        Element(tag="title", text=HttpConnection.identity),
-    ],
-)
+    document.body.children.append(Element(tag="div", text="Hello, world!"))
 
 
 async def html_handler(
@@ -74,18 +49,11 @@ async def html_handler(
     # Set response headers.
     response["Content-Type"] = f"text/html; charset={DEFAULT_ENCODING}"
 
-    # Create a copy at some point?
-    head = HEAD
-
-    body = Element(tag="body")
-
     # Create the application.
+    document = Html(HttpConnection.identity)
     await apps.get(request.target.path, default_app)(
-        head, body, request, response, request_data
+        document, request, response, request_data
     )
 
     stream.write("<!DOCTYPE html>\n")
-    html = Element(
-        tag="html", attrib=attributes({"lang": "en"}), children=[head, body]
-    )
-    html.encode(stream)
+    document.encode(stream)
