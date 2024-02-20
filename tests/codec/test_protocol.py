@@ -8,7 +8,7 @@ from io import BytesIO
 from json import load
 
 # module under test
-from runtimepy.codec.protocol import Protocol
+from runtimepy.codec.protocol import Protocol, ProtocolFactory
 from runtimepy.codec.protocol.base import FieldSpec
 from runtimepy.enum.registry import EnumRegistry
 from runtimepy.primitives.serializable import PrefixedChunk
@@ -17,8 +17,21 @@ from runtimepy.primitives.serializable import PrefixedChunk
 from tests.resources import resource
 
 
+class SampleProtocol(ProtocolFactory):
+    """A sample protocol implementation."""
+
+    @classmethod
+    def initialize(cls, protocol: Protocol) -> None:
+        """Initialize this protocol."""
+
+        protocol.add_field("test1", "uint8")
+
+
 def test_protocol_basic():
     """Test basic interactions with protocol objects."""
+
+    assert SampleProtocol.instance().size == 1
+    assert SampleProtocol.instance().size == 1
 
     proto = Protocol(
         EnumRegistry.decode(resource("enums", "sample_enum.yaml"))
