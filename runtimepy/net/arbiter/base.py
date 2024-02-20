@@ -211,6 +211,8 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
             for name, conn in self._connections.items():
                 register_env(name, conn.command)
 
+            info: Optional[AppInfo] = None
+
             # Run application, but only if all the registered connections are
             # still alive after initialization.
             if not check_connections or not any(
@@ -275,7 +277,8 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
             self.stop_sig.set()
 
             # Summarize results.
-            info.result(logger=self.logger)
+            if info is not None:
+                info.result(logger=self.logger)
 
         return result
 
