@@ -139,7 +139,8 @@ class ProtocolBase:
             build=self._build,
             byte_order=self.array.byte_order,
             serializables={
-                key: val.copy() for key, val in self.serializables.items()
+                key: val.copy_without_chain()
+                for key, val in self.serializables.items()
             },
         )
 

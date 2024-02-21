@@ -67,11 +67,18 @@ class Serializable(ABC):
     def _copy_impl(self: T) -> T:
         """Make a copy of this instance."""
 
+    def copy_without_chain(self: T) -> T:
+        """A method for copying instances without chain references."""
+
+        orig = self._copy_impl()
+        assert orig.chain is None
+        orig.byte_order = self.byte_order
+        return orig
+
     def __copy__(self: T) -> T:
         """Make a copy of this serializable."""
 
-        orig = self._copy_impl()
-        orig.byte_order = self.byte_order
+        orig = self.copy_without_chain()
 
         # Copy the entire chain.
         curr = orig
