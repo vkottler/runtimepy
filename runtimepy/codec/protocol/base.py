@@ -249,7 +249,7 @@ class ProtocolBase:
         """Get the value of a protocol field."""
 
         if name in self.serializables:
-            return str(self.serializables[name].__class__.__name__)
+            return str(self.serializables[name])
 
         return self.value(name)
 
@@ -261,5 +261,7 @@ class ProtocolBase:
             if isinstance(val, str):
                 val = self._enum_fields[name].get_int(val)
             self._regular_fields[name].value = val
+        elif name in self.serializables and isinstance(val, str):
+            self.serializables[name].update_str(val)
         else:
             self._fields.set(name, val)  # type: ignore

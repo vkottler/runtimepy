@@ -11,6 +11,7 @@ from json import load
 from runtimepy.codec.protocol import Protocol, ProtocolFactory
 from runtimepy.codec.protocol.base import FieldSpec
 from runtimepy.enum.registry import EnumRegistry
+from runtimepy.primitives import Uint32
 from runtimepy.primitives.serializable import PrefixedChunk
 
 # internal
@@ -20,11 +21,57 @@ from tests.resources import resource
 class SampleProtocol(ProtocolFactory):
     """A sample protocol implementation."""
 
+    protocol = Protocol(EnumRegistry())
+
     @classmethod
     def initialize(cls, protocol: Protocol) -> None:
         """Initialize this protocol."""
 
         protocol.add_field("test1", "uint8")
+
+
+class StartsWithChunk(ProtocolFactory):
+    """A sample protocol implementation."""
+
+    protocol = Protocol(EnumRegistry())
+
+    @classmethod
+    def initialize(cls, protocol: Protocol) -> None:
+        """Initialize this protocol."""
+
+        protocol.add_serializable("node_name", PrefixedChunk(Uint32()))
+        protocol.add_field("a", "uint32")
+        protocol.add_field("b", "uint32")
+        protocol.add_field("c", "uint32")
+
+
+def test_protocol_starts_with_serializable():
+    """Test that protocols that start with serializables work."""
+
+    proto = StartsWithChunk.instance()
+
+    proto["a"] = 1000
+    proto["b"] = 2000
+    proto["c"] = 3000
+
+    proto["node_name"] = "Hello, world!"
+    assert proto["node_name"] == "Hello, world!"
+
+    new_inst = StartsWithChunk.instance()
+
+    # Serialize and then de-serialize.
+    with BytesIO() as ostream:
+        size = proto.array.to_stream(ostream)
+        data = ostream.getvalue()
+        with BytesIO(data) as istream:
+            assert new_inst.array.from_stream(istream) == size
+
+    assert new_inst["node_name"] == "Hello, world!"
+    assert new_inst["a"] == 1000
+    assert new_inst["b"] == 2000
+    assert new_inst["c"] == 3000
+
+    assert proto.size == new_inst.size
 
 
 def test_protocol_basic():
