@@ -78,9 +78,9 @@ class JsonProtocol(ProtocolBase):
         )
 
         # Export the build specification.
-        build: _List[_Union[int, _JsonObject]] = []
+        build: _List[_Union[int, _JsonObject, str]] = []
         for item in self._build:
-            if isinstance(item, int):
+            if isinstance(item, (int, str)):
                 build.append(item)
             else:
                 build.append(item.asdict())
@@ -107,7 +107,7 @@ class JsonProtocol(ProtocolBase):
         fields = BitFieldsManager.import_json(data)
 
         # Create the build specification.
-        build: _List[_Union[int, FieldSpec]] = []
+        build: _List[_Union[int, FieldSpec, str]] = []
         for item in data[BUILD_KEY]:
             if isinstance(item, int):
                 build.append(item)

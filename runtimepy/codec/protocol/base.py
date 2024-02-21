@@ -69,7 +69,7 @@ class ProtocolBase:
         enum_registry: _EnumRegistry,
         names: _NameRegistry = None,
         fields: BitFieldsManager = None,
-        build: _List[_Union[int, FieldSpec]] = None,
+        build: _List[_Union[int, FieldSpec, str]] = None,
         identifier: int = 1,
         byte_order: _Union[_ByteOrder, _RegistryKey] = _DEFAULT_BYTE_ORDER,
         serializables: SerializableMap = None,
@@ -102,14 +102,21 @@ class ProtocolBase:
         self._enum_fields: _Dict[str, _RuntimeEnum] = {}
 
         # Keep track of the order that the protocol was created.
-        if build is None:
-            build = []
-        self._build: _List[_Union[int, FieldSpec]] = build
+        self._build: _List[_Union[int, FieldSpec, str]] = []
+
+        # Keep track of named serializables.
+        self.serializables: SerializableMap = {}
 
         # Add fields if necessary.
-        for item in self._build:
+        if build is None:
+            build = []
+        for item in build:
             if isinstance(item, int):
                 self._add_bit_fields(self._fields.fields[item], track=False)
+            elif isinstance(item, str):
+                assert serializables, (item, serializables)
+                self.add_field(item, serializable=serializables[item])
+                del serializables[item]
             else:
                 self.add_field(
                     item.name,
@@ -119,11 +126,8 @@ class ProtocolBase:
                     array_length=item.array_length,
                 )
 
-        # Keep track of named serializables.
-        self.serializables: SerializableMap = {}
-        if serializables is not None:
-            for name, serializable in serializables.items():
-                self.add_field(name, serializable=serializable)
+        # Ensure all serializables were handled via build.
+        assert not serializables, serializables
 
     def __copy__(self: T) -> T:
         """Create another protocol instance from this one."""
@@ -153,6 +157,7 @@ class ProtocolBase:
 
         self.register_name(name)
         self.serializables[name] = serializable
+        self._build.append(name)
         return self.array.add_to_end(serializable, array_length=array_length)
 
     def add_field(
