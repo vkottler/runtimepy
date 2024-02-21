@@ -134,7 +134,9 @@ class ProtocolBase:
             fields=_copy(self._fields),
             build=self._build,
             byte_order=self.array.byte_order,
-            serializables=self.serializables,
+            serializables={
+                key: val.copy() for key, val in self.serializables.items()
+            },
         )
 
     def register_name(self, name: str) -> int:
