@@ -46,8 +46,4 @@ def test_prefixed_chunk_basic():
     chunk_copy.add_to_end(end_copy.copy())
     assert chunk_copy.length() == 7
 
-    try:
-        chunk_copy.update(bytes())
-        assert False
-    except NotImplementedError:
-        pass
+    chunk_copy.update(bytes())

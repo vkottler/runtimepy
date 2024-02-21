@@ -1,7 +1,7 @@
 # =====================================
 # generator=datazen
 # version=3.1.4
-# hash=0eeb8330cf82afd613078176033693af
+# hash=f5dace9c4c7fbe3728802948504b1bd7
 # =====================================
 
 """
@@ -10,7 +10,7 @@ Useful defaults and other package metadata.
 
 DESCRIPTION = "A framework for implementing Python services."
 PKG_NAME = "runtimepy"
-VERSION = "3.7.3"
+VERSION = "3.7.4"
 
 # runtimepy-specific content.
 METRICS_NAME = "metrics"

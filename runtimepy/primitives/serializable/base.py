@@ -104,9 +104,9 @@ class Serializable(ABC):
 
         return result
 
+    @abstractmethod
     def update(self, data: bytes) -> int:
         """Update this serializable from a bytes instance."""
-        raise NotImplementedError
 
     def update_str(self, data: str) -> int:
         """Update this serializable from string data."""

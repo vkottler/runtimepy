@@ -44,10 +44,10 @@ class PrefixedChunk(Serializable):
         """Get this chunk as a string."""
         return str(self.chunk)
 
-    def update_str(self, data: str) -> int:
-        """Update this chunk from a string."""
+    def update(self, data: bytes) -> int:
+        """Update this serializable from a bytes instance."""
 
-        size = self.chunk.update_str(data)
+        size = self.chunk.update(data)
         self.prefix.value = size
         return self._update_size()
 
