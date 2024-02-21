@@ -70,13 +70,18 @@ class Serializable(ABC):
     def __copy__(self: T) -> T:
         """Make a copy of this serializable."""
 
-        result = self._copy_impl()
+        orig = self._copy_impl()
+        orig.byte_order = self.byte_order
 
-        if self.chain is not None:
-            result.assign(self.chain.copy())
-        result.byte_order = self.byte_order
+        # Copy the entire chain.
+        curr = orig
+        chain = self.chain
+        while chain is not None:
+            curr.assign(chain.copy())
+            curr = chain
+            chain = curr.chain
 
-        return result
+        return orig
 
     def copy(self: T) -> T:
         """Create a copy of a serializable instance."""
