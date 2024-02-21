@@ -78,17 +78,12 @@ class Serializable(ABC):
     def __copy__(self: T) -> T:
         """Make a copy of this serializable."""
 
-        orig = self.copy_without_chain()
+        result = self.copy_without_chain()
 
-        # Copy the entire chain.
-        curr = orig
-        chain = self.chain
-        while chain is not None:
-            curr.assign(chain.copy())
-            curr = chain
-            chain = curr.chain
+        if self.chain is not None:
+            result.assign(self.chain.copy())
 
-        return orig
+        return result
 
     def copy(self: T) -> T:
         """Create a copy of a serializable instance."""
