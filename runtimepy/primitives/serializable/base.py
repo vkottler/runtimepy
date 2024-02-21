@@ -8,6 +8,9 @@ from copy import copy as _copy
 from typing import BinaryIO as _BinaryIO
 from typing import TypeVar
 
+# third-party
+from vcorelib import DEFAULT_ENCODING
+
 # internal
 from runtimepy.primitives.byte_order import (
     DEFAULT_BYTE_ORDER as _DEFAULT_BYTE_ORDER,
@@ -97,6 +100,10 @@ class Serializable(ABC):
     def update(self, data: bytes) -> int:
         """Update this serializable from a bytes instance."""
         raise NotImplementedError
+
+    def update_str(self, data: str) -> int:
+        """Update this serializable from string data."""
+        return self.update(data.encode(encoding=DEFAULT_ENCODING))
 
     def _from_stream(self, stream: _BinaryIO) -> int:
         """Update just this instance from a stream."""

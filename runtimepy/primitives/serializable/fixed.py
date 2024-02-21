@@ -37,7 +37,3 @@ class FixedChunk(Serializable):
         self.data = data
         self.size = len(self.data)
         return self.size
-
-    def update_str(self, data: str) -> int:
-        """Update this chunk from a string."""
-        return self.update(data.encode())
