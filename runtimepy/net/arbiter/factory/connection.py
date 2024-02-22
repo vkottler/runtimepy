@@ -73,7 +73,7 @@ class FactoryConnectionArbiter(_BaseConnectionArbiter):
             self._conn_names[factory] = [*namespaces]
 
             result = True
-            self.logger.info(
+            self.logger.debug(
                 "Registered '%s' (%s) connection factory.", name, snake_name
             )
 

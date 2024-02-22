@@ -67,7 +67,7 @@ class TaskConnectionArbiter(_BaseConnectionArbiter):
             self._task_names[factory] = [*namespaces]
 
             result = True
-            self.logger.info(
+            self.logger.debug(
                 "Registered '%s' (%s) task factory.", name, snake_name
             )
 
