@@ -77,6 +77,8 @@ def test_protocol_starts_with_serializable():
 def test_protocol_basic():
     """Test basic interactions with protocol objects."""
 
+    assert SampleProtocol.singleton() is SampleProtocol.singleton()
+
     assert SampleProtocol.instance().size == 1
     assert SampleProtocol.instance().size == 1
 
