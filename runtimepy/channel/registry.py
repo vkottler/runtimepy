@@ -4,6 +4,7 @@ A module implementing a channel registry.
 
 # built-in
 from typing import Any as _Any
+from typing import NamedTuple
 from typing import Optional as _Optional
 from typing import Type as _Type
 from typing import Union
@@ -27,6 +28,46 @@ class ChannelNameRegistry(_NameRegistry):
     """A name registry with a name-matching pattern for channel names."""
 
     name_regex = _CHANNEL_PATTERN
+
+
+class ChannelCreation(NamedTuple):
+    """A container for channel-creation parameters."""
+
+    name: str
+    kind: Union[Primitive[_Any], _Primitivelike]
+    commandable: bool = False
+    enum: _Optional[_RegistryKey] = None
+    scaling: _Optional[ChannelScaling] = None
+
+
+class GlobalEnvironment:
+    """A global environment management interface."""
+
+    registry: "ChannelRegistry"
+
+    def __init__(self) -> None:
+        """Initialize this instance."""
+
+        self.duplicates: list[tuple[_AnyChannel, ChannelCreation]] = []
+
+        # We should add a 'num_duplicates' channel, maybe 'num_channels' as
+        # well?
+
+    def handle(self, channel: _AnyChannel, meta: ChannelCreation) -> None:
+        """Handle global channel registration (used for instrumentation)."""
+
+        if not self.registry.channel(
+            meta.name,
+            meta.kind,
+            commandable=meta.commandable,
+            enum=meta.enum,
+            scaling=meta.scaling,
+        ):
+            self.duplicates.append((channel, meta))
+
+
+# Keep track of global channels.
+GLOBAL: GlobalEnvironment = GlobalEnvironment()
 
 
 class ChannelRegistry(_Registry[_Channel[_Any]]):
@@ -77,4 +118,18 @@ class ChannelRegistry(_Registry[_Channel[_Any]]):
         if result is not None:
             result.raw = primitive
 
+            GLOBAL.handle(
+                result,
+                ChannelCreation(
+                    name,
+                    kind,
+                    commandable=commandable,
+                    enum=enum,
+                    scaling=scaling,
+                ),
+            )
+
         return result
+
+
+GLOBAL.registry = ChannelRegistry.create()
