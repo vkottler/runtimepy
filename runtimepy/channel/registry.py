@@ -49,6 +49,7 @@ class GlobalEnvironment:
         """Initialize this instance."""
 
         self.duplicates: list[tuple[_AnyChannel, ChannelCreation]] = []
+        self.finalized = False
 
         # We should add a 'num_duplicates' channel, maybe 'num_channels' as
         # well?
@@ -56,14 +57,15 @@ class GlobalEnvironment:
     def handle(self, channel: _AnyChannel, meta: ChannelCreation) -> None:
         """Handle global channel registration (used for instrumentation)."""
 
-        if not self.registry.channel(
-            meta.name,
-            meta.kind,
-            commandable=meta.commandable,
-            enum=meta.enum,
-            scaling=meta.scaling,
-        ):
-            self.duplicates.append((channel, meta))
+        if not self.finalized:
+            if not self.registry.channel(
+                meta.name,
+                meta.kind,
+                commandable=meta.commandable,
+                enum=meta.enum,
+                scaling=meta.scaling,
+            ):
+                self.duplicates.append((channel, meta))
 
 
 # Keep track of global channels.

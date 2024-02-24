@@ -46,7 +46,12 @@ class TcpConnection(_Connection, _TransportMixin):
     uses_text_tx_queue = False
     uses_binary_tx_queue = False
 
-    def __init__(self, transport: _Transport, protocol: QueueProtocol) -> None:
+    def __init__(
+        self,
+        transport: _Transport,
+        protocol: QueueProtocol,
+        env_name: str = "",
+    ) -> None:
         """Initialize this TCP connection."""
 
         _TransportMixin.__init__(self, transport)
@@ -55,7 +60,10 @@ class TcpConnection(_Connection, _TransportMixin):
         self._transport: _Transport = transport
         self._set_protocol(protocol)
 
-        super().__init__(_getLogger(self.logger_name("TCP ")))
+        super().__init__(
+            _getLogger(self.logger_name("TCP ")),
+            env_name=env_name if env_name else str(self.local_address),
+        )
 
         # Store connection-instantiation arguments.
         self._conn_kwargs: dict[str, _Any] = {}

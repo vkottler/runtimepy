@@ -43,6 +43,7 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
         logger: _LoggerType,
         env: ChannelEnvironment = None,
         add_metrics: bool = True,
+        env_name: str = "",
     ) -> None:
         """Initialize this connection."""
 
@@ -66,7 +67,7 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
 
         self.metrics = ConnectionMetrics()
 
-        ChannelEnvironmentMixin.__init__(self, env=env)
+        ChannelEnvironmentMixin.__init__(self, env=env, env_name=env_name)
         self.setup_level_channel(self.env)
         self.command = ChannelCommandProcessor(self.env, self.logger)
         if add_metrics:

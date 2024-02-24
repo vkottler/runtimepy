@@ -13,12 +13,14 @@ class ChannelEnvironmentMixin:
 
     env: ChannelEnvironment
 
-    def __init__(self, env: ChannelEnvironment = None, **kwargs) -> None:
+    def __init__(
+        self, env: ChannelEnvironment = None, env_name: str = "", **kwargs
+    ) -> None:
         """Initialize this instance."""
 
         if not hasattr(self, "env"):
             if env is None:
-                env = ChannelEnvironment(**kwargs)
+                env = ChannelEnvironment(name=env_name, **kwargs)
             self.env = env
 
     def register_task_metrics(

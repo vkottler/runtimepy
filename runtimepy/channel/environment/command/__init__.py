@@ -213,4 +213,8 @@ def register_env(name: str, env: ChannelCommandProcessor) -> None:
     assert (
         name not in ENVIRONMENTS or ENVIRONMENTS[name] is env
     ), f"Can't register environment '{name}'!"
+
+    # Names for environments got added later, so do an integrity check here.
+    assert env.env.name == name, (env.env.name, name)
+
     ENVIRONMENTS[name] = env

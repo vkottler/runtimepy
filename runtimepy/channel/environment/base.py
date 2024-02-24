@@ -54,6 +54,7 @@ class BaseChannelEnvironment(_NamespaceMixin, FinalizeMixin):
         fields: _Iterable[_BitFields] = None,
         namespace: Namespace = None,
         namespace_delim: str = DEFAULT_DELIM,
+        name: str = "",
     ) -> None:
         """Initialize this channel environment."""
 
@@ -61,6 +62,7 @@ class BaseChannelEnvironment(_NamespaceMixin, FinalizeMixin):
             self, namespace=namespace, namespace_delim=namespace_delim
         )
         FinalizeMixin.__init__(self)
+        self.name = name
 
         if channels is None:
             channels = _ChannelRegistry()

@@ -59,7 +59,7 @@ class PeriodicTask(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
             metrics = PeriodicTaskMetrics.create()
         self.metrics = metrics
 
-        ChannelEnvironmentMixin.__init__(self, env=env)
+        ChannelEnvironmentMixin.__init__(self, env=env, env_name=name)
         self.setup_level_channel(self.env)
         self.command = ChannelCommandProcessor(self.env, self.logger)
         self.register_task_metrics(self.metrics)

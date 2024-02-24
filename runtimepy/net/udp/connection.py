@@ -40,7 +40,10 @@ class UdpConnection(_Connection, _TransportMixin):
     uses_binary_tx_queue = False
 
     def __init__(
-        self, transport: _DatagramTransport, protocol: UdpQueueProtocol
+        self,
+        transport: _DatagramTransport,
+        protocol: UdpQueueProtocol,
+        env_name: str = "",
     ) -> None:
         """Initialize this UDP connection."""
 
@@ -51,7 +54,10 @@ class UdpConnection(_Connection, _TransportMixin):
         # Re-assign with updated type information.
         self._transport: _DatagramTransport = transport
 
-        super().__init__(_getLogger(self.logger_name("UDP ")))
+        super().__init__(
+            _getLogger(self.logger_name("UDP ")),
+            env_name=env_name if env_name else str(self.local_address),
+        )
         self._set_protocol(protocol)
 
         # Store connection-instantiation arguments.

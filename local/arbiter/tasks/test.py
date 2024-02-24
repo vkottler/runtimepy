@@ -5,6 +5,7 @@ A module for testing application performance.
 # built-in
 import asyncio
 
+from runtimepy.channel.registry import GLOBAL
 from runtimepy.net.arbiter import AppInfo
 
 # internal
@@ -15,6 +16,9 @@ async def test(app: AppInfo) -> int:
     """A network application that doesn't do anything."""
 
     conns = list(app.search(pattern="client", kind=JsonMessageConnection))
+
+    for chan in GLOBAL.duplicates:
+        app.logger.info("Duplicate: %s.", chan[1].name)
 
     while not app.stop.is_set():
         for conn in conns:

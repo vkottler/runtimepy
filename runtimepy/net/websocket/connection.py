@@ -50,11 +50,12 @@ class WebsocketConnection(Connection):
     def __init__(
         self,
         protocol: _Union[_WebSocketClientProtocol, _WebSocketServerProtocol],
+        env_name: str = "",
     ) -> None:
         """Initialize this connection."""
 
         self.protocol = protocol
-        super().__init__(self.protocol.logger)
+        super().__init__(self.protocol.logger, env_name=env_name)
 
     async def _handle_connection_closed(
         self, task: _Awaitable[V]

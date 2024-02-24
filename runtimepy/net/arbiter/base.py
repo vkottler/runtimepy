@@ -28,6 +28,7 @@ from runtimepy.channel.environment.command import (
     env_json_data,
     register_env,
 )
+from runtimepy.channel.registry import GLOBAL
 from runtimepy.net.arbiter.housekeeping import metrics_poller
 from runtimepy.net.arbiter.info import AppInfo, ConnectionMap
 from runtimepy.net.arbiter.result import AppResult, ResultState
@@ -211,6 +212,7 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
                 register_env(task.name, task.command)
             for name, conn in self._connections.items():
                 register_env(name, conn.command)
+            GLOBAL.finalized = True
 
             # Run application, but only if all the registered connections are
             # still alive after initialization.
