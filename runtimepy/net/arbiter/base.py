@@ -182,6 +182,7 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
         """
 
         result = -1
+        info: Optional[AppInfo] = None
 
         try:
             # Wait for servers to start.
@@ -210,8 +211,6 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
                 register_env(task.name, task.command)
             for name, conn in self._connections.items():
                 register_env(name, conn.command)
-
-            info: Optional[AppInfo] = None
 
             # Run application, but only if all the registered connections are
             # still alive after initialization.
