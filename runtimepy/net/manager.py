@@ -6,6 +6,7 @@ from __future__ import annotations
 
 # built-in
 import asyncio as _asyncio
+from contextlib import suppress as _suppress
 from typing import Iterator as _Iterator
 from typing import List as _List
 from typing import Optional as _Optional
@@ -14,6 +15,7 @@ from typing import TypeVar as _TypeVar
 
 # third-party
 from vcorelib.asyncio import log_exceptions as _log_exceptions
+from vcorelib.logging import LoggerMixin
 from vcorelib.math import default_time_ns as _default_time_ns
 
 # internal
@@ -22,11 +24,13 @@ from runtimepy.net.connection import Connection as _Connection
 T = _TypeVar("T", bound=_Connection)
 
 
-class ConnectionManager:
+class ConnectionManager(LoggerMixin):
     """A class for managing connection processing at runtime."""
 
     def __init__(self) -> None:
         """Initialize this connection manager."""
+
+        super().__init__()
         self.queue: _asyncio.Queue[_Connection] = _asyncio.Queue()
         self._running = False
         self._conns: _List[_Connection] = []
@@ -113,10 +117,12 @@ class ConnectionManager:
 
             tasks = next_tasks
 
-        # Allow existing tasks to clean up.
-        if new_conn_task is not None:
-            new_conn_task.cancel()
-        for task in tasks:
-            await task
+        with self.log_time("Shutting down", reminder=True):
+            # Allow existing tasks to clean up.
+            if new_conn_task is not None:
+                new_conn_task.cancel()
+            if tasks:
+                with _suppress(_asyncio.TimeoutError):
+                    await _asyncio.wait_for(_asyncio.gather(*tasks), 1.0)
 
         self._running = False
