@@ -13,9 +13,9 @@ from typing import Optional
 from vcorelib.logging import LoggerMixin
 
 # internal
-from runtimepy.channel.environment.command import (
+from runtimepy.channel.environment.command import FieldOrChannel
+from runtimepy.channel.environment.command.processor import (
     ChannelCommandProcessor,
-    FieldOrChannel,
 )
 
 ChannelCommandParams = tuple[Namespace, Optional[FieldOrChannel]]

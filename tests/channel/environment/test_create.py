@@ -7,7 +7,9 @@ import logging
 
 # module under test
 from runtimepy.channel.environment import ChannelEnvironment
-from runtimepy.channel.environment.command import ChannelCommandProcessor
+from runtimepy.channel.environment.command.processor import (
+    ChannelCommandProcessor,
+)
 from runtimepy.primitives import Uint8
 from runtimepy.primitives.field import BitField
 

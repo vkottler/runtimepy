@@ -12,7 +12,9 @@ from vcorelib.io import ARBITER
 from vcorelib.paths import find_file
 
 # internal
-from runtimepy.channel.environment.command import ChannelCommandProcessor
+from runtimepy.channel.environment.command.processor import (
+    ChannelCommandProcessor,
+)
 from runtimepy.net.stream.json.types import JsonMessage, TypedHandler
 from runtimepy.schemas import RuntimepyDictCodec
 

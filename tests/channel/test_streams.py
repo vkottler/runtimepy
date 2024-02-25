@@ -7,6 +7,7 @@ from vcorelib.paths.context import tempfile
 
 # module under test
 from runtimepy.channel.environment import ChannelEnvironment
+from runtimepy.mapping import DEFAULT_PATTERN
 
 
 def test_channel_registry_streams_basic():
@@ -17,7 +18,7 @@ def test_channel_registry_streams_basic():
     assert env.int_channel("b")
     assert env.int_channel("c")
 
-    assert len(list(env.channels.search())) == 3
+    assert len(list(env.channels.search(DEFAULT_PATTERN))) == 3
 
     with tempfile() as path:
         with path.open("wb") as path_fd:

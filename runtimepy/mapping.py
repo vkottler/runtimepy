@@ -6,7 +6,7 @@ A module implementing a generic, two-way mapping interface.
 import re
 from typing import Dict as _Dict
 from typing import Generic as _Generic
-from typing import Iterator as _Iterator
+from typing import Iterable, Iterator
 from typing import List as _List
 from typing import MutableMapping as _MutableMapping
 from typing import Optional as _Optional
@@ -40,6 +40,18 @@ EnumMappingData = _Union[
     _MutableMapping[str, int],
 ]
 DEFAULT_PATTERN = ".*"
+
+
+def name_search(
+    names: Iterable[str], pattern: str, exact: bool = False
+) -> Iterator[str]:
+    """A simple name searching method."""
+
+    compiled = re.compile(pattern)
+    for name in names:
+        if compiled.search(name) is not None:
+            if not exact or name == pattern:
+                yield name
 
 
 class TwoWayNameMapping(_RegexMixin, LoggerMixin, _Generic[T]):
@@ -114,10 +126,9 @@ class TwoWayNameMapping(_RegexMixin, LoggerMixin, _Generic[T]):
         return self._mapping.get(_cast(T, key))
 
     @property
-    def names(self) -> _Iterator[str]:
+    def names(self) -> Iterator[str]:
         """Iterate over names."""
-        for name in self._reverse:
-            yield name
+        yield from self._reverse
 
     def asdict(self) -> _Dict[str, T]:
         """Provide a dictionary representation."""
@@ -144,16 +155,9 @@ class TwoWayNameMapping(_RegexMixin, LoggerMixin, _Generic[T]):
 
         return cls(mapping=mapping, reverse=reverse)
 
-    def search(
-        self, pattern: str = DEFAULT_PATTERN, exact: bool = False
-    ) -> _Iterator[str]:
+    def search(self, pattern: str, exact: bool = False) -> Iterator[str]:
         """Get names in this mapping based on a pattern."""
-
-        compiled = re.compile(pattern)
-        for name in self.names:
-            if compiled.search(name) is not None:
-                if not exact or name == pattern:
-                    yield name
+        yield from name_search(self.names, pattern, exact=exact)
 
     @classmethod
     def bool_from_dict(

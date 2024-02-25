@@ -19,7 +19,7 @@ def test_channel_environment_array_basic():
     """
 
     env = ChannelEnvironment.load_directory(
-        resource("channels", "environment", "sample")
+        resource("channels", "environment", "sample"), finalize=False
     )
 
     array = env.array(

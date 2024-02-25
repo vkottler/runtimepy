@@ -19,7 +19,6 @@ from vcorelib.io.types import JsonObject as _JsonObject
 from vcorelib.io.types import JsonValue as _JsonValue
 
 # internal
-from runtimepy.mapping import DEFAULT_PATTERN
 from runtimepy.registry.item import RegistryItem as _RegistryItem
 from runtimepy.registry.name import NameRegistry as _NameRegistry
 from runtimepy.registry.name import RegistryKey as _RegistryKey
@@ -53,10 +52,11 @@ class Registry(_RuntimepyDictCodec, _Generic[T]):
         )
 
     def search(
-        self, pattern: str = DEFAULT_PATTERN
+        self, pattern: str, exact: bool = False
     ) -> Iterator[Tuple[str, T]]:
         """Search for items in the registry by name."""
-        for name in self.names.search(pattern=pattern):
+
+        for name in self.names.search(pattern, exact=exact):
             yield name, self.items[name]
 
     def asdict(self) -> _JsonObject:

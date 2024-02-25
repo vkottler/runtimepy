@@ -55,7 +55,7 @@ class JsonMessageConnection(
         self.typed_handler(
             "channel_command",
             ChannelCommand,
-            channel_env_handler(ENVIRONMENTS, self.command),
+            channel_env_handler(ENVIRONMENTS.data, self.command),
         )
 
     def init(self) -> None:

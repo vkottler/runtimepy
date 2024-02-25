@@ -54,6 +54,9 @@ class FileChannelEnvironment(_BaseChannelEnvironment):
     ) -> _Dict[str, _JsonObject]:
         """Get this channel environment as a single dictionary."""
 
+        # Only allow exporting finalized environments.
+        self.finalize(strict=False)
+
         return {
             CHANNELS_KEY: self.channels.asdict(),
             ENUMS_KEY: self.enums.asdict(),
@@ -78,6 +81,9 @@ class FileChannelEnvironment(_BaseChannelEnvironment):
         **kwargs,
     ) -> None:
         """Write channel and enum registries to disk."""
+
+        # Only allow exporting finalized environments.
+        self.finalize(strict=False)
 
         self.channels.encode(channels, **kwargs)
         self.enums.encode(enums, **kwargs)
@@ -120,7 +126,9 @@ class FileChannelEnvironment(_BaseChannelEnvironment):
         )
 
     @classmethod
-    def load_json(cls: _Type[T], data: _Dict[str, _JsonObject]) -> T:
+    def load_json(
+        cls: _Type[T], data: _Dict[str, _JsonObject], finalize: bool = True
+    ) -> T:
         """Load a channel environment from JSON data."""
 
         chan_reg = _ChannelRegistry.create(data[CHANNELS_KEY])
@@ -134,12 +142,19 @@ class FileChannelEnvironment(_BaseChannelEnvironment):
             _cast(_NameToKey[int], data[NAMES_KEY][ENUMS_KEY])
         )
 
-        return cls(
+        result = cls(
             channels=chan_reg,
             enums=enum_reg,
             values=_cast(_Optional[_ValueMap], data.get(VALUES_KEY)),
             fields=_fields_from_dict(data[FIELDS_KEY]),
         )
+
+        # Typically, externally loaded environments should be final at load
+        # time.
+        if finalize:
+            result.finalize()
+
+        return result
 
     @classmethod
     def load(
@@ -149,6 +164,7 @@ class FileChannelEnvironment(_BaseChannelEnvironment):
         values: _Pathlike = VALUES_FILE,
         fields: _Pathlike = FIELDS_FILE,
         names: _Pathlike = NAMES_FILE,
+        finalize: bool = True,
     ) -> T:
         """Load a channel environment from a pair of files."""
 
@@ -174,15 +190,24 @@ class FileChannelEnvironment(_BaseChannelEnvironment):
             _cast(_NameToKey[int], name_data[ENUMS_KEY])
         )
 
-        return cls(
+        result = cls(
             channels=chan_reg,
             enums=enum_reg,
             values=value_map,
             fields=_fields_from_file(fields),
         )
 
+        # Typically, externally loaded environments should be final at load
+        # time.
+        if finalize:
+            result.finalize()
+
+        return result
+
     @classmethod
-    def load_directory(cls: _Type[T], path: _Pathlike) -> T:
+    def load_directory(
+        cls: _Type[T], path: _Pathlike, finalize: bool = True
+    ) -> T:
         """Load a channel environment from a directory."""
 
         path = _normalize(path, require=True)
@@ -193,4 +218,5 @@ class FileChannelEnvironment(_BaseChannelEnvironment):
             values=path.joinpath(VALUES_FILE),
             fields=path.joinpath(FIELDS_FILE),
             names=path.joinpath(NAMES_FILE),
+            finalize=finalize,
         )

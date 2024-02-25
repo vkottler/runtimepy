@@ -5,7 +5,7 @@ A module implementing a channel registry.
 # built-in
 from contextlib import ExitStack, contextmanager
 from typing import Any as _Any
-from typing import BinaryIO, Iterator, NamedTuple
+from typing import BinaryIO, Iterable, Iterator, NamedTuple
 from typing import Optional as _Optional
 from typing import Type as _Type
 from typing import Union, cast
@@ -36,12 +36,28 @@ class ChannelNameRegistry(_NameRegistry):
     name_regex = _CHANNEL_PATTERN
 
 
+ChannelEventMap = dict[str, list["ParsedEvent"]]
+
+
 class ParsedEvent(NamedTuple):
     """A raw channel event."""
 
     name: str
     timestamp: int
     value: PythonPrimitive
+
+    @staticmethod
+    def by_channel(
+        event_stream: Iterable["ParsedEvent"],
+    ) -> ChannelEventMap:
+        """
+        Get a dictionary of channel events broken down by individual channels.
+        """
+
+        result: ChannelEventMap = {}
+        for event in event_stream:
+            result.setdefault(event.name, []).append(event)
+        return result
 
 
 class ChannelRegistry(_Registry[_Channel[_Any]]):
@@ -109,15 +125,23 @@ class ChannelRegistry(_Registry[_Channel[_Any]]):
 
     @contextmanager
     def registered(
-        self, stream: BinaryIO, pattern: str = DEFAULT_PATTERN
-    ) -> Iterator[None]:
-        """Register a stream as a managed context."""
+        self,
+        stream: BinaryIO,
+        pattern: str = DEFAULT_PATTERN,
+        exact: bool = False,
+    ) -> Iterator[list[str]]:
+        """
+        Register a stream as a managed context. Returns a list of all channels
+        registered.
+        """
 
         with ExitStack() as stack:
-            for _, channel in self.search(pattern=pattern):
+            names = []
+            for name, channel in self.search(pattern, exact=exact):
                 stack.enter_context(channel.event.registered(stream))
+                names.append(name)
 
-            yield
+            yield names
 
     def parse_event_stream(self, stream: BinaryIO) -> Iterator[ParsedEvent]:
         """Parse individual events from a stream."""
