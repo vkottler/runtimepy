@@ -3,6 +3,7 @@ A module implementing a generic, two-way mapping interface.
 """
 
 # built-in
+import re
 from typing import Dict as _Dict
 from typing import Generic as _Generic
 from typing import Iterator as _Iterator
@@ -38,6 +39,7 @@ EnumMappingData = _Union[
     _MutableMapping[str, bool],
     _MutableMapping[str, int],
 ]
+DEFAULT_PATTERN = ".*"
 
 
 class TwoWayNameMapping(_RegexMixin, LoggerMixin, _Generic[T]):
@@ -141,6 +143,17 @@ class TwoWayNameMapping(_RegexMixin, LoggerMixin, _Generic[T]):
                 mapping[key] = str(value)
 
         return cls(mapping=mapping, reverse=reverse)
+
+    def search(
+        self, pattern: str = DEFAULT_PATTERN, exact: bool = False
+    ) -> _Iterator[str]:
+        """Get names in this mapping based on a pattern."""
+
+        compiled = re.compile(pattern)
+        for name in self.names:
+            if compiled.search(name) is not None:
+                if not exact or name == pattern:
+                    yield name
 
     @classmethod
     def bool_from_dict(

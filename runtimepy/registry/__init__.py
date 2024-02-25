@@ -7,7 +7,9 @@ integer identifier.
 from abc import abstractmethod as _abstractmethod
 from typing import Dict as _Dict
 from typing import Generic as _Generic
+from typing import Iterator
 from typing import Optional as _Optional
+from typing import Tuple
 from typing import Type as _Type
 from typing import TypeVar as _TypeVar
 from typing import cast as _cast
@@ -17,6 +19,7 @@ from vcorelib.io.types import JsonObject as _JsonObject
 from vcorelib.io.types import JsonValue as _JsonValue
 
 # internal
+from runtimepy.mapping import DEFAULT_PATTERN
 from runtimepy.registry.item import RegistryItem as _RegistryItem
 from runtimepy.registry.name import NameRegistry as _NameRegistry
 from runtimepy.registry.name import RegistryKey as _RegistryKey
@@ -48,6 +51,13 @@ class Registry(_RuntimepyDictCodec, _Generic[T]):
         self.names = self.name_registry(
             reverse={name: item.id for name, item in self.items.items()}
         )
+
+    def search(
+        self, pattern: str = DEFAULT_PATTERN
+    ) -> Iterator[Tuple[str, T]]:
+        """Search for items in the registry by name."""
+        for name in self.names.search(pattern=pattern):
+            yield name, self.items[name]
 
     def asdict(self) -> _JsonObject:
         """Get this registry as a dictionary."""

@@ -13,6 +13,10 @@ class IntegerBounds(NamedTuple):
     min: int
     max: int
 
+    def validate(self, val: int) -> bool:
+        """Determine if the value is within bounds."""
+        return self.min <= val <= self.max
+
     def clamp(self, val: int) -> int:
         """
         Ensure that 'val' is between min and max, use the min or max value
