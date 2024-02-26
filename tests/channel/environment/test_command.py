@@ -10,9 +10,9 @@ from typing import Optional
 
 # module under test
 from runtimepy.channel.environment import ChannelEnvironment
-from runtimepy.channel.environment.command import (
+from runtimepy.channel.environment.command import FieldOrChannel
+from runtimepy.channel.environment.command.processor import (
     ChannelCommandProcessor,
-    FieldOrChannel,
 )
 
 

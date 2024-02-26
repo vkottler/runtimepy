@@ -107,6 +107,9 @@ class Primitive(_Generic[T]):
 
         curr: T = self.raw.value  # type: ignore
 
+        self.raw.value = value
+        self.last_updated_ns = default_time_ns()
+
         # Call callbacks if the value has changed.
         if self.callbacks and curr != value:
             to_remove = []
@@ -118,9 +121,6 @@ class Primitive(_Generic[T]):
             # Remove one-time callbacks.
             for item in to_remove:
                 self.remove_callback(item)
-
-        self.last_updated_ns = default_time_ns()
-        self.raw.value = value
 
     @property
     def scaled(self) -> Numeric:

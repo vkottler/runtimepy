@@ -11,6 +11,7 @@ from typing import cast as _cast
 from vcorelib.io.types import JsonObject as _JsonObject
 
 # internal
+from runtimepy.channel.event import PrimitiveEvent
 from runtimepy.mixins.enum import EnumMixin as _EnumMixin
 from runtimepy.primitives import T as _T
 from runtimepy.primitives import normalize as _normalize
@@ -58,6 +59,9 @@ class Channel(_RegistryItem, _EnumMixin, _Generic[_T]):
 
         # A key to this channel's enumeration in the enumeration registry.
         self._enum = _cast(str, data.get("enum"))
+
+        # An event-streaming interface.
+        self.event = PrimitiveEvent(self.raw, self.id)
 
     def asdict(self) -> _JsonObject:
         """Obtain a dictionary representing this instance."""
