@@ -86,7 +86,7 @@ def config_data(args: _Namespace) -> Dict[str, Any]:
         clients.append(client_data(args))
 
     return {
-        "includes": [f"package://{PKG_NAME}/factories.yaml"],
+        "includes": [f"package://{PKG_NAME}/factories.yaml"] + args.configs,
         "clients": clients,
         "servers": servers,
         "ports": [

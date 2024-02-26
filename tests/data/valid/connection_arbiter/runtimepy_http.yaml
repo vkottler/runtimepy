@@ -1,11 +1,9 @@
 ---
-includes:
-  - package://runtimepy/factories.yaml
+includes_left:
+  - package://runtimepy/server.yaml
 
-app: tests.net.stream.runtimepy_http_test
-
-ports:
-  - {name: runtimepy_http_server, type: tcp}
+app:
+  - tests.net.stream.runtimepy_http_test
 
 clients:
   - factory: runtimepy_http
@@ -13,7 +11,7 @@ clients:
     defer: true
     kwargs: {host: localhost, port: "$runtimepy_http_server"}
 
-servers:
-  - factory: runtimepy_http
-    kwargs:
-      port: "$runtimepy_http_server"
+  - factory: runtimepy_websocket_json
+    name: runtimepy_websocket_client
+    defer: true
+    args: ["ws://localhost:$runtimepy_websocket_server"]
