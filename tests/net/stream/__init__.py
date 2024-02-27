@@ -101,6 +101,7 @@ async def runtimepy_http_test(app: AppInfo) -> int:
         *(
             # Application.
             client.request(RequestHeader(target="/")),
+            client.request(RequestHeader(target="/index.html")),
             # favicon.ico.
             client.request(RequestHeader(target="/favicon.ico")),
             # JSON queries.
