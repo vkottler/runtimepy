@@ -6,16 +6,17 @@ const blob = new Blob(
   { type: "text/javascript" },
 );
 
-// Creating a new document.worker property containing all our "text/js-worker" scripts.
-document.worker = new Worker(window.URL.createObjectURL(blob));
+// Creating a new document.worker property containing all our "text/js-worker"
+// scripts.
+let worker = new Worker(window.URL.createObjectURL(blob));
 
-document.worker.onmessage = (event) => {
-  pageLog(`Received: ${event.data}`);
+worker.onmessage = (event) => {
+  console.log(`Main thread received: ${event.data}.`);
 };
 
 // Start the worker.
 window.onload = () => {
-  document.worker.postMessage("");
+  worker.postMessage("Message from main thread.");
 };
 
 console.log("Main thread!");

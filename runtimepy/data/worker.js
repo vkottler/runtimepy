@@ -1,6 +1,6 @@
 onmessage = (event) => {
   console.log(event);
-  postMessage("Hello, world!");
+  postMessage("Worker received message!");
 };
 
 console.log("Worker thread!");
