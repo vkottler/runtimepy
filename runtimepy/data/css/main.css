@@ -1,0 +1,27 @@
+html {
+  height: 100%;
+}
+
+body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+/* This is the application container. */
+body > :first-child {
+  height: 100%;
+}
+
+.flex-column-scroll-bodge {
+  height: 100%;
+  flex-wrap: nowrap;
+  overflow: scroll;
+  flex-shrink: 0;
+}
+
+.tab-content-scroll-bodge {
+  width: 100%;
+  height: 100%;
+  overflow: scroll;
+}

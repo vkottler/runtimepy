@@ -3,50 +3,45 @@ A module implementing application methods for this package's server interface.
 """
 
 # built-in
-from typing import Any, Optional
-
-# third-party
-from svgen.element.html import Html
+from importlib import import_module as _import_module
 
 # internal
+from runtimepy.net.arbiter.imports import import_str_and_item
 from runtimepy.net.arbiter.info import AppInfo
-from runtimepy.net.http.header import RequestHeader
-from runtimepy.net.http.response import ResponseHeader
 from runtimepy.net.server import RuntimepyServerConnection
-from runtimepy.net.server.app.base import WebApplication
+from runtimepy.net.server.app.bootstrap.tabs import TabbedContent
+from runtimepy.net.server.app.create import config_param, create_app
+from runtimepy.net.server.app.elements import div
 
-DOCUMENT = None
+
+def sample(app: AppInfo, tabs: TabbedContent) -> None:
+    """Populate application elements."""
+
+    for idx in range(10):
+        item = f"test{idx}"
+
+        button, content = tabs.create(item)
+
+        # what should we put here?
+        button.text = item
+
+        for idx in range(100):
+            msg = f"Hello, world! ({idx})"
+            text = ", ".join(list(msg for _ in range(20)))
+            div(parent=content, text=text, style="white-space: nowrap;")
+
+    del app
 
 
 async def setup(app: AppInfo) -> int:
     """Perform server application setup steps."""
 
-    async def main(
-        document: Html,
-        request: RequestHeader,
-        response: ResponseHeader,
-        request_data: Optional[bytes],
-    ) -> Html:
-        """A simple 'Hello, world!' application."""
-
-        # Use the already-rendered document.
-        config: dict[str, Any] = app.config["root"]  # type: ignore
-        if config.get("config", {}).get("caching", True):
-            global DOCUMENT  # pylint: disable=global-statement
-            if DOCUMENT is not None:
-                return DOCUMENT
-
-        # Not currently used.
-        del request
-        del response
-        del request_data
-
-        # Create the application.
-        WebApplication(app).populate(document.body)
-
-        DOCUMENT = document
-        return document
-
-    RuntimepyServerConnection.default_app = main
+    # Set default application.
+    module, method = import_str_and_item(
+        config_param(app, "html_method", "runtimepy.net.server.app.sample")
+    )
+    RuntimepyServerConnection.default_app = create_app(
+        app, getattr(_import_module(module), method)
+    )
 
     return 0
