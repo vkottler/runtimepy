@@ -2,11 +2,11 @@
     =====================================
     generator=datazen
     version=3.1.4
-    hash=c7bfaabcb235afbdae1921e1defa2f1a
+    hash=2cdc52179796701956fa06a3853806b0
     =====================================
 -->
 
-# runtimepy ([3.9.0](https://pypi.org/project/runtimepy/))
+# runtimepy ([3.10.0](https://pypi.org/project/runtimepy/))
 
 [![python](https://img.shields.io/pypi/pyversions/runtimepy.svg)](https://pypi.org/project/runtimepy/)
 ![Build Status](https://github.com/vkottler/runtimepy/workflows/Python%20Package/badge.svg)

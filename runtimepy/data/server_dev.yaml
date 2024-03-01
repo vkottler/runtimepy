@@ -1,0 +1,7 @@
+---
+config:
+  localhost: true
+  caching: false
+
+port_overrides:
+  runtimepy_http_server: 8000
