@@ -21,6 +21,9 @@ from runtimepy.net.arbiter.info import AppInfo
 class WebApplication:
     """A simple web-application interface."""
 
+    worker_source_paths = ["worker", "handle_json_messages"]
+    main_source_paths = ["main"]
+
     def __init__(self, app: AppInfo) -> None:
         """Initialize this instance."""
         self.app = app
@@ -34,15 +37,26 @@ class WebApplication:
         config: dict[str, Any] = self.app.config["root"]  # type: ignore
 
         # Find connection ports to save as variables in JavaScript.
-        host = socket.gethostname()
+        host = (
+            socket.gethostname()
+            if not config.get("config", {}).get("localhost", False)
+            else "localhost"
+        )
+
         for port in cast(list[dict[str, Any]], config["ports"]):
             if port["name"] == f"{PKG_NAME}_http_server":
+                http_server = f"http://{host}:{port['port']}"
                 children.append(
-                    Element(tag="div", text=f"http://{host}:{port['port']}")
+                    Element(tag="div", text=http_server, id="http_server_url")
                 )
             elif port["name"] == f"{PKG_NAME}_websocket_server":
+                websocket_server = f"ws://{host}:{port['port']}"
                 children.append(
-                    Element(tag="div", text=f"ws://{host}:{port['port']}")
+                    Element(
+                        tag="div",
+                        text=websocket_server,
+                        id="websocket_server_url",
+                    )
                 )
 
         children.append(Element(tag="div", text="End."))
@@ -50,7 +64,10 @@ class WebApplication:
         # Worker code.
         with StringIO() as stream:
             writer = IndentedFileWriter(stream, per_indent=2)
-            self._write_found_file(writer, f"package://{PKG_NAME}/worker.js")
+            for path in self.worker_source_paths:
+                self._write_found_file(
+                    writer, f"package://{PKG_NAME}/{path}.js"
+                )
             children.append(
                 Element(
                     tag="script", type="text/js-worker", text=stream.getvalue()
@@ -60,7 +77,10 @@ class WebApplication:
         # Main-thread code.
         with StringIO() as stream:
             writer = IndentedFileWriter(stream, per_indent=2)
-            self._write_found_file(writer, f"package://{PKG_NAME}/main.js")
+            for path in self.main_source_paths:
+                self._write_found_file(
+                    writer, f"package://{PKG_NAME}/{path}.js"
+                )
             children.append(Element(tag="script", text=stream.getvalue()))
 
     def _write_found_file(

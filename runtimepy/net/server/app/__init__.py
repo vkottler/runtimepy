@@ -3,7 +3,7 @@ A module implementing application methods for this package's server interface.
 """
 
 # built-in
-from typing import Optional
+from typing import Any, Optional
 
 # third-party
 from svgen.element.html import Html
@@ -30,9 +30,11 @@ async def setup(app: AppInfo) -> int:
         """A simple 'Hello, world!' application."""
 
         # Use the already-rendered document.
-        global DOCUMENT  # pylint: disable=global-statement
-        if DOCUMENT is not None:
-            return DOCUMENT
+        config: dict[str, Any] = app.config["root"]  # type: ignore
+        if config.get("config", {}).get("caching", True):
+            global DOCUMENT  # pylint: disable=global-statement
+            if DOCUMENT is not None:
+                return DOCUMENT
 
         # Not currently used.
         del request
