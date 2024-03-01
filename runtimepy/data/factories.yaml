@@ -20,6 +20,7 @@ factories:
   - {name: runtimepy.net.factories.Http}
   - {name: runtimepy.net.factories.RuntimepyHttp}
   - {name: runtimepy.net.factories.RuntimepyWebsocketJson}
+  - {name: runtimepy.net.factories.RuntimepyWebsocketData}
 
   # Useful tasks.
   - {name: runtimepy.task.trig.Sinusoid}

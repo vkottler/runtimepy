@@ -21,18 +21,19 @@ from runtimepy.net.arbiter.info import AppInfo
 class WebApplication:
     """A simple web-application interface."""
 
-    worker_source_paths = ["worker", "handle_json_messages"]
-    main_source_paths = ["main"]
+    worker_source_paths = ["JsonConnection", "DataConnection", "worker"]
+    main_source_paths = ["main", "config"]
 
     def __init__(self, app: AppInfo) -> None:
         """Initialize this instance."""
         self.app = app
 
-    def populate(self, body: Element) -> None:
-        """Populate the body element with the application."""
+    def _populate_server_urls(self, body: Element) -> None:
+        """
+        Add elements to the document that allow easy lookup from JavaScript.
+        """
 
         children = body.children
-        children.append(Element(tag="div", text="Begin."))
 
         config: dict[str, Any] = self.app.config["root"]  # type: ignore
 
@@ -44,21 +45,30 @@ class WebApplication:
         )
 
         for port in cast(list[dict[str, Any]], config["ports"]):
-            if port["name"] == f"{PKG_NAME}_http_server":
-                http_server = f"http://{host}:{port['port']}"
-                children.append(
-                    Element(tag="div", text=http_server, id="http_server_url")
-                )
-            elif port["name"] == f"{PKG_NAME}_websocket_server":
-                websocket_server = f"ws://{host}:{port['port']}"
-                children.append(
-                    Element(
-                        tag="div",
-                        text=websocket_server,
-                        id="websocket_server_url",
-                    )
-                )
+            text = ""
+            ident = ""
 
+            if port["name"] == f"{PKG_NAME}_http_server":
+                text = f"http://{host}:{port['port']}"
+                ident = "http_url"
+            elif port["name"] == f"{PKG_NAME}_websocket_json_server":
+                text = f"ws://{host}:{port['port']}"
+                ident = "websocket_json_url"
+            elif port["name"] == f"{PKG_NAME}_websocket_data_server":
+                text = f"ws://{host}:{port['port']}"
+                ident = "websocket_data_url"
+
+            # Add element.
+            if text and ident:
+                children.append(Element(tag="div", text=text, id=ident))
+
+    def populate(self, body: Element) -> None:
+        """Populate the body element with the application."""
+
+        children = body.children
+
+        children.append(Element(tag="div", text="Begin."))
+        self._populate_server_urls(body)
         children.append(Element(tag="div", text="End."))
 
         # Worker code.
@@ -66,7 +76,7 @@ class WebApplication:
             writer = IndentedFileWriter(stream, per_indent=2)
             for path in self.worker_source_paths:
                 self._write_found_file(
-                    writer, f"package://{PKG_NAME}/{path}.js"
+                    writer, f"package://{PKG_NAME}/js/{path}.js"
                 )
             children.append(
                 Element(
@@ -79,7 +89,7 @@ class WebApplication:
             writer = IndentedFileWriter(stream, per_indent=2)
             for path in self.main_source_paths:
                 self._write_found_file(
-                    writer, f"package://{PKG_NAME}/{path}.js"
+                    writer, f"package://{PKG_NAME}/js/{path}.js"
                 )
             children.append(Element(tag="script", text=stream.getvalue()))
 

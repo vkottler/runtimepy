@@ -12,7 +12,10 @@ from runtimepy.net.arbiter.tcp.json import (
 from runtimepy.net.arbiter.udp import UdpConnectionFactory
 from runtimepy.net.arbiter.websocket import WebsocketConnectionFactory
 from runtimepy.net.server import RuntimepyServerConnection
-from runtimepy.net.server.websocket import RuntimepyWebsocketConnection
+from runtimepy.net.server.websocket import (
+    RuntimepyDataWebsocketConnection,
+    RuntimepyWebsocketConnection,
+)
 from runtimepy.net.stream import (
     EchoTcpMessageConnection,
     EchoUdpMessageConnection,
@@ -158,3 +161,11 @@ class RuntimepyWebsocketJson(
     """WebSocket JSON-connection factory."""
 
     kind = RuntimepyWebsocketConnection
+
+
+class RuntimepyWebsocketData(
+    WebsocketConnectionFactory[RuntimepyDataWebsocketConnection]
+):
+    """WebSocket JSON-connection factory."""
+
+    kind = RuntimepyDataWebsocketConnection

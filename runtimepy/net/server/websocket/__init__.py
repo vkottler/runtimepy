@@ -4,6 +4,7 @@ A module implementing a simple WebSocket server for the package.
 
 # internal
 from runtimepy.net.arbiter.tcp.json import WebsocketJsonMessageConnection
+from runtimepy.net.websocket import WebsocketConnection
 
 
 class RuntimepyWebsocketConnection(WebsocketJsonMessageConnection):
@@ -14,3 +15,7 @@ class RuntimepyWebsocketConnection(WebsocketJsonMessageConnection):
 
         super()._register_handlers()
         print("TODO")
+
+
+class RuntimepyDataWebsocketConnection(WebsocketConnection):
+    """A class implementing a WebSocket connection for streaming raw data."""

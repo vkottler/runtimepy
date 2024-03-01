@@ -12,6 +12,11 @@ clients:
     kwargs: {host: localhost, port: "$runtimepy_http_server"}
 
   - factory: runtimepy_websocket_json
-    name: runtimepy_websocket_client
+    name: runtimepy_websocket_json_client
     defer: true
-    args: ["ws://localhost:$runtimepy_websocket_server"]
+    args: ["ws://localhost:$runtimepy_websocket_json_server"]
+
+  - factory: runtimepy_websocket_data
+    name: runtimepy_websocket_data_client
+    defer: true
+    args: ["ws://localhost:$runtimepy_websocket_data_server"]
