@@ -7,10 +7,27 @@ from pytest import raises
 from vcorelib.paths.context import tempfile
 
 # module under test
-from runtimepy.enum.registry import EnumRegistry
+from runtimepy.enum.registry import EnumRegistry, RuntimeIntEnum
 
 # internal
 from tests.resources import resource
+
+
+class SampleEnum(RuntimeIntEnum):
+    """A sample enumeration."""
+
+    A = 1
+    B = 2
+    C = 3
+
+
+def test_runtime_int_enum_basic():
+    """Test basic interations with a runtime integer enumeration."""
+
+    assert SampleEnum.normalize(SampleEnum.A) is SampleEnum.A
+    assert SampleEnum.normalize("a") is SampleEnum.A
+    assert SampleEnum.normalize("A") is SampleEnum.A
+    assert SampleEnum.normalize(1) is SampleEnum.A
 
 
 def test_enum_registry_basic():

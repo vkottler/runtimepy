@@ -6,6 +6,7 @@ A module implementing and enumeration registry.
 from enum import IntEnum as _IntEnum
 from typing import Optional as _Optional
 from typing import Type as _Type
+from typing import TypeVar
 from typing import cast as _cast
 
 # third-party
@@ -43,8 +44,25 @@ class EnumRegistry(_Registry[_RuntimeEnum]):
         return self.register_dict(name, data)
 
 
+T = TypeVar("T", bound="RuntimeIntEnum")
+
+
 class RuntimeIntEnum(_IntEnum):
     """An integer enumeration extension."""
+
+    @classmethod
+    def normalize(cls: type[T], data: int | str | T) -> T:
+        """
+        Normalize a value at runtime that is either integer, string or an enum
+        instance.
+        """
+
+        if isinstance(data, int):
+            data = cls(data)
+        elif isinstance(data, str):
+            data = cls[data.upper()]
+
+        return data
 
     @classmethod
     def primitive(cls) -> str:
