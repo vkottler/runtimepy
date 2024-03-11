@@ -1,3 +1,5 @@
+import_pyodide();
+
 function create_connections(config) {
   /* This business logic could use some work. */
   const conn_factories = {"json" : JsonConnection, "data" : DataConnection};
@@ -12,18 +14,32 @@ function create_connections(config) {
 }
 
 /* Worker entry. */
-function start(config) {
+async function start(config) {
   let conns = create_connections(config);
   // console.log(conns);
+
+  /* Run pyodide. */
+  let pyodide = await loadPyodide();
+  await pyodide.loadPackage("micropip");
+  const micropip = pyodide.pyimport("micropip");
+
+  /* Install packages. */
+  await micropip.install("runtimepy");
+
+  pyodide.runPython(`
+    from runtimepy.primitives import create
+
+    print(create("uint8"))
+  `);
 }
 
 started = false;
 
 /* Handle messages from the main thread. */
-onmessage = (event) => {
+onmessage = async (event) => {
   /* First message.*/
   if (!started) {
-    start(event.data);
+    await start(event.data);
     started = true;
   } else {
     /* Additional messages not handled. */

@@ -17,6 +17,7 @@ from runtimepy.net.server.app.bootstrap import (
 )
 from runtimepy.net.server.app.bootstrap.tabs import TabbedContent
 from runtimepy.net.server.app.files import append_kind
+from runtimepy.net.server.app.pyodide import add_pyodide_js
 
 TabPopulater = Callable[[TabbedContent], None]
 
@@ -24,8 +25,13 @@ TabPopulater = Callable[[TabbedContent], None]
 class WebApplication:
     """A simple web-application interface."""
 
-    worker_source_paths = ["JsonConnection", "DataConnection", "worker"]
-    main_source_paths = ["main"]
+    worker_source_paths = [
+        "shared",
+        "JsonConnection",
+        "DataConnection",
+        "worker",
+    ]
+    main_source_paths = ["shared", "main"]
     css_paths = ["main"]
 
     def __init__(self, app: AppInfo) -> None:
@@ -46,6 +52,7 @@ class WebApplication:
 
         # Third-party dependencies.
         add_bootstrap_js(document.body)
+        add_pyodide_js(document.body)
 
         # Worker code.
         append_kind(document.body, *self.worker_source_paths)[

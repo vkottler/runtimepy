@@ -2,18 +2,6 @@ function worker_message(event) {
   console.log(`Main thread received: ${event.data}.`);
 }
 
-/*
- * Do some heinous sh*t to create a worker from our 'text/js-worker' element.
- */
-const worker = new Worker(window.URL.createObjectURL(new Blob(
-    Array.prototype.map.call(
-        document.querySelectorAll("script[type='text\/js-worker']"),
-        (script) => script.textContent,
-        ),
-    {type : "text/javascript"},
-    )));
-worker.onmessage = worker_message;
-
 function worker_config(config) {
   let worker_cfg = {};
 
@@ -35,10 +23,27 @@ function worker_config(config) {
   return worker_cfg;
 }
 
-function main(config) {
+/*
+ * Do some heinous sh*t to create a worker from our 'text/js-worker' element.
+ */
+const worker = new Worker(window.URL.createObjectURL(new Blob(
+    Array.prototype.map.call(
+        document.querySelectorAll("script[type='text\/js-worker']"),
+        (script) => script.textContent,
+        ),
+    {type : "text/javascript"},
+    )));
+worker.onmessage = worker_message;
+
+async function main(config) {
+
   /* Send configuration data to the worker. */
   config["worker"] = worker_config(config);
   worker.postMessage(config);
+
+  /* Run pyodide. */
+  let pyodide = await loadPyodide();
+  pyodide.runPython(`print("MAIN THREAD.")`);
 
   /* Canvas. */
   // let ctx = document.getElementById("canvas").getContext("2d");
@@ -47,8 +52,6 @@ function main(config) {
 }
 
 /* Load configuration data then run application entry. */
-window.onload = () => {
-  fetch(window.location.origin + "/json")
-      .then((value) => { return value.json(); })
-      .then((value) => { main(value); });
+window.onload = async () => {
+  await main(await (await fetch(window.location.origin + "/json")).json());
 };
