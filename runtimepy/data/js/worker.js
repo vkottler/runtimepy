@@ -13,6 +13,16 @@ function create_connections(config) {
   return conns;
 }
 
+const script = `
+import js
+from runtimepy.primitives import create
+
+print(create("uint8"))
+
+# can send messages to main thread
+js.postMessage("What's good bud!")
+`;
+
 /* Worker entry. */
 async function start(config) {
   let conns = create_connections(config);
@@ -26,11 +36,7 @@ async function start(config) {
   /* Install packages. */
   await micropip.install("runtimepy");
 
-  pyodide.runPython(`
-    from runtimepy.primitives import create
-
-    print(create("uint8"))
-  `);
+  await pyodide.runPythonAsync(script);
 }
 
 started = false;
