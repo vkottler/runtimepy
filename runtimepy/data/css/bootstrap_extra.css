@@ -1,0 +1,12 @@
+.flex-column-scroll-bodge {
+  height: 100%;
+  flex-wrap: nowrap;
+  overflow: scroll;
+  flex-shrink: 0;
+}
+
+.tab-content-scroll-bodge {
+  width: 100%;
+  height: 100%;
+  overflow: scroll;
+}

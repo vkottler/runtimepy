@@ -1,0 +1,14 @@
+---
+includes:
+  - package://runtimepy/server_base.yaml
+
+port_overrides:
+  runtimepy_http_server: 8000
+
+config:
+  wasm_app: hello_world
+  wasm_root: wasm/src
+
+app:
+  - tasks.app.setup
+  - runtimepy.net.apps.wait_for_stop

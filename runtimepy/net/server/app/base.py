@@ -32,7 +32,7 @@ class WebApplication:
         "worker",
     ]
     main_source_paths = ["shared", "main"]
-    css_paths = ["main"]
+    css_paths = ["main", "bootstrap_extra"]
 
     def __init__(self, app: AppInfo) -> None:
         """Initialize this instance."""
