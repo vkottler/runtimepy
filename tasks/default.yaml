@@ -6,7 +6,7 @@ port_overrides:
   runtimepy_http_server: 8000
 
 config:
-  wasm_app: hello_world
+  wasm_app: dev/console
   wasm_root: wasm/src
 
 app:

@@ -7,6 +7,7 @@ import asyncio as _asyncio
 from contextlib import AsyncExitStack as _AsyncExitStack
 from dataclasses import dataclass
 from logging import getLogger as _getLogger
+from pathlib import Path
 from re import compile as _compile
 from typing import Any, Dict
 from typing import Iterator as _Iterator
@@ -30,6 +31,7 @@ from runtimepy.tui.mixin import TuiMixin
 ConnectionMap = _MutableMapping[str, _Connection]
 T = _TypeVar("T", bound=_Connection)
 V = _TypeVar("V", bound=PeriodicTask)
+Z = _TypeVar("Z")
 
 
 @dataclass
@@ -181,3 +183,21 @@ class AppInfo:
                 result[key] = val
 
         return result
+
+    def config_param(self, key: str, default: Z, strict: bool = False) -> Z:
+        """Attempt to get a configuration parameter."""
+
+        config: dict[str, Z] = self.config["root"].setdefault(  # type: ignore
+            "config",
+            {},
+        )
+
+        if strict:
+            assert key in config, (key, config)
+
+        return config.get(key, default)
+
+    @property
+    def wasm_root(self) -> Path:
+        """Get the WebAssembly root directory."""
+        return Path(self.config_param("wasm_root", str(Path()), strict=True))
