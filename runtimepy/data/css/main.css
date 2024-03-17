@@ -12,3 +12,7 @@ body {
 body > :first-child {
   height: 100%;
 }
+
+#runtimepy {
+  height: 100%;
+}

@@ -61,6 +61,7 @@ class TabbedContent:
 
         # Create application container
         self.container = div(parent=parent)
+        self.container["id"] = name
         self.container["data-bs-theme"] = "dark"
         self.container["class"] = "d-flex align-items-start"
 
