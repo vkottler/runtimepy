@@ -11,7 +11,6 @@ from svgen.element import Element
 from vcorelib.io.file_writer import IndentedFileWriter
 
 # internal
-from runtimepy import PKG_NAME
 from runtimepy.net.arbiter.info import AppInfo
 from runtimepy.net.server.app.bootstrap.tabs import TabbedContent
 from runtimepy.net.server.app.elements import div
@@ -102,13 +101,11 @@ class Tab:
         writer.c_comment("Useful constants.")
 
         # Declare useful variables.
-        writer.write(f'const name = "{self.name}";')
-        writer.write(
-            (
-                "const elem = document.getElementById("
-                f'"{PKG_NAME}-" + name + "-tab");'
-            )
-        )
+        writer.write(f'const tab = new TabInterface("{self.name}");')
+
+        # GET RID OF THESE
+        writer.write("const name = tab.name;")
+        writer.write("const elem = tab.element;")
 
         # Declare a function for sending messages.
         with writer.padding():

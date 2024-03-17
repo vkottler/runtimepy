@@ -46,7 +46,7 @@ class WebApplication:
         ] = "text/js-worker"
 
         # Set up worker.
-        append_kind(document.body, "setup_worker")
+        append_kind(document.body, "setup_worker", "setup_tabs")
 
         # Populate applicaton elements.
         app(TabbedContent(PKG_NAME, document.body))
