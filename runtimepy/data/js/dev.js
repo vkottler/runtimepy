@@ -1,5 +1,5 @@
-document.getElementById("dev-button").onclick = async event => {
+document.getElementById(name + "-button").onclick = async event => {
   /**/
-  console.log("button pressed");
+  send_message({kind : "button.pressed"});
   /**/
 };

@@ -35,7 +35,7 @@ class Tab:
     def populate_elements(self, parent: Element) -> None:
         """Populate tab elements."""
 
-        for idx in range(100):
+        for idx in range(10):
             div(
                 parent=parent,
                 text=f"Hello, world! ({idx})" * 10,
@@ -45,8 +45,7 @@ class Tab:
     def populate_shown_inner(self, writer: IndentedFileWriter) -> None:
         """Populate the tab-shown handler."""
 
-        # where should we source this from?
-        writer.write(f"console.log('SHOWN HANDLER FOR {self.name}');")
+        self.send_message(writer, 'kind: "tab.shown"')
 
     def populate_shown(self, writer: IndentedFileWriter) -> None:
         """Populate the tab-shown handler."""
@@ -58,8 +57,7 @@ class Tab:
         writer.write("}")
 
         # If this tab is already/currently shown, run the handler now.
-        writer.write("let tab = bootstrap.Tab.getInstance(elem);")
-        writer.write("if (tab) {")
+        writer.write("if (bootstrap.Tab.getInstance(elem)) {")
         with writer.indented():
             writer.write(f"await {shown_handler}();")
         writer.write("}")
@@ -70,11 +68,15 @@ class Tab:
             writer.write(f"await {shown_handler}();")
         writer.write("});")
 
+    def send_message(self, writer: IndentedFileWriter, data: str) -> None:
+        """Send a message to the worker thread."""
+
+        writer.write("send_message({" + data + "});")
+
     def populate_hidden_inner(self, writer: IndentedFileWriter) -> None:
         """Populate the tab-hidden handler."""
 
-        # where should we source this from?
-        writer.write(f"console.log('HIDDEN HANDLER FOR {self.name}');")
+        self.send_message(writer, 'kind: "tab.hidden"')
 
     def populate_hidden(self, writer: IndentedFileWriter) -> None:
         """Populate the tab-hidden handler."""
@@ -91,22 +93,44 @@ class Tab:
             writer.write(f"await {hidden_handler}();")
         writer.write("});")
 
-    @property
-    def element_id(self) -> str:
-        """Get this tab's element identifier."""
-        return f"{PKG_NAME}-{self.name}-tab"
-
     def init_script(self, writer: IndentedFileWriter) -> None:
         """Initialize script code."""
 
     def _init_script(self, writer: IndentedFileWriter) -> None:
         """Create this tab's initialization script."""
 
+        writer.c_comment("Useful constants.")
+
+        # Declare useful variables.
+        writer.write(f'const name = "{self.name}";')
         writer.write(
-            f'let elem = document.getElementById("{self.element_id}");'
+            (
+                "const elem = document.getElementById("
+                f'"{PKG_NAME}-" + name + "-tab");'
+            )
         )
+
+        # Declare a function for sending messages.
+        with writer.padding():
+            writer.c_comment("Worker/server messaging interface.")
+            writer.write("function send_message(data) {")
+            with writer.indented():
+                writer.write(
+                    'worker.postMessage({name: "'
+                    + self.name
+                    + '", event: data});'
+                )
+            writer.write("}")
+
+        writer.c_comment("Tab-specific code start.")
         self.init_script(writer)
-        self.populate_shown(writer)
+        writer.c_comment("Tab-specific code end.")
+
+        with writer.padding():
+            writer.c_comment("Tab-shown handling.")
+            self.populate_shown(writer)
+
+        writer.c_comment("Tab-hidden handling.")
         self.populate_hidden(writer)
 
     def entry(self) -> None:

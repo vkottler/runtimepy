@@ -37,3 +37,6 @@ function worker_message(event) {
   console.log(`Main thread received: ${event.data}.`);
 }
 worker.onmessage = worker_message;
+
+/* An array of initialization methods to run. */
+let inits = [];

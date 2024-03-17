@@ -30,12 +30,6 @@ class DevTab(Tab):
 
         write_found_file(writer, kind_url("js", self.name))
 
-    def populate_shown_inner(self, writer: IndentedFileWriter) -> None:
-        """Populate the tab-shown handler."""
-
-    def populate_hidden_inner(self, writer: IndentedFileWriter) -> None:
-        """Populate the tab-hidden handler."""
-
 
 def sample(app: AppInfo, tabs: TabbedContent) -> None:
     """Populate application elements."""
@@ -43,6 +37,6 @@ def sample(app: AppInfo, tabs: TabbedContent) -> None:
     # Add dev tab.
     DevTab("dev", app, tabs).entry()
 
-    for idx in range(100):
+    for idx in range(10):
         tab = Tab(f"test{idx}", app, tabs)
         tab.entry()
