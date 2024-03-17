@@ -42,36 +42,20 @@ class Tab:
                 style="white-space: nowrap;",
             )
 
-    def populate_shown(self, writer: IndentedFileWriter) -> None:
+    def populate_shown_inner(self, writer: IndentedFileWriter) -> None:
         """Populate the tab-shown handler."""
 
         # where should we source this from?
         writer.write(f"console.log('SHOWN HANDLER FOR {self.name}');")
 
-    def populate_hidden(self, writer: IndentedFileWriter) -> None:
-        """Populate the tab-hidden handler."""
+    def populate_shown(self, writer: IndentedFileWriter) -> None:
+        """Populate the tab-shown handler."""
 
-        # where should we source this from?
-        writer.write(f"console.log('HIDDEN HANDLER FOR {self.name}');")
-
-    @property
-    def element_id(self) -> str:
-        """Get this tab's element identifier."""
-        return f"{PKG_NAME}-{self.name}-tab"
-
-    def populate_app(self, writer: IndentedFileWriter) -> None:
-        """Write a tab's application wrapper."""
-
-        # Tab shown handler.
         shown_handler = f"{self.name}_shown_handler"
         writer.write(f"async function {shown_handler}() " + "{")
         with writer.indented():
-            self.populate_shown(writer)
+            self.populate_shown_inner(writer)
         writer.write("}")
-
-        writer.write(
-            f'let elem = document.getElementById("{self.element_id}");'
-        )
 
         # If this tab is already/currently shown, run the handler now.
         writer.write("let tab = bootstrap.Tab.getInstance(elem);")
@@ -80,22 +64,50 @@ class Tab:
             writer.write(f"await {shown_handler}();")
         writer.write("}")
 
-        # Tab hidden handler.
-        hidden_handler = f"{self.name}_hidden_handler"
-        writer.write(f"async function {hidden_handler}() " + "{")
-        with writer.indented():
-            self.populate_hidden(writer)
-        writer.write("}")
-
-        # Register handlers.
+        # Add event listener.
         writer.write("elem.addEventListener('shown.bs.tab', async event => {")
         with writer.indented():
             writer.write(f"await {shown_handler}();")
         writer.write("});")
+
+    def populate_hidden_inner(self, writer: IndentedFileWriter) -> None:
+        """Populate the tab-hidden handler."""
+
+        # where should we source this from?
+        writer.write(f"console.log('HIDDEN HANDLER FOR {self.name}');")
+
+    def populate_hidden(self, writer: IndentedFileWriter) -> None:
+        """Populate the tab-hidden handler."""
+
+        hidden_handler = f"{self.name}_hidden_handler"
+        writer.write(f"async function {hidden_handler}() " + "{")
+        with writer.indented():
+            self.populate_hidden_inner(writer)
+        writer.write("}")
+
+        # Add event listener.
         writer.write("elem.addEventListener('hidden.bs.tab', async event => {")
         with writer.indented():
             writer.write(f"await {hidden_handler}();")
         writer.write("});")
+
+    @property
+    def element_id(self) -> str:
+        """Get this tab's element identifier."""
+        return f"{PKG_NAME}-{self.name}-tab"
+
+    def init_script(self, writer: IndentedFileWriter) -> None:
+        """Initialize script code."""
+
+    def _init_script(self, writer: IndentedFileWriter) -> None:
+        """Create this tab's initialization script."""
+
+        writer.write(
+            f'let elem = document.getElementById("{self.element_id}");'
+        )
+        self.init_script(writer)
+        self.populate_shown(writer)
+        self.populate_hidden(writer)
 
     def entry(self) -> None:
         """Tab overall script entry."""
@@ -105,7 +117,7 @@ class Tab:
             writer.write("inits.push(async () => {")
 
             with writer.indented():
-                self.populate_app(writer)
+                self._init_script(writer)
 
             writer.write("});")
 
