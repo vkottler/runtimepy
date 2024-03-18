@@ -41,9 +41,12 @@ class App {
 
         /* Prepare worker message handler. */
         this.worker.onmessage = async (event) => {
-          /**/
-          console.log(`Main thread received: ${event.data}.`);
-          /**/
+          for (const key in event.data) {
+            /* Handle forwarding messages to individual tabs. */
+            if (key in tabs) {
+              tabs[key].onmessage(event.data[key]);
+            }
+          }
         };
       }
     }, {once : true});

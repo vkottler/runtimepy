@@ -21,6 +21,9 @@ class JsonConnection {
     this.conn.onerror = this.onerror.bind(this);
     this.conn.onmessage = this.onmessage.bind(this);
     this.conn.onopen = this.onopen.bind(this);
+
+    /* Individual message handlers. */
+    this.message_handlers = {};
   }
 
   /*
@@ -42,12 +45,18 @@ class JsonConnection {
       }
     }
 
-    // handle any keys we haven't handled yet
-    console.log(data);
+    for (const key in data) {
+      if (key in this.message_handlers) {
+        this.message_handlers[key](data[key]);
+      } else {
+        console.log(`(not handled) ${key}: ${data[key]}`);
+      }
+    }
 
     /* Send our response. */
-    if (response) {
+    for (const _ in response) {
       this.send_json(response);
+      return;
     }
   }
 

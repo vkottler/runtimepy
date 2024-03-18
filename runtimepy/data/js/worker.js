@@ -23,7 +23,11 @@ async function start(config) {
   }
 
   /* Forward all other messages to the server. */
-  onmessage = async (event) => { conns["json"].send_json({"ui" : event.data}); }
+  onmessage =
+      async (event) => { conns["json"].send_json({"ui" : event.data}); };
+
+  /* Add message handler to forward UI messages to the main thread. */
+  conns["json"].message_handlers["ui"] = (data) => { postMessage(data); };
 
   /* Tell main thread we're ready to go. */
   postMessage(0);

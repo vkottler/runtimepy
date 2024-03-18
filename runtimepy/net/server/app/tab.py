@@ -14,6 +14,11 @@ from vcorelib.io.file_writer import IndentedFileWriter
 from runtimepy.net.arbiter.info import AppInfo
 from runtimepy.net.server.app.bootstrap.tabs import TabbedContent
 from runtimepy.net.server.app.elements import div
+from runtimepy.net.server.app.files import (
+    append_kind,
+    kind_url,
+    write_found_file,
+)
 
 
 class Tab:
@@ -29,106 +34,21 @@ class Tab:
         # What should we put here?
         self.button.text = self.name
 
-        self.populate_elements(self.content)
+        self.compose(self.content)
 
-    def populate_elements(self, parent: Element) -> None:
-        """Populate tab elements."""
+    def compose(self, parent: Element) -> None:
+        """Compose the tab's HTML elements."""
 
-        for idx in range(10):
-            div(
-                parent=parent,
-                text=f"Hello, world! ({idx})" * 10,
-                style="white-space: nowrap;",
-            )
+        if append_kind(parent, self.name, kind="html", tag="div") is None:
+            for idx in range(100):
+                div(parent=parent, text=f"Hello, world! ({idx})")
 
-    def populate_shown_inner(self, writer: IndentedFileWriter) -> None:
-        """Populate the tab-shown handler."""
+    def write_js(self, writer: IndentedFileWriter) -> bool:
+        """Write JavaScript code for the tab."""
 
-        self.send_message(writer, 'kind: "tab.shown"')
-
-    def populate_shown(self, writer: IndentedFileWriter) -> None:
-        """Populate the tab-shown handler."""
-
-        shown_handler = f"{self.name}_shown_handler"
-        writer.write(f"async function {shown_handler}() " + "{")
-        with writer.indented():
-            self.populate_shown_inner(writer)
-        writer.write("}")
-
-        # If this tab is already/currently shown, run the handler now.
-        writer.write("if (bootstrap.Tab.getInstance(elem)) {")
-        with writer.indented():
-            writer.write(f"await {shown_handler}();")
-        writer.write("}")
-
-        # Add event listener.
-        writer.write("elem.addEventListener('shown.bs.tab', async event => {")
-        with writer.indented():
-            writer.write(f"await {shown_handler}();")
-        writer.write("});")
-
-    def send_message(self, writer: IndentedFileWriter, data: str) -> None:
-        """Send a message to the worker thread."""
-
-        writer.write("send_message({" + data + "});")
-
-    def populate_hidden_inner(self, writer: IndentedFileWriter) -> None:
-        """Populate the tab-hidden handler."""
-
-        self.send_message(writer, 'kind: "tab.hidden"')
-
-    def populate_hidden(self, writer: IndentedFileWriter) -> None:
-        """Populate the tab-hidden handler."""
-
-        hidden_handler = f"{self.name}_hidden_handler"
-        writer.write(f"async function {hidden_handler}() " + "{")
-        with writer.indented():
-            self.populate_hidden_inner(writer)
-        writer.write("}")
-
-        # Add event listener.
-        writer.write("elem.addEventListener('hidden.bs.tab', async event => {")
-        with writer.indented():
-            writer.write(f"await {hidden_handler}();")
-        writer.write("});")
-
-    def init_script(self, writer: IndentedFileWriter) -> None:
-        """Initialize script code."""
-
-    def _init_script(self, writer: IndentedFileWriter) -> None:
-        """Create this tab's initialization script."""
-
-        writer.c_comment("Useful constants.")
-
-        # Declare useful variables.
-        writer.write(f'const tab = new TabInterface("{self.name}");')
-
-        # GET RID OF THESE
-        writer.write("const name = tab.name;")
-        writer.write("const elem = tab.element;")
-
-        # Declare a function for sending messages.
-        with writer.padding():
-            writer.c_comment("Worker/server messaging interface.")
-            writer.write("function send_message(data) {")
-            with writer.indented():
-                writer.write(
-                    'worker.postMessage({name: "'
-                    + self.name
-                    + '", event: data});'
-                )
-            writer.write("}")
-
-        writer.c_comment("Tab-specific code start.")
-        self.init_script(writer)
-        writer.c_comment("Tab-specific code end.")
-
-        with writer.padding():
-            writer.c_comment("Tab-shown handling.")
-            self.populate_shown(writer)
-
-        writer.c_comment("Tab-hidden handling.")
-        self.populate_hidden(writer)
+        return write_found_file(
+            writer, kind_url("js", self.name, subdir="tabs")
+        )
 
     def entry(self) -> None:
         """Tab overall script entry."""
@@ -138,12 +58,17 @@ class Tab:
             writer.write("inits.push(async () => {")
 
             with writer.indented():
-                self._init_script(writer)
+                writer.write(
+                    f'const tab = new TabInterface("{self.name}", worker);'
+                )
+                writer.empty()
+                result = self.write_js(writer)
 
             writer.write("});")
 
-            div(
-                tag="script",
-                parent=self.content,
-                text=cast(StringIO, writer.stream).getvalue(),
-            )
+            if result:
+                div(
+                    tag="script",
+                    parent=self.content,
+                    text=cast(StringIO, writer.stream).getvalue(),
+                )
