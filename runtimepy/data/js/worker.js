@@ -11,10 +11,6 @@ function create_connections(config) {
   return conns;
 }
 
-started = false;
-
-let conns;
-
 /* Worker entry. */
 async function start(config) {
   console.log(config);
@@ -22,21 +18,16 @@ async function start(config) {
   conns = create_connections(config);
 
   /* Wait for both connections to be established. */
+  for (const key in conns) {
+    await conns[key].connected;
+  }
+
+  /* Forward all other messages to the server. */
+  onmessage = async (event) => { conns["json"].send_json({"ui" : event.data}); }
 
   /* Tell main thread we're ready to go. */
   postMessage(0);
 }
 
-/* Handle messages from the main thread. */
-onmessage = async (event) => {
-  /* First message.*/
-  if (!started) {
-    await start(event.data);
-    started = true;
-  } else {
-    console.log(`Worker thread received: ${event.data}.`);
-
-    /* Need to make this actually work. */
-    // conns["json"].send_json({"ui" : event.data});
-  }
-};
+/* Handle first message from the main thread. */
+onmessage = async (event) => { await start(event.data); };

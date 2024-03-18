@@ -11,7 +11,10 @@ class JsonConnection {
     this.conn.binaryType = "arraybuffer";
 
     /* State. */
-    this.connected = false;
+    this.connected = new Promise((resolve, reject) => {
+      this.resolve = resolve;
+      this.reject = reject
+    });
 
     /* Register handlers. */
     this.conn.onclose = this.onclose.bind(this);
@@ -82,13 +85,12 @@ class JsonConnection {
 
   onopen(event) {
     console.log(`Connection ${this.toString()} open.`);
-    this.connected = true;
-    /* Should run some initialization method here. */
+    this.resolve();
   }
 
   onclose(event) {
     console.log(`Connection ${this.toString()} closed.`);
-    this.connected = false;
+    this.reject();
   }
 
   onerror(event) {
