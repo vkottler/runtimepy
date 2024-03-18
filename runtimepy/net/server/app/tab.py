@@ -24,10 +24,14 @@ from runtimepy.net.server.app.files import (
 class Tab:
     """A simple application-tab interface class."""
 
-    def __init__(self, name: str, app: AppInfo, tabs: TabbedContent) -> None:
+    def __init__(
+        self, name: str, app: AppInfo, tabs: TabbedContent, source: str = None
+    ) -> None:
         """Initialize this instance."""
 
         self.name = name
+        self.source = source if source else self.name
+
         self.app = app
         self.button, self.content = tabs.create(self.name)
 
@@ -39,15 +43,13 @@ class Tab:
     def compose(self, parent: Element) -> None:
         """Compose the tab's HTML elements."""
 
-        if append_kind(parent, self.name, kind="html", tag="div") is None:
-            for idx in range(100):
-                div(parent=parent, text=f"Hello, world! ({idx})")
+        append_kind(parent, self.source, kind="html", tag="div")
 
     def write_js(self, writer: IndentedFileWriter) -> bool:
         """Write JavaScript code for the tab."""
 
         return write_found_file(
-            writer, kind_url("js", self.name, subdir="tabs")
+            writer, kind_url("js", self.source, subdir="tabs")
         )
 
     def entry(self) -> None:
@@ -62,13 +64,12 @@ class Tab:
                     f'const tab = new TabInterface("{self.name}", worker);'
                 )
                 writer.empty()
-                result = self.write_js(writer)
+                self.write_js(writer)
 
             writer.write("});")
 
-            if result:
-                div(
-                    tag="script",
-                    parent=self.content,
-                    text=cast(StringIO, writer.stream).getvalue(),
-                )
+            div(
+                tag="script",
+                parent=self.content,
+                text=cast(StringIO, writer.stream).getvalue(),
+            )

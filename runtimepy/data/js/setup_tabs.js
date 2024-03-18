@@ -11,18 +11,19 @@ class TabInterface {
     this.name = name;
     this.worker = _worker;
 
-    this.element = document.getElementById("runtimepy-" + this.name + "-tab");
+    /* Relevant elements. */
+    this.button = document.getElementById("runtimepy-" + this.name + "-tab");
+    this.container = document.getElementById("runtimepy-" + this.name);
 
     this.message_handlers = [];
 
-    this.element.addEventListener("hidden.bs.tab",
-                                  this.hidden_handler.bind(this));
-    this.element.addEventListener("shown.bs.tab",
-                                  this.shown_handler.bind(this));
+    this.button.addEventListener("hidden.bs.tab",
+                                 this.hidden_handler.bind(this));
+    this.button.addEventListener("shown.bs.tab", this.shown_handler.bind(this));
 
     tabs[this.name] = this;
 
-    if (bootstrap.Tab.getInstance(this.element)) {
+    if (bootstrap.Tab.getInstance(this.button)) {
       this.shown_handler();
     }
   }

@@ -22,7 +22,7 @@ class RuntimepyWebsocketConnection(WebsocketJsonMessageConnection):
             self.logger.info("Got UI message: %s.", inbox)
 
             # Connect tabs to tab messaging somehow.
-            outbox[inbox["name"]] = {"GOOD_SHIT": "BUD"}
+            outbox[inbox["name"]] = inbox["event"]
 
         self.basic_handler("ui", ui_handler)
 

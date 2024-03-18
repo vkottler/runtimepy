@@ -32,7 +32,7 @@ def write_found_file(writer: IndentedFileWriter, *args, **kwargs) -> bool:
     return result
 
 
-def set_text_to_file(element: Element, *args, **kwargs) -> None:
+def set_text_to_file(element: Element, *args, **kwargs) -> bool:
     """Set an element's text to the contents of a file."""
 
     with StringIO() as stream:
@@ -62,10 +62,10 @@ def kind_url(
 
 def set_text_to_kind(
     element: Element, kind: str, name: str, package: str = PKG_NAME
-) -> None:
+) -> bool:
     """Set text to HTML-file contents at a predictable path."""
 
-    set_text_to_file(element, kind_url(kind, name, package=package))
+    return set_text_to_file(element, kind_url(kind, name, package=package))
 
 
 def append_kind(

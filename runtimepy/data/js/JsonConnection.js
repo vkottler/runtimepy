@@ -48,8 +48,9 @@ class JsonConnection {
     for (const key in data) {
       if (key in this.message_handlers) {
         this.message_handlers[key](data[key]);
-      } else {
-        console.log(`(not handled) ${key}: ${data[key]}`);
+      } else if (!(key in response)) {
+        console.log(`(not handled) ${key}:`);
+        console.log(data[key]);
       }
     }
 

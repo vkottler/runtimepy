@@ -11,26 +11,17 @@ from runtimepy.net.arbiter.info import AppInfo
 from runtimepy.net.server import RuntimepyServerConnection
 from runtimepy.net.server.app.bootstrap.tabs import TabbedContent
 from runtimepy.net.server.app.create import config_param, create_app
-from runtimepy.net.server.app.elements import div
+from runtimepy.net.server.app.tab import Tab
 
 
 def sample(app: AppInfo, tabs: TabbedContent) -> None:
     """Populate application elements."""
 
+    # Add dev tab.
+    Tab("example", app, tabs, source="dev").entry()
+
     for idx in range(10):
-        item = f"test{idx}"
-
-        button, content = tabs.create(item)
-
-        # what should we put here?
-        button.text = item
-
-        for idx in range(100):
-            msg = f"Hello, world! ({idx})"
-            text = ", ".join(list(msg for _ in range(20)))
-            div(parent=content, text=text, style="white-space: nowrap;")
-
-    del app
+        Tab(f"test{idx}", app, tabs, source="example").entry()
 
 
 async def setup(app: AppInfo) -> int:

@@ -41,9 +41,9 @@ class WebApplication:
         append_kind(document.head, *self.css_paths, kind="css", tag="style")
 
         # Worker code.
-        append_kind(document.body, *self.worker_source_paths)[
-            "type"
-        ] = "text/js-worker"
+        worker = append_kind(document.body, *self.worker_source_paths)
+        if worker is not None:
+            worker["type"] = "text/js-worker"
 
         # Set up worker.
         append_kind(document.body, "setup_worker", "setup_tabs")

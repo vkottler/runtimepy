@@ -1,6 +1,6 @@
 ---
 includes:
-  # Un-comment while developing.
+  # Can un-comment while developing.
   # - server_dev.yaml
   - package://runtimepy/server_base.yaml
 

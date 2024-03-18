@@ -7,7 +7,6 @@ import asyncio as _asyncio
 from contextlib import AsyncExitStack as _AsyncExitStack
 from dataclasses import dataclass
 from logging import getLogger as _getLogger
-from pathlib import Path
 from re import compile as _compile
 from typing import Any, Dict
 from typing import Iterator as _Iterator
@@ -196,8 +195,3 @@ class AppInfo:
             assert key in config, (key, config)
 
         return config.get(key, default)
-
-    @property
-    def wasm_root(self) -> Path:
-        """Get the WebAssembly root directory."""
-        return Path(self.config_param("wasm_root", str(Path()), strict=True))

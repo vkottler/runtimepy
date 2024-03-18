@@ -5,6 +5,9 @@ includes_left:
 app:
   - tests.net.stream.runtimepy_http_test
 
+config:
+  foo: bar
+
 clients:
   - factory: runtimepy_http
     name: runtimepy_http_client

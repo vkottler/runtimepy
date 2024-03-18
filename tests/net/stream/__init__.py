@@ -17,10 +17,15 @@ from runtimepy.net.arbiter.info import AppInfo
 from runtimepy.net.http.header import RequestHeader
 from runtimepy.net.http.response import ResponseHeader
 from runtimepy.net.server import RuntimepyServerConnection
+from runtimepy.net.server.websocket import RuntimepyWebsocketConnection
 from runtimepy.net.stream import StringMessageConnection
 from runtimepy.net.stream.json import JsonMessage, JsonMessageConnection
 from runtimepy.net.tcp.http import HttpConnection
 from runtimepy.net.udp import UdpConnection
+from tests.net.server import (
+    runtimepy_http_client_server,
+    runtimepy_websocket_client,
+)
 
 # internal
 from tests.resources import SampleArbiterTask
@@ -83,6 +88,8 @@ async def http_test(app: AppInfo) -> int:
 async def runtimepy_http_test(app: AppInfo) -> int:
     """A network application that tests this package's HTTP connection."""
 
+    assert app.config_param("foo", "baz", strict=True) == "bar"
+
     client = app.single(pattern="client", kind=RuntimepyServerConnection)
 
     conns = list(app.search(kind=RuntimepyServerConnection))
@@ -93,31 +100,11 @@ async def runtimepy_http_test(app: AppInfo) -> int:
             server = conn
     assert server is not None
 
-    env = "connection_metrics_poller"
-    env_path = f"/json/environments/{env}"
-
-    # Make requests in parallel.
-    await asyncio.gather(
-        *(
-            # Application.
-            client.request(RequestHeader(target="/")),
-            client.request(RequestHeader(target="/index.html")),
-            # favicon.ico.
-            client.request(RequestHeader(target="/favicon.ico")),
-            # JSON queries.
-            client.request_json(RequestHeader(target="/json")),
-            client.request_json(RequestHeader(target="/json//////")),
-            client.request_json(RequestHeader(target="/json/a")),
-            client.request_json(RequestHeader(target="/json/test")),
-            client.request_json(RequestHeader(target="/json/test/a")),
-            client.request_json(RequestHeader(target="/json/test/a/b")),
-            client.request_json(RequestHeader(target="/json/test/d")),
-            client.request_json(RequestHeader(target=env_path)),
-            client.request_json(RequestHeader(target=f"{env_path}/values")),
-        )
+    await runtimepy_websocket_client(
+        app.single(pattern="client", kind=RuntimepyWebsocketConnection)
     )
 
-    del server
+    await runtimepy_http_client_server(client, server)
 
     return 0
 
