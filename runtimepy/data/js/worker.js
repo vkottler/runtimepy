@@ -11,14 +11,21 @@ function create_connections(config) {
   return conns;
 }
 
+started = false;
+
+let conns;
+
 /* Worker entry. */
 async function start(config) {
   console.log(config);
 
-  let conns = create_connections(config);
-}
+  conns = create_connections(config);
 
-started = false;
+  /* Wait for both connections to be established. */
+
+  /* Tell main thread we're ready to go. */
+  postMessage(0);
+}
 
 /* Handle messages from the main thread. */
 onmessage = async (event) => {
@@ -27,8 +34,9 @@ onmessage = async (event) => {
     await start(event.data);
     started = true;
   } else {
-    /* Additional messages not handled. */
-    console.log("MESSAGE NOT HANDLED.");
-    console.log(event.data);
+    console.log(`Worker thread received: ${event.data}.`);
+
+    /* Need to make this actually work. */
+    // conns["json"].send_json({"ui" : event.data});
   }
 };
