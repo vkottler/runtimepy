@@ -4,19 +4,24 @@ A module implementing a server interface for this package.
 
 # built-in
 from io import StringIO
+import mimetypes
+from pathlib import Path
 from typing import Optional
 
 # third-party
 from vcorelib.io import JsonObject
-from vcorelib.paths import find_file
+from vcorelib.paths import Pathlike, find_file, normalize
 
 # internal
 from runtimepy import PKG_NAME
 from runtimepy.net.http.header import RequestHeader
+from runtimepy.net.http.request_target import PathMaybeQuery
 from runtimepy.net.http.response import ResponseHeader
 from runtimepy.net.server.html import HtmlApp, HtmlApps, html_handler
 from runtimepy.net.server.json import json_handler
 from runtimepy.net.tcp.http import HttpConnection
+
+MIMETYPES_INIT = False
 
 
 class RuntimepyServerConnection(HttpConnection):
@@ -31,10 +36,41 @@ class RuntimepyServerConnection(HttpConnection):
 
     favicon_data: bytes
 
+    paths: list[Path]
+    class_paths: list[Pathlike] = [Path()]
+
+    def add_path(self, path: Pathlike, front: bool = False) -> None:
+        """Add a path."""
+
+        resolved = normalize(path).resolve()
+        if not front:
+            self.paths.append(resolved)
+        else:
+            self.paths.insert(0, resolved)
+
+        self.log_paths()
+
+    def log_paths(self) -> None:
+        """Log search paths."""
+
+        self.logger.info(
+            "New path: %s.", ", ".join(str(x) for x in self.paths)
+        )
+
     def init(self) -> None:
         """Initialize this instance."""
 
+        global MIMETYPES_INIT  # pylint: disable=global-statement
+        if not MIMETYPES_INIT:
+            mimetypes.init()
+            MIMETYPES_INIT = True
+
         super().init()
+
+        # Initialize paths.
+        self.paths = []
+        for path in type(self).class_paths:
+            self.add_path(path)
 
         # Load favicon if necessary.
         if not hasattr(type(self), "favicon_data"):
@@ -43,6 +79,36 @@ class RuntimepyServerConnection(HttpConnection):
                 assert favicon is not None
                 with favicon.open("rb") as favicon_fd:
                     type(self).favicon_data = favicon_fd.read()
+
+    def try_file(
+        self, path: PathMaybeQuery, response: ResponseHeader
+    ) -> Optional[bytes]:
+        """Try serving this path as a file directly from the file-system."""
+
+        result = None
+
+        # Try serving the path as a file.
+        for search in self.paths:
+            candidate = search.joinpath(path[0][1:])
+            if candidate.is_file():
+                mime, encoding = mimetypes.guess_type(candidate, strict=False)
+
+                # Set MIME type if it can be determined.
+                if mime:
+                    response["Content-Type"] = mime
+
+                # We don't handle this yet.
+                assert not encoding, (candidate, mime, encoding)
+
+                self.logger.info("Serving '%s' (MIME: %s)", candidate, mime)
+
+                # Return the file data.
+                with candidate.open("rb") as path_fd:
+                    result = path_fd.read()
+
+                break
+
+        return result
 
     async def get_handler(
         self,
@@ -56,6 +122,11 @@ class RuntimepyServerConnection(HttpConnection):
 
         with StringIO() as stream:
             if request.target.origin_form:
+                # Try serving the path as a file.
+                result = self.try_file(request.target.origin_form, response)
+                if result is not None:
+                    return result
+
                 path = request.target.path
 
                 # Handle favicon (for browser clients).

@@ -11,13 +11,19 @@ class JsonConnection {
     this.conn.binaryType = "arraybuffer";
 
     /* State. */
-    this.connected = false;
+    this.connected = new Promise((resolve, reject) => {
+      this.resolve = resolve;
+      this.reject = reject
+    });
 
     /* Register handlers. */
     this.conn.onclose = this.onclose.bind(this);
     this.conn.onerror = this.onerror.bind(this);
     this.conn.onmessage = this.onmessage.bind(this);
     this.conn.onopen = this.onopen.bind(this);
+
+    /* Individual message handlers. */
+    this.message_handlers = {};
   }
 
   /*
@@ -39,12 +45,19 @@ class JsonConnection {
       }
     }
 
-    // handle any keys we haven't handled yet
-    console.log(data);
+    for (const key in data) {
+      if (key in this.message_handlers) {
+        this.message_handlers[key](data[key]);
+      } else if (!(key in response)) {
+        console.log(`(not handled) ${key}:`);
+        console.log(data[key]);
+      }
+    }
 
     /* Send our response. */
-    if (response) {
+    for (const _ in response) {
       this.send_json(response);
+      return;
     }
   }
 
@@ -82,13 +95,12 @@ class JsonConnection {
 
   onopen(event) {
     console.log(`Connection ${this.toString()} open.`);
-    this.connected = true;
-    /* Should run some initialization method here. */
+    this.resolve();
   }
 
   onclose(event) {
     console.log(`Connection ${this.toString()} closed.`);
-    this.connected = false;
+    this.reject();
   }
 
   onerror(event) {

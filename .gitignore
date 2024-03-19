@@ -15,3 +15,5 @@ coverage*.xml
 tags
 mklocal
 docs
+compile_commands.json
+src

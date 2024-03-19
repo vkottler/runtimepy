@@ -1,22 +1,8 @@
 ---
 includes:
-  # Un-comment while developing.
+  # Can un-comment while developing.
   # - server_dev.yaml
-  - package://runtimepy/factories.yaml
+  - package://runtimepy/server_base.yaml
 
 app:
   - runtimepy.net.server.app.setup
-
-ports:
-  - {name: runtimepy_http_server, type: tcp}
-  - {name: runtimepy_websocket_json_server, type: tcp}
-  - {name: runtimepy_websocket_data_server, type: tcp}
-
-servers:
-  - factory: runtimepy_http
-    kwargs: {port: "$runtimepy_http_server"}
-
-  - factory: runtimepy_websocket_json
-    kwargs: {host: "0.0.0.0", port: "$runtimepy_websocket_json_server"}
-  - factory: runtimepy_websocket_data
-    kwargs: {host: "0.0.0.0", port: "$runtimepy_websocket_data_server"}

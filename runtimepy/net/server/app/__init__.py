@@ -11,26 +11,7 @@ from runtimepy.net.arbiter.info import AppInfo
 from runtimepy.net.server import RuntimepyServerConnection
 from runtimepy.net.server.app.bootstrap.tabs import TabbedContent
 from runtimepy.net.server.app.create import config_param, create_app
-from runtimepy.net.server.app.elements import div
-
-
-def sample(app: AppInfo, tabs: TabbedContent) -> None:
-    """Populate application elements."""
-
-    for idx in range(10):
-        item = f"test{idx}"
-
-        button, content = tabs.create(item)
-
-        # what should we put here?
-        button.text = item
-
-        for idx in range(100):
-            msg = f"Hello, world! ({idx})"
-            text = ", ".join(list(msg for _ in range(20)))
-            div(parent=content, text=text, style="white-space: nowrap;")
-
-    del app
+from runtimepy.net.server.app.env import ChannelEnvironmentTab
 
 
 async def setup(app: AppInfo) -> int:
@@ -38,10 +19,28 @@ async def setup(app: AppInfo) -> int:
 
     # Set default application.
     module, method = import_str_and_item(
-        config_param(app, "html_method", "runtimepy.net.server.app.sample")
+        config_param(
+            app, "html_method", "runtimepy.net.server.app.channel_environments"
+        )
     )
     RuntimepyServerConnection.default_app = create_app(
         app, getattr(_import_module(module), method)
     )
 
     return 0
+
+
+def channel_environments(app: AppInfo, tabs: TabbedContent) -> None:
+    """Populate application elements."""
+
+    # Connection tabs.
+    for name, conn in app.connections.items():
+        ChannelEnvironmentTab(
+            name, conn.command, app, tabs, icon="ethernet"
+        ).entry()
+
+    # Task tabs.
+    for name, task in app.tasks.items():
+        ChannelEnvironmentTab(
+            name, task.command, app, tabs, icon="arrow-repeat"
+        ).entry()

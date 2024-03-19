@@ -6,7 +6,11 @@ A module implementing interfaces for creating tabbed content with bootstrap.
 from svgen.element import Element
 
 # internal
+from runtimepy import PKG_NAME
+from runtimepy.net.server.app.bootstrap import icon_str
 from runtimepy.net.server.app.elements import div
+
+BOOTSTRAP_BUTTON = "rounded-0 font-monospace button-bodge"
 
 
 def create_nav_button(
@@ -24,7 +28,7 @@ def create_nav_button(
     button["aria-controls"] = f"{name}-{item}"
     button["aria-selected"] = str(active_tab).lower()
 
-    class_str = "nav-link rounded-0 font-monospace"
+    class_str = "nav-link " + BOOTSTRAP_BUTTON
     if active_tab:
         class_str += " active"
 
@@ -51,6 +55,35 @@ def create_nav_container(
     return content
 
 
+def set_tooltip(element: Element, data: str, placement: str = "right") -> None:
+    """Set a tooltip on an element."""
+
+    element["data-bs-title"] = data
+    element["data-bs-placement"] = placement
+
+    # Should we use another mechanism for this?
+    element["class"] += " has-tooltip"
+
+
+def collapse_button(tooltip: str = None, **kwargs) -> Element:
+    """Create a collapse button."""
+
+    collapse = div(
+        tag="button",
+        type="button",
+        text=icon_str("arrows-collapse-vertical"),
+        **kwargs,
+    )
+    collapse["class"] = "btn btn-secondary " + BOOTSTRAP_BUTTON
+    if tooltip:
+        set_tooltip(collapse, tooltip)
+
+    collapse["data-bs-toggle"] = "collapse"
+    collapse["data-bs-target"] = f"#{PKG_NAME}-tabs"
+
+    return collapse
+
+
 class TabbedContent:
     """A tabbed-content container."""
 
@@ -61,16 +94,26 @@ class TabbedContent:
 
         # Create application container
         self.container = div(parent=parent)
+        self.container["id"] = name
         self.container["data-bs-theme"] = "dark"
         self.container["class"] = "d-flex align-items-start"
 
+        # Collapse button.
+        self.button_column = div(parent=self.container)
+        self.button_column["class"] = "d-flex flex-column bg-dark h-100"
+        self.collapse = collapse_button(
+            parent=self.button_column, tooltip="Collapse tabs."
+        )
+
+        # Placeholder.
+        collapse_button(parent=self.button_column, tooltip="YUP 2")
+
         # Create tab container.
-        self.tabs = div(parent=self.container)
-        tabs_class = "bg-dark nav flex-column nav-pills"
+        self.tabs = div(id=f"{PKG_NAME}-tabs", parent=self.container)
+        tabs_class = "bg-dark nav flex-column nav-pills show"
 
         # Created a custom class to fix scroll behavior.
         tabs_class += " flex-column-scroll-bodge"
-
         self.tabs["class"] = tabs_class
 
         # Create content container.

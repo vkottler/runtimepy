@@ -12,22 +12,26 @@ function create_connections(config) {
 }
 
 /* Worker entry. */
-function start(config) {
-  let conns = create_connections(config);
-  // console.log(conns);
+async function start(config) {
+  console.log(config);
+
+  conns = create_connections(config);
+
+  /* Wait for both connections to be established. */
+  for (const key in conns) {
+    await conns[key].connected;
+  }
+
+  /* Forward all other messages to the server. */
+  onmessage =
+      async (event) => { conns["json"].send_json({"ui" : event.data}); };
+
+  /* Add message handler to forward UI messages to the main thread. */
+  conns["json"].message_handlers["ui"] = (data) => { postMessage(data); };
+
+  /* Tell main thread we're ready to go. */
+  postMessage(0);
 }
 
-started = false;
-
-/* Handle messages from the main thread. */
-onmessage = (event) => {
-  /* First message.*/
-  if (!started) {
-    start(event.data);
-    started = true;
-  } else {
-    /* Additional messages not handled. */
-    console.log("MESSAGE NOT HANDLED.");
-    console.log(event.data);
-  }
-};
+/* Handle first message from the main thread. */
+onmessage = async (event) => { await start(event.data); };

@@ -76,7 +76,7 @@ class ResponseHeader(HeadersMixin):
         """Log information about this response header."""
 
         level = logging.INFO if (200 <= self.status <= 299) else logging.ERROR
-        logger.log(
+        logger.debug(
             level,
             "(%s response) %s - %s",
             "outgoing" if out else "incoming",

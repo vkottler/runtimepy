@@ -25,8 +25,7 @@ class WebApplication:
     """A simple web-application interface."""
 
     worker_source_paths = ["JsonConnection", "DataConnection", "worker"]
-    main_source_paths = ["main"]
-    css_paths = ["main"]
+    css_paths = ["main", "bootstrap_extra"]
 
     def __init__(self, app: AppInfo) -> None:
         """Initialize this instance."""
@@ -41,16 +40,19 @@ class WebApplication:
         # Internal CSS.
         append_kind(document.head, *self.css_paths, kind="css", tag="style")
 
+        # Worker code.
+        worker = append_kind(document.body, *self.worker_source_paths)
+        if worker is not None:
+            worker["type"] = "text/js-worker"
+
+        # Set up worker.
+        append_kind(document.body, "setup_worker", "setup_tabs")
+
         # Populate applicaton elements.
         app(TabbedContent(PKG_NAME, document.body))
 
+        # Main-thread code.
+        append_kind(document.body, "main")
+
         # Third-party dependencies.
         add_bootstrap_js(document.body)
-
-        # Worker code.
-        append_kind(document.body, *self.worker_source_paths)[
-            "type"
-        ] = "text/js-worker"
-
-        # Main-thread code.
-        append_kind(document.body, *self.main_source_paths)

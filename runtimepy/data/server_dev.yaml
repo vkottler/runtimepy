@@ -3,8 +3,8 @@ config:
   localhost: true
   caching: false
 
-  # html_method: runtimepy.net.server.app.sample
-  html_method: tasks.html.sample
+  # This is the default.
+  # html_method: runtimepy.net.server.app.channel_environments
 
 port_overrides:
   runtimepy_http_server: 8000

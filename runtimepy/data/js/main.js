@@ -1,19 +1,3 @@
-function worker_message(event) {
-  console.log(`Main thread received: ${event.data}.`);
-}
-
-/*
- * Do some heinous sh*t to create a worker from our 'text/js-worker' element.
- */
-const worker = new Worker(window.URL.createObjectURL(new Blob(
-    Array.prototype.map.call(
-        document.querySelectorAll("script[type='text\/js-worker']"),
-        (script) => script.textContent,
-        ),
-    {type : "text/javascript"},
-    )));
-worker.onmessage = worker_message;
-
 function worker_config(config) {
   let worker_cfg = {};
 
@@ -35,20 +19,58 @@ function worker_config(config) {
   return worker_cfg;
 }
 
-function main(config) {
-  /* Send configuration data to the worker. */
-  config["worker"] = worker_config(config);
-  worker.postMessage(config);
+function bootstrap_init() {
+  /*
+   * Enable tooltips.
+   * https://getbootstrap.com/docs/5.3/components/tooltips/#overview
+   */
+  const tooltipTriggerList = document.querySelectorAll(".has-tooltip");
+  const tooltipList = [...tooltipTriggerList ].map(
+      tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+}
 
-  /* Canvas. */
-  // let ctx = document.getElementById("canvas").getContext("2d");
-  // ctx.lineWidth = 10;
-  // ctx.strokeRect(20, 20, 40, 40);
+class App {
+  constructor(config, worker) {
+    this.config = config;
+    this.worker = worker;
+
+    this.config["worker"] = worker_config(this.config);
+  }
+
+  async main() {
+    /*
+     * Run application initialization when the worker thread responds with an
+     * expected value.
+     */
+    worker.addEventListener("message", async (event) => {
+      if (event.data == 0) {
+        /* Run tab initialization. */
+        for await (const init of inits) {
+          await init();
+        }
+
+        /* Prepare worker message handler. */
+        this.worker.onmessage = async (event) => {
+          for (const key in event.data) {
+            /* Handle forwarding messages to individual tabs. */
+            if (key in tabs) {
+              tabs[key].onmessage(event.data[key]);
+            }
+          }
+        };
+      }
+    }, {once : true});
+
+    /* Start worker. */
+    this.worker.postMessage(this.config);
+
+    bootstrap_init();
+  }
 }
 
 /* Load configuration data then run application entry. */
-window.onload = () => {
-  fetch(window.location.origin + "/json")
-      .then((value) => { return value.json(); })
-      .then((value) => { main(value); });
+window.onload = async () => {
+  await (new App(await (await fetch(window.location.origin + "/json")).json(),
+                 worker))
+      .main();
 };

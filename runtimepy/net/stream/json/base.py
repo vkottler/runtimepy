@@ -363,6 +363,9 @@ class JsonMessageConnection(
 
         if keys_ignored:
             response["keys_ignored"] = sorted(keys_ignored)
+            self.logger.warning(
+                "Ignored incoming message keys: %s.", ", ".join(keys_ignored)
+            )
 
         if self._handle_reserved(data, response) and response:
             self.send_json(response, addr=addr)

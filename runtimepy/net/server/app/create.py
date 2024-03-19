@@ -20,14 +20,11 @@ DOCUMENT = None
 T = TypeVar("T")
 
 
-def config_param(app: AppInfo, key: str, default: T) -> T:
+def config_param(
+    app: AppInfo, key: str, default: T, strict: bool = False
+) -> T:
     """Attempt to get a configuration parameter."""
-
-    config: dict[str, T] = app.config["root"].setdefault(  # type: ignore
-        "config",
-        {},
-    )
-    return config.get(key, default)
+    return app.config_param(key, default, strict=strict)
 
 
 def create_app(

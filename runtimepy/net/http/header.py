@@ -56,7 +56,7 @@ class RequestHeader(HeadersMixin):
     def log(self, logger: LoggerType, out: bool) -> None:
         """Log information about this request header."""
 
-        logger.info(
+        logger.debug(
             "(%s request) %s - %s",
             "outgoing" if out else "incoming",
             self.request_line,

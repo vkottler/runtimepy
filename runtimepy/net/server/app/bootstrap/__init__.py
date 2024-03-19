@@ -6,36 +6,54 @@ A module implementing interfaces to include Bootstrap
 # third-party
 from svgen.element import Element
 
+# internal
+from runtimepy.net.server.app.elements import div
+
+CDN = "cdn.jsdelivr.net"
 BOOTSTRAP_VERSION = "5.3.3"
+ICONS_VERSION = "1.11.3"
+
+
+def icon_str(icon: str) -> str:
+    """Get a boostrap icon string."""
+    return f'<i class="bi bi-{icon}"></i>'
 
 
 def add_bootstrap_css(element: Element) -> None:
     """Add boostrap CSS sources as a child of element."""
 
-    element.children.append(
-        Element(
-            tag="link",
-            href=(
-                "https://cdn.jsdelivr.net/npm/bootstrap"
-                f"@{BOOTSTRAP_VERSION}/dist/css/bootstrap.min.css"
-            ),
-            rel="stylesheet",
-            crossorigin="anonymous",
-        )
+    div(
+        tag="link",
+        rel="stylesheet",
+        href=(
+            f"https://{CDN}/npm/"
+            f"bootstrap-icons@{ICONS_VERSION}/font/bootstrap-icons.min.css"
+        ),
+        parent=element,
+    )
+
+    div(
+        tag="link",
+        href=(
+            f"https://{CDN}/npm/bootstrap"
+            f"@{BOOTSTRAP_VERSION}/dist/css/bootstrap.min.css"
+        ),
+        rel="stylesheet",
+        crossorigin="anonymous",
+        parent=element,
     )
 
 
 def add_bootstrap_js(element: Element) -> None:
     """Add bootstrap JavaScript as a child of element."""
 
-    element.children.append(
-        Element(
-            tag="script",
-            src=(
-                "https://cdn.jsdelivr.net/npm/bootstrap"
-                f"@{BOOTSTRAP_VERSION}/dist/js/bootstrap.bundle.min.js"
-            ),
-            crossorigin="anonymous",
-            text="/* null */",
-        )
+    div(
+        tag="script",
+        src=(
+            "https://cdn.jsdelivr.net/npm/bootstrap"
+            f"@{BOOTSTRAP_VERSION}/dist/js/bootstrap.bundle.min.js"
+        ),
+        crossorigin="anonymous",
+        text="/* null */",
+        parent=element,
     )
