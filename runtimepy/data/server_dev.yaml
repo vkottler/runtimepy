@@ -4,7 +4,7 @@ config:
   caching: false
 
   # This is the default.
-  # html_method: runtimepy.net.server.app.sample
+  # html_method: runtimepy.net.server.app.channel_environments
 
 port_overrides:
   runtimepy_http_server: 8000

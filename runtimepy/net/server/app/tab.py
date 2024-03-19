@@ -14,11 +14,7 @@ from vcorelib.io.file_writer import IndentedFileWriter
 from runtimepy.net.arbiter.info import AppInfo
 from runtimepy.net.server.app.bootstrap.tabs import TabbedContent
 from runtimepy.net.server.app.elements import div
-from runtimepy.net.server.app.files import (
-    append_kind,
-    kind_url,
-    write_found_file,
-)
+from runtimepy.net.server.app.files import kind_url, write_found_file
 
 
 class Tab:
@@ -43,14 +39,10 @@ class Tab:
     def compose(self, parent: Element) -> None:
         """Compose the tab's HTML elements."""
 
-        append_kind(parent, self.source, kind="html", tag="div")
-
-    def write_js(self, writer: IndentedFileWriter) -> bool:
+    def write_js(self, writer: IndentedFileWriter, **kwargs) -> bool:
         """Write JavaScript code for the tab."""
 
-        return write_found_file(
-            writer, kind_url("js", self.source, subdir="tabs")
-        )
+        return write_found_file(writer, kind_url("js", self.source, **kwargs))
 
     def entry(self) -> None:
         """Tab overall script entry."""

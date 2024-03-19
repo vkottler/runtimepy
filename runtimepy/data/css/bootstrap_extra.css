@@ -10,3 +10,11 @@
   height: 100%;
   overflow: scroll;
 }
+
+.button-bodge {
+  text-align: left;
+}
+
+.collapsing {
+  transition: none !important;
+}

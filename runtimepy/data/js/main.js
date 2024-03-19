@@ -19,6 +19,16 @@ function worker_config(config) {
   return worker_cfg;
 }
 
+function bootstrap_init() {
+  /*
+   * Enable tooltips.
+   * https://getbootstrap.com/docs/5.3/components/tooltips/#overview
+   */
+  const tooltipTriggerList = document.querySelectorAll(".has-tooltip");
+  const tooltipList = [...tooltipTriggerList ].map(
+      tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+}
+
 class App {
   constructor(config, worker) {
     this.config = config;
@@ -53,6 +63,8 @@ class App {
 
     /* Start worker. */
     this.worker.postMessage(this.config);
+
+    bootstrap_init();
   }
 }
 
