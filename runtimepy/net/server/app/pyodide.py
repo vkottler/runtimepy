@@ -17,7 +17,7 @@ def add_pyodide_js(element: Element) -> Element:
             "https://cdn.jsdelivr.net/pyodide/"
             f"v{PYODIDE_VERSION}/full/pyodide.js"
         ),
-        text="/* null */",
+        allow_no_end_tag=False,
     )
     element.children.append(elem)
     return elem

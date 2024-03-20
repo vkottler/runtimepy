@@ -54,6 +54,5 @@ def add_bootstrap_js(element: Element) -> None:
             f"@{BOOTSTRAP_VERSION}/dist/js/bootstrap.bundle.min.js"
         ),
         crossorigin="anonymous",
-        text="/* null */",
         parent=element,
     )

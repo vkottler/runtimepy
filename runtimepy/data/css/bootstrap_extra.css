@@ -18,3 +18,8 @@
 .collapsing {
   transition: none !important;
 }
+
+.table {
+  margin-bottom: 0;
+  width: auto;
+}

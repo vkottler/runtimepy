@@ -12,7 +12,7 @@ from runtimepy.net.server.app.files import set_text_to_kind
 def div(tag: str = "div", parent: Element = None, **kwargs) -> Element:
     """Get a new 'div' element."""
 
-    result = Element(tag=tag, **kwargs)
+    result = Element(tag=tag, allow_no_end_tag=False, **kwargs)
 
     if parent is not None:
         parent.children.append(result)

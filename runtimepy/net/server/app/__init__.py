@@ -12,6 +12,7 @@ from runtimepy.net.server import RuntimepyServerConnection
 from runtimepy.net.server.app.bootstrap.tabs import TabbedContent
 from runtimepy.net.server.app.create import config_param, create_app
 from runtimepy.net.server.app.env import ChannelEnvironmentTab
+from runtimepy.net.server.app.placeholder import dummy_tabs, under_construction
 
 
 async def setup(app: AppInfo) -> int:
@@ -44,3 +45,8 @@ def channel_environments(app: AppInfo, tabs: TabbedContent) -> None:
         ChannelEnvironmentTab(
             name, task.command, app, tabs, icon="arrow-repeat"
         ).entry()
+
+    # Add a bunch of dummy tabs.
+    dummy_tabs(5, app, tabs)
+
+    under_construction(tabs.tabs)

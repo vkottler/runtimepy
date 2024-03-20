@@ -7,10 +7,11 @@ from svgen.element import Element
 
 # internal
 from runtimepy import PKG_NAME
-from runtimepy.net.server.app.bootstrap import icon_str
+from runtimepy.net.server.app.bootstrap.elements import (
+    BOOTSTRAP_BUTTON,
+    collapse_button,
+)
 from runtimepy.net.server.app.elements import div
-
-BOOTSTRAP_BUTTON = "rounded-0 font-monospace button-bodge"
 
 
 def create_nav_button(
@@ -55,37 +56,24 @@ def create_nav_container(
     return content
 
 
-def set_tooltip(element: Element, data: str, placement: str = "right") -> None:
-    """Set a tooltip on an element."""
-
-    element["data-bs-title"] = data
-    element["data-bs-placement"] = placement
-
-    # Should we use another mechanism for this?
-    element["class"] += " has-tooltip"
-
-
-def collapse_button(tooltip: str = None, **kwargs) -> Element:
-    """Create a collapse button."""
-
-    collapse = div(
-        tag="button",
-        type="button",
-        text=icon_str("arrows-collapse-vertical"),
-        **kwargs,
-    )
-    collapse["class"] = "btn btn-secondary " + BOOTSTRAP_BUTTON
-    if tooltip:
-        set_tooltip(collapse, tooltip)
-
-    collapse["data-bs-toggle"] = "collapse"
-    collapse["data-bs-target"] = f"#{PKG_NAME}-tabs"
-
-    return collapse
-
-
 class TabbedContent:
     """A tabbed-content container."""
+
+    def buttons(self, parent: Element) -> None:
+        """Create buttons on the left button bar."""
+
+        # Collapse tabs button.
+        collapse_button(
+            f"#{PKG_NAME}-tabs", parent=parent, tooltip="Collapse tabs."
+        )
+
+        # Collapse channel-table button.
+        collapse_button(
+            ".table",
+            parent=parent,
+            tooltip="Collapse channel table.",
+            icon="table",
+        )
 
     def __init__(self, name: str, parent: Element) -> None:
         """Initialize this instance."""
@@ -98,15 +86,10 @@ class TabbedContent:
         self.container["data-bs-theme"] = "dark"
         self.container["class"] = "d-flex align-items-start"
 
-        # Collapse button.
-        self.button_column = div(parent=self.container)
-        self.button_column["class"] = "d-flex flex-column bg-dark h-100"
-        self.collapse = collapse_button(
-            parent=self.button_column, tooltip="Collapse tabs."
-        )
-
-        # Placeholder.
-        collapse_button(parent=self.button_column, tooltip="YUP 2")
+        # Buttons.
+        button_column = div(parent=self.container)
+        button_column["class"] = "d-flex flex-column bg-dark h-100"
+        self.buttons(button_column)
 
         # Create tab container.
         self.tabs = div(id=f"{PKG_NAME}-tabs", parent=self.container)

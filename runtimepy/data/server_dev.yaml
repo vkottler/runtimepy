@@ -8,3 +8,10 @@ config:
 
 port_overrides:
   runtimepy_http_server: 8000
+
+# Add more sample tasks.
+tasks:
+  # Sinusoids.
+  - {name: wave1, factory: sinusoid, period_s: 0.01}
+  - {name: wave2, factory: sinusoid, period_s: 0.02}
+  - {name: wave3, factory: sinusoid, period_s: 0.03}

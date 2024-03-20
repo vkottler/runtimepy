@@ -24,6 +24,7 @@ factories:
 
   # Useful tasks.
   - {name: runtimepy.task.trig.Sinusoid}
+  - {name: runtimepy.task.sample.Sample}
 
 ports:
   # Reserve ports for JSON listeners.
