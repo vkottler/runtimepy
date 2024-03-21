@@ -35,6 +35,7 @@ def collapse_button(
     target: str,
     tooltip: str = None,
     icon: str = "arrows-collapse-vertical",
+    toggle: str = "collapse",
     **kwargs,
 ) -> Element:
     """Create a collapse button."""
@@ -44,7 +45,42 @@ def collapse_button(
     if tooltip:
         set_tooltip(collapse, tooltip)
 
-    collapse["data-bs-toggle"] = "collapse"
+    collapse["data-bs-toggle"] = toggle
     collapse["data-bs-target"] = target
 
     return collapse
+
+
+def toggle_button(parent: Element) -> None:
+    """Add a boolean-toggle button."""
+
+    div(
+        tag="button",
+        type="button",
+        text=icon_str("toggles"),
+        parent=parent,
+        title="toggle value",
+    )["class"] = (
+        "btn " + BOOTSTRAP_BUTTON
+    )
+
+
+def input_box(
+    parent: Element, label: str = "filter", pattern: str = ".*"
+) -> None:
+    """Create command input box."""
+
+    container = div(parent=parent, class_str="input-group")
+
+    label_elem = div(tag="span", parent=container, text=label)
+    label_elem.add_class("input-group-text", "rounded-0", TEXT)
+
+    box = div(
+        tag="input",
+        type="text",
+        placeholder=pattern,
+        parent=container,
+        name=label,
+        title=label + " input",
+    )
+    box.add_class("form-control", "rounded-0", TEXT)

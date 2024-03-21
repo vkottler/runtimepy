@@ -16,19 +16,16 @@ from runtimepy.channel.environment.command.processor import (
 from runtimepy.enum import RuntimeEnum
 from runtimepy.net.arbiter.info import AppInfo
 from runtimepy.net.server.app.bootstrap import icon_str
-from runtimepy.net.server.app.bootstrap.elements import TEXT, flex
+from runtimepy.net.server.app.bootstrap.elements import (
+    TEXT,
+    flex,
+    input_box,
+    toggle_button,
+)
 from runtimepy.net.server.app.bootstrap.tabs import TabbedContent
 from runtimepy.net.server.app.elements import div
 from runtimepy.net.server.app.placeholder import under_construction
 from runtimepy.net.server.app.tab import Tab
-
-
-def append_class(curr: str, data: str) -> str:
-    """A simple class-appending method."""
-
-    if curr:
-        curr += " "
-    return curr + data
 
 
 class ChannelEnvironmentTab(Tab):
@@ -63,23 +60,28 @@ class ChannelEnvironmentTab(Tab):
 
         kind_str = str(chan.type)
 
-        type_sty = ""
-
         # Should handle enums at some point.
         if enum is not None:
             enum_name = env.enums.names.name(enum.id)
             assert enum_name is not None
             kind_str = enum_name
-            type_sty = append_class(type_sty, "fw-bold")
+
+        # Add boolean/bit toggle button.
+        toggle = div(tag="td", parent=parent)
+
+        chan_type = div(tag="td", text=kind_str, parent=parent)
+        if enum is not None:
+            chan_type.add_class("fw-bold")
 
         if chan.type.is_boolean:
-            type_sty = append_class(type_sty, "text-primary-emphasis")
-        elif chan.type.is_float:
-            type_sty = append_class(type_sty, "text-secondary")
-        else:
-            type_sty = append_class(type_sty, "text-primary")
+            chan_type.add_class("text-primary-emphasis")
+            if chan.commandable:
+                toggle_button(toggle)
 
-        div(tag="td", text=kind_str, parent=parent)["class"] = type_sty
+        elif chan.type.is_float:
+            chan_type.add_class("text-secondary-emphasis")
+        else:
+            chan_type.add_class("text-primary")
 
         name_sty = ""
         if chan.commandable:
@@ -97,14 +99,21 @@ class ChannelEnvironmentTab(Tab):
 
         field = env.fields[name]
 
-        kind = f"{'bit' if field.width == 1 else 'bits'} {field.where_str()}"
+        toggle = div(tag="td", parent=parent)
 
-        div(tag="td", text=kind, parent=parent)["class"] = "text-info-emphasis"
+        # Add boolean/bit toggle button.
+        is_bit = field.width == 1
+        kind_str = f"{'bit' if is_bit else 'bits'} {field.where_str()}"
 
-        name_sty = ""
+        div(tag="td", text=kind_str, parent=parent)["class"] = (
+            "text-info-emphasis"
+        )
+
+        name_elem = div(tag="td", text=name, parent=parent)
         if field.commandable:
-            name_sty += "text-success"
-        div(tag="td", text=name, parent=parent)["class"] = name_sty
+            name_elem.add_class("text-success")
+            if is_bit:
+                toggle_button(toggle)
 
         div(tag="td", text=str(env.value(name)), parent=parent)
 
@@ -112,25 +121,36 @@ class ChannelEnvironmentTab(Tab):
         """Create the channel table."""
 
         table = div(tag="table", parent=parent)
-        table["class"] = "show table " + TEXT
+        # table.add_class("show")
+        table.add_class("table")
+        table.add_class(TEXT)
 
         header = div(tag="thead", parent=table)
         body = div(tag="tbody", parent=table)
 
         # Add header.
         header_row = div(tag="tr", parent=header)
-        for heading in ["type", "name", "value"]:
-            div(tag="th", scope="col", parent=header_row, text=heading)
+        for heading in ["", "type", "name", "value"]:
+            div(
+                tag="th",
+                scope="col",
+                parent=header_row,
+                text=heading,
+                class_str="text-secondary",
+            )
+
+        # Add some controls.
+        ctl_row = div(tag="tr", parent=header)
+        div(tag="th", parent=ctl_row)
+        div(tag="th", parent=ctl_row)
+        input_box(div(tag="th", parent=ctl_row))
+        div(tag="th", parent=ctl_row)
 
         env = self.command.env
 
         # make a table for channel stuff
         for name in env.names:
             row = div(tag="tr", parent=body)
-
-            # Implement this at some point.
-            # if not self.channel_pattern.matches(name):
-            #     continue
 
             # Add channel rows.
             chan_result = env.get(name)
@@ -148,11 +168,31 @@ class ChannelEnvironmentTab(Tab):
         # For controlling layout.
         container = flex(parent=parent)
 
-        # Input box / text log area?
-        sub_container = flex(kind="column", parent=container)
-        under_construction(sub_container)
-        self.channel_table(sub_container)
-        under_construction(sub_container)
+        # Use all of the vertical space by default.
+        parent.add_class("h-100")
+        container.add_class("h-100")
+
+        vert_container = flex(
+            parent=container,
+            kind="column",
+        )
+        vert_container.add_class("channel-column", "collapse", "show")
+
+        input_box(vert_container, label="command", pattern="help")
+
+        # Text area.
+        logs = div(
+            tag="textarea",
+            parent=div(parent=vert_container, class_str="form-floating"),
+            class_str=f"form-control rounded-0 {TEXT}",
+            id=f"{self.name}-logs",
+            title="logs",
+        )
+        logs.booleans.add("readonly")
+
+        self.channel_table(vert_container)
+
+        under_construction(vert_container)
 
         # Future plot area?
-        under_construction(container)
+        under_construction(container, note="plot?")

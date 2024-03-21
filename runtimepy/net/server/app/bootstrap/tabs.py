@@ -29,11 +29,9 @@ def create_nav_button(
     button["aria-controls"] = f"{name}-{item}"
     button["aria-selected"] = str(active_tab).lower()
 
-    class_str = "nav-link " + BOOTSTRAP_BUTTON
+    button.add_class("nav-link", BOOTSTRAP_BUTTON)
     if active_tab:
-        class_str += " active"
-
-    button["class"] = class_str
+        button.add_class("active")
 
     return button
 
@@ -48,10 +46,9 @@ def create_nav_container(
     )
     content["aria-labelledby"] = f"{name}-{item}-tab"
 
-    class_str = "tab-pane fade"
+    content.add_class("tab-pane", "fade")
     if active_tab:
-        class_str += " show active"
-    content["class"] = class_str
+        content.add_class("show", "active")
 
     return content
 
@@ -59,20 +56,15 @@ def create_nav_container(
 class TabbedContent:
     """A tabbed-content container."""
 
-    def buttons(self, parent: Element) -> None:
-        """Create buttons on the left button bar."""
+    def add_button(self, msg: str, target: str, **kwargs) -> Element:
+        """Add a button to the left side button column."""
 
-        # Collapse tabs button.
-        collapse_button(
-            f"#{PKG_NAME}-tabs", parent=parent, tooltip="Collapse tabs."
-        )
-
-        # Collapse channel-table button.
-        collapse_button(
-            ".table",
-            parent=parent,
-            tooltip="Collapse channel table.",
-            icon="table",
+        return collapse_button(
+            target,
+            parent=self.button_column,
+            tooltip=f"{msg}.",
+            title=f"{msg} button.",
+            **kwargs,
         )
 
     def __init__(self, name: str, parent: Element) -> None:
@@ -81,34 +73,43 @@ class TabbedContent:
         self.name = name
 
         # Create application container
-        self.container = div(parent=parent)
-        self.container["id"] = name
+        self.container = div(parent=parent, id=name)
+        self.container.add_class("d-flex", "align-items-start")
+
+        # Dark theme.
         self.container["data-bs-theme"] = "dark"
-        self.container["class"] = "d-flex align-items-start"
+        parent.add_class("bg-dark")
 
         # Buttons.
-        button_column = div(parent=self.container)
-        button_column["class"] = "d-flex flex-column bg-dark h-100"
-        self.buttons(button_column)
+        self.button_column = div(parent=self.container)
+        self.button_column.add_class("d-flex", "flex-column", "h-100")
+
+        # Toggle tabs button.
+        self.add_button("Toggle tabs", f"#{PKG_NAME}-tabs")
 
         # Create tab container.
         self.tabs = div(id=f"{PKG_NAME}-tabs", parent=self.container)
-        tabs_class = "bg-dark nav flex-column nav-pills show"
-
-        # Created a custom class to fix scroll behavior.
-        tabs_class += " flex-column-scroll-bodge"
-        self.tabs["class"] = tabs_class
+        self.tabs.add_class(
+            "nav",
+            "flex-column",
+            "nav-pills",
+            "show",
+            "flex-column-scroll-bodge",
+        )
 
         # Create content container.
         self.content = div(id=f"{name}-tabContent", parent=self.container)
-        content_class = "tab-content"
-
-        # Created a custom class to fix scroll behavior.
-        content_class += " tab-content-scroll-bodge"
-
-        self.content["class"] = content_class
+        self.set_scroll(True)
 
         self.active_tab = True
+
+    def set_scroll(self, scroll: bool) -> None:
+        """Set classes on content element."""
+
+        self.content["class"] = ""
+        self.content.add_class("tab-content", "tab-content-bodge")
+        if scroll:
+            self.content.add_class("scroll")
 
     def create(self, name: str) -> tuple[Element, Element]:
         """Only the first tab is active."""

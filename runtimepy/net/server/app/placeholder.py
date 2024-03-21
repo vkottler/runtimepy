@@ -19,16 +19,18 @@ class DummyTab(Tab):
     def compose(self, parent: Element) -> None:
         """Compose the tab's HTML elements."""
 
+        parent.add_class("text-light")
+
         for idx in range(10):
             div(parent=parent, text="Hello, world! " + str(idx))
 
 
-def under_construction(parent: Element) -> Element:
+def under_construction(parent: Element, note: str = "") -> Element:
     """Add some 'under construction' content to the tab area."""
 
     container = div(parent=parent)
-    container["class"] = (
-        "flex-grow-1 d-flex flex-column justify-content-between"
+    container.add_class(
+        "flex-grow-1", "d-flex", "flex-column", "justify-content-between"
     )
 
     # Add content below tabs.
@@ -42,7 +44,12 @@ def under_construction(parent: Element) -> Element:
         + icon_str("wrench-adjustable"),
         parent=container,
     )
-    sample["class"] = "text-info text-center font-monospace"
+    sample.add_class("text-info", "text-center", "font-monospace")
+
+    if note:
+        div(text=f"({note})", parent=container).add_class(
+            "text-info", "text-center", "font-monospace"
+        )
 
     div(parent=container)
 

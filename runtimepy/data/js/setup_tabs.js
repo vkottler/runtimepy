@@ -14,6 +14,7 @@ class TabInterface {
     /* Relevant elements. */
     this.button = document.getElementById("runtimepy-" + this.name + "-tab");
     this.container = document.getElementById("runtimepy-" + this.name);
+    this.logs = this.container.querySelector("#" + this.name + "-logs");
 
     this.message_handlers = [];
 
@@ -27,6 +28,8 @@ class TabInterface {
       this.shown_handler();
     }
   }
+
+  log(message) { this.logs.value += message + "\n"; }
 
   send_message(data) {
     this.worker.postMessage({name : this.name, event : data});
