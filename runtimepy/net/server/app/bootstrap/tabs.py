@@ -7,10 +7,11 @@ from svgen.element import Element
 
 # internal
 from runtimepy import PKG_NAME
-from runtimepy.net.server.app.bootstrap import icon_str
+from runtimepy.net.server.app.bootstrap.elements import (
+    BOOTSTRAP_BUTTON,
+    collapse_button,
+)
 from runtimepy.net.server.app.elements import div
-
-BOOTSTRAP_BUTTON = "rounded-0 font-monospace button-bodge"
 
 
 def create_nav_button(
@@ -28,11 +29,9 @@ def create_nav_button(
     button["aria-controls"] = f"{name}-{item}"
     button["aria-selected"] = str(active_tab).lower()
 
-    class_str = "nav-link " + BOOTSTRAP_BUTTON
+    button.add_class("nav-link", BOOTSTRAP_BUTTON)
     if active_tab:
-        class_str += " active"
-
-    button["class"] = class_str
+        button.add_class("active")
 
     return button
 
@@ -47,45 +46,26 @@ def create_nav_container(
     )
     content["aria-labelledby"] = f"{name}-{item}-tab"
 
-    class_str = "tab-pane fade"
+    content.add_class("tab-pane", "fade")
     if active_tab:
-        class_str += " show active"
-    content["class"] = class_str
+        content.add_class("show", "active")
 
     return content
 
 
-def set_tooltip(element: Element, data: str, placement: str = "right") -> None:
-    """Set a tooltip on an element."""
-
-    element["data-bs-title"] = data
-    element["data-bs-placement"] = placement
-
-    # Should we use another mechanism for this?
-    element["class"] += " has-tooltip"
-
-
-def collapse_button(tooltip: str = None, **kwargs) -> Element:
-    """Create a collapse button."""
-
-    collapse = div(
-        tag="button",
-        type="button",
-        text=icon_str("arrows-collapse-vertical"),
-        **kwargs,
-    )
-    collapse["class"] = "btn btn-secondary " + BOOTSTRAP_BUTTON
-    if tooltip:
-        set_tooltip(collapse, tooltip)
-
-    collapse["data-bs-toggle"] = "collapse"
-    collapse["data-bs-target"] = f"#{PKG_NAME}-tabs"
-
-    return collapse
-
-
 class TabbedContent:
     """A tabbed-content container."""
+
+    def add_button(self, msg: str, target: str, **kwargs) -> Element:
+        """Add a button to the left side button column."""
+
+        return collapse_button(
+            target,
+            parent=self.button_column,
+            tooltip=f"{msg}.",
+            title=f"{msg} button.",
+            **kwargs,
+        )
 
     def __init__(self, name: str, parent: Element) -> None:
         """Initialize this instance."""
@@ -93,39 +73,43 @@ class TabbedContent:
         self.name = name
 
         # Create application container
-        self.container = div(parent=parent)
-        self.container["id"] = name
+        self.container = div(parent=parent, id=name)
+        self.container.add_class("d-flex", "align-items-start")
+
+        # Dark theme.
         self.container["data-bs-theme"] = "dark"
-        self.container["class"] = "d-flex align-items-start"
+        parent.add_class("bg-dark")
 
-        # Collapse button.
+        # Buttons.
         self.button_column = div(parent=self.container)
-        self.button_column["class"] = "d-flex flex-column bg-dark h-100"
-        self.collapse = collapse_button(
-            parent=self.button_column, tooltip="Collapse tabs."
-        )
+        self.button_column.add_class("d-flex", "flex-column", "h-100")
 
-        # Placeholder.
-        collapse_button(parent=self.button_column, tooltip="YUP 2")
+        # Toggle tabs button.
+        self.add_button("Toggle tabs", f"#{PKG_NAME}-tabs")
 
         # Create tab container.
         self.tabs = div(id=f"{PKG_NAME}-tabs", parent=self.container)
-        tabs_class = "bg-dark nav flex-column nav-pills show"
-
-        # Created a custom class to fix scroll behavior.
-        tabs_class += " flex-column-scroll-bodge"
-        self.tabs["class"] = tabs_class
+        self.tabs.add_class(
+            "nav",
+            "flex-column",
+            "nav-pills",
+            "show",
+            "flex-column-scroll-bodge",
+        )
 
         # Create content container.
         self.content = div(id=f"{name}-tabContent", parent=self.container)
-        content_class = "tab-content"
-
-        # Created a custom class to fix scroll behavior.
-        content_class += " tab-content-scroll-bodge"
-
-        self.content["class"] = content_class
+        self.set_scroll(True)
 
         self.active_tab = True
+
+    def set_scroll(self, scroll: bool) -> None:
+        """Set classes on content element."""
+
+        self.content["class"] = ""
+        self.content.add_class("tab-content", "tab-content-bodge")
+        if scroll:
+            self.content.add_class("scroll")
 
     def create(self, name: str) -> tuple[Element, Element]:
         """Only the first tab is active."""

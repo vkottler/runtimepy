@@ -4,5 +4,12 @@ includes:
   # - server_dev.yaml
   - package://runtimepy/server_base.yaml
 
+# Add sample tasks.
+tasks:
+  # Chaos.
+  - {name: sample1, factory: Sample, period_s: 0.9}
+  - {name: sample2, factory: Sample, period_s: 1.0}
+  - {name: sample3, factory: Sample, period_s: 1.1}
+
 app:
   - runtimepy.net.server.app.setup

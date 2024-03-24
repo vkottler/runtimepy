@@ -5,10 +5,13 @@
   flex-shrink: 0;
 }
 
-.tab-content-scroll-bodge {
+.scroll {
+  overflow: scroll;
+}
+
+.tab-content-bodge {
   width: 100%;
   height: 100%;
-  overflow: scroll;
 }
 
 .button-bodge {
@@ -17,4 +20,34 @@
 
 .collapsing {
   transition: none !important;
+}
+
+.tab-pane.fade {
+  transition: none !important;
+}
+
+.modal.fade {
+  transition: none !important;
+}
+
+.modal-dialog {
+  width: 80%;
+  max-width: 80%;
+}
+
+.table {
+  margin-bottom: 0;
+  width: auto;
+}
+
+.channel-column {
+  overflow-y: scroll;
+}
+
+.table > tbody > tr > td {
+  vertical-align: middle;
+}
+
+.collapse:not(.show) {
+    display: none !important;
 }

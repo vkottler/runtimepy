@@ -77,7 +77,7 @@ def append_kind(
 ) -> Optional[Element]:
     """Append a new script element."""
 
-    elem = Element(tag=tag)
+    elem = Element(tag=tag, allow_no_end_tag=False)
 
     with StringIO() as stream:
         writer = IndentedFileWriter(stream, per_indent=2)
