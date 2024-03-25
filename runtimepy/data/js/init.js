@@ -1,3 +1,10 @@
+/* An array of initialization methods to run. */
+let inits = [];
+
+/* View tabs. */
+let tabs = {};
+let shown_tab = "UNKNOWN";
+
 /*
  * Do some heinous sh*t to create a worker from our 'text/js-worker' element.
  */

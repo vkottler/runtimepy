@@ -24,8 +24,8 @@ TabPopulater = Callable[[TabbedContent], None]
 class WebApplication:
     """A simple web-application interface."""
 
-    worker_source_paths = ["JsonConnection", "DataConnection", "worker"]
-    css_paths = ["main", "bootstrap_extra"]
+    worker_classes = ["JsonConnection", "DataConnection", "PlotManager"]
+    ui_classes = ["WorkerInterface", "Plot", "TabInterface"]
 
     def __init__(self, app: AppInfo) -> None:
         """Initialize this instance."""
@@ -38,15 +38,22 @@ class WebApplication:
         add_bootstrap_css(document.head)
 
         # Internal CSS.
-        append_kind(document.head, *self.css_paths, kind="css", tag="style")
+        append_kind(
+            document.head, "main", "bootstrap_extra", kind="css", tag="style"
+        )
 
         # Worker code.
-        worker = append_kind(document.body, *self.worker_source_paths)
-        if worker is not None:
-            worker["type"] = "text/js-worker"
+        append_kind(
+            document.body,
+            *self.worker_classes,
+            subdir="classes",
+            worker=True,
+        )
+        append_kind(document.body, "worker", worker=True)
 
         # Set up worker.
-        append_kind(document.body, "setup_worker", "setup_tabs")
+        append_kind(document.body, "init")
+        append_kind(document.body, *self.ui_classes, subdir="classes")
 
         # Populate applicaton elements.
         app(TabbedContent(PKG_NAME, document.body))

@@ -192,7 +192,14 @@ class ChannelEnvironmentTab(Tab):
 
         self.channel_table(vert_container)
 
+        # Possible empty space that could eventually be used (scenario: channel
+        # table doesn't take up full vertical space, few channels).
         under_construction(vert_container)
 
-        # Future plot area?
-        under_construction(container, note="plot?")
+        # Plot.
+        div(
+            tag="canvas",
+            id=f"{self.name}-plot",
+            parent=div(parent=container, class_str="w-100 h-100"),
+            class_str="w-100 h-100",
+        )

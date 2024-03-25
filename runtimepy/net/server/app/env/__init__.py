@@ -8,7 +8,7 @@ from runtimepy.net.server.app.bootstrap.elements import input_box
 from runtimepy.net.server.app.bootstrap.tabs import TabbedContent
 from runtimepy.net.server.app.env.modal import Modal
 from runtimepy.net.server.app.env.tab import ChannelEnvironmentTab
-from runtimepy.net.server.app.placeholder import dummy_tabs, under_construction
+from runtimepy.net.server.app.placeholder import under_construction
 
 
 def channel_environments(app: AppInfo, tabs: TabbedContent) -> None:
@@ -31,9 +31,6 @@ def channel_environments(app: AppInfo, tabs: TabbedContent) -> None:
         ChannelEnvironmentTab(
             name, task.command, app, tabs, icon="arrow-repeat"
         ).entry()
-
-    # Add some dummy tabs.
-    dummy_tabs(3, app, tabs)
 
     # Toggle channel-table button.
     tabs.add_button("Toggle channel table", ".channel-column", icon="table")
