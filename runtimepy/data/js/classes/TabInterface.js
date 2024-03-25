@@ -9,7 +9,7 @@ class TabInterface {
 
     /* Relevant elements. */
     this.container = document.getElementById("runtimepy-" + this.name);
-    this.logs = this.container.querySelector("#" + this.name + "-logs");
+    this.logs = this.query("#" + this.name + "-logs");
 
     this.message_handlers = [];
 
@@ -25,10 +25,13 @@ class TabInterface {
         shown_tab = this.name;
       }
       this.worker.send({kind : msg});
+
+      /* Could remove this. */
+      this.log(msg);
     } ];
 
     /* Plot related. */
-    let plot = this.container.querySelector("#" + this.name + "-plot");
+    let plot = this.query("#" + this.name + "-plot");
     if (plot) {
       this.plot = new Plot(plot, this.worker);
       this.show_state_handlers.push(this.plot.handle_shown.bind(this.plot));
@@ -36,6 +39,8 @@ class TabInterface {
 
     this.initButton();
   }
+
+  query(data) { return this.container.querySelector(data); }
 
   initButton() {
     let button = document.getElementById("runtimepy-" + this.name + "-tab");
