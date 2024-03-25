@@ -7,14 +7,10 @@ class PlotManager {
     this.shown = "UNKNOWN";
   }
 
-  run() {
-    function render(time) {
-      if (this.shown in this.plots) {
-        this.drawPlot(this.shown, time);
-      }
-      requestAnimationFrame(render.bind(this));
+  render(time) {
+    if (this.shown in this.plots) {
+      this.drawPlot(this.shown, time);
     }
-    requestAnimationFrame(render.bind(this));
   }
 
   async handleMessage(data) {

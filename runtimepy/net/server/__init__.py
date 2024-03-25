@@ -24,6 +24,14 @@ from runtimepy.net.tcp.http import HttpConnection
 MIMETYPES_INIT = False
 
 
+def package_data_dir() -> Path:
+    """Get this package's data directory."""
+
+    result = find_file("factories.yaml", package=PKG_NAME)
+    assert result is not None
+    return result.parent
+
+
 class RuntimepyServerConnection(HttpConnection):
     """A class implementing a server-connection interface for this package."""
 
@@ -37,7 +45,7 @@ class RuntimepyServerConnection(HttpConnection):
     favicon_data: bytes
 
     paths: list[Path]
-    class_paths: list[Pathlike] = [Path()]
+    class_paths: list[Pathlike] = [Path(), package_data_dir()]
 
     def add_path(self, path: Pathlike, front: bool = False) -> None:
         """Add a path."""
@@ -122,17 +130,17 @@ class RuntimepyServerConnection(HttpConnection):
 
         with StringIO() as stream:
             if request.target.origin_form:
-                # Try serving the path as a file.
-                result = self.try_file(request.target.origin_form, response)
-                if result is not None:
-                    return result
-
                 path = request.target.path
 
                 # Handle favicon (for browser clients).
                 if path.startswith("/favicon"):
                     response["Content-Type"] = "image/x-icon"
                     return self.favicon_data
+
+                # Try serving the path as a file.
+                result = self.try_file(request.target.origin_form, response)
+                if result is not None:
+                    return result
 
                 # Handle raw data queries.
                 if path.startswith("/json"):

@@ -15,4 +15,4 @@ def test_set_text_to_file_basic():
 
     assert kind_url("js", "test", subdir="subdir")
 
-    assert set_text_to_file(Element(), f"package://{PKG_NAME}/js/env.js")
+    assert set_text_to_file(Element(), f"package://{PKG_NAME}/js/main.js")

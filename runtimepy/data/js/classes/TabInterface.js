@@ -8,44 +8,54 @@ class TabInterface {
     this.worker = new WorkerInterface(this.name, _worker);
 
     /* Relevant elements. */
-    this.button = document.getElementById("runtimepy-" + this.name + "-tab");
     this.container = document.getElementById("runtimepy-" + this.name);
-    this.logs = this.container.querySelector("#" + this.name + "-logs");
-
-    this.plot = new Plot(
-        this.container.querySelector("#" + this.name + "-plot"), this.worker);
+    this.logs = this.query("#" + this.name + "-logs");
 
     this.message_handlers = [];
-
-    this.button.addEventListener("hidden.bs.tab",
-                                 this.hidden_handler.bind(this));
-    this.button.addEventListener("shown.bs.tab", this.shown_handler.bind(this));
 
     tabs[this.name] = this;
 
     /* Always send a message */
-    this.show_state_handlers = [
-      (is_shown) => {
-        let msg = "tab.hidden";
-        if (is_shown) {
-          msg = "tab.shown";
+    this.show_state_handlers = [ (is_shown) => {
+      let msg = "tab.hidden";
+      if (is_shown) {
+        msg = "tab.shown";
 
-          /* Update global reference. */
-          shown_tab = this.name;
-        }
-        this.worker.send({kind : msg});
-      },
-      this.plot.handle_shown.bind(this.plot)
-    ];
+        /* Update global reference. */
+        shown_tab = this.name;
+      }
+      this.worker.send({kind : msg});
 
-    if (bootstrap.Tab.getInstance(this.button)) {
+      /* Could remove this. */
+      this.log(msg);
+    } ];
+
+    /* Plot related. */
+    let plot = this.query("#" + this.name + "-plot");
+    if (plot) {
+      this.plot = new Plot(plot, this.worker);
+      this.show_state_handlers.push(this.plot.handle_shown.bind(this.plot));
+    }
+
+    this.initButton();
+  }
+
+  query(data) { return this.container.querySelector(data); }
+
+  initButton() {
+    let button = document.getElementById("runtimepy-" + this.name + "-tab");
+    button.addEventListener("hidden.bs.tab", this.hidden_handler.bind(this));
+    button.addEventListener("shown.bs.tab", this.shown_handler.bind(this));
+    if (bootstrap.Tab.getInstance(button)) {
       this.show_state_handler(true);
     }
   }
 
   log(message) {
     console.log(`(${this.name}) ` + message);
-    this.logs.value += message + "\n";
+    if (this.logs) {
+      this.logs.value += message + "\n";
+    }
   }
 
   show_state_handler(is_shown) {

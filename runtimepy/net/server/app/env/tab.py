@@ -15,7 +15,6 @@ from runtimepy.channel.environment.command.processor import (
 )
 from runtimepy.enum import RuntimeEnum
 from runtimepy.net.arbiter.info import AppInfo
-from runtimepy.net.server.app.bootstrap import icon_str
 from runtimepy.net.server.app.bootstrap.elements import (
     TEXT,
     flex,
@@ -42,10 +41,7 @@ class ChannelEnvironmentTab(Tab):
         """Initialize this instance."""
 
         self.command = command
-        super().__init__(name, app, tabs, source="env")
-
-        # Use an icon as the start of the button.
-        self.button.text = icon_str(icon) + " " + self.name
+        super().__init__(name, app, tabs, source="env", icon=icon)
 
     def add_channel(
         self,
