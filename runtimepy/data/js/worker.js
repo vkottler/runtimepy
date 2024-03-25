@@ -55,7 +55,11 @@ async function start(config) {
   postMessage(0);
 
   /* Set up the main request-animation-frame loop. */
-  plots.run();
+  function render(time) {
+    plots.render(time);
+    requestAnimationFrame(render);
+  }
+  requestAnimationFrame(render);
 }
 
 /* Handle first message from the main thread. */
