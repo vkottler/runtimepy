@@ -61,11 +61,20 @@ def kind_url(
 
 
 def set_text_to_kind(
-    element: Element, kind: str, name: str, package: str = PKG_NAME
+    element: Element,
+    kind: str,
+    name: str,
+    package: str = PKG_NAME,
+    subdir: str = None,
 ) -> bool:
     """Set text to HTML-file contents at a predictable path."""
 
-    return set_text_to_file(element, kind_url(kind, name, package=package))
+    return set_text_to_file(
+        element, kind_url(kind, name, subdir=subdir, package=package)
+    )
+
+
+WORKER_TYPE = "text/js-worker"
 
 
 def append_kind(
@@ -74,6 +83,8 @@ def append_kind(
     package: str = PKG_NAME,
     kind: str = "js",
     tag: str = "script",
+    subdir: str = None,
+    worker: bool = False,
 ) -> Optional[Element]:
     """Append a new script element."""
 
@@ -83,7 +94,9 @@ def append_kind(
         writer = IndentedFileWriter(stream, per_indent=2)
         found_count = 0
         for name in names:
-            if write_found_file(writer, kind_url(kind, name, package=package)):
+            if write_found_file(
+                writer, kind_url(kind, name, subdir=subdir, package=package)
+            ):
                 found_count += 1
 
         if found_count:
@@ -91,5 +104,8 @@ def append_kind(
 
     if found_count:
         element.children.append(elem)
+
+    if worker:
+        elem["type"] = WORKER_TYPE
 
     return elem if found_count else None

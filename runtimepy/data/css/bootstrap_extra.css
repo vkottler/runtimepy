@@ -42,6 +42,7 @@
 
 .channel-column {
   overflow-y: scroll;
+  min-width: min-content;
 }
 
 .table > tbody > tr > td {
