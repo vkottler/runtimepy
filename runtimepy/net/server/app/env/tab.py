@@ -47,6 +47,13 @@ def plot_checkbox(parent: Element, name: str) -> None:
     )
 
 
+def enum_dropdown(parent: Element, enum: Optional[RuntimeEnum]) -> None:
+    """Implement a drop down for enumeration options."""
+
+    del enum
+    div(parent=parent, text="TODO")
+
+
 class ChannelEnvironmentTab(Tab):
     """A channel-environment tab interface."""
 
@@ -84,16 +91,19 @@ class ChannelEnvironmentTab(Tab):
             kind_str = enum_name
 
         # Add boolean/bit toggle button.
-        toggle = div(tag="td", parent=parent)
+        control = div(tag="td", parent=parent)
 
         chan_type = div(tag="td", text=kind_str, parent=parent)
-        if enum is not None:
+        if enum:
             chan_type.add_class("fw-bold")
+
+            if chan.commandable and not chan.type.is_boolean:
+                enum_dropdown(control, enum)
 
         if chan.type.is_boolean:
             chan_type.add_class("text-primary-emphasis")
             if chan.commandable:
-                toggle_button(toggle)["title"] = f"Toggle '{name}'."
+                toggle_button(control)["title"] = f"Toggle '{name}'."
 
         elif chan.type.is_float:
             chan_type.add_class("text-secondary-emphasis")
@@ -116,9 +126,12 @@ class ChannelEnvironmentTab(Tab):
 
         env = self.command.env
 
+        enum = None
         field = env.fields[name]
+        if field.is_enum:
+            enum = env.enums[field.enum]
 
-        toggle = div(tag="td", parent=parent)
+        control = div(tag="td", parent=parent)
 
         # Add boolean/bit toggle button.
         is_bit = field.width == 1
@@ -132,7 +145,9 @@ class ChannelEnvironmentTab(Tab):
         if field.commandable:
             name_elem.add_class("text-success")
             if is_bit:
-                toggle_button(toggle)
+                toggle_button(control)
+            elif enum:
+                enum_dropdown(control, enum)
 
         div(tag="td", text=str(env.value(name)), parent=parent)
 

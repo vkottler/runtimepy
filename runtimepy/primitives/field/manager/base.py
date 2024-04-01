@@ -134,7 +134,10 @@ class BitFieldsManagerBase:
         value: _Union[int, str] = field()
 
         if field.is_enum and resolve_enum:
-            value = self.enum_lookup[field.name].get_str(value)
+            name = self.registry.name(key)
+            assert name is not None, key
+            value = self.enum_lookup[name].get_str(value)
+
         elif field.width == 1:
             value = bool(value)
 

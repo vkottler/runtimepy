@@ -168,4 +168,5 @@ class CreateChannelEnvironment(_BaseChannelEnvironment):
         name = self.namespace(name=field.name, namespace=namespace)
         fields.fields[name] = field
         self.fields.add(fields)
+
         return name
