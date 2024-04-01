@@ -12,6 +12,7 @@ from vcorelib.io.file_writer import IndentedFileWriter
 
 # internal
 from runtimepy.net.arbiter.info import AppInfo
+from runtimepy.net.server.app.bootstrap import icon_str
 from runtimepy.net.server.app.bootstrap.tabs import TabbedContent
 from runtimepy.net.server.app.elements import div
 from runtimepy.net.server.app.files import kind_url, write_found_file
@@ -21,18 +22,29 @@ class Tab:
     """A simple application-tab interface class."""
 
     def __init__(
-        self, name: str, app: AppInfo, tabs: TabbedContent, source: str = None
+        self,
+        name: str,
+        app: AppInfo,
+        tabs: TabbedContent,
+        source: str = None,
+        subdir: str = "tab",
+        icon: str = None,
     ) -> None:
         """Initialize this instance."""
 
         self.name = name
+
         self.source = source if source else self.name
+        self.subdir = subdir
 
         self.app = app
         self.button, self.content = tabs.create(self.name)
 
-        # What should we put here?
-        self.button.text = self.name
+        button_str = ""
+        if icon:
+            button_str += icon_str(icon) + " "
+        button_str += self.name
+        self.button.text = button_str
 
         self.compose(self.content)
 
@@ -42,7 +54,9 @@ class Tab:
     def write_js(self, writer: IndentedFileWriter, **kwargs) -> bool:
         """Write JavaScript code for the tab."""
 
-        return write_found_file(writer, kind_url("js", self.source, **kwargs))
+        return write_found_file(
+            writer, kind_url("js", self.source, subdir=self.subdir, **kwargs)
+        )
 
     def entry(self) -> None:
         """Tab overall script entry."""

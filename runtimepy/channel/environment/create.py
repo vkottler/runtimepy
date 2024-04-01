@@ -44,6 +44,7 @@ class CreateChannelEnvironment(_BaseChannelEnvironment):
         enum: _Union[_RegistryKey, _RuntimeEnum] = None,
         namespace: _Namespace = None,
         scaling: ChannelScaling = None,
+        **kwargs,
     ) -> _ChannelResult:
         """Create a new channel from the environment."""
 
@@ -58,7 +59,12 @@ class CreateChannelEnvironment(_BaseChannelEnvironment):
 
         # Register the channel.
         result = self.channels.channel(
-            name, kind, commandable=commandable, enum=enum, scaling=scaling
+            name,
+            kind,
+            commandable=commandable,
+            enum=enum,
+            scaling=scaling,
+            **kwargs,
         )
         assert result is not None, f"Can't create channel '{name}'!"
 
@@ -76,6 +82,7 @@ class CreateChannelEnvironment(_BaseChannelEnvironment):
         enum: _Union[_RegistryKey, _RuntimeEnum] = None,
         namespace: _Namespace = None,
         scaling: ChannelScaling = None,
+        **kwargs,
     ) -> _IntChannelResult:
         """Create an integer channel."""
 
@@ -86,6 +93,7 @@ class CreateChannelEnvironment(_BaseChannelEnvironment):
             enum=enum,
             namespace=namespace,
             scaling=scaling,
+            **kwargs,
         )
         assert result[0].raw.kind.is_integer
         return _cast(_IntChannelResult, result)
@@ -97,11 +105,17 @@ class CreateChannelEnvironment(_BaseChannelEnvironment):
         commandable: bool = False,
         enum: _Union[_RegistryKey, _RuntimeEnum] = None,
         namespace: _Namespace = None,
+        **kwargs,
     ) -> _BoolChannelResult:
         """Create a boolean channel."""
 
         result = self.channel(
-            name, kind, commandable=commandable, enum=enum, namespace=namespace
+            name,
+            kind,
+            commandable=commandable,
+            enum=enum,
+            namespace=namespace,
+            **kwargs,
         )
         assert result[0].raw.kind.is_boolean
         return _cast(_BoolChannelResult, result)
@@ -113,6 +127,7 @@ class CreateChannelEnvironment(_BaseChannelEnvironment):
         commandable: bool = False,
         namespace: _Namespace = None,
         scaling: ChannelScaling = None,
+        **kwargs,
     ) -> _FloatChannel:
         """Create a floating-point channel."""
 
@@ -122,6 +137,7 @@ class CreateChannelEnvironment(_BaseChannelEnvironment):
             commandable=commandable,
             namespace=namespace,
             scaling=scaling,
+            **kwargs,
         )[0]
         assert result.raw.kind.is_float
         return _cast(_FloatChannel, result)
@@ -152,4 +168,5 @@ class CreateChannelEnvironment(_BaseChannelEnvironment):
         name = self.namespace(name=field.name, namespace=namespace)
         fields.fields[name] = field
         self.fields.add(fields)
+
         return name

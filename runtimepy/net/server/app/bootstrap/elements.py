@@ -31,6 +31,26 @@ def set_tooltip(element: Element, data: str, placement: str = "right") -> None:
     element["class"] += " has-tooltip"
 
 
+BUTTON_COLOR = "secondary"
+
+
+def bootstrap_button(
+    text: str, tooltip: str = None, color: str = BUTTON_COLOR, **kwargs
+) -> Element:
+    """Create a bootstrap button."""
+
+    button = div(
+        tag="button",
+        type="button",
+        text=text,
+        **kwargs,
+        class_str=f"btn btn-{color} " + BOOTSTRAP_BUTTON,
+    )
+    if tooltip:
+        set_tooltip(button, tooltip)
+    return button
+
+
 def collapse_button(
     target: str,
     tooltip: str = None,
@@ -40,33 +60,31 @@ def collapse_button(
 ) -> Element:
     """Create a collapse button."""
 
-    collapse = div(tag="button", type="button", text=icon_str(icon), **kwargs)
-    collapse["class"] = "btn btn-secondary " + BOOTSTRAP_BUTTON
-    if tooltip:
-        set_tooltip(collapse, tooltip)
-
+    collapse = bootstrap_button(icon_str(icon), tooltip=tooltip, **kwargs)
     collapse["data-bs-toggle"] = toggle
     collapse["data-bs-target"] = target
 
     return collapse
 
 
-def toggle_button(parent: Element) -> None:
+def toggle_button(parent: Element) -> Element:
     """Add a boolean-toggle button."""
 
-    div(
+    return div(
         tag="button",
         type="button",
         text=icon_str("toggles"),
         parent=parent,
         title="toggle value",
-    )["class"] = (
-        "btn " + BOOTSTRAP_BUTTON
+        class_str="btn " + BOOTSTRAP_BUTTON,
     )
 
 
 def input_box(
-    parent: Element, label: str = "filter", pattern: str = ".*"
+    parent: Element,
+    label: str = "filter",
+    pattern: str = ".*",
+    description: str = None,
 ) -> None:
     """Create command input box."""
 
@@ -74,6 +92,9 @@ def input_box(
 
     label_elem = div(tag="span", parent=container, text=label)
     label_elem.add_class("input-group-text", "rounded-0", TEXT)
+
+    if description:
+        set_tooltip(label_elem, description)
 
     box = div(
         tag="input",

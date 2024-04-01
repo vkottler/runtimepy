@@ -36,11 +36,15 @@ class LoggerMixinLevelControl(LoggerMixin):
         env: ChannelEnvironment,
         name: str = "log_level",
         initial: str = "info",
+        description: str = "Text-log level filter for this environment.",
     ) -> None:
         """Add a commandable log-level channel to the environment."""
 
         chan = env.int_channel(
-            name, enum=LogLevel.register_enum(env.enums), commandable=True
+            name,
+            enum=LogLevel.register_enum(env.enums),
+            commandable=True,
+            description=description,
         )
 
         # Set up change handler.

@@ -21,7 +21,11 @@ def create_nav_button(
 
     # Add button.
     button = div(
-        tag="button", id=f"{name}-{item}-tab", parent=parent, role="tab"
+        tag="button",
+        id=f"{name}-{item}-tab",
+        parent=parent,
+        role="tab",
+        title=f"Navigate to '{item}' tab.",
     )
     button["type"] = "button"
     button["data-bs-toggle"] = "pill"

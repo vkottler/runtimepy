@@ -11,6 +11,19 @@ function create_connections(config) {
   return conns;
 }
 
+const plots = new PlotManager();
+
+async function message(data) {
+  if ("plot" in data) {
+    /* Forward the 'name' field. */
+    data["plot"]["name"] = data["name"];
+    await plots.handleMessage(data["plot"]);
+  } else {
+    console.log(`Message for worker:`);
+    console.log(data);
+  }
+}
+
 /* Worker entry. */
 async function start(config) {
   console.log(config);
@@ -22,15 +35,31 @@ async function start(config) {
     await conns[key].connected;
   }
 
-  /* Forward all other messages to the server. */
-  onmessage =
-      async (event) => { conns["json"].send_json({"ui" : event.data}); };
+  onmessage = async (event) => {
+    /* Handle messages meant for this thread. */
+    if ("event" in event.data && "worker" in event.data["event"]) {
+      /* Forward the 'name' field. */
+      event.data["event"]["worker"]["name"] = event.data["name"];
+      await message(event.data["event"]["worker"]);
+    }
+    /* Forward all other messages to the server. */
+    else {
+      conns["json"].send_json({"ui" : event.data});
+    }
+  };
 
   /* Add message handler to forward UI messages to the main thread. */
   conns["json"].message_handlers["ui"] = (data) => { postMessage(data); };
 
   /* Tell main thread we're ready to go. */
   postMessage(0);
+
+  /* Set up the main request-animation-frame loop. */
+  function render(time) {
+    plots.render(time);
+    requestAnimationFrame(render);
+  }
+  requestAnimationFrame(render);
 }
 
 /* Handle first message from the main thread. */

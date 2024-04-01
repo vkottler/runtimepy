@@ -8,6 +8,9 @@ properties:
     type: integer
     minimum: 1
 
+  description:
+    type: string
+
   type:
     enum:
       - bool

@@ -23,7 +23,7 @@ class SampleTask(ArbiterTask):
         await super().init(app)
 
         # Register an enum.
-        self.env.enum(
+        sample_enum = self.env.enum(
             "SampleEnum",
             "int",
             items={
@@ -63,7 +63,16 @@ class SampleTask(ArbiterTask):
                     self.env.add_field(
                         BitFlag("flag2", prim, 1, commandable=True)
                     )
-                    self.env.add_field(BitField("field1", prim, 2, 2))
+                    self.env.add_field(
+                        BitField(
+                            "field1",
+                            prim,
+                            2,
+                            2,
+                            enum=sample_enum.id,
+                            commandable=True,
+                        )
+                    )
                     self.env.add_field(BitField("field2", prim, 4, 4))
 
                 for i in range(10):

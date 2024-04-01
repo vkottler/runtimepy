@@ -9,6 +9,7 @@ from runtimepy.net.server.app.bootstrap.tabs import TabbedContent
 from runtimepy.net.server.app.env.modal import Modal
 from runtimepy.net.server.app.env.tab import ChannelEnvironmentTab
 from runtimepy.net.server.app.placeholder import dummy_tabs, under_construction
+from runtimepy.net.server.app.sound import SoundTab
 
 
 def channel_environments(app: AppInfo, tabs: TabbedContent) -> None:
@@ -18,7 +19,10 @@ def channel_environments(app: AppInfo, tabs: TabbedContent) -> None:
     tabs.set_scroll(False)
 
     # Tab name filter.
-    input_box(tabs.tabs, label="tab")
+    input_box(tabs.tabs, label="tab", description="Tab name filter.")
+
+    # Sound tab.
+    SoundTab("sound", app, tabs, source="sound", icon="boombox").entry()
 
     # Connection tabs.
     for name, conn in app.connections.items():
@@ -32,7 +36,6 @@ def channel_environments(app: AppInfo, tabs: TabbedContent) -> None:
             name, task.command, app, tabs, icon="arrow-repeat"
         ).entry()
 
-    # Add some dummy tabs.
     dummy_tabs(3, app, tabs)
 
     # Toggle channel-table button.
@@ -43,4 +46,4 @@ def channel_environments(app: AppInfo, tabs: TabbedContent) -> None:
     Modal(tabs, name="diagnostics", icon="activity")
 
     # Placeholder for using space at the bottom of the tab list.
-    under_construction(tabs.tabs)
+    under_construction(tabs.tabs, note="unused space")

@@ -3,11 +3,13 @@ test.bool:
   id: 1
   type: bool
   enum: "ValveState"
+  description: Channel for valve state.
 
 test.float:
   id: 2
   type: float
   commandable: true
+  description: Test floating-point channel.
 
 test.double:
   id: 3
