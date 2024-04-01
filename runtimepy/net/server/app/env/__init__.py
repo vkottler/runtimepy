@@ -19,7 +19,7 @@ def channel_environments(app: AppInfo, tabs: TabbedContent) -> None:
     tabs.set_scroll(False)
 
     # Tab name filter.
-    input_box(tabs.tabs, label="tab")
+    input_box(tabs.tabs, label="tab", description="Tab name filter.")
 
     # Sound tab.
     SoundTab("sound", app, tabs, source="sound", icon="boombox").entry()
@@ -46,4 +46,4 @@ def channel_environments(app: AppInfo, tabs: TabbedContent) -> None:
     Modal(tabs, name="diagnostics", icon="activity")
 
     # Placeholder for using space at the bottom of the tab list.
-    under_construction(tabs.tabs, note="put something here?")
+    under_construction(tabs.tabs, note="unused space")

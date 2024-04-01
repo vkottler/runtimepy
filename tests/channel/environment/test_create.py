@@ -21,7 +21,9 @@ def test_channel_environment_create_basic():
 
     enum = env.enum("sample_enum", "bool", items={"on": True, "off": False})
 
-    result = env.channel("sample_channel", "bool", enum=enum)
+    result = env.channel(
+        "sample_channel", "bool", enum=enum, description="A sample channel."
+    )
     assert result
 
     env.age_ns("sample_channel")

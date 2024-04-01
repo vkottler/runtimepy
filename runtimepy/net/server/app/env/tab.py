@@ -19,12 +19,32 @@ from runtimepy.net.server.app.bootstrap.elements import (
     TEXT,
     flex,
     input_box,
+    set_tooltip,
     toggle_button,
 )
 from runtimepy.net.server.app.bootstrap.tabs import TabbedContent
 from runtimepy.net.server.app.elements import div
 from runtimepy.net.server.app.placeholder import under_construction
 from runtimepy.net.server.app.tab import Tab
+
+
+def plot_checkbox(parent: Element, name: str) -> None:
+    """Add a checkbox for individual channel plot status."""
+
+    container = div(tag="td", parent=parent)
+
+    set_tooltip(
+        div(
+            tag="input",
+            type="checkbox",
+            value="",
+            id=f"plot-{name}",
+            allow_no_end_tag=True,
+            parent=container,
+            class_str="form-check-input",
+        ),
+        f"Enable plotting channel '{name}'.",
+    )
 
 
 class ChannelEnvironmentTab(Tab):
@@ -49,6 +69,7 @@ class ChannelEnvironmentTab(Tab):
         name: str,
         chan: AnyChannel,
         enum: Optional[RuntimeEnum],
+        description: str = None,
     ) -> int:
         """Add a channel to the table."""
 
@@ -72,17 +93,19 @@ class ChannelEnvironmentTab(Tab):
         if chan.type.is_boolean:
             chan_type.add_class("text-primary-emphasis")
             if chan.commandable:
-                toggle_button(toggle)
+                toggle_button(toggle)["title"] = f"Toggle '{name}'."
 
         elif chan.type.is_float:
             chan_type.add_class("text-secondary-emphasis")
         else:
             chan_type.add_class("text-primary")
 
-        name_sty = ""
+        name_elem = div(tag="td", text=name, parent=parent)
         if chan.commandable:
-            name_sty += "text-success"
-        div(tag="td", text=name, parent=parent)["class"] = name_sty
+            name_elem.add_class("text-success")
+
+        if description:
+            set_tooltip(name_elem, description)
 
         div(tag="td", text=str(env.value(name)), parent=parent)
 
@@ -117,29 +140,39 @@ class ChannelEnvironmentTab(Tab):
         """Create the channel table."""
 
         table = div(tag="table", parent=parent)
-        # table.add_class("show")
-        table.add_class("table")
-        table.add_class(TEXT)
+        table.add_class("table", TEXT)
 
         header = div(tag="thead", parent=table)
         body = div(tag="tbody", parent=table)
 
         # Add header.
         header_row = div(tag="tr", parent=header)
-        for heading in ["", "type", "name", "value"]:
-            div(
-                tag="th",
-                scope="col",
-                parent=header_row,
-                text=heading,
-                class_str="text-secondary",
+        for heading, desc in [
+            ("plot", "Toggle plotting for channels."),
+            ("ctl", "Type-specific channel controls."),
+            ("type", "Channel types."),
+            ("name", "Channel names."),
+            ("value", "Channel values."),
+        ]:
+            set_tooltip(
+                div(
+                    tag="th",
+                    scope="col",
+                    parent=header_row,
+                    text=heading,
+                    class_str="text-secondary",
+                ),
+                desc,
+                placement="bottom",
             )
 
         # Add some controls.
         ctl_row = div(tag="tr", parent=header)
-        div(tag="th", parent=ctl_row)
-        div(tag="th", parent=ctl_row)
-        input_box(div(tag="th", parent=ctl_row))
+        for _ in range(3):
+            div(tag="th", parent=ctl_row)
+        input_box(
+            div(tag="th", parent=ctl_row), description="Channel name filter."
+        )
         div(tag="th", parent=ctl_row)
 
         env = self.command.env
@@ -148,11 +181,15 @@ class ChannelEnvironmentTab(Tab):
         for name in env.names:
             row = div(tag="tr", parent=body)
 
+            plot_checkbox(row, name)
+
             # Add channel rows.
             chan_result = env.get(name)
             if chan_result is not None:
                 chan, enum = chan_result
-                self.add_channel(row, name, chan, enum)
+                self.add_channel(
+                    row, name, chan, enum, description=chan.description
+                )
 
             # Add field and flag rows.
             else:
@@ -174,7 +211,12 @@ class ChannelEnvironmentTab(Tab):
         )
         vert_container.add_class("channel-column", "collapse", "show")
 
-        input_box(vert_container, label="command", pattern="help")
+        input_box(
+            vert_container,
+            label="command",
+            pattern="help",
+            description="Send a string command via this environment.",
+        )
 
         # Text area.
         logs = div(
@@ -182,7 +224,7 @@ class ChannelEnvironmentTab(Tab):
             parent=div(parent=vert_container, class_str="form-floating"),
             class_str=f"form-control rounded-0 {TEXT}",
             id=f"{self.name}-logs",
-            title="logs",
+            title=f"Text logs for {self.name}.",
         )
         logs.booleans.add("readonly")
 

@@ -77,17 +77,37 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
         # State.
         self._enabled = Bool()
         self.disabled_event = _asyncio.Event()
-        self.env.channel("enabled", self._enabled)
+        self.env.channel(
+            "enabled",
+            self._enabled,
+            description="Whether or not this connection is enabled.",
+        )
         self._set_enabled(True)
 
         # Restart state and behavior.
         self._restarts = Uint8()
         self._restart_attempts = Uint8()
-        self.env.channel("restarts", self._restarts)
-        self.env.channel("restart_attempts", self._restarts)
+        self.env.channel(
+            "restarts",
+            self._restarts,
+            description="Number of successful connection restarts.",
+        )
+        self.env.channel(
+            "restart_attempts",
+            self._restarts,
+            description="Number of connection restart attempts.",
+        )
 
         self._auto_restart = Bool(self.default_auto_restart)
-        self.env.channel("auto_restart", self._auto_restart, commandable=True)
+        self.env.channel(
+            "auto_restart",
+            self._auto_restart,
+            commandable=True,
+            description=(
+                "Whether or not this connection will "
+                "automatically attempt re-connection."
+            ),
+        )
 
         self.init()
 

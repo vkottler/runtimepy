@@ -89,6 +89,7 @@ class ChannelRegistry(_Registry[_Channel[_Any]]):
         commandable: bool = False,
         enum: _RegistryKey = None,
         scaling: ChannelScaling = None,
+        description: str = None,
     ) -> _Optional[_AnyChannel]:
         """Create a new channel."""
 
@@ -113,6 +114,9 @@ class ChannelRegistry(_Registry[_Channel[_Any]]):
         }
         if enum is not None:
             data["enum"] = enum
+
+        if description:
+            data["description"] = description
 
         result = self.register_dict(name, data)
 

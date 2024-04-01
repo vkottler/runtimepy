@@ -67,8 +67,18 @@ class PeriodicTask(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
         self.register_task_metrics(self.metrics)
 
         # State.
-        self.env.channel("paused", self._paused, commandable=True)
-        self.env.channel("period_s", self.period_s, commandable=True)
+        self.env.channel(
+            "paused",
+            self._paused,
+            commandable=True,
+            description="Whether or not this task is paused.",
+        )
+        self.env.channel(
+            "period_s",
+            self.period_s,
+            commandable=True,
+            description="Iteration period for this task.",
+        )
         self._init_state()
         if self.auto_finalize:
             self.env.finalize()

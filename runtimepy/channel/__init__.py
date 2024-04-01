@@ -4,6 +4,7 @@ A module implementing a basic channel interface.
 
 # built-in
 from typing import Generic as _Generic
+from typing import Optional as _Optional
 from typing import Union as _Union
 from typing import cast as _cast
 
@@ -60,6 +61,8 @@ class Channel(_RegistryItem, _EnumMixin, _Generic[_T]):
         # A key to this channel's enumeration in the enumeration registry.
         self._enum = _cast(str, data.get("enum"))
 
+        self.description: _Optional[str] = _cast(str, data.get("description"))
+
         # An event-streaming interface.
         self.event = PrimitiveEvent(self.raw, self.id)
 
@@ -71,8 +74,13 @@ class Channel(_RegistryItem, _EnumMixin, _Generic[_T]):
             "type": str(self.type),
             "commandable": self.commandable,
         }
+
         if self._enum is not None:
             result["enum"] = self._enum
+
+        if self.description:
+            result["description"] = self.description
+
         return _cast(_JsonObject, result)
 
 

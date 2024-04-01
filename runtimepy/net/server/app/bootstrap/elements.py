@@ -67,22 +67,24 @@ def collapse_button(
     return collapse
 
 
-def toggle_button(parent: Element) -> None:
+def toggle_button(parent: Element) -> Element:
     """Add a boolean-toggle button."""
 
-    div(
+    return div(
         tag="button",
         type="button",
         text=icon_str("toggles"),
         parent=parent,
         title="toggle value",
-    )["class"] = (
-        "btn " + BOOTSTRAP_BUTTON
+        class_str="btn " + BOOTSTRAP_BUTTON,
     )
 
 
 def input_box(
-    parent: Element, label: str = "filter", pattern: str = ".*"
+    parent: Element,
+    label: str = "filter",
+    pattern: str = ".*",
+    description: str = None,
 ) -> None:
     """Create command input box."""
 
@@ -90,6 +92,9 @@ def input_box(
 
     label_elem = div(tag="span", parent=container, text=label)
     label_elem.add_class("input-group-text", "rounded-0", TEXT)
+
+    if description:
+        set_tooltip(label_elem, description)
 
     box = div(
         tag="input",
