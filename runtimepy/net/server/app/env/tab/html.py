@@ -3,18 +3,14 @@ A module implementing a channel-environment tab HTML interface.
 """
 
 # built-in
-from typing import Optional
+from typing import Optional, cast
 
 # third-party
 from svgen.element import Element
 
 # internal
 from runtimepy.channel import AnyChannel
-from runtimepy.channel.environment.command.processor import (
-    ChannelCommandProcessor,
-)
 from runtimepy.enum import RuntimeEnum
-from runtimepy.net.arbiter.info import AppInfo
 from runtimepy.net.server.app.bootstrap.elements import (
     TEXT,
     flex,
@@ -22,53 +18,18 @@ from runtimepy.net.server.app.bootstrap.elements import (
     set_tooltip,
     toggle_button,
 )
-from runtimepy.net.server.app.bootstrap.tabs import TabbedContent
 from runtimepy.net.server.app.elements import div
+from runtimepy.net.server.app.env.tab.base import ChannelEnvironmentTabBase
+from runtimepy.net.server.app.env.widgets import (
+    channel_table_header,
+    enum_dropdown,
+    plot_checkbox,
+)
 from runtimepy.net.server.app.placeholder import under_construction
-from runtimepy.net.server.app.tab import Tab
 
 
-def plot_checkbox(parent: Element, name: str) -> None:
-    """Add a checkbox for individual channel plot status."""
-
-    container = div(tag="td", parent=parent)
-
-    set_tooltip(
-        div(
-            tag="input",
-            type="checkbox",
-            value="",
-            id=f"plot-{name}",
-            allow_no_end_tag=True,
-            parent=container,
-            class_str="form-check-input",
-        ),
-        f"Enable plotting channel '{name}'.",
-    )
-
-
-def enum_dropdown(parent: Element, enum: Optional[RuntimeEnum]) -> None:
-    """Implement a drop down for enumeration options."""
-
-    del enum
-    div(parent=parent, text="TODO")
-
-
-class ChannelEnvironmentTab(Tab):
+class ChannelEnvironmentTabHtml(ChannelEnvironmentTabBase):
     """A channel-environment tab interface."""
-
-    def __init__(
-        self,
-        name: str,
-        command: ChannelCommandProcessor,
-        app: AppInfo,
-        tabs: TabbedContent,
-        icon: str = "alarm",
-    ) -> None:
-        """Initialize this instance."""
-
-        self.command = command
-        super().__init__(name, app, tabs, source="env", icon=icon)
 
     def add_channel(
         self,
@@ -91,19 +52,19 @@ class ChannelEnvironmentTab(Tab):
             kind_str = enum_name
 
         # Add boolean/bit toggle button.
-        control = div(tag="td", parent=parent)
+        control = div(tag="td", parent=parent, class_str="text-center")
 
         chan_type = div(tag="td", text=kind_str, parent=parent)
         if enum:
             chan_type.add_class("fw-bold")
 
             if chan.commandable and not chan.type.is_boolean:
-                enum_dropdown(control, enum)
+                enum_dropdown(control, name, enum, cast(int, chan.raw.value))
 
         if chan.type.is_boolean:
             chan_type.add_class("text-primary-emphasis")
             if chan.commandable:
-                toggle_button(control)["title"] = f"Toggle '{name}'."
+                toggle_button(control, id=name)["title"] = f"Toggle '{name}'."
 
         elif chan.type.is_float:
             chan_type.add_class("text-secondary-emphasis")
@@ -131,7 +92,7 @@ class ChannelEnvironmentTab(Tab):
         if field.is_enum:
             enum = env.enums[field.enum]
 
-        control = div(tag="td", parent=parent)
+        control = div(tag="td", parent=parent, class_str="text-center")
 
         # Add boolean/bit toggle button.
         is_bit = field.width == 1
@@ -145,9 +106,9 @@ class ChannelEnvironmentTab(Tab):
         if field.commandable:
             name_elem.add_class("text-success")
             if is_bit:
-                toggle_button(control)
+                toggle_button(control, id=name)
             elif enum:
-                enum_dropdown(control, enum)
+                enum_dropdown(control, name, enum, field())
 
         div(tag="td", text=str(env.value(name)), parent=parent)
 
@@ -161,34 +122,7 @@ class ChannelEnvironmentTab(Tab):
         body = div(tag="tbody", parent=table)
 
         # Add header.
-        header_row = div(tag="tr", parent=header)
-        for heading, desc in [
-            ("plot", "Toggle plotting for channels."),
-            ("ctl", "Type-specific channel controls."),
-            ("type", "Channel types."),
-            ("name", "Channel names."),
-            ("value", "Channel values."),
-        ]:
-            set_tooltip(
-                div(
-                    tag="th",
-                    scope="col",
-                    parent=header_row,
-                    text=heading,
-                    class_str="text-secondary",
-                ),
-                desc,
-                placement="bottom",
-            )
-
-        # Add some controls.
-        ctl_row = div(tag="tr", parent=header)
-        for _ in range(3):
-            div(tag="th", parent=ctl_row)
-        input_box(
-            div(tag="th", parent=ctl_row), description="Channel name filter."
-        )
-        div(tag="th", parent=ctl_row)
+        channel_table_header(header)
 
         env = self.command.env
 
@@ -209,6 +143,10 @@ class ChannelEnvironmentTab(Tab):
             # Add field and flag rows.
             else:
                 self.add_field(row, name)
+
+    def get_id(self, data: str) -> str:
+        """Get an HTML id for an element."""
+        return f"{self.name}-{data}"
 
     def compose(self, parent: Element) -> None:
         """Compose the tab's HTML elements."""
@@ -231,6 +169,7 @@ class ChannelEnvironmentTab(Tab):
             label="command",
             pattern="help",
             description="Send a string command via this environment.",
+            id=self.get_id("command"),
         )
 
         # Text area.
@@ -238,7 +177,7 @@ class ChannelEnvironmentTab(Tab):
             tag="textarea",
             parent=div(parent=vert_container, class_str="form-floating"),
             class_str=f"form-control rounded-0 {TEXT}",
-            id=f"{self.name}-logs",
+            id=self.get_id("logs"),
             title=f"Text logs for {self.name}.",
         )
         logs.booleans.add("readonly")
@@ -252,7 +191,7 @@ class ChannelEnvironmentTab(Tab):
         # Plot.
         div(
             tag="canvas",
-            id=f"{self.name}-plot",
+            id=self.get_id("plot"),
             parent=div(parent=container, class_str="w-100 h-100"),
             class_str="w-100 h-100",
         )

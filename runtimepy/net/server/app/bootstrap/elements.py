@@ -67,7 +67,7 @@ def collapse_button(
     return collapse
 
 
-def toggle_button(parent: Element) -> Element:
+def toggle_button(parent: Element, **kwargs) -> Element:
     """Add a boolean-toggle button."""
 
     return div(
@@ -77,6 +77,7 @@ def toggle_button(parent: Element) -> Element:
         parent=parent,
         title="toggle value",
         class_str="btn " + BOOTSTRAP_BUTTON,
+        **kwargs,
     )
 
 
@@ -85,6 +86,7 @@ def input_box(
     label: str = "filter",
     pattern: str = ".*",
     description: str = None,
+    **kwargs,
 ) -> None:
     """Create command input box."""
 
@@ -103,5 +105,6 @@ def input_box(
         parent=container,
         name=label,
         title=label + " input",
+        **kwargs,
     )
     box.add_class("form-control", "rounded-0", TEXT)

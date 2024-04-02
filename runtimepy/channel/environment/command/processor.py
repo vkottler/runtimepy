@@ -37,7 +37,7 @@ class ChannelCommandProcessor(ChannelEnvironmentMixin):
         self.hooks: list[CommandHook] = []
 
         self.parser_data: dict[str, Any] = {}
-        self.parser = CommandParser()
+        self.parser = CommandParser(prog="")
         self.parser.data = self.parser_data
 
         self.parser.initialize()

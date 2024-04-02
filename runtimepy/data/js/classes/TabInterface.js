@@ -7,6 +7,9 @@ class TabInterface {
     this.name = name;
     this.worker = new WorkerInterface(this.name, _worker);
 
+    /* Send an initialization message. */
+    this.worker.send({kind : "init"});
+
     /* Relevant elements. */
     this.container = document.getElementById("runtimepy-" + this.name);
     this.logs = this.query("#" + this.name + "-logs");
@@ -25,22 +28,60 @@ class TabInterface {
         shown_tab = this.name;
       }
       this.worker.send({kind : msg});
-
-      /* Could remove this. */
-      this.log(msg);
     } ];
 
-    /* Plot related. */
+    this.initPlot();
+    this.initCommand();
+    this.initControls();
+    this.initButton();
+  }
+
+  initCommand() {
+    let command = this.query("#" + this.name + "-command")
+    if (command) {
+      command.onkeypress = (event) => {
+        if (event.key == "Enter") {
+          let cmd = event.target.value.trim();
+
+          if (cmd == "cls" || cmd == "clear") {
+            this.clearLog();
+          } else {
+            this.command(cmd);
+          }
+
+          event.target.value = "";
+        }
+      };
+    }
+  }
+
+  command(data) { this.worker.send({kind : "command", value : data}); }
+
+  initControls() {
+    /* Initialize enumeration command drop downs. */
+    for (let enums of this.queryAll("select")) {
+      enums.onchange =
+          (() => { this.command(`set ${enums.id} ${enums.value}`); })
+              .bind(this);
+    }
+
+    /* Initialize toggle buttons. */
+    for (let toggle of this.queryAll("td>button")) {
+      toggle.onclick =
+          (() => { this.command(`toggle ${toggle.id}`); }).bind(this);
+    }
+  }
+
+  initPlot() {
     let plot = this.query("#" + this.name + "-plot");
     if (plot) {
       this.plot = new Plot(plot, this.worker);
       this.show_state_handlers.push(this.plot.handle_shown.bind(this.plot));
     }
-
-    this.initButton();
   }
 
   query(data) { return this.container.querySelector(data); }
+  queryAll(data) { return this.container.querySelectorAll(data); }
 
   initButton() {
     let button = document.getElementById("runtimepy-" + this.name + "-tab");
@@ -52,11 +93,12 @@ class TabInterface {
   }
 
   log(message) {
-    console.log(`(${this.name}) ` + message);
     if (this.logs) {
       this.logs.value += message + "\n";
     }
   }
+
+  clearLog() { this.logs.value = ""; }
 
   show_state_handler(is_shown) {
     for (const handler of this.show_state_handlers) {
@@ -69,6 +111,10 @@ class TabInterface {
   hidden_handler() { this.show_state_handler(false); }
 
   onmessage(data) {
+    if ("log_message" in data) {
+      this.log(data["log_message"]);
+    }
+
     for (const handler of this.message_handlers) {
       handler(data);
     }

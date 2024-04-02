@@ -27,6 +27,12 @@ function bootstrap_init() {
   const tooltipTriggerList = document.querySelectorAll(".has-tooltip");
   const tooltipList = [...tooltipTriggerList ].map(
       tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+
+  /* Initialize tab filter. */
+  let tabs = document.getElementById("runtimepy-tabs");
+  if (tabs) {
+    const tabFilter = new TabFilter(tabs);
+  }
 }
 
 class App {

@@ -52,3 +52,7 @@
 .collapse:not(.show) {
     display: none !important;
 }
+
+select.form-select {
+  width: min-content;
+}

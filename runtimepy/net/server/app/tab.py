@@ -46,7 +46,12 @@ class Tab:
         button_str += self.name
         self.button.text = button_str
 
+        self.init()
+
         self.compose(self.content)
+
+    def init(self) -> None:
+        """Initialize this instance."""
 
     def compose(self, parent: Element) -> None:
         """Compose the tab's HTML elements."""

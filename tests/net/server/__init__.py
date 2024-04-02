@@ -4,6 +4,7 @@ Test HTTP server interactions.
 
 # built-in
 import asyncio
+from typing import Any
 
 # module under test
 from runtimepy.net.http.header import RequestHeader
@@ -14,14 +15,26 @@ from runtimepy.net.server.websocket import RuntimepyWebsocketConnection
 from tests.resources import resource
 
 
+def send_ui(
+    client: RuntimepyWebsocketConnection, name: str, data: Any
+) -> None:
+    """Send a UI message."""
+    client.send_json({"ui": {"name": name, "event": data}})
+
+
 async def runtimepy_websocket_client(
     client: RuntimepyWebsocketConnection,
 ) -> None:
     """Test client interactions via WebSocket."""
 
-    client.send_json(
-        {"ui": {"name": "test", "event": {"a": 1, "b": 2, "c": 3}}}
-    )
+    send_ui(client, "test", {"a": 1, "b": 2, "c": 3})
+
+    for idx in range(3):
+        send_ui(client, f"sample{idx}", {"kind": "asdf"})
+        send_ui(client, f"sample{idx}", {"kind": "init"})
+        send_ui(client, f"sample{idx}", {"kind": "tab.shown"})
+        send_ui(client, f"sample{idx}", {"kind": "tab.hidden"})
+        send_ui(client, f"sample{idx}", {"kind": "command", "value": "help"})
 
 
 async def runtimepy_http_client_server(
