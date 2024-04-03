@@ -21,9 +21,6 @@ def channel_environments(app: AppInfo, tabs: TabbedContent) -> None:
     # Tab name filter.
     input_box(tabs.tabs, label="tab", description="Tab name filter.")
 
-    # Sound tab.
-    SoundTab("sound", app, tabs, source="sound", icon="boombox").entry()
-
     # Connection tabs.
     for name, conn in app.connections.items():
         ChannelEnvironmentTab(
@@ -35,6 +32,9 @@ def channel_environments(app: AppInfo, tabs: TabbedContent) -> None:
         ChannelEnvironmentTab(
             name, task.command, app, tabs, icon="arrow-repeat"
         ).entry()
+
+    # Sound tab.
+    SoundTab("sound", app, tabs, source="sound", icon="boombox").entry()
 
     dummy_tabs(3, app, tabs)
 

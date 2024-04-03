@@ -82,6 +82,7 @@ class SampleTask(ArbiterTask):
                         self.env.int_channel(
                             "really_really_long_enum",
                             enum="InsanelyLongEnumNameForTesting",
+                            commandable=True,
                         )
                         self.env.bool_channel("bool")
                         self.env.int_channel("int", commandable=True)

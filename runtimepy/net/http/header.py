@@ -5,6 +5,7 @@ A module implementing interfaces for HTTP headers.
 # built-in
 import http
 from io import StringIO
+import logging
 
 # third-party
 from vcorelib.logging import LoggerType
@@ -53,10 +54,13 @@ class RequestHeader(HeadersMixin):
         self.version = HttpVersion(version_raw)
         HeadersMixin.__init__(self, lines[1:])
 
-    def log(self, logger: LoggerType, out: bool) -> None:
+    def log(
+        self, logger: LoggerType, out: bool, level: int = logging.DEBUG
+    ) -> None:
         """Log information about this request header."""
 
-        logger.debug(
+        logger.log(
+            level,
             "(%s request) %s - %s",
             "outgoing" if out else "incoming",
             self.request_line,
