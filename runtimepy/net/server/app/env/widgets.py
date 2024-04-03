@@ -85,6 +85,8 @@ def channel_table_header(parent: Element) -> None:
     for _ in range(3):
         div(tag="th", parent=ctl_row)
     input_box(
-        div(tag="th", parent=ctl_row), description="Channel name filter."
+        div(tag="th", parent=ctl_row),
+        description="Channel name filter.",
+        id="channel-filter",
     )
     div(tag="th", parent=ctl_row)

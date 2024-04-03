@@ -57,7 +57,49 @@ class TabInterface {
 
   command(data) { this.worker.send({kind : "command", value : data}); }
 
+  updateChannelStyles(pattern) {
+    if (!pattern) {
+      pattern = ".*";
+    }
+    const re = new RegExp(pattern);
+
+    for (let [name, elem] of Object.entries(this.channelRows)) {
+      if (re.test(name)) {
+        elem.style.display = "table-row";
+      } else {
+        elem.style.display = "none";
+      }
+    }
+  }
+
+  channelKeydown(event) {
+    if (event.key == "Enter") {
+      this.channelFilter.value = "";
+      this.updateChannelStyles(this.channelFilter.value);
+    } else {
+      let curr = this.channelFilter.value;
+      if (event.key == "Backspace") {
+        curr = curr.slice(0, -1);
+      } else {
+        curr += event.key;
+      }
+      this.updateChannelStyles(curr);
+    }
+  }
+
   initControls() {
+    /* Initialize channel filter. */
+    this.channelFilter = this.query("#channel-filter");
+    this.channelRows = {};
+    if (this.channelFilter) {
+      for (let row of this.queryAll("tr.channel-row")) {
+        this.channelRows[row.id] = row;
+      }
+
+      this.channelFilter.addEventListener("keydown",
+                                          this.channelKeydown.bind(this));
+    }
+
     /* Initialize enumeration command drop downs. */
     for (let enums of this.queryAll("select")) {
       enums.onchange =
