@@ -4,6 +4,7 @@ A module implementing a server interface for this package.
 
 # built-in
 from io import StringIO
+import logging
 import mimetypes
 from pathlib import Path
 from typing import Optional
@@ -61,7 +62,7 @@ class RuntimepyServerConnection(HttpConnection):
     def log_paths(self) -> None:
         """Log search paths."""
 
-        self.logger.info(
+        self.logger.debug(
             "New path: %s.", ", ".join(str(x) for x in self.paths)
         )
 
@@ -129,6 +130,8 @@ class RuntimepyServerConnection(HttpConnection):
         result = None
 
         with StringIO() as stream:
+            request.log(self.logger, False, level=logging.INFO)
+
             if request.target.origin_form:
                 path = request.target.path
 

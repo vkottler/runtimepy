@@ -26,6 +26,7 @@ class TabInterface {
 
         /* Update global reference. */
         shown_tab = this.name;
+        window.location.hash = this.name;
       }
       this.worker.send({kind : msg});
     } ];
@@ -126,10 +127,13 @@ class TabInterface {
   queryAll(data) { return this.container.querySelectorAll(data); }
 
   initButton() {
-    let button = document.getElementById("runtimepy-" + this.name + "-tab");
-    button.addEventListener("hidden.bs.tab", this.hidden_handler.bind(this));
-    button.addEventListener("shown.bs.tab", this.shown_handler.bind(this));
-    if (bootstrap.Tab.getInstance(button)) {
+    this.tabButton = document.getElementById("runtimepy-" + this.name + "-tab");
+    this.tabButton.addEventListener("hidden.bs.tab",
+                                    this.hidden_handler.bind(this));
+    this.tabButton.addEventListener("shown.bs.tab",
+                                    this.shown_handler.bind(this));
+
+    if (bootstrap.Tab.getInstance(this.tabButton)) {
       this.show_state_handler(true);
     }
   }
