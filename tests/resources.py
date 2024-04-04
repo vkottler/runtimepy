@@ -4,13 +4,11 @@ A module for working with test data.
 
 # built-in
 import asyncio
-from os.path import join
 from pathlib import Path
 from sys import version_info
 from typing import List, Tuple
 
 # third-party
-import pkg_resources
 from vcorelib.platform import is_windows
 
 # internal
@@ -28,13 +26,11 @@ def resource(
 ) -> Path:
     """Locate the path to a test resource."""
 
-    return Path(
-        pkg_resources.resource_filename(
-            pkg,
-            join(
-                "data", "valid" if valid else "invalid", resource_name, *parts
-            ),
-        )
+    # Can't search in other packages.
+    assert pkg == __name__
+
+    return Path(__file__).parent.joinpath(
+        "data", "valid" if valid else "invalid", resource_name, *parts
     )
 
 

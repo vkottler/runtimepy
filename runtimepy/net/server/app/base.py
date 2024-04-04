@@ -25,7 +25,14 @@ class WebApplication:
     """A simple web-application interface."""
 
     worker_classes = ["JsonConnection", "DataConnection", "PlotManager"]
-    ui_classes = ["WorkerInterface", "Plot", "TabInterface", "TabFilter"]
+    ui_classes = [
+        "WindowHashManager",
+        "WorkerInterface",
+        "Plot",
+        "TabInterface",
+        "TabFilter",
+        "App",
+    ]
 
     def __init__(self, app: AppInfo) -> None:
         """Initialize this instance."""

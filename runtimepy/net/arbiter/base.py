@@ -5,6 +5,7 @@ A module implementing a base connection-arbiter interface.
 # built-in
 import asyncio as _asyncio
 from contextlib import AsyncExitStack as _AsyncExitStack
+from contextlib import suppress as _suppress
 from inspect import isawaitable as _isawaitable
 from typing import Awaitable as _Awaitable
 from typing import Callable as _Callable
@@ -15,7 +16,7 @@ from typing import Optional
 from typing import Union as _Union
 
 # third-party
-from vcorelib.asyncio import run_handle_stop as _run_handle_stop
+from vcorelib.asyncio import log_exceptions, run_handle_stop
 from vcorelib.io.types import JsonObject as _JsonObject
 from vcorelib.logging import LoggerMixin as _LoggerMixin
 from vcorelib.logging import LoggerType as _LoggerType
@@ -291,11 +292,13 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
                             info.results.append(
                                 [AppResult(app.__name__) for app in curr_app]
                             )
-
         finally:
             for conn in self._connections.values():
                 conn.disable(f"app exit {result}")
+
+            # Stop runtime entities.
             self.stop_sig.set()
+            await _asyncio.sleep(0)
 
             # Summarize results.
             if info is not None:
@@ -351,16 +354,25 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
         Run the application alongside the connection manager and server tasks.
         """
 
-        result = await _asyncio.gather(
-            self._entry(
-                app=app, check_connections=check_connections, config=config
-            ),
-            self.manager.manage(self.stop_sig),
-            *self._servers,
+        # Create task for connection manager.
+        conns = _asyncio.create_task(self.manager.manage(self.stop_sig))
+
+        # Run application.
+        result = await self._entry(
+            app=app, check_connections=check_connections, config=config
         )
-        assert result is not None
-        assert result[0] is not None
-        return int(result[0])
+
+        # Shutdown any pending tasks.
+        pending = log_exceptions(self._servers + [conns], logger=self.logger)
+        if pending:
+            for task in pending:
+                task.cancel()
+                with _suppress(KeyboardInterrupt, _asyncio.CancelledError):
+                    await task
+
+            assert not log_exceptions(pending, logger=self.logger)
+
+        return int(result)
 
     def run(
         self,
@@ -373,7 +385,7 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
     ) -> int:
         """Run the application until the stop signal is set."""
 
-        return _run_handle_stop(
+        return run_handle_stop(
             self.stop_sig,
             self.app(
                 app=app, check_connections=check_connections, config=config
