@@ -51,7 +51,7 @@ def enum_dropdown(
     for key, val in cast(dict[str, dict[str, int | bool]], enum.asdict())[
         "items"
     ].items():
-        opt = div(tag="option", value=key, text=key, parent=select)
+        opt = div(tag="option", value=val, text=key, parent=select)
         if current == val:
             opt.booleans.add("selected")
 
