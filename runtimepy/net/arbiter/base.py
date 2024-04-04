@@ -31,7 +31,7 @@ from runtimepy.channel.environment.command import (
 from runtimepy.net.arbiter.housekeeping import metrics_poller
 from runtimepy.net.arbiter.info import AppInfo, ConnectionMap
 from runtimepy.net.arbiter.result import AppResult, ResultState
-from runtimepy.net.arbiter.struct import StructMap as _StructMap
+from runtimepy.net.arbiter.struct import RuntimeStruct
 from runtimepy.net.arbiter.task import (
     ArbiterTaskManager as _ArbiterTaskManager,
 )
@@ -119,7 +119,7 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
         ] = {}
 
         # Runtime structures.
-        self._structs: _StructMap = {}
+        self._structs: dict[str, RuntimeStruct] = {}
 
         self._servers: _List[_asyncio.Task[None]] = []
         self._servers_started = _asyncio.Semaphore(0)
@@ -183,6 +183,25 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
         for struct in self._structs.values():
             register_env(struct.name, struct.command)
 
+    async def _init_connections(self) -> None:
+        """Initialize network connections."""
+
+        # Wait for servers to start.
+        for _ in range(len(self._servers)):
+            await self._servers_started.acquire()
+
+        # Start deferred connections.
+        for key, value in zip(
+            self._deferred_connections,
+            await _asyncio.gather(*self._deferred_connections.values()),
+        ):
+            self._register_connection(value, key)
+
+        # Ensure connections are all initialized.
+        await _asyncio.gather(
+            *(x.initialized.wait() for x in self._connections.values())
+        )
+
     async def _entry(
         self,
         app: NetworkApplicationlike = None,
@@ -198,28 +217,8 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
         info: Optional[AppInfo] = None
 
         try:
-            # Build structs.
-            for struct in self._structs.values():
-                struct.init()
-            self.logger.info("Structs built.")
-
-            # Wait for servers to start.
-            for _ in range(len(self._servers)):
-                await self._servers_started.acquire()
-
-            # Start deferred connections.
-            for key, value in zip(
-                self._deferred_connections,
-                await _asyncio.gather(*self._deferred_connections.values()),
-            ):
-                self._register_connection(value, key)
-
-            # Ensure connections are all initialized.
-            await _asyncio.gather(
-                *(x.initialized.wait() for x in self._connections.values())
-            )
-
-            self.logger.info("Connections initialized.")
+            with self.log_time("Connection initialization", reminder=True):
+                await self._init_connections()
 
             # Register environments.
             self._register_envs()
@@ -247,27 +246,34 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
                         tasks,  # type: ignore
                         self.task_manager,
                         [],
-                        self._structs,
+                        self._structs,  # type: ignore
                     )
 
+                    # Build structs.
+                    with self.log_time("Building structs", reminder=True):
+                        await _asyncio.gather(
+                            *(x.build(info) for x in self._structs.values())
+                        )
+                        for struct in self._structs.values():
+                            struct.env.finalize(strict=False)
+
                     # Initialize tasks.
-                    self.logger.debug("Initializing periodic tasks...")
-                    await _asyncio.gather(
-                        *(x.init(info) for x in self.task_manager.tasks)
-                    )
-                    for task in self.task_manager.tasks:
-                        task.env.finalize(strict=False)
-                    self.logger.debug("Periodic tasks initialized.")
+                    with self.log_time(
+                        "Initializing periodic tasks", reminder=True
+                    ):
+                        await _asyncio.gather(
+                            *(x.init(info) for x in self.task_manager.tasks)
+                        )
+                        for task in self.task_manager.tasks:
+                            task.env.finalize(strict=False)
 
                     # Wire runtime data to server JSON.
                     self._setup_server_json(info)
 
                     # Start tasks.
-                    self.logger.debug("Starting periodic tasks...")
                     await stack.enter_async_context(
                         self.task_manager.running(stop_sig=self.stop_sig)
                     )
-                    self.logger.debug("Periodic tasks started.")
 
                     # Get application methods.
                     apps = self._apps
