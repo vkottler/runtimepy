@@ -66,7 +66,7 @@ class WebApplication:
         app(TabbedContent(PKG_NAME, document.body))
 
         # Main-thread code.
-        append_kind(document.body, "main")
+        append_kind(document.body, "util", "main")
 
         # Third-party dependencies.
         add_bootstrap_js(document.body)

@@ -24,9 +24,11 @@ class App {
           await init();
         }
 
+        hash.initButtons();
+
         /* Switch tabs if necessary. */
-        if (hash.original) {
-          this.switchTab(hash.original);
+        if (hash.tab) {
+          this.switchTab(hash.tab);
         }
 
         /* Prepare worker message handler. */

@@ -89,7 +89,7 @@ class TabbedContent:
         self.button_column.add_class("d-flex", "flex-column", "h-100")
 
         # Toggle tabs button.
-        self.add_button("Toggle tabs", f"#{PKG_NAME}-tabs")
+        self.add_button("Toggle tabs", f"#{PKG_NAME}-tabs", id="tabs-button")
 
         # Create tab container.
         self.tabs = div(id=f"{PKG_NAME}-tabs", parent=self.container)

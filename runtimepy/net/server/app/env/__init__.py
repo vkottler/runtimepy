@@ -45,7 +45,12 @@ def channel_environments(app: AppInfo, tabs: TabbedContent) -> None:
     dummy_tabs(3, app, tabs)
 
     # Toggle channel-table button.
-    tabs.add_button("Toggle channel table", ".channel-column", icon="table")
+    tabs.add_button(
+        "Toggle channel table",
+        ".channel-column",
+        icon="table",
+        id="channels-button",
+    )
 
     # Application modals.
     Modal(tabs)
