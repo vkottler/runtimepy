@@ -13,6 +13,7 @@ from typing import Type as _Type
 from typing import Union as _Union
 
 # third-party
+from vcorelib.io.types import JsonObject as _JsonObject
 from vcorelib.names import to_snake
 
 # internal
@@ -115,13 +116,15 @@ class ImportConnectionArbiter(
 
         return result
 
-    def factory_struct(self, factory: str, name: str) -> bool:
+    def factory_struct(
+        self, factory: str, name: str, config: _JsonObject
+    ) -> bool:
         """Register a runtime structure from factory and name."""
 
         result = False
 
         if factory in self._struct_factories and name not in self._structs:
-            self._structs[name] = self._struct_factories[factory](name)
+            self._structs[name] = self._struct_factories[factory](name, config)
             result = True
 
         return result

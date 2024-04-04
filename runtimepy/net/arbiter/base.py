@@ -203,6 +203,16 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
             *(x.initialized.wait() for x in self._connections.values())
         )
 
+    async def _build_structs(self, info: AppInfo) -> None:
+        """Build structs."""
+
+        with self.log_time("Building structs", reminder=True):
+            await _asyncio.gather(
+                *(x.build(info) for x in self._structs.values())
+            )
+            for struct in self._structs.values():
+                struct.env.finalize(strict=False)
+
     async def _entry(
         self,
         app: NetworkApplicationlike = None,
@@ -251,12 +261,7 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
                     )
 
                     # Build structs.
-                    with self.log_time("Building structs", reminder=True):
-                        await _asyncio.gather(
-                            *(x.build(info) for x in self._structs.values())
-                        )
-                        for struct in self._structs.values():
-                            struct.env.finalize(strict=False)
+                    await self._build_structs(info)
 
                     # Initialize tasks.
                     with self.log_time(
