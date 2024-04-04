@@ -6,6 +6,9 @@ A module implementing a runtime structure base.
 from logging import getLogger as _getLogger
 from typing import Dict as _Dict
 
+# third-party
+from vcorelib.io.types import JsonObject as _JsonObject
+
 # internal
 from runtimepy.channel.environment.command.processor import (
     ChannelCommandProcessor,
@@ -17,7 +20,7 @@ from runtimepy.mixins.logging import LoggerMixinLevelControl
 class RuntimeStructBase(LoggerMixinLevelControl, ChannelEnvironmentMixin):
     """A base runtime structure."""
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, config: _JsonObject) -> None:
         """Initialize this instance."""
 
         self.name = name
@@ -25,6 +28,7 @@ class RuntimeStructBase(LoggerMixinLevelControl, ChannelEnvironmentMixin):
         ChannelEnvironmentMixin.__init__(self)
         self.setup_level_channel(self.env)
         self.command = ChannelCommandProcessor(self.env, self.logger)
+        self.config = config
 
     def poll(self) -> None:
         """

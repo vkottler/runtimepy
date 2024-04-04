@@ -13,6 +13,15 @@ tasks:
 
 # Add some sample structs.
 structs:
-  - {name: struct1, factory: sample_struct}
-  - {name: struct2, factory: sample_struct}
-  - {name: struct3, factory: sample_struct}
+  - name: struct1
+    factory: sample_struct
+    # Not actually used.
+    config:
+      a: 1
+      b: 2
+      c: 3
+
+  - name: struct2
+    factory: sample_struct
+  - name: struct3
+    factory: sample_struct

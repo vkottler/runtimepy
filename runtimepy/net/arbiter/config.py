@@ -246,7 +246,7 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
             name = struct["name"]
             factory = struct["factory"]
             assert self.factory_struct(
-                struct["factory"], struct["name"]
+                struct["factory"], struct["name"], struct.get("config", {})
             ), f"Couldn't register struct '{name}' ({factory})!"
 
         # Set the new application entry if it's set.
