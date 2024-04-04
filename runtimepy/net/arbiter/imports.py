@@ -5,10 +5,15 @@ machinery.
 
 # built-in
 from importlib import import_module as _import_module
+from typing import Dict as _Dict
 from typing import List as _List
-from typing import Optional
+from typing import Optional as _Optional
 from typing import Tuple as _Tuple
+from typing import Type as _Type
 from typing import Union as _Union
+
+# third-party
+from vcorelib.names import to_snake
 
 # internal
 from runtimepy.net.arbiter.factory import (
@@ -20,6 +25,7 @@ from runtimepy.net.arbiter.factory import (
 from runtimepy.net.arbiter.factory.task import (
     TaskConnectionArbiter as _TaskConnectionArbiter,
 )
+from runtimepy.net.arbiter.struct import RuntimeStruct as _RuntimeStruct
 from runtimepy.net.arbiter.task import TaskFactory as _TaskFactory
 
 
@@ -44,9 +50,16 @@ class ImportConnectionArbiter(
     arbitrary Python modules.
     """
 
+    def _init(self) -> None:
+        """Additional initialization tasks."""
+
+        super()._init()
+        self._struct_factories: _Dict[str, _Type[_RuntimeStruct]] = {}
+        self._struct_names: _Dict[_Type[_RuntimeStruct], _List[str]] = {}
+
     def set_app(
         self,
-        module_path: Optional[_Union[str, _List[str]]],
+        module_path: _Optional[_Union[str, _List[str]]],
         wait_for_stop: bool = False,
     ) -> None:
         """
@@ -77,6 +90,42 @@ class ImportConnectionArbiter(
         if apps:
             self._apps = apps
 
+    def register_struct_factory(
+        self, factory: _Type[_RuntimeStruct], *namespaces: str
+    ) -> bool:
+        """Attempt to register a periodic task factory."""
+
+        result = False
+
+        name = factory.__name__
+        snake_name = to_snake(name)
+
+        if (
+            name not in self._struct_factories
+            and snake_name not in self._struct_factories
+        ):
+            self._struct_factories[name] = factory
+            self._struct_factories[snake_name] = factory
+            self._struct_names[factory] = [*namespaces]
+
+            result = True
+            self.logger.debug(
+                "Registered '%s' (%s) struct factory.", name, snake_name
+            )
+
+        return result
+
+    def factory_struct(self, factory: str, name: str) -> bool:
+        """Register a runtime structure from factory and name."""
+
+        result = False
+
+        if factory in self._struct_factories and name not in self._structs:
+            self._structs[name] = self._struct_factories[factory](name)
+            result = True
+
+        return result
+
     def register_module_factory(
         self, module_path: str, *namespaces: str, **kwargs
     ) -> bool:
@@ -84,14 +133,24 @@ class ImportConnectionArbiter(
 
         module, factory_class = import_str_and_item(module_path)
 
-        # We need to call the factory class to create an instance.
-        inst = getattr(_import_module(module), factory_class)(**kwargs)
+        raw_import = getattr(_import_module(module), factory_class)
 
-        # Determine what kind of factory to register.
-        result = False
-        if isinstance(inst, _ConnectionFactory):
-            result = self.register_connection_factory(inst, *namespaces)
-        elif isinstance(inst, _TaskFactory):
-            result = self.register_task_factory(inst, *namespaces)
+        # Handle factories that don't need factory-class proxying.
+        if (
+            isinstance(raw_import, type)
+            and _RuntimeStruct in raw_import.__bases__
+        ):
+            result = self.register_struct_factory(raw_import, *namespaces)
+
+        else:
+            # We need to call the factory class to create an instance.
+            inst = raw_import(**kwargs)
+
+            # Determine what kind of factory to register.
+            result = False
+            if isinstance(inst, _ConnectionFactory):
+                result = self.register_connection_factory(inst, *namespaces)
+            elif isinstance(inst, _TaskFactory):
+                result = self.register_task_factory(inst, *namespaces)
 
         return result

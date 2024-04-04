@@ -77,6 +77,7 @@ class ConnectionArbiterConfig(_RuntimepyDictCodec):
         self.clients: _List[_Any] = data.get("clients", [])  # type: ignore
         self.servers: _List[_Any] = data.get("servers", [])  # type: ignore
         self.tasks: _List[_Any] = data.get("tasks", [])  # type: ignore
+        self.structs: _List[_Any] = data.get("structs", [])  # type: ignore
 
         directory_str = str(data.get("directory", "."))
         self.directory = _Path(directory_str)
@@ -239,6 +240,14 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
                 period_s=task["period_s"],
                 average_depth=task["average_depth"],
             ), f"Couldn't register task '{name}' ({factory})!"
+
+        # Register structs.
+        for struct in config.structs:
+            name = struct["name"]
+            factory = struct["factory"]
+            assert self.factory_struct(
+                struct["factory"], struct["name"]
+            ), f"Couldn't register struct '{name}' ({factory})!"
 
         # Set the new application entry if it's set.
         self.set_app(config.app, wait_for_stop=wait_for_stop)

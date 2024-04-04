@@ -88,6 +88,9 @@ async def http_test(app: AppInfo) -> int:
 async def runtimepy_http_test(app: AppInfo) -> int:
     """A network application that tests this package's HTTP connection."""
 
+    for struct in app.structs.values():
+        struct.poll()
+
     assert app.config_param("foo", "baz", strict=True) == "bar"
 
     client = app.single(pattern="client", kind=RuntimepyServerConnection)

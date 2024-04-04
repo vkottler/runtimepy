@@ -1,0 +1,4 @@
+---
+includes:
+  - has_factory.yaml
+  - has_name.yaml

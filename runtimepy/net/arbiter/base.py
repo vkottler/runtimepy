@@ -31,6 +31,7 @@ from runtimepy.channel.environment.command import (
 from runtimepy.net.arbiter.housekeeping import metrics_poller
 from runtimepy.net.arbiter.info import AppInfo, ConnectionMap
 from runtimepy.net.arbiter.result import AppResult, ResultState
+from runtimepy.net.arbiter.struct import StructMap as _StructMap
 from runtimepy.net.arbiter.task import (
     ArbiterTaskManager as _ArbiterTaskManager,
 )
@@ -117,6 +118,9 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
             str, _Awaitable[_Connection]
         ] = {}
 
+        # Runtime structures.
+        self._structs: _StructMap = {}
+
         self._servers: _List[_asyncio.Task[None]] = []
         self._servers_started = _asyncio.Semaphore(0)
 
@@ -170,6 +174,15 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
         # Connect environment data.
         cls.json_data["environments"] = env_json_data()
 
+    def _register_envs(self) -> None:
+        """Register environments."""
+
+        clear_env()
+        for name, conn in self._connections.items():
+            register_env(name, conn.command)
+        for struct in self._structs.values():
+            register_env(struct.name, struct.command)
+
     async def _entry(
         self,
         app: NetworkApplicationlike = None,
@@ -185,6 +198,11 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
         info: Optional[AppInfo] = None
 
         try:
+            # Build structs.
+            for struct in self._structs.values():
+                struct.init()
+            self.logger.info("Structs built.")
+
             # Wait for servers to start.
             for _ in range(len(self._servers)):
                 await self._servers_started.acquire()
@@ -203,14 +221,11 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
 
             self.logger.info("Connections initialized.")
 
-            tasks = {x.name: x for x in self.task_manager.tasks}
-
             # Register environments.
-            clear_env()
+            self._register_envs()
+            tasks = {x.name: x for x in self.task_manager.tasks}
             for task in tasks.values():
                 register_env(task.name, task.command)
-            for name, conn in self._connections.items():
-                register_env(name, conn.command)
 
             # Run application, but only if all the registered connections are
             # still alive after initialization.
@@ -232,6 +247,7 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
                         tasks,  # type: ignore
                         self.task_manager,
                         [],
+                        self._structs,
                     )
 
                     # Initialize tasks.

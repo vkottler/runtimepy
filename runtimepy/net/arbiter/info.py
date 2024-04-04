@@ -22,6 +22,7 @@ from vcorelib.namespace import Namespace as _Namespace
 # internal
 from runtimepy.mapping import DEFAULT_PATTERN
 from runtimepy.net.arbiter.result import OverallResult, results
+from runtimepy.net.arbiter.struct import StructMap as _StructMap
 from runtimepy.net.connection import Connection as _Connection
 from runtimepy.net.manager import ConnectionManager
 from runtimepy.task import PeriodicTask, PeriodicTaskManager
@@ -66,6 +67,9 @@ class AppInfo:
     # Keep track of application state.
     results: OverallResult
 
+    # A name-to-struct mapping.
+    structs: _StructMap
+
     def with_new_logger(self, name: str) -> "AppInfo":
         """Get a copy of this AppInfo instance, but with a new logger."""
 
@@ -81,6 +85,7 @@ class AppInfo:
             self.tasks,
             self.task_manager,
             self.results,
+            self.structs,
         )
 
     def search(
