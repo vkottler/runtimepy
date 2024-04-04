@@ -33,13 +33,24 @@ def channel_environments(app: AppInfo, tabs: TabbedContent) -> None:
             name, task.command, app, tabs, icon="arrow-repeat"
         ).entry()
 
+    # Struct tabs.
+    for struct in app.structs.values():
+        ChannelEnvironmentTab(
+            struct.name, struct.command, app, tabs, icon="bucket"
+        ).entry()
+
     # Sound tab.
     SoundTab("sound", app, tabs, source="sound", icon="boombox").entry()
 
     dummy_tabs(3, app, tabs)
 
     # Toggle channel-table button.
-    tabs.add_button("Toggle channel table", ".channel-column", icon="table")
+    tabs.add_button(
+        "Toggle channel table",
+        ".channel-column",
+        icon="table",
+        id="channels-button",
+    )
 
     # Application modals.
     Modal(tabs)

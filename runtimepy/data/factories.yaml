@@ -26,6 +26,9 @@ factories:
   - {name: runtimepy.task.trig.Sinusoid}
   - {name: runtimepy.task.sample.Sample}
 
+  # Useful structs.
+  - {name: runtimepy.net.arbiter.struct.SampleStruct}
+
 ports:
   # Reserve ports for JSON listeners.
   - {name: udp_json, type: udp}

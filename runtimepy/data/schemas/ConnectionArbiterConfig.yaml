@@ -13,6 +13,11 @@ properties:
     items:
       $ref: package://runtimepy/schemas/ServerConnectionConfig.yaml
 
+  structs:
+    type: array
+    items:
+      $ref: package://runtimepy/schemas/StructConfig.yaml
+
   tasks:
     type: array
     items:

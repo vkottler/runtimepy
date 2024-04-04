@@ -26,7 +26,7 @@ class TabInterface {
 
         /* Update global reference. */
         shown_tab = this.name;
-        window.location.hash = this.name;
+        hash.setTab(shown_tab);
       }
       this.worker.send({kind : msg});
     } ];

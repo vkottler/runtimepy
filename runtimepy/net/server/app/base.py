@@ -25,7 +25,14 @@ class WebApplication:
     """A simple web-application interface."""
 
     worker_classes = ["JsonConnection", "DataConnection", "PlotManager"]
-    ui_classes = ["WorkerInterface", "Plot", "TabInterface", "TabFilter"]
+    ui_classes = [
+        "WindowHashManager",
+        "WorkerInterface",
+        "Plot",
+        "TabInterface",
+        "TabFilter",
+        "App",
+    ]
 
     def __init__(self, app: AppInfo) -> None:
         """Initialize this instance."""
@@ -59,7 +66,7 @@ class WebApplication:
         app(TabbedContent(PKG_NAME, document.body))
 
         # Main-thread code.
-        append_kind(document.body, "main")
+        append_kind(document.body, "util", "main")
 
         # Third-party dependencies.
         add_bootstrap_js(document.body)

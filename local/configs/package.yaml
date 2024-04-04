@@ -5,8 +5,8 @@ description: A framework for implementing Python services.
 entry: {{entry}}
 
 requirements:
-  - vcorelib>=3.2.0
-  - svgen>=0.6.4
+  - vcorelib>=3.2.2
+  - svgen>=0.6.5
   - websockets
   - "windows-curses; sys_platform == 'win32' and python_version < '3.12'"
 

@@ -5,6 +5,7 @@ A module implementing a base connection-arbiter interface.
 # built-in
 import asyncio as _asyncio
 from contextlib import AsyncExitStack as _AsyncExitStack
+from contextlib import suppress as _suppress
 from inspect import isawaitable as _isawaitable
 from typing import Awaitable as _Awaitable
 from typing import Callable as _Callable
@@ -15,7 +16,7 @@ from typing import Optional
 from typing import Union as _Union
 
 # third-party
-from vcorelib.asyncio import run_handle_stop as _run_handle_stop
+from vcorelib.asyncio import log_exceptions, run_handle_stop
 from vcorelib.io.types import JsonObject as _JsonObject
 from vcorelib.logging import LoggerMixin as _LoggerMixin
 from vcorelib.logging import LoggerType as _LoggerType
@@ -31,6 +32,7 @@ from runtimepy.channel.environment.command import (
 from runtimepy.net.arbiter.housekeeping import metrics_poller
 from runtimepy.net.arbiter.info import AppInfo, ConnectionMap
 from runtimepy.net.arbiter.result import AppResult, ResultState
+from runtimepy.net.arbiter.struct import RuntimeStruct
 from runtimepy.net.arbiter.task import (
     ArbiterTaskManager as _ArbiterTaskManager,
 )
@@ -117,6 +119,9 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
             str, _Awaitable[_Connection]
         ] = {}
 
+        # Runtime structures.
+        self._structs: dict[str, RuntimeStruct] = {}
+
         self._servers: _List[_asyncio.Task[None]] = []
         self._servers_started = _asyncio.Semaphore(0)
 
@@ -170,6 +175,34 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
         # Connect environment data.
         cls.json_data["environments"] = env_json_data()
 
+    def _register_envs(self) -> None:
+        """Register environments."""
+
+        clear_env()
+        for name, conn in self._connections.items():
+            register_env(name, conn.command)
+        for struct in self._structs.values():
+            register_env(struct.name, struct.command)
+
+    async def _init_connections(self) -> None:
+        """Initialize network connections."""
+
+        # Wait for servers to start.
+        for _ in range(len(self._servers)):
+            await self._servers_started.acquire()
+
+        # Start deferred connections.
+        for key, value in zip(
+            self._deferred_connections,
+            await _asyncio.gather(*self._deferred_connections.values()),
+        ):
+            self._register_connection(value, key)
+
+        # Ensure connections are all initialized.
+        await _asyncio.gather(
+            *(x.initialized.wait() for x in self._connections.values())
+        )
+
     async def _entry(
         self,
         app: NetworkApplicationlike = None,
@@ -185,32 +218,14 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
         info: Optional[AppInfo] = None
 
         try:
-            # Wait for servers to start.
-            for _ in range(len(self._servers)):
-                await self._servers_started.acquire()
-
-            # Start deferred connections.
-            for key, value in zip(
-                self._deferred_connections,
-                await _asyncio.gather(*self._deferred_connections.values()),
-            ):
-                self._register_connection(value, key)
-
-            # Ensure connections are all initialized.
-            await _asyncio.gather(
-                *(x.initialized.wait() for x in self._connections.values())
-            )
-
-            self.logger.info("Connections initialized.")
-
-            tasks = {x.name: x for x in self.task_manager.tasks}
+            with self.log_time("Connection initialization", reminder=True):
+                await self._init_connections()
 
             # Register environments.
-            clear_env()
+            self._register_envs()
+            tasks = {x.name: x for x in self.task_manager.tasks}
             for task in tasks.values():
                 register_env(task.name, task.command)
-            for name, conn in self._connections.items():
-                register_env(name, conn.command)
 
             # Run application, but only if all the registered connections are
             # still alive after initialization.
@@ -232,26 +247,34 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
                         tasks,  # type: ignore
                         self.task_manager,
                         [],
+                        self._structs,  # type: ignore
                     )
 
+                    # Build structs.
+                    with self.log_time("Building structs", reminder=True):
+                        await _asyncio.gather(
+                            *(x.build(info) for x in self._structs.values())
+                        )
+                        for struct in self._structs.values():
+                            struct.env.finalize(strict=False)
+
                     # Initialize tasks.
-                    self.logger.debug("Initializing periodic tasks...")
-                    await _asyncio.gather(
-                        *(x.init(info) for x in self.task_manager.tasks)
-                    )
-                    for task in self.task_manager.tasks:
-                        task.env.finalize(strict=False)
-                    self.logger.debug("Periodic tasks initialized.")
+                    with self.log_time(
+                        "Initializing periodic tasks", reminder=True
+                    ):
+                        await _asyncio.gather(
+                            *(x.init(info) for x in self.task_manager.tasks)
+                        )
+                        for task in self.task_manager.tasks:
+                            task.env.finalize(strict=False)
 
                     # Wire runtime data to server JSON.
                     self._setup_server_json(info)
 
                     # Start tasks.
-                    self.logger.debug("Starting periodic tasks...")
                     await stack.enter_async_context(
                         self.task_manager.running(stop_sig=self.stop_sig)
                     )
-                    self.logger.debug("Periodic tasks started.")
 
                     # Get application methods.
                     apps = self._apps
@@ -269,11 +292,13 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
                             info.results.append(
                                 [AppResult(app.__name__) for app in curr_app]
                             )
-
         finally:
             for conn in self._connections.values():
                 conn.disable(f"app exit {result}")
+
+            # Stop runtime entities.
             self.stop_sig.set()
+            await _asyncio.sleep(0)
 
             # Summarize results.
             if info is not None:
@@ -329,16 +354,25 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
         Run the application alongside the connection manager and server tasks.
         """
 
-        result = await _asyncio.gather(
-            self._entry(
-                app=app, check_connections=check_connections, config=config
-            ),
-            self.manager.manage(self.stop_sig),
-            *self._servers,
+        # Create task for connection manager.
+        conns = _asyncio.create_task(self.manager.manage(self.stop_sig))
+
+        # Run application.
+        result = await self._entry(
+            app=app, check_connections=check_connections, config=config
         )
-        assert result is not None
-        assert result[0] is not None
-        return int(result[0])
+
+        # Shutdown any pending tasks.
+        pending = log_exceptions(self._servers + [conns], logger=self.logger)
+        if pending:
+            for task in pending:
+                task.cancel()
+                with _suppress(KeyboardInterrupt, _asyncio.CancelledError):
+                    await task
+
+            assert not log_exceptions(pending, logger=self.logger)
+
+        return int(result)
 
     def run(
         self,
@@ -351,7 +385,7 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
     ) -> int:
         """Run the application until the stop signal is set."""
 
-        return _run_handle_stop(
+        return run_handle_stop(
             self.stop_sig,
             self.app(
                 app=app, check_connections=check_connections, config=config

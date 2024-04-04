@@ -109,7 +109,17 @@ class RuntimeEnum(_RegistryItem):
 
     def as_int(self, value: _Union[str, int]) -> _Optional[int]:
         """Attempt to get an enumeration integer."""
-        return self.ints.identifier(value)
+
+        result = self.ints.identifier(value)
+
+        # Try 'value' as a converted integer.
+        if result is None and isinstance(value, str):
+            try:
+                result = self.ints.identifier(int(value))
+            except ValueError:
+                pass
+
+        return result
 
     def get_int(self, value: _Union[str, int, bool]) -> int:
         """Get an enumeration integer."""

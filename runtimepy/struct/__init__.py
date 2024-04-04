@@ -1,0 +1,36 @@
+"""
+A module implementing a runtime structure base.
+"""
+
+# built-in
+from logging import getLogger as _getLogger
+from typing import Dict as _Dict
+
+# internal
+from runtimepy.channel.environment.command.processor import (
+    ChannelCommandProcessor,
+)
+from runtimepy.mixins.environment import ChannelEnvironmentMixin
+from runtimepy.mixins.logging import LoggerMixinLevelControl
+
+
+class RuntimeStructBase(LoggerMixinLevelControl, ChannelEnvironmentMixin):
+    """A base runtime structure."""
+
+    def __init__(self, name: str) -> None:
+        """Initialize this instance."""
+
+        self.name = name
+        LoggerMixinLevelControl.__init__(self, logger=_getLogger(self.name))
+        ChannelEnvironmentMixin.__init__(self)
+        self.setup_level_channel(self.env)
+        self.command = ChannelCommandProcessor(self.env, self.logger)
+
+    def poll(self) -> None:
+        """
+        A method that other runtime entities can call to perform canonical
+        updates to this struct's environment.
+        """
+
+
+StructMap = _Dict[str, RuntimeStructBase]
