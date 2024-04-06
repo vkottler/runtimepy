@@ -90,7 +90,9 @@ def input_box(
 ) -> None:
     """Create command input box."""
 
-    container = div(parent=parent, class_str="input-group")
+    container = div(
+        parent=div(tag="form", parent=parent), class_str="input-group"
+    )
 
     label_elem = div(tag="span", parent=container, text=label)
     label_elem.add_class("input-group-text", "rounded-0", TEXT)

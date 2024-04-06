@@ -162,7 +162,9 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabBase):
             parent=container,
             kind="column",
         )
-        vert_container.add_class("channel-column", "collapse", "show")
+        vert_container.add_class(
+            "channel-column", "collapse", "show", "ui-widget-content"
+        )
 
         input_box(
             vert_container,

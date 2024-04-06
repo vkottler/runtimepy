@@ -17,7 +17,7 @@ from runtimepy.net.server.app.elements import div
 def plot_checkbox(parent: Element, name: str) -> None:
     """Add a checkbox for individual channel plot status."""
 
-    container = div(tag="td", parent=parent)
+    container = div(tag="td", parent=div(tag="form", parent=parent))
 
     set_tooltip(
         div(
@@ -41,7 +41,7 @@ def enum_dropdown(
     title = f"Enumeration selection for '{name}'."
     select = div(
         tag="select",
-        parent=parent,
+        parent=div(tag="form", parent=parent),
         class_str="form-select",
         title=title,
         id=name,

@@ -27,6 +27,12 @@ class TabInterface {
         /* Update global reference. */
         shown_tab = this.name;
         hash.setTab(shown_tab);
+
+        //
+        console.log($(this.container).find(".ui-widget-content"));
+        console.log("WTF");
+
+        $(this.container).find(".ui-widget-content").resizable({handles : "e"});
       }
       this.worker.send({kind : msg});
     } ];
