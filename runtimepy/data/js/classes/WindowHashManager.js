@@ -102,11 +102,15 @@ class WindowHashManager {
     }
 
     for (let tab in this.plotChannels) {
-      hash += "/" + tab + ":"
-
+      let firstChan = true;
       let channels = this.plotChannels[tab];
       for (let name in channels) {
         if (channels[name]) {
+          if (firstChan) {
+            hash += "/" + tab + ":"
+            firstChan = false;
+          }
+
           if (hash.slice(-1) != ":") {
             hash += ",";
           }

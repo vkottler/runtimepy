@@ -155,13 +155,23 @@ class TabInterface {
     }
   }
 
+  isShown() { return shown_tab == this.name; }
+
   log(message) {
     if (this.logs) {
       this.logs.value += message + "\n";
+      if (this.isShown()) {
+        this.logs.scrollTo(0, this.logs.scrollHeight);
+      }
     }
   }
 
-  clearLog() { this.logs.value = ""; }
+  clearLog() {
+    if (this.logs) {
+      this.logs.value = "";
+      this.logs.scrollTo(0, 0);
+    }
+  }
 
   show_state_handler(is_shown) {
     for (const handler of this.show_state_handlers) {

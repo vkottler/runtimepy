@@ -56,3 +56,9 @@
 select.form-select {
   width: min-content;
 }
+
+textarea.text-logs {
+  min-height: 10em !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
