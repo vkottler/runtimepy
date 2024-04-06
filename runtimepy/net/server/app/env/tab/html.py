@@ -128,7 +128,12 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabBase):
 
         # make a table for channel stuff
         for name in env.names:
-            row = div(tag="tr", parent=body, id=name, class_str="channel-row")
+            row = div(
+                tag="tr",
+                parent=body,
+                id=name,
+                class_str="channel-row border-start",
+            )
 
             plot_checkbox(row, name)
 
