@@ -75,6 +75,8 @@ class ChannelEnvironmentTabMessaging(ChannelEnvironmentTabBase):
 
         # Log when messages aren't handled.
         else:
-            self.command.logger.warning("Message not handled: '%s'.", data)
+            self.command.logger.warning(
+                "(%s) Message not handled: '%s'.", self.name, data
+            )
 
         return response

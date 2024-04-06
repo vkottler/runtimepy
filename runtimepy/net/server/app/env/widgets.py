@@ -10,7 +10,11 @@ from svgen.element import Element
 
 # internal
 from runtimepy.enum import RuntimeEnum
-from runtimepy.net.server.app.bootstrap.elements import input_box, set_tooltip
+from runtimepy.net.server.app.bootstrap.elements import (
+    input_box,
+    set_tooltip,
+    toggle_button,
+)
 from runtimepy.net.server.app.elements import div
 
 
@@ -57,7 +61,7 @@ def enum_dropdown(
 
 
 def channel_table_header(parent: Element) -> None:
-    """Add header row to channel table.."""
+    """Add header row to channel table."""
 
     # Add header.
     header_row = div(tag="tr", parent=parent)
@@ -82,7 +86,16 @@ def channel_table_header(parent: Element) -> None:
 
     # Add some controls.
     ctl_row = div(tag="tr", parent=parent)
-    for _ in range(3):
+
+    # Button for clearing plotted channels.
+    toggle_button(
+        div(tag="th", parent=ctl_row),
+        title="Clear plotted channels.",
+        icon="x-lg",
+        id="clear-plotted-channels",
+    )
+
+    for _ in range(2):
         div(tag="th", parent=ctl_row)
     input_box(
         div(tag="th", parent=ctl_row),

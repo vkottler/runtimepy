@@ -120,6 +120,23 @@ class TabInterface {
     if (plot) {
       this.plot = new Plot(plot, this.worker);
       this.show_state_handlers.push(this.plot.handle_shown.bind(this.plot));
+
+      /* Initialize plot-channel buttons. */
+      for (let elem of this.queryAll("input.form-check-input")) {
+        elem.addEventListener(
+            "change",
+            ((event) => {
+              let chan = elem.id.split("-")[1];
+              let state = elem.checked;
+              hash.handlePlotChannelToggle(this.name, chan, state);
+              this.worker.send(
+                  {kind : "plot", value : {"channel" : chan, "state" : state}});
+            }).bind(this));
+      }
+
+      /* Initialize plotted-channel clearing interface. */
+      this.query("#clear-plotted-channels").onclick =
+          (() => { hash.clearPlotChannels(this.name); }).bind(this);
     }
   }
 
