@@ -27,6 +27,9 @@ properties:
           type: string
           pattern: "^[a-z0-9-_.]+$"
 
+        description:
+          type: string
+
         index:
           type: integer
           minimum: 0

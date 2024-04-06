@@ -25,12 +25,14 @@ class BitFieldBase:
         index: int,
         width: int,
         commandable: bool = False,
+        description: str = None,
     ) -> None:
         """Initialize this bit-field."""
 
         self.raw = raw
         self.index = index
         self.commandable = commandable
+        self.description = description
 
         # Compute a bit-mask for this field.
         self.width = width
@@ -93,10 +95,13 @@ class BitField(BitFieldBase, _RegexMixin, _EnumMixin):
         width: int,
         enum: _RegistryKey = None,
         commandable: bool = False,
+        description: str = None,
     ) -> None:
         """Initialize this bit-field."""
 
-        super().__init__(raw, index, width, commandable=commandable)
+        super().__init__(
+            raw, index, width, commandable=commandable, description=description
+        )
 
         # Verify bit-field parameters.
         assert (
@@ -137,11 +142,18 @@ class BitFlag(BitField):
         index: int,
         enum: _RegistryKey = None,
         commandable: bool = False,
+        description: str = None,
     ) -> None:
         """Initialize this bit flag."""
 
         super().__init__(
-            name, raw, index, 1, enum=enum, commandable=commandable
+            name,
+            raw,
+            index,
+            1,
+            enum=enum,
+            commandable=commandable,
+            description=description,
         )
 
     def clear(self) -> None:
