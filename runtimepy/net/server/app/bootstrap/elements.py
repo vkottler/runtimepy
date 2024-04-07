@@ -67,15 +67,20 @@ def collapse_button(
     return collapse
 
 
-def toggle_button(parent: Element, **kwargs) -> Element:
+def toggle_button(
+    parent: Element,
+    icon: str = "toggles",
+    title: str = "toggle value",
+    **kwargs,
+) -> Element:
     """Add a boolean-toggle button."""
 
     return div(
         tag="button",
         type="button",
-        text=icon_str("toggles"),
+        text=icon_str(icon),
         parent=parent,
-        title="toggle value",
+        title=title,
         class_str="btn " + BOOTSTRAP_BUTTON,
         **kwargs,
     )

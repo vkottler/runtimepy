@@ -52,7 +52,15 @@ def sample_env(env: ChannelEnvironment) -> None:
 
                 # Add a bit field and flag.
                 env.add_field(BitFlag("flag1", prim, 0))
-                env.add_field(BitFlag("flag2", prim, 1, commandable=True))
+                env.add_field(
+                    BitFlag(
+                        "flag2",
+                        prim,
+                        1,
+                        commandable=True,
+                        description="Sample bit flag.",
+                    )
+                )
                 env.add_field(
                     BitField(
                         "field1",
@@ -61,6 +69,7 @@ def sample_env(env: ChannelEnvironment) -> None:
                         2,
                         enum=sample_enum.id,
                         commandable=True,
+                        description="Sample bit field.",
                     )
                 )
                 env.add_field(BitField("field2", prim, 4, 4))

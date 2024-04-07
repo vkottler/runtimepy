@@ -113,6 +113,32 @@ class TabInterface {
       toggle.onclick =
           (() => { this.command(`toggle ${toggle.id}`); }).bind(this);
     }
+
+    /* Initialize channel table and plot divider. */
+    let divider = this.query(".vertical-divider");
+    if (divider) {
+      this.setupVerticalDivider(divider);
+    }
+  }
+
+  setupVerticalDivider(elem) {
+    elem.addEventListener("mousedown", (event) => {
+      let elem = this.query(".channel-column");
+      let origX = event.clientX;
+
+      /* Track mouse movement while the mouse is held down. */
+      let handleMouse = (event) => {
+        let deltaX = origX - event.clientX;
+        elem.style.width = elem.getBoundingClientRect().width - deltaX + "px";
+        origX = event.clientX;
+      };
+      document.addEventListener("mousemove", handleMouse);
+
+      /* Remove mouse handler on mouse release. */
+      document.addEventListener("mouseup", (event) => {
+        document.removeEventListener("mousemove", handleMouse);
+      }, {once : true});
+    });
   }
 
   initPlot() {
@@ -120,6 +146,23 @@ class TabInterface {
     if (plot) {
       this.plot = new Plot(plot, this.worker);
       this.show_state_handlers.push(this.plot.handle_shown.bind(this.plot));
+
+      /* Initialize plot-channel buttons. */
+      for (let elem of this.queryAll("input.form-check-input")) {
+        elem.addEventListener(
+            "change",
+            ((event) => {
+              let chan = elem.id.split("-")[1];
+              let state = elem.checked;
+              hash.handlePlotChannelToggle(this.name, chan, state);
+              this.worker.send(
+                  {kind : "plot", value : {"channel" : chan, "state" : state}});
+            }).bind(this));
+      }
+
+      /* Initialize plotted-channel clearing interface. */
+      this.query("#clear-plotted-channels").onclick =
+          (() => { hash.clearPlotChannels(this.name); }).bind(this);
     }
   }
 
@@ -138,13 +181,23 @@ class TabInterface {
     }
   }
 
+  isShown() { return shown_tab == this.name; }
+
   log(message) {
     if (this.logs) {
       this.logs.value += message + "\n";
+      if (this.isShown()) {
+        this.logs.scrollTo(0, this.logs.scrollHeight);
+      }
     }
   }
 
-  clearLog() { this.logs.value = ""; }
+  clearLog() {
+    if (this.logs) {
+      this.logs.value = "";
+      this.logs.scrollTo(0, 0);
+    }
+  }
 
   show_state_handler(is_shown) {
     for (const handler of this.show_state_handlers) {

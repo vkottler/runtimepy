@@ -57,4 +57,8 @@ def channel_environments(app: AppInfo, tabs: TabbedContent) -> None:
     Modal(tabs, name="diagnostics", icon="activity")
 
     # Placeholder for using space at the bottom of the tab list.
-    under_construction(tabs.tabs, note="unused space")
+    under_construction(
+        tabs.tabs,
+        note="unused space",
+        class_str="border-start border-bottom border-end",
+    )

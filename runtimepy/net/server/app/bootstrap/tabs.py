@@ -15,7 +15,11 @@ from runtimepy.net.server.app.elements import div
 
 
 def create_nav_button(
-    parent: Element, name: str, item: str, active_tab: bool
+    parent: Element,
+    name: str,
+    item: str,
+    active_tab: bool,
+    **kwargs,
 ) -> Element:
     """Create a navigation button."""
 
@@ -26,6 +30,7 @@ def create_nav_button(
         parent=parent,
         role="tab",
         title=f"Navigate to '{item}' tab.",
+        **kwargs,
     )
     button["type"] = "button"
     button["data-bs-toggle"] = "pill"
@@ -76,7 +81,7 @@ class TabbedContent:
 
         self.name = name
 
-        # Create application container
+        # Create application container.
         self.container = div(parent=parent, id=name)
         self.container.add_class("d-flex", "align-items-start")
 
@@ -86,7 +91,9 @@ class TabbedContent:
 
         # Buttons.
         self.button_column = div(parent=self.container)
-        self.button_column.add_class("d-flex", "flex-column", "h-100")
+        self.button_column.add_class(
+            "d-flex", "flex-column", "h-100", "bg-secondary-subtle"
+        )
 
         # Toggle tabs button.
         self.add_button("Toggle tabs", f"#{PKG_NAME}-tabs", id="tabs-button")
@@ -118,7 +125,13 @@ class TabbedContent:
     def create(self, name: str) -> tuple[Element, Element]:
         """Only the first tab is active."""
 
-        button = create_nav_button(self.tabs, self.name, name, self.active_tab)
+        button = create_nav_button(
+            self.tabs,
+            self.name,
+            name,
+            self.active_tab,
+            class_str="border-start border-bottom border-end",
+        )
 
         # Add content.
         content = create_nav_container(

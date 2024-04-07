@@ -10,7 +10,11 @@ from svgen.element import Element
 
 # internal
 from runtimepy.enum import RuntimeEnum
-from runtimepy.net.server.app.bootstrap.elements import input_box, set_tooltip
+from runtimepy.net.server.app.bootstrap.elements import (
+    input_box,
+    set_tooltip,
+    toggle_button,
+)
 from runtimepy.net.server.app.elements import div
 
 
@@ -57,16 +61,18 @@ def enum_dropdown(
 
 
 def channel_table_header(parent: Element) -> None:
-    """Add header row to channel table.."""
+    """Add header row to channel table."""
 
     # Add header.
-    header_row = div(tag="tr", parent=parent)
+    header_row = div(
+        tag="tr", parent=parent, class_str="border-start border-end"
+    )
     for heading, desc in [
         ("plot", "Toggle plotting for channels."),
-        ("ctl", "Type-specific channel controls."),
-        ("type", "Channel types."),
         ("name", "Channel names."),
         ("value", "Channel values."),
+        ("ctl", "Type-specific channel controls."),
+        ("type", "Channel types."),
     ]:
         set_tooltip(
             div(
@@ -81,12 +87,20 @@ def channel_table_header(parent: Element) -> None:
         )
 
     # Add some controls.
-    ctl_row = div(tag="tr", parent=parent)
-    for _ in range(3):
-        div(tag="th", parent=ctl_row)
+    ctl_row = div(tag="tr", parent=parent, class_str="border-start border-end")
+
+    # Button for clearing plotted channels.
+    toggle_button(
+        div(tag="th", parent=ctl_row),
+        title="Clear plotted channels.",
+        icon="x-lg",
+        id="clear-plotted-channels",
+    )
+
     input_box(
         div(tag="th", parent=ctl_row),
         description="Channel name filter.",
         id="channel-filter",
     )
-    div(tag="th", parent=ctl_row)
+    for _ in range(3):
+        div(tag="th", parent=ctl_row)

@@ -59,6 +59,7 @@ class BitFields(_RuntimepyDictCodec):
             width: int = item["width"]
             value: int = int(item["value"])
             enum = item.get("enum")
+            desc: _Optional[str] = _cast(str, item.get("description"))
 
             # Fields without names are considered padding.
             if not name:
@@ -68,11 +69,15 @@ class BitFields(_RuntimepyDictCodec):
                 continue
 
             if width == 1:
-                flag = self.flag(name, index=index, enum=enum)
+                flag = self.flag(
+                    name, index=index, enum=enum, description=desc
+                )
                 flag(value)
                 item["index"] = flag.index
             else:
-                field = self.field(name, width, index=index, enum=enum)
+                field = self.field(
+                    name, width, index=index, enum=enum, description=desc
+                )
                 field(value)
                 item["index"] = field.index
 
@@ -126,13 +131,19 @@ class BitFields(_RuntimepyDictCodec):
         return result
 
     def flag(
-        self, name: str, index: int = None, enum: _RegistryKey = None
+        self,
+        name: str,
+        index: int = None,
+        enum: _RegistryKey = None,
+        description: str = None,
     ) -> _BitFlag:
         """Create a new bit flag."""
 
         index = self._claim_bits(1, index=index)
 
-        result = _BitFlag(name, self.raw, index, enum=enum)
+        result = _BitFlag(
+            name, self.raw, index, enum=enum, description=description
+        )
 
         self.fields[name] = result
         self.by_index[index] = result
@@ -179,6 +190,7 @@ class BitFields(_RuntimepyDictCodec):
         width: int,
         index: int = None,
         enum: _RegistryKey = None,
+        description: str = None,
     ) -> _BitField:
         """Create a new bit field."""
 
@@ -186,7 +198,9 @@ class BitFields(_RuntimepyDictCodec):
 
         index = self._claim_bits(width, index=index)
 
-        result = _BitField(name, self.raw, index, width, enum=enum)
+        result = _BitField(
+            name, self.raw, index, width, enum=enum, description=description
+        )
 
         self.fields[name] = result
         self.by_index[index] = result

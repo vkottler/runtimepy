@@ -40,10 +40,11 @@ class PlotManager {
     const canvas = this.plots[name];
     const ctx = this.contexts[name];
 
-    ctx.fillStyle = "purple";
+    /* Background (match bootstrap). */
+    ctx.fillStyle = "#212529";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.fillStyle = "green";
+    ctx.fillStyle = "#495057";
     let size = 25;
 
     ctx.fillRect(size, size, size, size);
@@ -52,10 +53,12 @@ class PlotManager {
     ctx.fillRect(canvas.width - (2 * size), canvas.height - (2 * size), size,
                  size);
 
-    ctx.fillStyle = "blue";
+    ctx.fillStyle = "#cce2e6";
     ctx.font = "24px monospace";
-    let y = canvas.height / 2;
-    ctx.fillText(Date.now(), canvas.width / 2, y);
-    ctx.fillText(time, canvas.width / 2, y + 24);
+    let y = (canvas.height / 3) + 24;
+    let x = (canvas.width / 3);
+    ctx.fillText("Future plot area!", x, y);
+    ctx.fillText(Date.now(), x, y + 48);
+    ctx.fillText(time, x, y + 72);
   }
 }

@@ -42,7 +42,9 @@
 
 .channel-column {
   overflow-y: scroll;
-  min-width: min-content;
+  overflow-x: hidden;
+  flex-grow: 0;
+  flex-shrink: 0;
 }
 
 .table > tbody > tr > td {
@@ -55,4 +57,32 @@
 
 select.form-select {
   width: min-content;
+}
+select.form-select:hover {
+  cursor: pointer;
+}
+
+textarea.text-logs {
+  min-height: 10em !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+
+  border-top: 0;
+  background-color: var(--bs-secondary-bg-subtle);
+}
+
+.vertical-divider {
+  flex-basis: 0.5em;
+  flex-grow: 0;
+  flex-shrink: 0;
+  background-color: var(--bs-secondary-bg-subtle);
+}
+
+.vertical-divider:hover {
+  cursor: col-resize;
+  background-color: var(--bs-secondary-bg);
+}
+
+button:hover {
+  background-color: var(--bs-tertiary-bg);
 }
