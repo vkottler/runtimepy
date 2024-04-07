@@ -47,6 +47,10 @@
   flex-shrink: 0;
 }
 
+.channel-value {
+  min-width: 10em;
+}
+
 .table > tbody > tr > td {
   vertical-align: middle;
 }

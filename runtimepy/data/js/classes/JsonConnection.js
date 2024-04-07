@@ -101,6 +101,11 @@ class JsonConnection {
   onclose(event) {
     console.log(`Connection ${this.toString()} closed.`);
     this.reject();
+
+    /*
+     * Nothing to do from here. Recommend page refresh (to UI thread) for now.
+     */
+    postMessage({reload : true});
   }
 
   onerror(event) {

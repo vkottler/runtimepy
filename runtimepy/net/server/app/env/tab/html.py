@@ -50,10 +50,10 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabBase):
         if description:
             set_tooltip(name_elem, description, placement="left")
 
-        div(tag="td", text=str(env.value(name)), parent=parent)
+        div(tag="td", class_str="channel-value", parent=parent)
 
         # Add boolean/bit toggle button.
-        control = div(tag="td", parent=parent, class_str="text-center")
+        control = div(tag="td", parent=parent)
 
         kind_str = str(chan.type)
 
@@ -112,9 +112,9 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabBase):
         if description:
             set_tooltip(name_elem, description, placement="left")
 
-        div(tag="td", text=str(env.value(name)), parent=parent)
+        div(tag="td", class_str="channel-value", parent=parent)
 
-        control = div(tag="td", parent=parent, class_str="text-center")
+        control = div(tag="td", parent=parent)
         if field.commandable:
             if is_bit:
                 toggle_button(control, id=name, title=f"Toggle '{name}'.")
@@ -216,7 +216,9 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabBase):
         # Possible empty space that could eventually be used (scenario: channel
         # table doesn't take up full vertical space, few channels).
         under_construction(
-            vert_container, class_str="border-start border-bottom border-end"
+            vert_container,
+            class_str="border-start border-bottom border-end",
+            note="unused space",
         )
 
         # Divider.

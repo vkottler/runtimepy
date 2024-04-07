@@ -33,6 +33,12 @@ class App {
 
         /* Prepare worker message handler. */
         this.worker.onmessage = async (event) => {
+          /* Check for reload recommendation. */
+          if ("reload" in event.data && event.data["reload"]) {
+            console.log("Worker thread recommended page reload.");
+            window.location.reload();
+          }
+
           for (const key in event.data) {
             /* Handle forwarding messages to individual tabs. */
             if (key in tabs) {
@@ -47,5 +53,30 @@ class App {
     this.worker.postMessage(this.config);
 
     bootstrap_init();
+
+    let splash = document.getElementById("runtimepy-splash");
+
+    /* Main loop. */
+    function render(time) {
+      /* Fade splash screen out if necessary. */
+      if (splash) {
+        let curr = window.getComputedStyle(splash).getPropertyValue("opacity");
+        if (curr > 0) {
+          curr -= 0.005;
+          splash.style.opacity = curr;
+        } else {
+          splash.style.display = "none";
+          splash = undefined;
+        }
+      }
+
+      /* Poll the currently shown tab. */
+      if (shown_tab in tabs) {
+        tabs[shown_tab].poll(time);
+      }
+
+      requestAnimationFrame(render);
+    }
+    requestAnimationFrame(render);
   }
 }

@@ -1,3 +1,5 @@
+const staleMs = 500;
+
 /*
  * Define class for generated code to use (instead of generating so many
  * methods).
@@ -17,6 +19,16 @@ class TabInterface {
     this.message_handlers = [];
 
     tabs[this.name] = this;
+
+    /* Channel-table manager. */
+    this.channels = undefined;
+    this.channelsPending = {};
+    this.time = 0;
+    this.channelTimestamps = {};
+    let table = this.query("tbody");
+    if (table) {
+      this.channels = new ChannelTable(this.name, table);
+    }
 
     /* Always send a message */
     this.show_state_handlers = [ (is_shown) => {
@@ -214,8 +226,33 @@ class TabInterface {
       this.log(data["log_message"]);
     }
 
+    /* Stage any channel-table re-paints. */
+    if (this.channels) {
+      for (let key in data) {
+        if (key in this.channels.rows) {
+          this.channelsPending[key] = data[key];
+          this.channelTimestamps[key] = this.time;
+        }
+      }
+    }
+
     for (const handler of this.message_handlers) {
       handler(data);
+    }
+  }
+
+  poll(time) {
+    this.time = time;
+
+    if (this.channels && this.isShown()) {
+      /* Update channel values. */
+      if (this.channelsPending) {
+        this.channels.onmessage(this.channelsPending);
+        this.channelsPending = {};
+      }
+
+      /* Poll staleness. */
+      this.channels.pollStaleness(this.channelTimestamps, this.time, staleMs);
     }
   }
 }

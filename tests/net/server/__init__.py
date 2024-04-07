@@ -36,6 +36,12 @@ async def runtimepy_websocket_client(
         send_ui(client, f"sample{idx}", {"kind": "tab.hidden"})
         send_ui(client, f"sample{idx}", {"kind": "command", "value": "help"})
 
+        # Trigger some telemetry sending.
+        send_ui(client, f"wave{idx}", {"kind": "init"})
+        send_ui(client, f"wave{idx}", {"kind": "tab.shown"})
+        await asyncio.sleep(0.05)
+        send_ui(client, f"wave{idx}", {"kind": "tab.hidden"})
+
 
 async def runtimepy_http_client_server(
     client: RuntimepyServerConnection, server: RuntimepyServerConnection
