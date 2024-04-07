@@ -43,6 +43,18 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabBase):
 
         env = self.command.env
 
+        name_elem = div(tag="td", text=name, parent=parent)
+        if chan.commandable:
+            name_elem.add_class("text-success")
+
+        if description:
+            set_tooltip(name_elem, description, placement="left")
+
+        div(tag="td", text=str(env.value(name)), parent=parent)
+
+        # Add boolean/bit toggle button.
+        control = div(tag="td", parent=parent, class_str="text-center")
+
         kind_str = str(chan.type)
 
         # Should handle enums at some point.
@@ -50,9 +62,6 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabBase):
             enum_name = env.enums.names.name(enum.id)
             assert enum_name is not None
             kind_str = enum_name
-
-        # Add boolean/bit toggle button.
-        control = div(tag="td", parent=parent, class_str="text-center")
 
         chan_type = div(
             tag="td",
@@ -76,15 +85,6 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabBase):
         else:
             chan_type.add_class("text-primary")
 
-        name_elem = div(tag="td", text=name, parent=parent)
-        if chan.commandable:
-            name_elem.add_class("text-success")
-
-        if description:
-            set_tooltip(name_elem, description, placement="left")
-
-        div(tag="td", text=str(env.value(name)), parent=parent)
-
         return chan.id
 
     def add_field(
@@ -99,26 +99,13 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabBase):
         if field.is_enum:
             enum = env.enums[field.enum]
 
-        control = div(tag="td", parent=parent, class_str="text-center")
-
         # Add boolean/bit toggle button.
         is_bit = field.width == 1
         kind_str = f"{'bit' if is_bit else 'bits'} {field.where_str()}"
 
-        div(
-            tag="td",
-            text=kind_str,
-            parent=parent,
-            title=f"Field position for '{name}' within underlying primitive.",
-        )["class"] = "text-info-emphasis"
-
         name_elem = div(tag="td", text=name, parent=parent)
         if field.commandable:
             name_elem.add_class("text-success")
-            if is_bit:
-                toggle_button(control, id=name, title=f"Toggle '{name}'.")
-            elif enum:
-                enum_dropdown(control, name, enum, field())
 
         if field.description:
             description = field.description
@@ -126,6 +113,20 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabBase):
             set_tooltip(name_elem, description, placement="left")
 
         div(tag="td", text=str(env.value(name)), parent=parent)
+
+        control = div(tag="td", parent=parent, class_str="text-center")
+        if field.commandable:
+            if is_bit:
+                toggle_button(control, id=name, title=f"Toggle '{name}'.")
+            elif enum:
+                enum_dropdown(control, name, enum, field())
+
+        div(
+            tag="td",
+            text=kind_str,
+            parent=parent,
+            title=f"Field position for '{name}' within underlying primitive.",
+        )["class"] = "text-info-emphasis"
 
     def channel_table(self, parent: Element) -> None:
         """Create the channel table."""

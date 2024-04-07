@@ -69,10 +69,10 @@ def channel_table_header(parent: Element) -> None:
     )
     for heading, desc in [
         ("plot", "Toggle plotting for channels."),
-        ("ctl", "Type-specific channel controls."),
-        ("type", "Channel types."),
         ("name", "Channel names."),
         ("value", "Channel values."),
+        ("ctl", "Type-specific channel controls."),
+        ("type", "Channel types."),
     ]:
         set_tooltip(
             div(
@@ -97,11 +97,10 @@ def channel_table_header(parent: Element) -> None:
         id="clear-plotted-channels",
     )
 
-    for _ in range(2):
-        div(tag="th", parent=ctl_row)
     input_box(
         div(tag="th", parent=ctl_row),
         description="Channel name filter.",
         id="channel-filter",
     )
-    div(tag="th", parent=ctl_row)
+    for _ in range(3):
+        div(tag="th", parent=ctl_row)
