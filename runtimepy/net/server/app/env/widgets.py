@@ -64,7 +64,9 @@ def channel_table_header(parent: Element) -> None:
     """Add header row to channel table."""
 
     # Add header.
-    header_row = div(tag="tr", parent=parent, class_str="border-start")
+    header_row = div(
+        tag="tr", parent=parent, class_str="border-start border-end"
+    )
     for heading, desc in [
         ("plot", "Toggle plotting for channels."),
         ("ctl", "Type-specific channel controls."),
@@ -85,7 +87,7 @@ def channel_table_header(parent: Element) -> None:
         )
 
     # Add some controls.
-    ctl_row = div(tag="tr", parent=parent, class_str="border-start")
+    ctl_row = div(tag="tr", parent=parent, class_str="border-start border-end")
 
     # Button for clearing plotted channels.
     toggle_button(

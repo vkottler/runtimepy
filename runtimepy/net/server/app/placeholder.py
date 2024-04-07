@@ -25,10 +25,10 @@ class DummyTab(Tab):
             div(parent=parent, text="Hello, world! " + str(idx))
 
 
-def under_construction(parent: Element, note: str = "") -> Element:
+def under_construction(parent: Element, note: str = "", **kwargs) -> Element:
     """Add some 'under construction' content to the tab area."""
 
-    container = div(parent=parent)
+    container = div(parent=parent, **kwargs)
     container.add_class(
         "flex-grow-1", "d-flex", "flex-column", "justify-content-between"
     )

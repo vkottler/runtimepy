@@ -113,6 +113,8 @@ class TabInterface {
       toggle.onclick =
           (() => { this.command(`toggle ${toggle.id}`); }).bind(this);
     }
+
+    /* Initialize channel table and plot divider. */
   }
 
   initPlot() {

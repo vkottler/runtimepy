@@ -147,7 +147,7 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabBase):
                 tag="tr",
                 parent=body,
                 id=name,
-                class_str="channel-row border-start",
+                class_str="channel-row border-start border-end",
             )
 
             plot_checkbox(row, name)
@@ -214,12 +214,21 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabBase):
 
         # Possible empty space that could eventually be used (scenario: channel
         # table doesn't take up full vertical space, few channels).
-        under_construction(vert_container)
+        under_construction(
+            vert_container, class_str="border-start border-bottom border-end"
+        )
+
+        # Divider.
+        div(
+            id=self.get_id("divider"),
+            parent=container,
+            class_str="vertical-divider border-start",
+        )
 
         # Plot.
         div(
             tag="canvas",
             id=self.get_id("plot"),
-            parent=div(parent=container, class_str="w-100 h-100"),
+            parent=div(parent=container, class_str="w-100 h-100 border-start"),
             class_str="w-100 h-100",
         )

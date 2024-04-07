@@ -16,6 +16,16 @@ class WindowHashManager {
 
   channelClick(event) {
     this.channelsShown = !this.channelsShown;
+
+    /* Hide the divider when the channel table isn't shown. */
+    let dividerDisplay = "block";
+    if (!this.channelsShown) {
+      dividerDisplay = "none";
+    }
+    for (let elem of document.querySelectorAll(".vertical-divider")) {
+      elem.style.display = dividerDisplay;
+    }
+
     this.update();
   }
 

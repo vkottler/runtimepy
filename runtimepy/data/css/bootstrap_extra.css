@@ -56,9 +56,29 @@
 select.form-select {
   width: min-content;
 }
+select.form-select:hover {
+  cursor: pointer;
+}
 
 textarea.text-logs {
   min-height: 10em !important;
   padding-top: 0 !important;
   padding-bottom: 0 !important;
+
+  border-top: 0;
+  background-color: var(--bs-secondary-bg-subtle);
+}
+
+.vertical-divider {
+  width: 1.5em;
+  background-color: var(--bs-secondary-bg-subtle);
+}
+
+.vertical-divider:hover {
+  cursor: col-resize;
+  background-color: var(--bs-secondary-bg);
+}
+
+button:hover {
+  background-color: var(--bs-tertiary-bg);
 }
