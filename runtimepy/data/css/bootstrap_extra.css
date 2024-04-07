@@ -42,7 +42,9 @@
 
 .channel-column {
   overflow-y: scroll;
-  min-width: min-content;
+  overflow-x: hidden;
+  flex-grow: 0;
+  flex-shrink: 0;
 }
 
 .table > tbody > tr > td {
@@ -70,7 +72,9 @@ textarea.text-logs {
 }
 
 .vertical-divider {
-  width: 1.5em;
+  flex-basis: 0.5em;
+  flex-grow: 0;
+  flex-shrink: 0;
   background-color: var(--bs-secondary-bg-subtle);
 }
 

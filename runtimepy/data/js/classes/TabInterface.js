@@ -115,6 +115,30 @@ class TabInterface {
     }
 
     /* Initialize channel table and plot divider. */
+    let divider = this.query(".vertical-divider");
+    if (divider) {
+      this.setupVerticalDivider(divider);
+    }
+  }
+
+  setupVerticalDivider(elem) {
+    elem.addEventListener("mousedown", (event) => {
+      let elem = this.query(".channel-column");
+      let origX = event.clientX;
+
+      /* Track mouse movement while the mouse is held down. */
+      let handleMouse = (event) => {
+        let deltaX = origX - event.clientX;
+        elem.style.width = elem.getBoundingClientRect().width - deltaX + "px";
+        origX = event.clientX;
+      };
+      document.addEventListener("mousemove", handleMouse);
+
+      /* Remove mouse handler on mouse release. */
+      document.addEventListener("mouseup", (event) => {
+        document.removeEventListener("mousemove", handleMouse);
+      }, {once : true});
+    });
   }
 
   initPlot() {
