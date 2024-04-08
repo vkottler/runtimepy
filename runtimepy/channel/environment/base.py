@@ -100,6 +100,10 @@ class BaseChannelEnvironment(_NamespaceMixin, FinalizeMixin):
         if values is not None:
             self.apply(values)
 
+    def __setitem__(self, key: _RegistryKey, value: ChannelValue) -> None:
+        """Mapping-set interface."""
+        return self.set(key, value)
+
     def set(self, key: _RegistryKey, value: ChannelValue) -> None:
         """Attempt to set an arbitrary channel value."""
 

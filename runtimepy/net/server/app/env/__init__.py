@@ -41,11 +41,6 @@ def channel_environments(app: AppInfo, tabs: TabbedContent) -> None:
             struct.name, struct.command, app, tabs, icon="bucket"
         ).entry()
 
-    # Sound tab.
-    SoundTab("sound", app, tabs, source="sound", icon="boombox").entry()
-
-    dummy_tabs(3, app, tabs)
-
     # Toggle channel-table button.
     tabs.add_button(
         "Toggle channel table",
@@ -54,9 +49,16 @@ def channel_environments(app: AppInfo, tabs: TabbedContent) -> None:
         id="channels-button",
     )
 
-    # Application modals.
-    Modal(tabs)
-    Modal(tabs, name="diagnostics", icon="activity")
+    # Experimental features.
+    if app.config_param("experimental", False):
+        # Sound tab.
+        SoundTab("sound", app, tabs, source="sound", icon="boombox").entry()
+
+        dummy_tabs(3, app, tabs)
+
+        # Application modals.
+        Modal(tabs)
+        Modal(tabs, name="diagnostics", icon="activity")
 
     # Placeholder for using space at the bottom of the tab list.
     under_construction(
