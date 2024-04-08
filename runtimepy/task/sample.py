@@ -4,6 +4,7 @@ A sample task interface.
 
 # built-in
 import asyncio
+from logging import DEBUG
 
 # internal
 from runtimepy.channel.environment.sample import poll_sample_env, sample_env
@@ -25,7 +26,7 @@ class SampleTask(ArbiterTask):
         """Dispatch an iteration of this task."""
 
         # Use this to implement / test rate-limited logging.
-        with self.log_time("dispatch"):
+        with self.log_time("dispatch", level=DEBUG):
             poll_sample_env(self.env)
 
             # Interact with connections.

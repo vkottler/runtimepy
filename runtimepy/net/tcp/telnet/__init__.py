@@ -33,6 +33,8 @@ __all__ = [
 class Telnet(_TcpConnection):
     """A class implementing a basic telnet interface."""
 
+    log_alias = "TELNET"
+
     async def process_telnet_message(self, data: bytes) -> bool:
         """By default, treat all incoming data bytes as text."""
         return await self.process_text(data.decode(encoding=DEFAULT_ENCODING))

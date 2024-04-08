@@ -57,6 +57,9 @@ class HttpConnection(_TcpConnection):
 
     expecting_response: bool
 
+    log_alias = "HTTP"
+    log_prefix = "http://"
+
     # Handlers registered at the class level so that instances created at
     # runtime don't need additional initialization.
     handlers: HttpRequestHandlers = {}

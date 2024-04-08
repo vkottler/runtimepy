@@ -46,6 +46,9 @@ class TcpConnection(_Connection, _TransportMixin):
     uses_text_tx_queue = False
     uses_binary_tx_queue = False
 
+    log_alias = "TCP"
+    log_prefix = ""
+
     def __init__(self, transport: _Transport, protocol: QueueProtocol) -> None:
         """Initialize this TCP connection."""
 
@@ -55,7 +58,7 @@ class TcpConnection(_Connection, _TransportMixin):
         self._transport: _Transport = transport
         self._set_protocol(protocol)
 
-        super().__init__(_getLogger(self.logger_name("TCP ")))
+        super().__init__(_getLogger(self.logger_name(f"{self.log_alias} ")))
 
         # Store connection-instantiation arguments.
         self._conn_kwargs: dict[str, _Any] = {}
@@ -140,7 +143,10 @@ class TcpConnection(_Connection, _TransportMixin):
         async with server:
             for socket in server.sockets:
                 LOG.info(
-                    "Started TCP server listening on '%s'.", _sockname(socket)
+                    "Started %s server listening on '%s%s'.",
+                    cls.log_alias,
+                    cls.log_prefix,
+                    _sockname(socket),
                 )
             yield server
 
@@ -169,11 +175,11 @@ class TcpConnection(_Connection, _TransportMixin):
             if serving_callback is not None:
                 serving_callback(server)
 
-            LOG.info("TCP Application starting.")
+            LOG.info("%s Application starting.", cls.log_alias)
             await manager.manage(stop_sig)
-            LOG.info("TCP Application stopped.")
+            LOG.info("%s Application stopped.", cls.log_alias)
 
-        LOG.info("TCP Server closed.")
+        LOG.info("%s Server closed.", cls.log_alias)
 
     @classmethod
     @_asynccontextmanager
