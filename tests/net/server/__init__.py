@@ -29,6 +29,9 @@ async def runtimepy_websocket_client(
 
     send_ui(client, "test", {"a": 1, "b": 2, "c": 3})
 
+    time = 0.0
+    period = 0.05
+
     for idx in range(3):
         send_ui(client, f"sample{idx}", {"kind": "asdf"})
         send_ui(client, f"sample{idx}", {"kind": "init"})
@@ -39,7 +42,13 @@ async def runtimepy_websocket_client(
         # Trigger some telemetry sending.
         send_ui(client, f"wave{idx}", {"kind": "init"})
         send_ui(client, f"wave{idx}", {"kind": "tab.shown"})
-        await asyncio.sleep(0.05)
+
+        # Drive the UI forward.
+        for _ in range(5):
+            await asyncio.sleep(period)
+            client.send_json({"ui": {"time": time}})
+            time += period
+
         send_ui(client, f"wave{idx}", {"kind": "tab.hidden"})
 
 

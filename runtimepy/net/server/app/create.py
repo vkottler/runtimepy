@@ -7,6 +7,7 @@ from typing import Callable, Optional, TypeVar
 
 # third-party
 from svgen.element.html import Html
+from vcorelib.logging import LoggerMixin
 
 # internal
 from runtimepy.net.arbiter.info import AppInfo
@@ -44,21 +45,29 @@ def create_app(
     ) -> Html:
         """A simple 'Hello, world!' application."""
 
-        # Use the already-rendered document.
-        if config_param(app, "caching", True):
-            global DOCUMENT  # pylint: disable=global-statement
-            if DOCUMENT is not None:
-                return DOCUMENT
+        with LoggerMixin(logger=app.logger).log_time(
+            "Composing HTML document"
+        ):
+            # Not currently used.
+            del request
+            del response
+            del request_data
 
-        # Not currently used.
-        del request
-        del response
-        del request_data
+            populate = True
 
-        # Create the application.
-        WebApplication(app).populate(document, _compose)
+            # Use the already-rendered document.
+            if config_param(app, "caching", True):
+                global DOCUMENT  # pylint: disable=global-statement
+                if DOCUMENT is not None:
+                    document = DOCUMENT
+                    populate = False
 
-        DOCUMENT = document
+            if populate:
+                # Create the application.
+                WebApplication(app).populate(document, _compose)
+
+            DOCUMENT = document
+
         return document
 
     return main

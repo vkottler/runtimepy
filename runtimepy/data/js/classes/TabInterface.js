@@ -222,8 +222,28 @@ class TabInterface {
   hidden_handler() { this.show_state_handler(false); }
 
   onmessage(data) {
+    /* Handle log messages. */
     if ("log_message" in data) {
       this.log(data["log_message"]);
+    }
+    if ("log_messages" in data) {
+      console.log();
+      for (let msg of data["log_messages"]) {
+        this.log(msg);
+      }
+    }
+
+    /* Handle data points. */
+    if ("points" in data) {
+      for (let key in data["points"]) {
+        let points = data["points"][key];
+
+        /* At some point, forward these to plot. */
+
+        /* Update channel-table tracking based on most recent point only. */
+        this.channelsPending[key] = points[points.length - 1][0];
+        this.channelTimestamps[key] = this.time;
+      }
     }
 
     /* Stage any channel-table re-paints. */

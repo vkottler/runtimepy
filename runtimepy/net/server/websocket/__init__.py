@@ -14,6 +14,7 @@ class RuntimepyWebsocketConnection(WebsocketJsonMessageConnection):
     """A class implementing a package-specific WebSocket connection."""
 
     send_interfaces: dict[str, TabMessageSender]
+    ui_time: float
 
     def tab_sender(self, name: str) -> TabMessageSender:
         """Get a tab message-sending interface."""
@@ -33,16 +34,27 @@ class RuntimepyWebsocketConnection(WebsocketJsonMessageConnection):
 
         super()._register_handlers()
         self.send_interfaces = {}
+        self.ui_time = 0.0
 
         async def ui_handler(outbox: JsonMessage, inbox: JsonMessage) -> None:
             """A simple loopback handler."""
 
+            # Handle frame messages.
+            if "time" in inbox:
+                self.ui_time = inbox["time"]
+
+                # Allows tabs to respond on a per-frame basis.
+                for name, tab in ChannelEnvironmentTab.all_tabs.items():
+                    result = tab.handle_frame(self.ui_time)
+                    if result:
+                        outbox[name] = result
+
             # Handle messages from tabs.
-            if "name" in inbox and "event" in inbox:
+            elif "name" in inbox and "event" in inbox:
                 name = inbox["name"]
-                tab = ChannelEnvironmentTab.all_tabs.get(name)
-                if tab is not None:
-                    response = await tab.handle_message(
+                try_tab = ChannelEnvironmentTab.all_tabs.get(name)
+                if try_tab is not None:
+                    response = await try_tab.handle_message(
                         inbox["event"], self.tab_sender(name)
                     )
                     if response:

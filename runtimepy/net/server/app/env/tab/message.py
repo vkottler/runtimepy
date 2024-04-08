@@ -3,15 +3,24 @@ A module implementing a channel-environment tab message-handling interface.
 """
 
 # built-in
+from collections import defaultdict
 import logging
-from typing import Any
+from typing import Any, cast
+
+# third-party
+from vcorelib.logging import DEFAULT_TIME_FORMAT
 
 # internal
 from runtimepy.channel import Channel
 from runtimepy.net.server.app.env.tab.base import ChannelEnvironmentTabBase
-from runtimepy.net.server.app.env.tab.logger import TabLogger, TabMessageSender
+from runtimepy.net.server.app.env.tab.logger import (
+    ListLogger,
+    TabMessageSender,
+)
 from runtimepy.net.stream.json.types import JsonMessage
 from runtimepy.primitives import AnyPrimitive
+
+Point = tuple[str | int | float | bool, int]
 
 
 class ChannelEnvironmentTabMessaging(ChannelEnvironmentTabBase):
@@ -19,6 +28,8 @@ class ChannelEnvironmentTabMessaging(ChannelEnvironmentTabBase):
 
     shown: bool
     shown_ever: bool
+    tab_logger: ListLogger
+    points: dict[str, list[Point]]
 
     def init(self) -> None:
         """Initialize this instance."""
@@ -26,11 +37,20 @@ class ChannelEnvironmentTabMessaging(ChannelEnvironmentTabBase):
         super().init()
         self.shown = False
         self.shown_ever = False
+        self.tab_logger = ListLogger()
+        self.points = defaultdict(list)
 
         self.primitives: dict[str, AnyPrimitive] = {}
         self.callbacks: dict[str, int] = {}
 
-    def _setup_callback(self, name: str, send: TabMessageSender) -> None:
+        # Initialize logging.
+        self.tab_logger.log_messages = []
+        self.tab_logger.setFormatter(logging.Formatter(DEFAULT_TIME_FORMAT))
+
+        if isinstance(self.command.logger, logging.Logger):
+            self.command.logger.addHandler(self.tab_logger)
+
+    def _setup_callback(self, name: str) -> None:
         """Register a channel's value-change callback."""
 
         chan = self.command.env.field_or_channel(name)
@@ -40,15 +60,17 @@ class ChannelEnvironmentTabMessaging(ChannelEnvironmentTabBase):
 
             # Render enumerations etc. here instead of trying to do it
             # in the UI.
-            send({name: self.command.env.value(name)})
+            self.points[name].append(
+                (
+                    self.command.env.value(name),
+                    cast(Channel[Any], chan).raw.last_updated_ns,
+                )
+            )
 
-        if isinstance(chan, Channel):
-            prim = chan.raw
-            self.primitives[name] = prim
-            self.callbacks[name] = prim.register_callback(callback)
-        else:
-            # Still need to handle bit-fields.
-            self.command.logger.warning("%s", name)
+        assert isinstance(chan, Channel) or chan is not None
+        prim = chan.raw
+        self.primitives[name] = prim
+        self.callbacks[name] = prim.register_callback(callback)
 
     def handle_shown_state(
         self, shown: bool, outbox: JsonMessage, send: TabMessageSender
@@ -67,7 +89,7 @@ class ChannelEnvironmentTabMessaging(ChannelEnvironmentTabBase):
 
             # Begin observing channel events for this environment.
             for name in env.names:
-                self._setup_callback(name, send)
+                self._setup_callback(name)
         else:
             # Remove callbacks for primitives.
             for name, val in self.callbacks.items():
@@ -75,17 +97,33 @@ class ChannelEnvironmentTabMessaging(ChannelEnvironmentTabBase):
 
         outbox["handle_shown_state"] = shown
 
+    def handle_frame(self, time: float) -> JsonMessage:
+        """Handle per-frame UI updates."""
+
+        del time
+
+        result: JsonMessage = {}
+
+        # Handle log messages.
+        if self.tab_logger.log_messages:
+            result["log_messages"] = self.tab_logger.log_messages
+            self.tab_logger.log_messages = []
+
+        # Handle channel updates.
+        if self.points:
+            result["points"] = self.points
+            self.points = defaultdict(list)
+
+        return result
+
     def handle_init(self, outbox: JsonMessage, send: TabMessageSender) -> None:
         """Handle tab initialization."""
 
+        # No explicit response.
         del outbox
+        del send
 
-        logger: logging.Logger = self.command.logger  # type: ignore
-
-        # Add a log handler.
-        logger.addHandler(TabLogger.create(send))
-
-        logger.info("Tab initialized.")
+        self.command.logger.info("Tab initialized.")
 
     async def handle_message(
         self, data: dict[str, Any], send: TabMessageSender
