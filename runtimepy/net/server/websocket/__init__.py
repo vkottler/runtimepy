@@ -3,10 +3,10 @@ A module implementing a simple WebSocket server for the package.
 """
 
 # internal
-from runtimepy.channel.environment import ChannelEnvironment
 from runtimepy.net.arbiter.tcp.json import WebsocketJsonMessageConnection
 from runtimepy.net.server.app.env.tab import ChannelEnvironmentTab
 from runtimepy.net.server.app.env.tab.logger import TabMessageSender
+from runtimepy.net.server.struct import UiState
 from runtimepy.net.stream.json.types import JsonMessage
 from runtimepy.net.websocket import WebsocketConnection
 
@@ -30,10 +30,14 @@ class RuntimepyWebsocketConnection(WebsocketJsonMessageConnection):
 
         return self.send_interfaces[name]
 
-    def _poll_ui_state(self, env: ChannelEnvironment, time: float) -> None:
+    def _poll_ui_state(self, ui: UiState, time: float) -> None:
         """Update UI-specific state."""
 
-        env["time"] = time
+        # Update time.
+        ui.env["time"] = time
+
+        # Update connection metrics.
+        ui.json_metrics.update(self.metrics)
 
     def _register_handlers(self) -> None:
         """Register connection-specific command handlers."""
@@ -50,11 +54,9 @@ class RuntimepyWebsocketConnection(WebsocketJsonMessageConnection):
                 ui_time = inbox["time"]
 
                 # Poll UI state.
-                ui_tab = ChannelEnvironmentTab.all_tabs.get("ui")
-                if ui_tab:
-                    env = ui_tab.command.env
-                    if env.finalized:
-                        self._poll_ui_state(env, ui_time)
+                ui = UiState.singleton()
+                if ui and ui.env.finalized:
+                    self._poll_ui_state(ui, ui_time)
 
                 # Allows tabs to respond on a per-frame basis.
                 for name, tab in ChannelEnvironmentTab.all_tabs.items():

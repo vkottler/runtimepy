@@ -27,6 +27,14 @@ class ChannelMetrics:
         self.kbps = _Float()
         self._kbps_tracker = _RateTracker(depth=METRICS_DEPTH)
 
+    def update(self, other: "ChannelMetrics") -> None:
+        """Update values in this instance from values in another instance."""
+
+        self.messages.value = other.messages.value
+        self.message_rate.value = other.message_rate.value
+        self.bytes.value = other.bytes.value
+        self.kbps.value = other.kbps.value
+
     def __str__(self) -> str:
         """Get metrics as a string."""
 
