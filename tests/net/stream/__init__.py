@@ -103,11 +103,11 @@ async def runtimepy_http_test(app: AppInfo) -> int:
             server = conn
     assert server is not None
 
+    await runtimepy_http_client_server(client, server)
+
     await runtimepy_websocket_client(
         app.single(pattern="client", kind=RuntimepyWebsocketConnection)
     )
-
-    await runtimepy_http_client_server(client, server)
 
     return 0
 

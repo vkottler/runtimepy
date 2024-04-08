@@ -29,6 +29,7 @@ class WebApplication:
         "WindowHashManager",
         "WorkerInterface",
         "Plot",
+        "ChannelTable",
         "TabInterface",
         "TabFilter",
         "App",

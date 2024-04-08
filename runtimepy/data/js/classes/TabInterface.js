@@ -1,3 +1,5 @@
+const staleMs = 500;
+
 /*
  * Define class for generated code to use (instead of generating so many
  * methods).
@@ -17,6 +19,16 @@ class TabInterface {
     this.message_handlers = [];
 
     tabs[this.name] = this;
+
+    /* Channel-table manager. */
+    this.channels = undefined;
+    this.channelsPending = {};
+    this.time = 0;
+    this.channelTimestamps = {};
+    let table = this.query("tbody");
+    if (table) {
+      this.channels = new ChannelTable(this.name, table);
+    }
 
     /* Always send a message */
     this.show_state_handlers = [ (is_shown) => {
@@ -210,12 +222,57 @@ class TabInterface {
   hidden_handler() { this.show_state_handler(false); }
 
   onmessage(data) {
+    /* Handle log messages. */
     if ("log_message" in data) {
       this.log(data["log_message"]);
+    }
+    if ("log_messages" in data) {
+      console.log();
+      for (let msg of data["log_messages"]) {
+        this.log(msg);
+      }
+    }
+
+    /* Handle data points. */
+    if ("points" in data) {
+      for (let key in data["points"]) {
+        let points = data["points"][key];
+
+        /* At some point, forward these to plot. */
+
+        /* Update channel-table tracking based on most recent point only. */
+        this.channelsPending[key] = points[points.length - 1][0];
+        this.channelTimestamps[key] = this.time;
+      }
+    }
+
+    /* Stage any channel-table re-paints. */
+    if (this.channels) {
+      for (let key in data) {
+        if (key in this.channels.rows) {
+          this.channelsPending[key] = data[key];
+          this.channelTimestamps[key] = this.time;
+        }
+      }
     }
 
     for (const handler of this.message_handlers) {
       handler(data);
+    }
+  }
+
+  poll(time) {
+    this.time = time;
+
+    if (this.channels && this.isShown()) {
+      /* Update channel values. */
+      if (this.channelsPending) {
+        this.channels.onmessage(this.channelsPending);
+        this.channelsPending = {};
+      }
+
+      /* Poll staleness. */
+      this.channels.pollStaleness(this.channelTimestamps, this.time, staleMs);
     }
   }
 }

@@ -15,6 +15,12 @@ class ConnectionMetrics:
         self.tx = ChannelMetrics()
         self.rx = ChannelMetrics()
 
+    def update(self, other: "ConnectionMetrics") -> None:
+        """Update values in this instance from values in another instance."""
+
+        self.tx.update(other.tx)
+        self.rx.update(other.rx)
+
     def reset(self) -> None:
         """Reset metrics."""
         self.tx.reset()

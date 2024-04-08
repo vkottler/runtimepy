@@ -11,6 +11,7 @@ class BooleanPrimitive(_Primitive[bool]):
     """A simple primitive class for booleans."""
 
     kind = _Bool
+    value: bool
 
     def __init__(self, value: bool = False) -> None:
         """Initialize this boolean primitive."""
@@ -18,15 +19,15 @@ class BooleanPrimitive(_Primitive[bool]):
 
     def toggle(self) -> None:
         """Toggle the underlying value."""
-        self.raw.value = not self.raw.value
+        self.value = not self.raw.value
 
     def set(self) -> None:
         """Coerce the underlying value to true."""
-        self.raw.value = True
+        self.value = True
 
     def clear(self) -> None:
         """Coerce the underlying value to false."""
-        self.raw.value = False
+        self.value = False
 
 
 Bool = BooleanPrimitive

@@ -56,7 +56,12 @@ async function start(config) {
 
   /* Set up the main request-animation-frame loop. */
   function render(time) {
+    /* Render plot. */
     plots.render(time);
+
+    /* Keep the server synchronized with frames. */
+    conns["json"].send_json({"ui" : {"time" : time}});
+
     requestAnimationFrame(render);
   }
   requestAnimationFrame(render);

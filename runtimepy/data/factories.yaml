@@ -28,6 +28,7 @@ factories:
 
   # Useful structs.
   - {name: runtimepy.net.arbiter.struct.SampleStruct}
+  - {name: runtimepy.net.server.struct.UiState}
 
 ports:
   # Reserve ports for JSON listeners.

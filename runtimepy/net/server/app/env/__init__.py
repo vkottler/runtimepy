@@ -3,9 +3,11 @@ A module implementing a channel-environment tab HTML interface.
 """
 
 # internal
+from runtimepy import PKG_NAME
 from runtimepy.net.arbiter.info import AppInfo
 from runtimepy.net.server.app.bootstrap.elements import input_box
 from runtimepy.net.server.app.bootstrap.tabs import TabbedContent
+from runtimepy.net.server.app.elements import div
 from runtimepy.net.server.app.env.modal import Modal
 from runtimepy.net.server.app.env.tab import ChannelEnvironmentTab
 from runtimepy.net.server.app.placeholder import dummy_tabs, under_construction
@@ -39,11 +41,6 @@ def channel_environments(app: AppInfo, tabs: TabbedContent) -> None:
             struct.name, struct.command, app, tabs, icon="bucket"
         ).entry()
 
-    # Sound tab.
-    SoundTab("sound", app, tabs, source="sound", icon="boombox").entry()
-
-    dummy_tabs(3, app, tabs)
-
     # Toggle channel-table button.
     tabs.add_button(
         "Toggle channel table",
@@ -52,9 +49,16 @@ def channel_environments(app: AppInfo, tabs: TabbedContent) -> None:
         id="channels-button",
     )
 
-    # Application modals.
-    Modal(tabs)
-    Modal(tabs, name="diagnostics", icon="activity")
+    # Experimental features.
+    if app.config_param("experimental", False):
+        # Sound tab.
+        SoundTab("sound", app, tabs, source="sound", icon="boombox").entry()
+
+        dummy_tabs(3, app, tabs)
+
+        # Application modals.
+        Modal(tabs)
+        Modal(tabs, name="diagnostics", icon="activity")
 
     # Placeholder for using space at the bottom of the tab list.
     under_construction(
@@ -62,3 +66,6 @@ def channel_environments(app: AppInfo, tabs: TabbedContent) -> None:
         note="unused space",
         class_str="border-start border-bottom border-end",
     )
+
+    # Add splash screen element.
+    div(id=f"{PKG_NAME}-splash", parent=tabs.container)
