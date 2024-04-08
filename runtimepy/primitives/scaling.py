@@ -3,10 +3,10 @@ A module implementing interfaces for working with channel scaling polynomials.
 """
 
 # built-in
-from typing import List, Union
+from typing import Union
 
 Numeric = Union[float, int]
-ChannelScaling = List[Numeric]
+ChannelScaling = list[Numeric]
 
 
 def invert(

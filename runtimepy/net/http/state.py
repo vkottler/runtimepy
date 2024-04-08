@@ -4,7 +4,7 @@ A module implementing an HTTP-header processing state interface.
 
 # built-in
 from dataclasses import dataclass
-from typing import List, Optional, Type, TypeVar
+from typing import Optional, TypeVar
 
 # third-party
 from vcorelib import DEFAULT_ENCODING
@@ -20,7 +20,7 @@ T = TypeVar("T", bound=HeadersMixin)
 class HeaderProcessingState:
     """A container for header-related processing state."""
 
-    lines: List[str]
+    lines: list[str]
     line: str
 
     @staticmethod
@@ -28,7 +28,7 @@ class HeaderProcessingState:
         """Create a default instance."""
         return HeaderProcessingState([], "")
 
-    def service(self, buffer: ByteFifo, kind: Type[T]) -> Optional[T]:
+    def service(self, buffer: ByteFifo, kind: type[T]) -> Optional[T]:
         """
         Continue processing the input fifo as if it contains request-header
         data.

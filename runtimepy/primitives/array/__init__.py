@@ -6,8 +6,6 @@ A module for implementing arrays of arbitrary primitives.
 from copy import copy as _copy
 from struct import pack as _pack
 from struct import unpack as _unpack
-from typing import Dict as _Dict
-from typing import List as _List
 from typing import NamedTuple
 from typing import cast as _cast
 
@@ -38,19 +36,19 @@ class PrimitiveArray(Serializable):
         self,
         *primitives: _AnyPrimitive,
         byte_order: _ByteOrder = _DEFAULT_BYTE_ORDER,
-        fragments: _List[ArrayFragmentSpec] = None,
+        fragments: list[ArrayFragmentSpec] = None,
         chain: Serializable = None,
     ) -> None:
         """Initialize this primitive array."""
 
-        self._primitives: _List[_AnyPrimitive] = []
+        self._primitives: list[_AnyPrimitive] = []
         self.byte_order = byte_order
         self._format: str = self.byte_order.fmt
 
         # Keep track of a quick lookup for converting between element indices
         # and byte indices.
-        self._bytes_to_index: _Dict[int, int] = {0: 0}
-        self._index_to_bytes: _Dict[int, int] = {0: 0}
+        self._bytes_to_index: dict[int, int] = {0: 0}
+        self._index_to_bytes: dict[int, int] = {0: 0}
 
         self.size = 0
         self.chain = None
@@ -61,8 +59,8 @@ class PrimitiveArray(Serializable):
 
         super().__init__(byte_order=self.byte_order, chain=chain)
 
-        self._fragments: _List["PrimitiveArray"] = []
-        self._fragment_specs: _List[ArrayFragmentSpec] = []
+        self._fragments: list["PrimitiveArray"] = []
+        self._fragment_specs: list[ArrayFragmentSpec] = []
 
         # Create array fragments from the specifications.
         if fragments is None:

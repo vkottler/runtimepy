@@ -2,5 +2,5 @@
 includes:
   - package://runtimepy/server_base.yaml
 
-app:
+init:
   - runtimepy.net.server.app.setup

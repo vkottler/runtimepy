@@ -6,7 +6,6 @@ extended.
 # built-in
 import asyncio as _asyncio
 from typing import Generic as _Generic
-from typing import Type as _Type
 from typing import TypeVar as _TypeVar
 
 # internal
@@ -26,7 +25,7 @@ T = _TypeVar("T", bound=_WebsocketConnection)
 class WebsocketConnectionFactory(_ConnectionFactory, _Generic[T]):
     """A class implementing a basic WebSocket connection factory."""
 
-    kind: _Type[T]
+    kind: type[T]
 
     async def client(self, name: str, *args, **kwargs) -> _Connection:
         """Create a client connection."""

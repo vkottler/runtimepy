@@ -3,11 +3,8 @@ A module implementing a base channel environment.
 """
 
 # built-in
-from typing import Dict as _Dict
 from typing import Iterable as _Iterable
 from typing import Optional as _Optional
-from typing import Set as _Set
-from typing import Tuple as _Tuple
 from typing import Union as _Union
 from typing import cast as _cast
 
@@ -33,12 +30,12 @@ from runtimepy.primitives.field.manager import (
 from runtimepy.registry.name import RegistryKey as _RegistryKey
 
 ChannelValue = _Union[bool, int, float, str]
-ValueMap = _Dict[_RegistryKey, ChannelValue]
+ValueMap = dict[_RegistryKey, ChannelValue]
 
-ChannelResult = _Tuple[_AnyChannel, _Optional[_RuntimeEnum]]
-BitfieldResult = _Tuple[_BitField, _Optional[_RuntimeEnum]]
-BoolChannelResult = _Tuple[_BoolChannel, _Optional[_RuntimeEnum]]
-IntChannelResult = _Tuple[_IntChannel, _Optional[_RuntimeEnum]]
+ChannelResult = tuple[_AnyChannel, _Optional[_RuntimeEnum]]
+BitfieldResult = tuple[_BitField, _Optional[_RuntimeEnum]]
+BoolChannelResult = tuple[_BoolChannel, _Optional[_RuntimeEnum]]
+IntChannelResult = tuple[_IntChannel, _Optional[_RuntimeEnum]]
 
 FieldOrChannel = _Union[_BitField, _AnyChannel]
 
@@ -75,24 +72,24 @@ class BaseChannelEnvironment(_NamespaceMixin, FinalizeMixin):
 
         # Keep a mapping of each channel's name and integer identifier to the
         # underlying enumeration.
-        self.channel_enums: _Dict[_AnyChannel, _RuntimeEnum] = {
+        self.channel_enums: dict[_AnyChannel, _RuntimeEnum] = {
             chan: self.enums[chan.enum]
             for chan in self.channels.items.values()
             if chan.is_enum
         }
 
         # Organize channel by Python type.
-        self.bools: _Set[_BoolChannel] = {
+        self.bools: set[_BoolChannel] = {
             chan
             for chan in self.channels.items.values()
             if chan.type.is_boolean
         }
-        self.ints: _Set[_IntChannel] = {
+        self.ints: set[_IntChannel] = {
             chan
             for chan in self.channels.items.values()
             if chan.type.is_integer
         }
-        self.floats: _Set[_FloatChannel] = {
+        self.floats: set[_FloatChannel] = {
             chan for chan in self.channels.items.values() if chan.type.is_float
         }
 

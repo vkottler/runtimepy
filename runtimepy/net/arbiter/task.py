@@ -4,7 +4,6 @@ A module implement a base class for arbiter periodic tasks.
 
 # built-in
 from typing import Generic as _Generic
-from typing import Type as _Type
 from typing import TypeVar as _TypeVar
 
 # internal
@@ -34,4 +33,4 @@ T = _TypeVar("T", bound=ArbiterTask)
 class TaskFactory(_Generic[T]):
     """A task-factory base class."""
 
-    kind: _Type[T]
+    kind: type[T]

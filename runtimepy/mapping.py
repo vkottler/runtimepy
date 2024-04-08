@@ -4,13 +4,10 @@ A module implementing a generic, two-way mapping interface.
 
 # built-in
 import re
-from typing import Dict as _Dict
 from typing import Generic as _Generic
 from typing import Iterable, Iterator
-from typing import List as _List
 from typing import MutableMapping as _MutableMapping
 from typing import Optional as _Optional
-from typing import Type as _Type
 from typing import TypeVar as _TypeVar
 from typing import Union as _Union
 from typing import cast as _cast
@@ -64,9 +61,9 @@ class TwoWayNameMapping(_RegexMixin, LoggerMixin, _Generic[T]):
     ) -> None:
         """Initialize this name registry."""
 
-        self._mapping: _Dict[T, str] = {}
-        self._reverse: _Dict[str, T] = {}
-        self.registered_order: _List[str] = []
+        self._mapping: dict[T, str] = {}
+        self._reverse: dict[str, T] = {}
+        self.registered_order: list[str] = []
         LoggerMixin.__init__(self)
 
         if mapping is not None:
@@ -130,13 +127,13 @@ class TwoWayNameMapping(_RegexMixin, LoggerMixin, _Generic[T]):
         """Iterate over names."""
         yield from self._reverse
 
-    def asdict(self) -> _Dict[str, T]:
+    def asdict(self) -> dict[str, T]:
         """Provide a dictionary representation."""
         return self._reverse
 
     @classmethod
     def int_from_dict(
-        cls: _Type[IntMapping], data: IntMappingData
+        cls: type[IntMapping], data: IntMappingData
     ) -> IntMapping:
         """
         Create an integer-to-name mapping from a dictionary with arbitrary
@@ -161,7 +158,7 @@ class TwoWayNameMapping(_RegexMixin, LoggerMixin, _Generic[T]):
 
     @classmethod
     def bool_from_dict(
-        cls: _Type[BoolMapping], data: BoolMappingData
+        cls: type[BoolMapping], data: BoolMappingData
     ) -> BoolMapping:
         """
         Create a boolean-to-name mapping from a dictionary with arbitrary data.

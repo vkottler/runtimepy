@@ -4,7 +4,6 @@ A module implementing a runtime structure base.
 
 # built-in
 from logging import getLogger as _getLogger
-from typing import Dict as _Dict
 
 # third-party
 from vcorelib.io.types import JsonObject as _JsonObject
@@ -37,4 +36,4 @@ class RuntimeStructBase(LoggerMixinLevelControl, ChannelEnvironmentMixin):
         """
 
 
-StructMap = _Dict[str, RuntimeStructBase]
+StructMap = dict[str, RuntimeStructBase]

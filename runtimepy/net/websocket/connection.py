@@ -13,8 +13,6 @@ from typing import AsyncIterator as _AsyncIterator
 from typing import Awaitable as _Awaitable
 from typing import Callable as _Callable
 from typing import Optional as _Optional
-from typing import Tuple as _Tuple
-from typing import Type as _Type
 from typing import TypeVar as _TypeVar
 from typing import Union as _Union
 
@@ -91,7 +89,7 @@ class WebsocketConnection(Connection):
         await self.protocol.close()
 
     @classmethod
-    async def create_connection(cls: _Type[T], uri: str, **kwargs) -> T:
+    async def create_connection(cls: type[T], uri: str, **kwargs) -> T:
         """Connect a client to an endpoint."""
 
         protocol = await getattr(websockets, "connect")(uri, **kwargs)
@@ -99,7 +97,7 @@ class WebsocketConnection(Connection):
 
     @classmethod
     @_asynccontextmanager
-    async def client(cls: _Type[T], uri: str, **kwargs) -> _AsyncIterator[T]:
+    async def client(cls: type[T], uri: str, **kwargs) -> _AsyncIterator[T]:
         """A wrapper for connecting a client."""
 
         async with getattr(websockets, "connect")(uri, **kwargs) as protocol:
@@ -107,7 +105,7 @@ class WebsocketConnection(Connection):
 
     @classmethod
     def server_handler(
-        cls: _Type[T],
+        cls: type[T],
         init: ConnectionInit[T] = None,
         stop_sig: _asyncio.Event = None,
         manager: _ConnectionManager = None,
@@ -155,7 +153,7 @@ class WebsocketConnection(Connection):
 
     @classmethod
     @_asynccontextmanager
-    async def create_pair(cls: _Type[T]) -> _AsyncIterator[_Tuple[T, T]]:
+    async def create_pair(cls: type[T]) -> _AsyncIterator[tuple[T, T]]:
         """Obtain a connected pair of WebsocketConnection objects."""
 
         server_conn: _Optional[T] = None
@@ -179,7 +177,7 @@ class WebsocketConnection(Connection):
     @classmethod
     @_asynccontextmanager
     async def serve(
-        cls: _Type[T],
+        cls: type[T],
         init: ConnectionInit[T] = None,
         stop_sig: _asyncio.Event = None,
         manager: _ConnectionManager = None,
@@ -200,7 +198,7 @@ class WebsocketConnection(Connection):
 
     @classmethod
     async def app(
-        cls: _Type[T],
+        cls: type[T],
         stop_sig: _asyncio.Event,
         init: ConnectionInit[T] = None,
         manager: _ConnectionManager = None,

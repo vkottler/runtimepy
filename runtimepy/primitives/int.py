@@ -8,14 +8,14 @@ from typing import Union as _Union
 # internal
 from runtimepy.primitives.base import Primitive as _Primitive
 from runtimepy.primitives.scaling import ChannelScaling
-from runtimepy.primitives.type.int import Int8 as _Int8
-from runtimepy.primitives.type.int import Int16 as _Int16
-from runtimepy.primitives.type.int import Int32 as _Int32
-from runtimepy.primitives.type.int import Int64 as _Int64
-from runtimepy.primitives.type.int import Uint8 as _Uint8
-from runtimepy.primitives.type.int import Uint16 as _Uint16
-from runtimepy.primitives.type.int import Uint32 as _Uint32
-from runtimepy.primitives.type.int import Uint64 as _Uint64
+from runtimepy.primitives.types.int import Int8 as _Int8
+from runtimepy.primitives.types.int import Int16 as _Int16
+from runtimepy.primitives.types.int import Int32 as _Int32
+from runtimepy.primitives.types.int import Int64 as _Int64
+from runtimepy.primitives.types.int import Uint8 as _Uint8
+from runtimepy.primitives.types.int import Uint16 as _Uint16
+from runtimepy.primitives.types.int import Uint32 as _Uint32
+from runtimepy.primitives.types.int import Uint64 as _Uint64
 
 
 class Int8Primitive(_Primitive[int]):

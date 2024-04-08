@@ -14,13 +14,12 @@ from typing import Any as _Any
 from typing import AsyncIterator as _AsyncIterator
 from typing import Callable as _Callable
 from typing import Optional as _Optional
-from typing import Tuple as _Tuple
-from typing import Type as _Type
 from typing import TypeVar as _TypeVar
 from typing import Union as _Union
 
 # internal
 from runtimepy.net import sockname as _sockname
+from runtimepy.net.backoff import ExponentialBackoff
 from runtimepy.net.connection import BinaryMessage as _BinaryMessage
 from runtimepy.net.connection import Connection as _Connection
 from runtimepy.net.connection import EchoConnection as _EchoConnection
@@ -104,10 +103,14 @@ class TcpConnection(_Connection, _TransportMixin):
         return result is not None
 
     @classmethod
-    async def create_connection(cls: _Type[T], **kwargs) -> T:
+    async def create_connection(
+        cls: type[T], backoff: ExponentialBackoff = None, **kwargs
+    ) -> T:
         """Create a TCP connection."""
 
-        transport, protocol = await tcp_transport_protocol_backoff(**kwargs)
+        transport, protocol = await tcp_transport_protocol_backoff(
+            backoff=backoff, **kwargs
+        )
         inst = cls(transport, protocol)
 
         # Is there a better way to do this? We can't restart a server's side
@@ -119,7 +122,7 @@ class TcpConnection(_Connection, _TransportMixin):
     @classmethod
     @_asynccontextmanager
     async def serve(
-        cls: _Type[T],
+        cls: type[T],
         callback: ConnectionCallback[T] = None,
         **kwargs,
     ) -> _AsyncIterator[_Any]:
@@ -142,17 +145,21 @@ class TcpConnection(_Connection, _TransportMixin):
         )
         async with server:
             for socket in server.sockets:
+                sockname = socket.getsockname()
                 LOG.info(
-                    "Started %s server listening on '%s%s'.",
+                    "Started %s server listening on '%s%s' (%s%s:%d).",
                     cls.log_alias,
                     cls.log_prefix,
                     _sockname(socket),
+                    cls.log_prefix,
+                    sockname[0] if sockname[0] != "0.0.0.0" else "localhost",
+                    sockname[1],
                 )
             yield server
 
     @classmethod
     async def app(
-        cls: _Type[T],
+        cls: type[T],
         stop_sig: _asyncio.Event,
         callback: ConnectionCallback[T] = None,
         serving_callback: _Callable[[_Any], None] = None,
@@ -183,7 +190,7 @@ class TcpConnection(_Connection, _TransportMixin):
 
     @classmethod
     @_asynccontextmanager
-    async def create_pair(cls: _Type[T]) -> _AsyncIterator[_Tuple[T, T]]:
+    async def create_pair(cls: type[T]) -> _AsyncIterator[tuple[T, T]]:
         """Create a connection pair."""
 
         cond = _Semaphore(0)

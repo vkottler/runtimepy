@@ -3,16 +3,16 @@ A module implementing a type interface for integers.
 """
 
 # internal
-from runtimepy.primitives.type.base import Int8Ctype as _Int8Ctype
-from runtimepy.primitives.type.base import Int16Ctype as _Int16Ctype
-from runtimepy.primitives.type.base import Int32Ctype as _Int32Ctype
-from runtimepy.primitives.type.base import Int64Ctype as _Int64Ctype
-from runtimepy.primitives.type.base import PrimitiveType as _PrimitiveType
-from runtimepy.primitives.type.base import Uint8Ctype as _Uint8Ctype
-from runtimepy.primitives.type.base import Uint16Ctype as _Uint16Ctype
-from runtimepy.primitives.type.base import Uint32Ctype as _Uint32Ctype
-from runtimepy.primitives.type.base import Uint64Ctype as _Uint64Ctype
-from runtimepy.primitives.type.bounds import IntegerBounds
+from runtimepy.primitives.types.base import Int8Ctype as _Int8Ctype
+from runtimepy.primitives.types.base import Int16Ctype as _Int16Ctype
+from runtimepy.primitives.types.base import Int32Ctype as _Int32Ctype
+from runtimepy.primitives.types.base import Int64Ctype as _Int64Ctype
+from runtimepy.primitives.types.base import PrimitiveType as _PrimitiveType
+from runtimepy.primitives.types.base import Uint8Ctype as _Uint8Ctype
+from runtimepy.primitives.types.base import Uint16Ctype as _Uint16Ctype
+from runtimepy.primitives.types.base import Uint32Ctype as _Uint32Ctype
+from runtimepy.primitives.types.base import Uint64Ctype as _Uint64Ctype
+from runtimepy.primitives.types.bounds import IntegerBounds
 
 
 class Int8Type(_PrimitiveType[_Int8Ctype]):

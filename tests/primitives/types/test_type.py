@@ -3,7 +3,7 @@ Test the 'primitives.type' module.
 """
 
 # module under test
-from runtimepy.primitives.type import normalize
+from runtimepy.primitives.types import normalize
 
 
 def test_primitive_type_basic():

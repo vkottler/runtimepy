@@ -27,7 +27,7 @@ from runtimepy.primitives.int import Uint8 as _Uint8
 from runtimepy.primitives.int import Uint16 as _Uint16
 from runtimepy.primitives.int import Uint32 as _Uint32
 from runtimepy.primitives.int import Uint64 as _Uint64
-from runtimepy.primitives.type import AnyPrimitiveType as _AnyPrimitiveType
+from runtimepy.primitives.types import AnyPrimitiveType as _AnyPrimitiveType
 from runtimepy.registry.item import RegistryItem as _RegistryItem
 
 

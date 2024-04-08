@@ -235,7 +235,7 @@ class GlobalEnvironment(UserDict[str, ChannelCommandProcessor], LoggerMixin):
 
         if name not in self:
             self[name] = env
-            self.logger.info("Registered channel environment '%s'.", name)
+            self.logger.debug("Registered channel environment '%s'.", name)
 
 
 GLOBAL = GlobalEnvironment()

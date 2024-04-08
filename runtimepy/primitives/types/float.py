@@ -3,9 +3,9 @@ A module implementing a type interface for floating-point numbers.
 """
 
 # internal
-from runtimepy.primitives.type.base import DoubleCtype as _DoubleCtype
-from runtimepy.primitives.type.base import FloatCtype as _FloatCtype
-from runtimepy.primitives.type.base import PrimitiveType as _PrimitiveType
+from runtimepy.primitives.types.base import DoubleCtype as _DoubleCtype
+from runtimepy.primitives.types.base import FloatCtype as _FloatCtype
+from runtimepy.primitives.types.base import PrimitiveType as _PrimitiveType
 
 
 class HalfType(_PrimitiveType[_FloatCtype]):

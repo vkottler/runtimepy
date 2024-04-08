@@ -6,7 +6,6 @@ A module implementing a network-connection interface.
 from abc import ABC as _ABC
 import asyncio as _asyncio
 from contextlib import suppress as _suppress
-from typing import List as _List
 from typing import Optional as _Optional
 from typing import Union as _Union
 
@@ -62,7 +61,7 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
         self._binary_messages: _asyncio.Queue[BinaryMessage] = _asyncio.Queue()
         self.tx_binary_hwm: int = 0
 
-        self._tasks: _List[_asyncio.Task[None]] = []
+        self._tasks: list[_asyncio.Task[None]] = []
         self.initialized = _asyncio.Event()
         self.exited = _asyncio.Event()
 

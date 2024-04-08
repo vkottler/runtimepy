@@ -4,7 +4,6 @@ A module implementing a basic UDP connection factory that can be extended.
 
 # built-in
 from typing import Generic as _Generic
-from typing import Type as _Type
 from typing import TypeVar as _TypeVar
 
 # internal
@@ -22,7 +21,7 @@ class UdpConnectionFactory(
 ):  # pylint: disable=abstract-method
     """A class implementing a basic UDP connection factory."""
 
-    kind: _Type[T]
+    kind: type[T]
 
     async def client(self, name: str, *args, **kwargs) -> _Connection:
         """Create a client connection."""

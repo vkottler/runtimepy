@@ -4,10 +4,8 @@ A channel-environment extension for creating arrays of primitives.
 
 # built-in
 from typing import Iterable as _Iterable
-from typing import List as _List
 from typing import NamedTuple
 from typing import Optional as _Optional
-from typing import Set as _Set
 
 # internal
 from runtimepy.channel.environment.base import (
@@ -21,7 +19,7 @@ from runtimepy.registry.name import RegistryKey as _RegistryKey
 class ChannelArray(NamedTuple):
     """A class for managing an array of channels and bit-fields."""
 
-    names: _List[str]
+    names: list[str]
     array: _PrimitiveArray
 
     @staticmethod
@@ -43,10 +41,10 @@ class ArrayChannelEnvironment(_BaseChannelEnvironment):
         result = ChannelArray.create()
 
         curr_fields: _Optional[_BitFields] = None
-        invalid_field_names: _Set[str] = set()
-        available_field_names: _Set[str] = set()
+        invalid_field_names: set[str] = set()
+        available_field_names: set[str] = set()
 
-        names: _Set[str] = set()
+        names: set[str] = set()
 
         for key in keys:
             # All keys must be registered names.

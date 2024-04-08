@@ -5,10 +5,6 @@ A protocol extension for importing and exporting JSON.
 # built-in
 from json import dumps as _dumps
 from typing import BinaryIO as _BinaryIO
-from typing import Dict as _Dict
-from typing import List as _List
-from typing import Set as _Set
-from typing import Type as _Type
 from typing import TypeVar as _TypeVar
 from typing import Union as _Union
 from typing import cast as _cast
@@ -46,9 +42,7 @@ class JsonProtocol(ProtocolBase):
         """Write protocol metadata to a stream."""
         return stream.write(self.meta_bytes(resolve_enum=resolve_enum))
 
-    def export_json(
-        self, resolve_enum: bool = True
-    ) -> _Dict[str, _JsonObject]:
+    def export_json(self, resolve_enum: bool = True) -> dict[str, _JsonObject]:
         """Export this protocol's data to JSON."""
 
         data = self._fields.export_json(resolve_enum=resolve_enum)
@@ -67,7 +61,7 @@ class JsonProtocol(ProtocolBase):
         )
 
         # Export enums used by regular fields.
-        enum_ids: _Set[int] = {x.id for x in self._enum_fields.values()}
+        enum_ids: set[int] = {x.id for x in self._enum_fields.values()}
         json_obj = data[ENUMS_KEY]
         json_obj.update(
             {
@@ -78,7 +72,7 @@ class JsonProtocol(ProtocolBase):
         )
 
         # Export the build specification.
-        build: _List[_Union[int, _JsonObject, str]] = []
+        build: list[_Union[int, _JsonObject, str]] = []
         for item in self._build:
             if isinstance(item, (int, str)):
                 build.append(item)
@@ -96,7 +90,7 @@ class JsonProtocol(ProtocolBase):
         return data
 
     @classmethod
-    def import_json(cls: _Type[T], data: _Dict[str, _JsonObject]) -> T:
+    def import_json(cls: type[T], data: dict[str, _JsonObject]) -> T:
         """Create a bit-fields manager from JSON data."""
 
         # Only set values once (at the end).
@@ -107,7 +101,7 @@ class JsonProtocol(ProtocolBase):
         fields = BitFieldsManager.import_json(data)
 
         # Create the build specification.
-        build: _List[_Union[int, FieldSpec, str]] = []
+        build: list[_Union[int, FieldSpec, str]] = []
         for item in data[BUILD_KEY]:
             if isinstance(item, int):
                 build.append(item)

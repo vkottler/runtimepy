@@ -3,9 +3,7 @@ A channel-environment extension for loading and saving files.
 """
 
 # built-in
-from typing import Dict as _Dict
 from typing import Optional as _Optional
-from typing import Type as _Type
 from typing import TypeVar as _TypeVar
 from typing import cast as _cast
 
@@ -49,9 +47,7 @@ NAMES_FILE = f"{NAMES_KEY}.json"
 class FileChannelEnvironment(_BaseChannelEnvironment):
     """A class integrating file-system operations with channel environments."""
 
-    def export_json(
-        self, resolve_enum: bool = True
-    ) -> _Dict[str, _JsonObject]:
+    def export_json(self, resolve_enum: bool = True) -> dict[str, _JsonObject]:
         """Get this channel environment as a single dictionary."""
 
         # Only allow exporting finalized environments.
@@ -127,7 +123,7 @@ class FileChannelEnvironment(_BaseChannelEnvironment):
 
     @classmethod
     def load_json(
-        cls: _Type[T], data: _Dict[str, _JsonObject], finalize: bool = True
+        cls: type[T], data: dict[str, _JsonObject], finalize: bool = True
     ) -> T:
         """Load a channel environment from JSON data."""
 
@@ -158,7 +154,7 @@ class FileChannelEnvironment(_BaseChannelEnvironment):
 
     @classmethod
     def load(
-        cls: _Type[T],
+        cls: type[T],
         channels: _Pathlike = CHANNELS_FILE,
         enums: _Pathlike = ENUMS_FILE,
         values: _Pathlike = VALUES_FILE,
@@ -206,7 +202,7 @@ class FileChannelEnvironment(_BaseChannelEnvironment):
 
     @classmethod
     def load_directory(
-        cls: _Type[T], path: _Pathlike, finalize: bool = True
+        cls: type[T], path: _Pathlike, finalize: bool = True
     ) -> T:
         """Load a channel environment from a directory."""
 

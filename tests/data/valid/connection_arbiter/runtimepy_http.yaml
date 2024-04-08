@@ -1,7 +1,6 @@
 ---
 includes_left:
   - package://runtimepy/server.yaml
-  - package://runtimepy/dummy_load.yaml
 
 app:
   - tests.net.stream.runtimepy_http_test

@@ -7,7 +7,6 @@ from contextlib import ExitStack, contextmanager
 from typing import Any as _Any
 from typing import BinaryIO, Iterable, Iterator, NamedTuple
 from typing import Optional as _Optional
-from typing import Type as _Type
 from typing import Union, cast
 
 # third-party
@@ -24,7 +23,7 @@ from runtimepy.mixins.regex import CHANNEL_PATTERN as _CHANNEL_PATTERN
 from runtimepy.primitives import ChannelScaling, Primitive
 from runtimepy.primitives import Primitivelike as _Primitivelike
 from runtimepy.primitives import normalize
-from runtimepy.primitives.type.base import PythonPrimitive
+from runtimepy.primitives.types.base import PythonPrimitive
 from runtimepy.registry import Registry as _Registry
 from runtimepy.registry.name import NameRegistry as _NameRegistry
 from runtimepy.registry.name import RegistryKey as _RegistryKey
@@ -70,7 +69,7 @@ class ChannelRegistry(_Registry[_Channel[_Any]]):
     header_ready: bool
 
     @property
-    def kind(self) -> _Type[_Channel[_Any]]:
+    def kind(self) -> type[_Channel[_Any]]:
         """Determine what kind of registry this is."""
         return _Channel
 

@@ -4,16 +4,8 @@ connections or servers.
 """
 
 # built-in
-from pathlib import Path as _Path
 from site import addsitedir as _addsitedir
-import socket as _socket
-import sys
-from typing import Any as _Any
-from typing import Dict as _Dict
 from typing import Iterable as _Iterable
-from typing import List as _List
-from typing import Optional as _Optional
-from typing import cast as _cast
 
 # third-party
 from vcorelib.dict import merge as _merge
@@ -25,100 +17,13 @@ from vcorelib.paths import find_file
 from vcorelib.paths import normalize as _normalize
 
 # internal
-from runtimepy.net import get_free_socket_name, normalize_host
+from runtimepy import DEFAULT_EXT, PKG_NAME
+from runtimepy.net.arbiter.config.codec import ConnectionArbiterConfig
+from runtimepy.net.arbiter.config.util import fix_args, fix_kwargs, list_adder
 from runtimepy.net.arbiter.imports import (
     ImportConnectionArbiter as _ImportConnectionArbiter,
 )
-from runtimepy.schemas import RuntimepyDictCodec as _RuntimepyDictCodec
-
-
-class ConnectionArbiterConfig(_RuntimepyDictCodec):
-    """
-    A class for encoding and decoding connection-arbiter configuration data.
-    """
-
-    directory: _Path
-
-    def init(self, data: _JsonObject) -> None:
-        """Perform implementation-specific initialization."""
-
-        self.data = data
-
-        port_overrides: _Dict[str, int] = data.get(
-            "port_overrides",
-            {},  # type: ignore
-        )
-
-        # Process ports.
-        self.ports: _Dict[str, int] = {}
-        for item in _cast(_List[_Dict[str, _Any]], data.get("ports", [])):
-            port = get_free_socket_name(
-                local=normalize_host(
-                    item["host"],
-                    port_overrides.get(item["name"], item["port"]),
-                ),
-                kind=(
-                    _socket.SOCK_STREAM
-                    if item["type"] == "tcp"
-                    else _socket.SOCK_DGRAM
-                ),
-            ).port
-
-            # Update the original structure.
-            self.ports[item["name"]] = port
-            item["port"] = port
-
-        self.app: _Optional[str] = data.get("app")  # type: ignore
-        self.config: _Optional[_JsonObject] = _cast(
-            _JsonObject, data.get("config")
-        )
-
-        self.factories: _List[_Any] = data.get("factories", [])  # type: ignore
-        self.clients: _List[_Any] = data.get("clients", [])  # type: ignore
-        self.servers: _List[_Any] = data.get("servers", [])  # type: ignore
-        self.tasks: _List[_Any] = data.get("tasks", [])  # type: ignore
-        self.structs: _List[_Any] = data.get("structs", [])  # type: ignore
-
-        directory_str = str(data.get("directory", "."))
-        self.directory = _Path(directory_str)
-
-        # Add directory to Python path.
-        if directory_str not in sys.path:
-            sys.path.append(directory_str)
-
-    def asdict(self) -> _JsonObject:
-        """Obtain a dictionary representing this instance."""
-        return self.data
-
-
-def fix_kwargs(data: _Dict[str, _Any]) -> _Dict[str, _Any]:
-    """
-    Fix data depending on nuances of what some Python interfaces require.
-    """
-
-    # Convert some keys to tuples.
-    for key in ["local_addr", "remote_addr"]:
-        if key in data:
-            data[key] = tuple(data[key])
-
-    return data
-
-
-def fix_args(data: _List[_Any], ports: _Dict[str, int]) -> _List[_Any]:
-    """Fix positional arguments."""
-
-    for idx, item in enumerate(data):
-        # Allow port variables to be used in host strings.
-        if isinstance(item, str):
-            data[idx] = ":".join(
-                str(x)
-                for x in list_resolve_env_vars(
-                    item.split(":"),
-                    env=ports,  # type: ignore
-                )
-            )
-
-    return data
+from runtimepy.net.arbiter.imports.util import get_apps
 
 
 class ConfigConnectionArbiter(_ImportConnectionArbiter):
@@ -126,6 +31,16 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
     A class implementing a configuration loading interface for the connection
     arbiter.
     """
+
+    search_packages: list[str] = []
+
+    @classmethod
+    def add_search_package(cls, name: str, front: bool = True) -> None:
+        """Add a package to the search path."""
+
+        name = name.replace("-", "_")
+        if name not in cls.search_packages:
+            list_adder(cls.search_packages, name, front=front)
 
     async def load_configs(
         self, paths: _Iterable[_Pathlike], wait_for_stop: bool = False
@@ -137,7 +52,20 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
         # Load and meld configuration data.
         config_data: _JsonObject = {}
         for path in paths:
+            # Try the path itself.
             found = find_file(path, logger=self.logger, include_cwd=True)
+
+            # Try package search path next.
+            if found is None:
+                for pkg in self.search_packages:
+                    found = find_file(
+                        f"{path}.{DEFAULT_EXT}",
+                        logger=self.logger,
+                        package=pkg,
+                    )
+                    if found is not None:
+                        break
+
             assert found is not None, f"Couldn't find '{path}'!"
 
             # Only load files once.
@@ -249,8 +177,13 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
                 struct["factory"], struct["name"], struct.get("config", {})
             ), f"Couldn't register struct '{name}' ({factory})!"
 
+        # Load initialization methods.
+        self._inits = get_apps(config.inits)
+
         # Set the new application entry if it's set.
-        self.set_app(config.app, wait_for_stop=wait_for_stop)
+        apps = get_apps(config.app, wait_for_stop=wait_for_stop)
+        if apps:
+            self._apps = apps
 
         # Update application configuration data if necessary.
         if config.config is not None:
@@ -258,3 +191,6 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
             self._config = config.config
             assert "root" not in config.config, config.config
             config.config["root"] = root
+
+
+ConfigConnectionArbiter.add_search_package(PKG_NAME)

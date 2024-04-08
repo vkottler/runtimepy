@@ -12,6 +12,7 @@ requirements:
 
 dev_requirements:
   - pytest-asyncio
+  - pytest-timeout
   - setuptools-wrapper
   - types-setuptools
   - "uvloop; sys_platform != 'win32' and sys_platform != 'cygwin'"
@@ -28,3 +29,4 @@ commands:
 
 init_local: |
   METRICS_NAME = "metrics"
+  DEFAULT_EXT = "yaml"

@@ -4,9 +4,7 @@ A base management entity for bit-fields.
 
 # built-in
 from copy import copy as _copy
-from typing import Dict as _Dict
 from typing import Iterable as _Iterable
-from typing import List as _List
 from typing import Optional as _Optional
 from typing import TypeVar as _TypeVar
 from typing import Union as _Union
@@ -62,9 +60,9 @@ class BitFieldsManagerBase:
         if fields is None:
             fields = []
 
-        self.fields: _List[_BitFields] = []
-        self.lookup: _Dict[str, int] = {}
-        self.enum_lookup: _Dict[str, _RuntimeEnum] = {}
+        self.fields: list[_BitFields] = []
+        self.lookup: dict[str, int] = {}
+        self.enum_lookup: dict[str, _RuntimeEnum] = {}
 
         # Add initial fields.
         for field in fields:
@@ -143,9 +141,7 @@ class BitFieldsManagerBase:
 
         return value
 
-    def values(
-        self, resolve_enum: bool = True
-    ) -> _Dict[str, _Union[str, int]]:
+    def values(self, resolve_enum: bool = True) -> dict[str, _Union[str, int]]:
         """Get a new dictionary of current field values."""
 
         return {

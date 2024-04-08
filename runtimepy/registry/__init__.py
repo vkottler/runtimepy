@@ -5,12 +5,9 @@ integer identifier.
 
 # built-in
 from abc import abstractmethod as _abstractmethod
-from typing import Dict as _Dict
 from typing import Generic as _Generic
 from typing import Iterator
 from typing import Optional as _Optional
-from typing import Tuple
-from typing import Type as _Type
 from typing import TypeVar as _TypeVar
 from typing import cast as _cast
 
@@ -30,18 +27,18 @@ T = _TypeVar("T", bound=_RegistryItem)
 class Registry(_RuntimepyDictCodec, _Generic[T]):
     """A base class for a generic registry."""
 
-    name_registry: _Type[_NameRegistry] = _NameRegistry
+    name_registry: type[_NameRegistry] = _NameRegistry
 
     @property
     @_abstractmethod
-    def kind(self) -> _Type[T]:
+    def kind(self) -> type[T]:
         """Determine what kind of registry this is."""
 
     def init(self, data: _JsonObject) -> None:
         """Perform implementation-specific initialization."""
 
         # Create the registry items and name mapping.
-        self.items: _Dict[str, T] = {
+        self.items: dict[str, T] = {
             name: self.kind.create(_cast(_JsonObject, data))
             for name, data in data.items()
         }
@@ -53,7 +50,7 @@ class Registry(_RuntimepyDictCodec, _Generic[T]):
 
     def search(
         self, pattern: str, exact: bool = False
-    ) -> Iterator[Tuple[str, T]]:
+    ) -> Iterator[tuple[str, T]]:
         """Search for items in the registry by name."""
 
         for name in self.names.search(pattern, exact=exact):

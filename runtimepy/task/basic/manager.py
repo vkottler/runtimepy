@@ -6,7 +6,6 @@ A module implementing a periodic-task manager.
 import asyncio as _asyncio
 from contextlib import asynccontextmanager as _asynccontextmanager
 from typing import AsyncIterator as _AsyncIterator
-from typing import Dict as _Dict
 from typing import Generic as _Generic
 from typing import Iterator as _Iterator
 from typing import TypeVar as _TypeVar
@@ -22,7 +21,7 @@ class PeriodicTaskManager(_Generic[T]):
 
     def __init__(self) -> None:
         """Initialize this instance."""
-        self._tasks: _Dict[str, T] = {}
+        self._tasks: dict[str, T] = {}
 
     def register(self, task: T, period_s: float = None) -> bool:
         """Register a periodic task."""

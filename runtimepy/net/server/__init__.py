@@ -14,7 +14,7 @@ from vcorelib.io import JsonObject
 from vcorelib.paths import Pathlike, find_file, normalize
 
 # internal
-from runtimepy import PKG_NAME
+from runtimepy import DEFAULT_EXT, PKG_NAME
 from runtimepy.net.http.header import RequestHeader
 from runtimepy.net.http.request_target import PathMaybeQuery
 from runtimepy.net.http.response import ResponseHeader
@@ -28,7 +28,7 @@ MIMETYPES_INIT = False
 def package_data_dir() -> Path:
     """Get this package's data directory."""
 
-    result = find_file("factories.yaml", package=PKG_NAME)
+    result = find_file(f"factories.{DEFAULT_EXT}", package=PKG_NAME)
     assert result is not None
     return result.parent
 

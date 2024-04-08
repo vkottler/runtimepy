@@ -50,7 +50,12 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabBase):
         if description:
             set_tooltip(name_elem, description, placement="left")
 
-        div(tag="td", class_str="channel-value", parent=parent)
+        div(
+            tag="td",
+            class_str="channel-value",
+            parent=parent,
+            title=f"Current value of '{name}'.",
+        )
 
         # Add boolean/bit toggle button.
         control = div(tag="td", parent=parent)
@@ -112,7 +117,12 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabBase):
         if description:
             set_tooltip(name_elem, description, placement="left")
 
-        div(tag="td", class_str="channel-value", parent=parent)
+        div(
+            tag="td",
+            class_str="channel-value",
+            parent=parent,
+            title=f"Current value of '{name}'.",
+        )
 
         control = div(tag="td", parent=parent)
         if field.commandable:

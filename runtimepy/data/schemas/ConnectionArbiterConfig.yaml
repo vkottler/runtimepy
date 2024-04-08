@@ -25,7 +25,7 @@ properties:
 
   # Runtime application or applications.
   # defaults to: "runtimepy.net.apps.init_only"
-  app:
+  app: &applike
     oneOf:
       - type: string
       - type: array
@@ -35,6 +35,9 @@ properties:
             - type: array
               items:
                 type: string
+
+  # Initialization methods.
+  init: *applike
 
   # Application configuration data.
   config:

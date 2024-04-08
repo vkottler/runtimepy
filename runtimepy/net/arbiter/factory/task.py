@@ -2,10 +2,6 @@
 A module implementing task-factory registration.
 """
 
-# built-in
-from typing import Dict as _Dict
-from typing import List as _List
-
 # third-party
 from vcorelib.names import obj_class_to_snake
 
@@ -26,8 +22,8 @@ class TaskConnectionArbiter(_BaseConnectionArbiter):
         """Additional initialization tasks."""
 
         super()._init()
-        self._task_factories: _Dict[str, Factory] = {}
-        self._task_names: _Dict[Factory, _List[str]] = {}
+        self._task_factories: dict[str, Factory] = {}
+        self._task_names: dict[Factory, list[str]] = {}
 
     def factory_task(
         self, factory: str, name: str, period_s: float = None, **kwargs

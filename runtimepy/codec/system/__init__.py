@@ -3,7 +3,7 @@ A basic type-system implementation.
 """
 
 # built-in
-from typing import Dict, Iterable, Optional, Type
+from typing import Iterable, Optional
 
 # third-party
 from vcorelib.logging import LoggerMixin
@@ -19,7 +19,7 @@ from runtimepy.enum.registry import (
     RuntimeIntEnum,
 )
 from runtimepy.primitives.byte_order import ByteOrder
-from runtimepy.primitives.type import AnyPrimitiveType, PrimitiveTypes
+from runtimepy.primitives.types import AnyPrimitiveType, PrimitiveTypes
 
 
 def resolve_name(matches: Iterable[str]) -> str:
@@ -48,8 +48,8 @@ class TypeSystem(LoggerMixin):
 
         super().__init__()
 
-        self.primitives: Dict[str, AnyPrimitiveType] = {}
-        self.custom: Dict[str, Protocol] = {}
+        self.primitives: dict[str, AnyPrimitiveType] = {}
+        self.custom: dict[str, Protocol] = {}
         self._enums = EnumRegistry()
 
         global_namespace = Namespace(delim=CPP_DELIM)
@@ -76,7 +76,7 @@ class TypeSystem(LoggerMixin):
         assert found is not None
         return self._enums[found]
 
-    def runtime_int_enum(self, enum: Type[RuntimeIntEnum]) -> None:
+    def runtime_int_enum(self, enum: type[RuntimeIntEnum]) -> None:
         """Register an enumeration class."""
 
         name = self._name(enum.enum_name(), check_available=True)
@@ -86,7 +86,7 @@ class TypeSystem(LoggerMixin):
     def enum(
         self,
         name: str,
-        items: Dict[str, int],
+        items: dict[str, int],
         *namespace: str,
         primitive: str = DEFAULT_ENUM_PRIMITIVE,
     ) -> None:

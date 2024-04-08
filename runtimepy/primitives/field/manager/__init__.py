@@ -3,9 +3,7 @@ A management entity for bit-fields.
 """
 
 # built-in
-from typing import Dict as _Dict
 from typing import Iterable as _Iterable
-from typing import Set as _Set
 from typing import cast as _cast
 
 # third-party
@@ -44,9 +42,7 @@ def fields_from_file(path: _Pathlike) -> _Iterable[_BitFields]:
 class BitFieldsManager(BitFieldsManagerBase):
     """A class for managing multiple bit-fields objects."""
 
-    def export_json(
-        self, resolve_enum: bool = True
-    ) -> _Dict[str, _JsonObject]:
+    def export_json(self, resolve_enum: bool = True) -> dict[str, _JsonObject]:
         """Export this manager's data to JSON."""
 
         # Only export names that we're using.
@@ -55,7 +51,7 @@ class BitFieldsManager(BitFieldsManagerBase):
         }
 
         # Only export enums that we're using.
-        enum_ids: _Set[int] = {x.id for x in self.enums.items.values()}
+        enum_ids: set[int] = {x.id for x in self.enums.items.values()}
         enums: _JsonObject = {
             name: _cast(_JsonValue, val.asdict())
             for name, val in self.enums.items.items()
@@ -72,11 +68,11 @@ class BitFieldsManager(BitFieldsManagerBase):
         }
 
     @classmethod
-    def import_json(cls, data: _Dict[str, _JsonObject]) -> "BitFieldsManager":
+    def import_json(cls, data: dict[str, _JsonObject]) -> "BitFieldsManager":
         """Create a bit-fields manager from JSON data."""
 
         result = cls(
-            _NameRegistry(reverse=_cast(_Dict[str, int], data[NAMES_KEY])),
+            _NameRegistry(reverse=_cast(dict[str, int], data[NAMES_KEY])),
             _EnumRegistry.create(data[ENUMS_KEY]),
             fields=fields_from_dict(data[FIELDS_KEY]),
         )
