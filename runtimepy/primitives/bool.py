@@ -4,7 +4,7 @@ A module implementing a boolean-primitive interface.
 
 # internal
 from runtimepy.primitives.base import Primitive as _Primitive
-from runtimepy.primitives.type.bool import Bool as _Bool
+from runtimepy.primitives.types.bool import Bool as _Bool
 
 
 class BooleanPrimitive(_Primitive[bool]):

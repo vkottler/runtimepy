@@ -18,7 +18,7 @@ from runtimepy.net import (
 from runtimepy.net.manager import ConnectionManager
 
 # internal
-from tests.resources import SampleTcpConnection, release_after
+from tests.resources import SampleTcpConnection
 
 
 @mark.asyncio
@@ -140,6 +140,7 @@ async def test_tcp_connection_manager_auto_restart():
     )
 
 
+@mark.timeout(120)
 @mark.asyncio
 async def test_tcp_connection_app():
     """Test the TCP connection's application interface."""
@@ -156,52 +157,50 @@ async def test_tcp_connection_app():
         """Publish the server host."""
         host_queue.put_nowait(sockname(server.sockets[0]))
 
+    # Don't continue re-trying connections.
+    backoff = ExponentialBackoff(max_tries=3)
+
     async def connect() -> None:
         """Connect to the server a number of times."""
 
         # Wait for the server to start.
         host = await host_queue.get()
 
-        for idx in range(10):
-            try:
-                if not sig.is_set():
-                    conn = await SampleTcpConnection.create_connection(
-                        host="localhost", port=host.port
-                    )
+        for idx in range(3):
+            if not sig.is_set():
+                conn = await SampleTcpConnection.create_connection(
+                    host="localhost", port=host.port, backoff=backoff
+                )
 
-                    if idx % 2 == 0:
-                        conn.send_text("stop\n")
+                if idx % 2 == 0:
+                    conn.send_text("stop\n")
 
-                    # Allow the connection manager to manage this connection.
-                    await manager.queue.put(conn)
+                # Allow the connection manager to manage this connection.
+                await manager.queue.put(conn)
 
-                    if manager.num_connections:
-                        manager.reset_metrics()
-                        manager.poll_metrics()
+                if manager.num_connections:
+                    manager.reset_metrics()
+                    manager.poll_metrics()
 
-            # Don't require every iteration to connection.
-            except ConnectionRefusedError:
-                pass
-
-    # Continue making connections with the server and stop after some time, or
-    # some number of connections?
-    await asyncio.wait(
-        [
-            asyncio.create_task(x)
-            for x in [
-                release_after(sig, 0.2),
-                connect(),
-                SampleTcpConnection.app(
-                    sig,
-                    callback=app,
-                    serving_callback=serve_cb,
-                    port=0,
-                    manager=manager,
-                ),
-            ]
-        ],
-        return_when=asyncio.ALL_COMPLETED,
+    # TCP-server application.
+    server_task = asyncio.create_task(
+        SampleTcpConnection.app(
+            sig,
+            callback=app,
+            serving_callback=serve_cb,
+            port=0,
+            manager=manager,
+        )
     )
+    await asyncio.sleep(0)
+
+    # Set signal after some delay.
+    # sig_task = asyncio.create_task(release_after(sig, 0.2))
+
+    # Wait for completion.
+    await connect()
+    sig.set()
+    await server_task
 
     # For code coverage.
     await SampleTcpConnection.app(sig, port=0)

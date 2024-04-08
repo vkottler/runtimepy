@@ -8,11 +8,13 @@ from contextlib import AsyncExitStack as _AsyncExitStack
 from dataclasses import dataclass
 from logging import getLogger as _getLogger
 from re import compile as _compile
-from typing import Any, Dict
+from typing import Any
+from typing import Awaitable as _Awaitable
+from typing import Callable as _Callable
 from typing import Iterator as _Iterator
 from typing import MutableMapping as _MutableMapping
-from typing import Type as _Type
 from typing import TypeVar as _TypeVar
+from typing import Union as _Union
 
 # third-party
 from vcorelib.io.types import JsonObject as _JsonObject
@@ -61,7 +63,7 @@ class AppInfo:
 
     tui: TuiMixin
 
-    tasks: Dict[str, PeriodicTask]
+    tasks: dict[str, PeriodicTask]
     task_manager: PeriodicTaskManager[Any]
 
     # Keep track of application state.
@@ -92,7 +94,7 @@ class AppInfo:
         self,
         *names: str,
         pattern: str = DEFAULT_PATTERN,
-        kind: _Type[T] = _Connection,  # type: ignore
+        kind: type[T] = _Connection,  # type: ignore
     ) -> _Iterator[T]:
         """
         Get all connections that are matching a naming convention or are
@@ -115,9 +117,7 @@ class AppInfo:
                     yield conn
                     seen.add(conn)
 
-    def search_tasks(
-        self, kind: _Type[V], pattern: str = ".*"
-    ) -> _Iterator[V]:
+    def search_tasks(self, kind: type[V], pattern: str = ".*") -> _Iterator[V]:
         """Search for tasks by type or pattern."""
 
         compiled = _compile(pattern)
@@ -130,7 +130,7 @@ class AppInfo:
         self,
         *names: str,
         pattern: str = ".*",
-        kind: _Type[T] = _Connection,  # type: ignore
+        kind: type[T] = _Connection,  # type: ignore
     ) -> T:
         """Search for a single node."""
 
@@ -200,3 +200,8 @@ class AppInfo:
             assert key in config, (key, config)
 
         return config.get(key, default)
+
+
+NetworkApplication = _Callable[[AppInfo], _Awaitable[int]]
+NetworkApplicationlike = _Union[NetworkApplication, list[NetworkApplication]]
+ArbiterApps = list[list[NetworkApplication]]

@@ -5,7 +5,6 @@ A module implementing a base, stream-oriented connection interface.
 # built-in
 from io import BytesIO as _BytesIO
 from typing import BinaryIO as _BinaryIO
-from typing import Tuple, Type
 
 # third-party
 from vcorelib.io import ByteFifo
@@ -22,7 +21,7 @@ class PrefixedMessageConnection(_Connection):
     stream-oriented protocols.
     """
 
-    message_length_kind: Type[UnsignedInt] = Uint32
+    message_length_kind: type[UnsignedInt] = Uint32
     reading_header: bool
 
     def init(self) -> None:
@@ -37,7 +36,7 @@ class PrefixedMessageConnection(_Connection):
         self.message_length_out = self.message_length_kind()
 
     def _send_message(
-        self, data: BinaryMessage, addr: Tuple[str, int] = None
+        self, data: BinaryMessage, addr: tuple[str, int] = None
     ) -> None:
         """Underlying data send."""
 
@@ -45,7 +44,7 @@ class PrefixedMessageConnection(_Connection):
         self.send_binary(data)
 
     def send_message(
-        self, data: BinaryMessage, addr: Tuple[str, int] = None
+        self, data: BinaryMessage, addr: tuple[str, int] = None
     ) -> None:
         """Handle inter-message prefixes for outgoing messages."""
 
@@ -59,13 +58,13 @@ class PrefixedMessageConnection(_Connection):
             self._send_message(stream.getvalue(), addr=addr)
 
     def send_message_str(
-        self, data: str, addr: Tuple[str, int] = None
+        self, data: str, addr: tuple[str, int] = None
     ) -> None:
         """Convert a message to bytes before sending."""
         self.send_message(data.encode(), addr=addr)
 
     async def process_single(
-        self, stream: _BinaryIO, addr: Tuple[str, int] = None
+        self, stream: _BinaryIO, addr: tuple[str, int] = None
     ) -> bool:
         """Process a single message."""
         del stream
@@ -73,7 +72,7 @@ class PrefixedMessageConnection(_Connection):
         return True
 
     async def process_binary(
-        self, data: bytes, addr: Tuple[str, int] = None
+        self, data: bytes, addr: tuple[str, int] = None
     ) -> bool:
         """Process an incoming message."""
 

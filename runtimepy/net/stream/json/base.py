@@ -8,7 +8,7 @@ import asyncio
 from copy import copy
 from json import JSONDecodeError, dumps, loads
 import logging
-from typing import Any, Dict, List, Optional, Tuple, Type, Union
+from typing import Any, Optional, Union
 
 # third-party
 from vcorelib.dict.codec import JsonCodec
@@ -44,7 +44,7 @@ class JsonMessageConnection(
 ):
     """A connection interface for JSON messaging."""
 
-    _log_messages: List[Dict[str, Any]]
+    _log_messages: list[dict[str, Any]]
     remote_meta: Optional[JsonMessage]
 
     def _register_handlers(self) -> None:
@@ -74,10 +74,10 @@ class JsonMessageConnection(
 
         self.curr_id: int = 1
 
-        self.ids_waiting: Dict[int, asyncio.Event] = {}
-        self.id_responses: Dict[int, JsonMessage] = {}
+        self.ids_waiting: dict[int, asyncio.Event] = {}
+        self.id_responses: dict[int, JsonMessage] = {}
 
-        self._log_messages: List[Dict[str, Any]] = []
+        self._log_messages: list[dict[str, Any]] = []
         self.remote_meta = None
 
         # Standard handlers.
@@ -106,14 +106,14 @@ class JsonMessageConnection(
         assert self.targets.register(key, (key, handler, None))
 
     def typed_handler(
-        self, key: str, kind: Type[T], handler: TypedHandler[T]
+        self, key: str, kind: type[T], handler: TypedHandler[T]
     ) -> None:
         """Register a typed handler."""
 
         assert self.targets.register(key, (key, handler, kind))
 
     def send_json(
-        self, data: Union[JsonMessage, JsonCodec], addr: Tuple[str, int] = None
+        self, data: Union[JsonMessage, JsonCodec], addr: tuple[str, int] = None
     ) -> None:
         """Send a JSON message."""
 
@@ -160,7 +160,7 @@ class JsonMessageConnection(
         self,
         command: str,
         environment: str = "default",
-        addr: Tuple[str, int] = None,
+        addr: tuple[str, int] = None,
     ) -> CommandResult:
         """Send a channel command to an endpoint."""
 
@@ -183,7 +183,7 @@ class JsonMessageConnection(
     async def wait_json(
         self,
         data: Union[JsonMessage, JsonCodec],
-        addr: Tuple[str, int] = None,
+        addr: tuple[str, int] = None,
         timeout: float = DEFAULT_TIMEOUT,
     ) -> JsonMessage:
         """Send a JSON message and wait for a response."""
@@ -219,7 +219,7 @@ class JsonMessageConnection(
     async def loopback(
         self,
         data: JsonMessage = None,
-        addr: Tuple[str, int] = None,
+        addr: tuple[str, int] = None,
         timeout: float = DEFAULT_TIMEOUT,
     ) -> bool:
         """Perform a simple loopback test on this connection."""
@@ -310,7 +310,7 @@ class JsonMessageConnection(
         return should_respond
 
     async def process_json(
-        self, data: JsonMessage, addr: Tuple[str, int] = None
+        self, data: JsonMessage, addr: tuple[str, int] = None
     ) -> bool:
         """Process a JSON message."""
 
@@ -373,7 +373,7 @@ class JsonMessageConnection(
         return True
 
     async def process_message(
-        self, data: str, addr: Tuple[str, int] = None
+        self, data: str, addr: tuple[str, int] = None
     ) -> bool:
         """Process a string message."""
 

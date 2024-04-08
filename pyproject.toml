@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta:__legacy__"
 
 [project]
 name = "runtimepy"
-version = "3.14.1"
+version = "4.0.0"
 description = "A framework for implementing Python services."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -40,6 +40,7 @@ test = [
   "sphinx",
   "sphinx-book-theme",
   "pytest-asyncio",
+  "pytest-timeout",
   "setuptools-wrapper",
   "types-setuptools",
   "uvloop; sys_platform != 'win32' and sys_platform != 'cygwin'"

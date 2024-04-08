@@ -5,7 +5,6 @@ A module implementing a runtime enumeration interface.
 # built-in
 from enum import IntEnum as _IntEnum
 from typing import Optional as _Optional
-from typing import Type as _Type
 from typing import Union as _Union
 from typing import cast as _cast
 
@@ -14,7 +13,7 @@ from vcorelib.io.types import JsonObject as _JsonObject
 from vcorelib.io.types import JsonValue as _JsonValue
 
 # internal
-from runtimepy.enum.type import EnumType as _EnumType
+from runtimepy.enum.types import EnumType as _EnumType
 from runtimepy.mapping import BoolMappingData as _BoolMappingData
 from runtimepy.mapping import IntMappingData as _IntMappingData
 from runtimepy.registry.bool import BooleanRegistry as _BooleanRegistry
@@ -165,7 +164,7 @@ class RuntimeEnum(_RegistryItem):
         return self.bools.register(name, value)
 
     @staticmethod
-    def data_from_enum(enum: _Type[_IntEnum]) -> _JsonObject:
+    def data_from_enum(enum: type[_IntEnum]) -> _JsonObject:
         """Get JSON data from an enumeration class."""
 
         return {
@@ -174,7 +173,7 @@ class RuntimeEnum(_RegistryItem):
         }
 
     @staticmethod
-    def from_enum(enum: _Type[_IntEnum], identifier: int) -> "RuntimeEnum":
+    def from_enum(enum: type[_IntEnum], identifier: int) -> "RuntimeEnum":
         """Create a runtime enumeration from an enum class."""
 
         data = RuntimeEnum.data_from_enum(enum)

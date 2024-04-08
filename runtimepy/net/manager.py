@@ -8,9 +8,7 @@ from __future__ import annotations
 import asyncio as _asyncio
 from contextlib import suppress as _suppress
 from typing import Iterator as _Iterator
-from typing import List as _List
 from typing import Optional as _Optional
-from typing import Type as _Type
 from typing import TypeVar as _TypeVar
 
 # third-party
@@ -33,14 +31,14 @@ class ConnectionManager(LoggerMixin):
         super().__init__()
         self.queue: _asyncio.Queue[_Connection] = _asyncio.Queue()
         self._running = False
-        self._conns: _List[_Connection] = []
+        self._conns: list[_Connection] = []
 
     @property
     def num_connections(self) -> int:
         """Return the number of managed connections."""
         return len(self._conns)
 
-    def by_type(self, kind: _Type[T]) -> _Iterator[T]:
+    def by_type(self, kind: type[T]) -> _Iterator[T]:
         """Iterate over connections of a specific type."""
         for conn in self._conns:
             if isinstance(conn, kind):
@@ -71,7 +69,7 @@ class ConnectionManager(LoggerMixin):
         self._running = True
 
         stop_sig_task = _asyncio.create_task(stop_sig.wait())
-        tasks: _List[_asyncio.Task[None]] = []
+        tasks: list[_asyncio.Task[None]] = []
         self._conns = []
         new_conn_task: _Optional[_asyncio.Task[_Connection]] = None
 

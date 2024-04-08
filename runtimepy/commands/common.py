@@ -6,17 +6,22 @@ A module for package command-line argument interfaces.
 from argparse import ArgumentParser as _ArgumentParser
 from argparse import Namespace as _Namespace
 from contextlib import contextmanager
-from typing import Any, Dict, Iterator
+from typing import Any, Iterator
 
 # third-party
 from vcorelib.args import CommandFunction as _CommandFunction
 from vcorelib.io import ARBITER
 from vcorelib.paths.context import tempfile
 
+# internal
+from runtimepy import DEFAULT_EXT, PKG_NAME
+
 try:
     import curses as _curses
 except ModuleNotFoundError:  # pragma: nocover
     _curses = {}  # type: ignore
+
+FACTORIES = f"package://{PKG_NAME}/factories.{DEFAULT_EXT}"
 
 
 def arbiter_flags(parser: _ArgumentParser) -> None:
@@ -74,11 +79,11 @@ def arbiter_args(parser: _ArgumentParser, nargs: str = "+") -> Iterator[None]:
 
 
 def cmd_with_jit(
-    command: _CommandFunction, args: _Namespace, data: Dict[str, Any]
+    command: _CommandFunction, args: _Namespace, data: dict[str, Any]
 ) -> int:
     """Run an 'arbiter' command with custom data inserted."""
 
-    with tempfile(suffix=".yaml") as temp_config:
+    with tempfile(suffix=f".{DEFAULT_EXT}") as temp_config:
         ARBITER.encode(temp_config, data)
         args.configs.append(str(temp_config))
         return command(args)

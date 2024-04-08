@@ -5,9 +5,7 @@ A module implementing an interface to build communication protocols.
 # built-in
 from contextlib import contextmanager
 from copy import copy as _copy
-from typing import Dict as _Dict
 from typing import Iterator as _Iterator
-from typing import List as _List
 from typing import NamedTuple
 from typing import Optional as _Optional
 from typing import TypeVar as _TypeVar
@@ -69,7 +67,7 @@ class ProtocolBase:
         enum_registry: _EnumRegistry,
         names: _NameRegistry = None,
         fields: BitFieldsManager = None,
-        build: _List[_Union[int, FieldSpec, str]] = None,
+        build: list[_Union[int, FieldSpec, str]] = None,
         identifier: int = 1,
         byte_order: _Union[_ByteOrder, _RegistryKey] = _DEFAULT_BYTE_ORDER,
         serializables: SerializableMap = None,
@@ -98,11 +96,11 @@ class ProtocolBase:
             fields = BitFieldsManager(self.names, self._enum_registry)
         self._fields = fields
 
-        self._regular_fields: _Dict[str, _AnyPrimitive] = {}
-        self._enum_fields: _Dict[str, _RuntimeEnum] = {}
+        self._regular_fields: dict[str, _AnyPrimitive] = {}
+        self._enum_fields: dict[str, _RuntimeEnum] = {}
 
         # Keep track of the order that the protocol was created.
-        self._build: _List[_Union[int, FieldSpec, str]] = []
+        self._build: list[_Union[int, FieldSpec, str]] = []
 
         # Keep track of named serializables.
         self.serializables: SerializableMap = {}

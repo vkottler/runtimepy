@@ -3,8 +3,6 @@ A module implementing a primitive-type storage entity.
 """
 
 # built-in
-from typing import Dict as _Dict
-from typing import Type as _Type
 from typing import TypeVar as _TypeVar
 from typing import Union as _Union
 
@@ -85,7 +83,7 @@ T = _TypeVar(
     Bool,
 )
 
-Primitives: _Dict[str, _Type[AnyPrimitive]] = {
+Primitives: dict[str, type[AnyPrimitive]] = {
     Int8().kind.name: Int8,
     Int16().kind.name: Int16,
     Int32().kind.name: Int32,
@@ -100,10 +98,10 @@ Primitives: _Dict[str, _Type[AnyPrimitive]] = {
     Bool().kind.name: Bool,
 }
 
-Primitivelike = _Union[_Type[AnyPrimitive], str]
+Primitivelike = _Union[type[AnyPrimitive], str]
 
 
-def normalize(value: Primitivelike) -> _Type[AnyPrimitive]:
+def normalize(value: Primitivelike) -> type[AnyPrimitive]:
     """Normalize a type of primitive or a string into a type of primitive."""
 
     if isinstance(value, str):

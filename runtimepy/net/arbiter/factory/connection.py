@@ -5,8 +5,6 @@ that methods that create connections can be registered by name.
 
 # built-in
 import asyncio as _asyncio
-from typing import Dict as _Dict
-from typing import List as _List
 
 # third-party
 from vcorelib.names import obj_class_to_snake
@@ -49,8 +47,8 @@ class FactoryConnectionArbiter(_BaseConnectionArbiter):
         """Additional initialization tasks."""
 
         super()._init()
-        self._conn_factories: _Dict[str, ConnectionFactory] = {}
-        self._conn_names: _Dict[ConnectionFactory, _List[str]] = {}
+        self._conn_factories: dict[str, ConnectionFactory] = {}
+        self._conn_names: dict[ConnectionFactory, list[str]] = {}
 
     def register_connection_factory(
         self, factory: ConnectionFactory, *namespaces: str

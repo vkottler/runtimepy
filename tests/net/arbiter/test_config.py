@@ -21,6 +21,7 @@ from tests.resources import (
 )
 
 
+@mark.timeout(60)
 @mark.asyncio
 async def test_connection_arbiter_config_basic():
     """Test basic loading of the connection-arbiter config."""

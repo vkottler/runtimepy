@@ -123,7 +123,7 @@ class ChannelEnvironmentTabMessaging(ChannelEnvironmentTabBase):
         del outbox
         del send
 
-        self.command.logger.info("Tab initialized.")
+        self.command.logger.debug("Tab initialized.")
 
     async def handle_message(
         self, data: dict[str, Any], send: TabMessageSender

@@ -2,6 +2,9 @@
 Test the 'commands.arbiter' module.
 """
 
+# third-party
+from pytest import mark
+
 # module under test
 from runtimepy.entry import main as runtimepy_main
 
@@ -9,6 +12,7 @@ from runtimepy.entry import main as runtimepy_main
 from tests.resources import base_args, resource
 
 
+@mark.timeout(30)
 def test_arbiter_command_basic():
     """Test basic usages of the 'arbiter' command."""
 
@@ -21,14 +25,30 @@ def test_arbiter_command_basic():
         == 0
     )
 
-    apps = []
-    apps.append("basic")
-    apps.append("http")
-    apps.append("runtimepy_http")
-    for entry in apps:
+    for entry in ["basic", "http"]:
         assert (
             runtimepy_main(
                 base + [str(resource("connection_arbiter", f"{entry}.yaml"))]
+            )
+            == 0
+        )
+
+
+@mark.timeout(30)
+def test_arbiter_command_advanced():
+    """Test advanced usages of the 'arbiter' command."""
+
+    base = base_args("arbiter")
+
+    # Run with dummy load.
+    for entry in ["runtimepy_http"]:
+        assert (
+            runtimepy_main(
+                base
+                + [
+                    str(resource("connection_arbiter", f"{entry}.yaml")),
+                    "dummy_load",
+                ]
             )
             == 0
         )

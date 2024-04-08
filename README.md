@@ -2,11 +2,11 @@
     =====================================
     generator=datazen
     version=3.1.4
-    hash=99f06b0d84ab71a66d110e4ff57bcadd
+    hash=66a0cf61a6081296df95d09b170cf551
     =====================================
 -->
 
-# runtimepy ([3.14.1](https://pypi.org/project/runtimepy/))
+# runtimepy ([4.0.0](https://pypi.org/project/runtimepy/))
 
 [![python](https://img.shields.io/pypi/pyversions/runtimepy.svg)](https://pypi.org/project/runtimepy/)
 ![Build Status](https://github.com/vkottler/runtimepy/workflows/Python%20Package/badge.svg)
@@ -45,7 +45,7 @@ This package is tested on the following platforms:
 # Command-line Options
 
 ```
-$ ./venv3.11/bin/runtimepy -h
+$ ./venv3.12/bin/runtimepy -h
 
 usage: runtimepy [-h] [--version] [-v] [-q] [--curses] [--no-uvloop] [-C DIR]
                  {arbiter,server,task,tui,noop} ...
@@ -77,7 +77,7 @@ commands:
 ### `arbiter`
 
 ```
-$ ./venv3.11/bin/runtimepy arbiter -h
+$ ./venv3.12/bin/runtimepy arbiter -h
 
 usage: runtimepy arbiter [-h] [-i] [-w] configs [configs ...]
 
@@ -97,7 +97,7 @@ options:
 ### `server`
 
 ```
-$ ./venv3.11/bin/runtimepy server -h
+$ ./venv3.12/bin/runtimepy server -h
 
 usage: runtimepy server [-h] [-i] [-w] [--host HOST] [-p PORT] [-u] [-l]
                         factory [configs ...]
@@ -124,7 +124,7 @@ options:
 ### `task`
 
 ```
-$ ./venv3.11/bin/runtimepy task -h
+$ ./venv3.12/bin/runtimepy task -h
 
 usage: runtimepy task [-h] [-i] [-w] [-r RATE] factory [configs ...]
 
@@ -146,7 +146,7 @@ options:
 ### `tui`
 
 ```
-$ ./venv3.11/bin/runtimepy tui -h
+$ ./venv3.12/bin/runtimepy tui -h
 
 usage: runtimepy tui [-h] [-i ITERATIONS] [-r RATE]
 

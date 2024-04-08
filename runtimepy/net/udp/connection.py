@@ -9,8 +9,6 @@ from contextlib import suppress as _suppress
 from logging import getLogger as _getLogger
 import socket as _socket
 from typing import Any as _Any
-from typing import Tuple as _Tuple
-from typing import Type as _Type
 from typing import TypeVar as _TypeVar
 from typing import Union as _Union
 
@@ -76,12 +74,12 @@ class UdpConnection(_Connection, _TransportMixin):
 
     @_abstractmethod
     async def process_datagram(
-        self, data: bytes, addr: _Tuple[str, int]
+        self, data: bytes, addr: tuple[str, int]
     ) -> bool:
         """Process a datagram."""
 
     def sendto(
-        self, data: bytes, addr: _Union[IpHost, _Tuple[str, int]] = None
+        self, data: bytes, addr: _Union[IpHost, tuple[str, int]] = None
     ) -> None:
         """Send to a specific address."""
 
@@ -123,7 +121,7 @@ class UdpConnection(_Connection, _TransportMixin):
 
     @classmethod
     async def create_connection(
-        cls: _Type[T], connect: bool = True, **kwargs
+        cls: type[T], connect: bool = True, **kwargs
     ) -> T:
         """Create a UDP connection."""
 
@@ -155,7 +153,7 @@ class UdpConnection(_Connection, _TransportMixin):
         return conn
 
     @classmethod
-    async def create_pair(cls: _Type[T]) -> _Tuple[T, T]:
+    async def create_pair(cls: type[T]) -> tuple[T, T]:
         """Create a connection pair."""
 
         # On Windows, local UDP sockets can't even be connected until the
@@ -202,7 +200,7 @@ class EchoUdpConnection(UdpConnection, _EchoConnection):
     """An echo connection for UDP."""
 
     async def process_datagram(
-        self, data: bytes, addr: _Tuple[str, int]
+        self, data: bytes, addr: tuple[str, int]
     ) -> bool:
         """Process a datagram."""
 
@@ -214,7 +212,7 @@ class NullUdpConnection(UdpConnection, _NullConnection):
     """A null UDP connection."""
 
     async def process_datagram(
-        self, data: bytes, addr: _Tuple[str, int]
+        self, data: bytes, addr: tuple[str, int]
     ) -> bool:
         """Process a datagram."""
         return True

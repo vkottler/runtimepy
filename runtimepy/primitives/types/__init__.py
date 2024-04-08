@@ -3,12 +3,11 @@ A module exposing primitive types.
 """
 
 # built-in
-from typing import Dict as _Dict
 from typing import Union as _Union
 
 # internal
-from runtimepy.primitives.type.bool import Bool, BooleanType
-from runtimepy.primitives.type.float import (
+from runtimepy.primitives.types.bool import Bool, BooleanType
+from runtimepy.primitives.types.float import (
     Double,
     DoubleType,
     Float,
@@ -16,7 +15,7 @@ from runtimepy.primitives.type.float import (
     Half,
     HalfType,
 )
-from runtimepy.primitives.type.int import (
+from runtimepy.primitives.types.int import (
     Int8,
     Int8Type,
     Int16,
@@ -44,7 +43,7 @@ AnyPrimitiveType = _Union[
     AnyIntegerType, HalfType, FloatType, DoubleType, BooleanType
 ]
 
-PrimitiveTypes: _Dict[str, AnyPrimitiveType] = {
+PrimitiveTypes: dict[str, AnyPrimitiveType] = {
     # Integer types.
     Int8.name: Int8,
     Int16.name: Int16,

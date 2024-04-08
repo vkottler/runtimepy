@@ -8,9 +8,7 @@ from contextlib import AsyncExitStack as _AsyncExitStack
 from contextlib import suppress as _suppress
 from inspect import isawaitable as _isawaitable
 from typing import Awaitable as _Awaitable
-from typing import Callable as _Callable
 from typing import Iterable as _Iterable
-from typing import List as _List
 from typing import MutableMapping as _MutableMapping
 from typing import Optional
 from typing import Union as _Union
@@ -30,7 +28,13 @@ from runtimepy.channel.environment.command import (
     register_env,
 )
 from runtimepy.net.arbiter.housekeeping import metrics_poller
-from runtimepy.net.arbiter.info import AppInfo, ConnectionMap
+from runtimepy.net.arbiter.info import (
+    AppInfo,
+    ArbiterApps,
+    ConnectionMap,
+    NetworkApplication,
+    NetworkApplicationlike,
+)
 from runtimepy.net.arbiter.result import AppResult, ResultState
 from runtimepy.net.arbiter.struct import RuntimeStruct
 from runtimepy.net.arbiter.task import (
@@ -41,8 +45,6 @@ from runtimepy.net.manager import ConnectionManager as _ConnectionManager
 from runtimepy.net.server import RuntimepyServerConnection
 from runtimepy.tui.mixin import CursesWindow, TuiMixin
 
-NetworkApplication = _Callable[[AppInfo], _Awaitable[int]]
-NetworkApplicationlike = _Union[NetworkApplication, _List[NetworkApplication]]
 ServerTask = _Awaitable[None]
 
 
@@ -55,7 +57,7 @@ async def init_only(app: AppInfo) -> int:
 
 def normalize_app(
     app: NetworkApplicationlike = None,
-) -> _List[_List[NetworkApplication]]:
+) -> ArbiterApps:
     """
     Normalize some application parameter into a list of network applications.
     """
@@ -106,7 +108,8 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
 
         # A fallback application. Set a class attribute so this can be more
         # easily externally updated.
-        self._apps: _List[_List[NetworkApplication]] = normalize_app(app)
+        self._inits: ArbiterApps = []
+        self._apps: ArbiterApps = normalize_app(app)
 
         # Application configuration data.
         if config is None:
@@ -122,7 +125,7 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
         # Runtime structures.
         self._structs: dict[str, RuntimeStruct] = {}
 
-        self._servers: _List[_asyncio.Task[None]] = []
+        self._servers: list[_asyncio.Task[None]] = []
         self._servers_started = _asyncio.Semaphore(0)
 
         self._init()
@@ -281,22 +284,16 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
                         self.task_manager.running(stop_sig=self.stop_sig)
                     )
 
-                    # Get application methods.
-                    apps = self._apps
-                    if app is not None:
-                        apps = normalize_app(app)
+                    # Run initialization methods.
+                    result = await self._run_apps_list(self._inits, info)
+                    if result == 0:
+                        # Get application methods.
+                        apps = self._apps
+                        if app is not None:
+                            apps = normalize_app(app)
 
-                    # Run applications in order.
-                    result = 0
-                    for curr_app in apps:
-                        if result == 0:
-                            result = await self._run_apps(curr_app, info)
-
-                        # Populate "not run" statuses.
-                        else:
-                            info.results.append(
-                                [AppResult(app.__name__) for app in curr_app]
-                            )
+                        # Run applications in order.
+                        result = await self._run_apps_list(apps, info)
         finally:
             for conn in self._connections.values():
                 conn.disable(f"app exit {result}")
@@ -311,8 +308,25 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
 
         return result
 
+    async def _run_apps_list(self, apps: ArbiterApps, info: AppInfo) -> int:
+        """Run application methods."""
+
+        # Run applications in order.
+        result = 0
+        for curr_app in apps:
+            if result == 0:
+                result = await self._run_apps(curr_app, info)
+
+            # Populate "not run" statuses.
+            else:
+                info.results.append(
+                    [AppResult(app.__name__) for app in curr_app]
+                )
+
+        return result
+
     async def _run_apps(
-        self, apps: _List[NetworkApplication], info: AppInfo
+        self, apps: list[NetworkApplication], info: AppInfo
     ) -> int:
         """Run application methods in parallel."""
 

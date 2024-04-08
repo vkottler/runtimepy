@@ -3,8 +3,8 @@ A module implementing a type interface for booleans.
 """
 
 # internal
-from runtimepy.primitives.type.base import BoolCtype as _BoolCtype
-from runtimepy.primitives.type.base import PrimitiveType as _PrimitiveType
+from runtimepy.primitives.types.base import BoolCtype as _BoolCtype
+from runtimepy.primitives.types.base import PrimitiveType as _PrimitiveType
 
 
 class BooleanType(_PrimitiveType[_BoolCtype]):

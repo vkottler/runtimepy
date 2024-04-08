@@ -3,7 +3,7 @@ A module implementing an HTTP-message processing interface.
 """
 
 # built-in
-from typing import Iterator, Optional, Tuple, Type, cast
+from typing import Iterator, Optional, cast
 
 # third-party
 from vcorelib.io import ByteFifo
@@ -29,8 +29,8 @@ class HttpMessageProcessor:
         self.current_header: Optional[HeadersMixin] = None
 
     def ingest(
-        self, data: bytes, kind: Type[T]
-    ) -> Iterator[Tuple[T, Optional[bytes]]]:
+        self, data: bytes, kind: type[T]
+    ) -> Iterator[tuple[T, Optional[bytes]]]:
         """Process a binary frame."""
 
         self.buffer.ingest(data)

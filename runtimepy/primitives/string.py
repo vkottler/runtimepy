@@ -4,7 +4,6 @@ A module implementing integer-prefixed string reading and writing.
 
 # built-in
 from typing import BinaryIO as _BinaryIO
-from typing import Type as _Type
 
 # internal
 from runtimepy.primitives.base import Primitive as _Primitive
@@ -21,7 +20,7 @@ class StringPrimitive:
     def __init__(
         self,
         value: str = "",
-        kind: _Type[_Primitive[int]] = _Uint16,
+        kind: type[_Primitive[int]] = _Uint16,
         byte_order: _ByteOrder = _DEFAULT_BYTE_ORDER,
     ) -> None:
         """Initialize this string primitive."""
@@ -46,7 +45,7 @@ class StringPrimitive:
     @staticmethod
     def from_stream(
         stream: _BinaryIO,
-        kind: _Type[_Primitive[int]] = _Uint16,
+        kind: type[_Primitive[int]] = _Uint16,
         byte_order: _ByteOrder = _DEFAULT_BYTE_ORDER,
     ) -> "StringPrimitive":
         """Create a new string primitive from a stream."""

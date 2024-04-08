@@ -3,7 +3,6 @@ A module implementing a channel-environment user interface.
 """
 
 # built-in
-from typing import List as _List
 from typing import Optional as _Optional
 
 try:
@@ -36,7 +35,7 @@ class ChannelTui(TuiMixin):
         self._body: _Optional[CursesWindow] = None
 
         self.env = env
-        self.channel_names: _List[str] = []
+        self.channel_names: list[str] = []
         self.value_col: int = 0
 
     @property

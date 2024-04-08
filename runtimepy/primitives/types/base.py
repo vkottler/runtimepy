@@ -10,7 +10,6 @@ from struct import unpack as _unpack
 from typing import BinaryIO as _BinaryIO
 from typing import Generic as _Generic
 from typing import Optional as _Optional
-from typing import Type as _Type
 from typing import TypeVar as _TypeVar
 from typing import Union as _Union
 from typing import cast as _cast
@@ -20,7 +19,7 @@ from runtimepy.primitives.byte_order import (
     DEFAULT_BYTE_ORDER as _DEFAULT_BYTE_ORDER,
 )
 from runtimepy.primitives.byte_order import ByteOrder as _ByteOrder
-from runtimepy.primitives.type.bounds import IntegerBounds
+from runtimepy.primitives.types.bounds import IntegerBounds
 
 # Integer type aliases.
 Int8Ctype = _ctypes.c_byte
@@ -68,7 +67,7 @@ class PrimitiveType(_Generic[T]):
 
     # Sub-classes must set these class attributes.
     name: str
-    c_type: _Type[T]
+    c_type: type[T]
 
     def __init__(self, struct_format: str, signed: bool = True) -> None:
         """Initialize this primitive type."""

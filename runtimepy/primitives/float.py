@@ -5,9 +5,9 @@ A module implementing a floating-point primitive interface.
 # internal
 from runtimepy.primitives.base import Primitive as _Primitive
 from runtimepy.primitives.scaling import ChannelScaling
-from runtimepy.primitives.type.float import Double as _Double
-from runtimepy.primitives.type.float import Float as _Float
-from runtimepy.primitives.type.float import Half as _Half
+from runtimepy.primitives.types.float import Double as _Double
+from runtimepy.primitives.types.float import Float as _Float
+from runtimepy.primitives.types.float import Half as _Half
 
 
 class HalfPrimitive(_Primitive[float]):

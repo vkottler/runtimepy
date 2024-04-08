@@ -7,9 +7,7 @@ from copy import copy as _copy
 from math import isclose as _isclose
 from typing import BinaryIO as _BinaryIO
 from typing import Callable as _Callable
-from typing import Dict as _Dict
 from typing import Generic as _Generic
-from typing import Tuple as _Tuple
 from typing import TypeVar as _TypeVar
 
 # third-party
@@ -21,7 +19,7 @@ from runtimepy.primitives.byte_order import (
 )
 from runtimepy.primitives.byte_order import ByteOrder as _ByteOrder
 from runtimepy.primitives.scaling import ChannelScaling, Numeric, apply, invert
-from runtimepy.primitives.type import AnyPrimitiveType as _AnyPrimitiveType
+from runtimepy.primitives.types import AnyPrimitiveType as _AnyPrimitiveType
 
 T = _TypeVar("T", bool, int, float)
 
@@ -45,9 +43,9 @@ class Primitive(_Generic[T]):
 
         self.raw = self.kind.instance()
         self.curr_callback: int = 0
-        self.callbacks: _Dict[
-            int, _Tuple[PrimitiveChangeCallaback[T], bool]
-        ] = {}
+        self.callbacks: dict[int, tuple[PrimitiveChangeCallaback[T], bool]] = (
+            {}
+        )
         self(value=value)
         self.last_updated_ns: int = default_time_ns()
         self.scaling = scaling

@@ -3,12 +3,8 @@ A module implementing a data structure for managing multiple bit fields.
 """
 
 # built-in
-from typing import Dict as _Dict
 from typing import Iterator as _Iterator
-from typing import List as _List
 from typing import Optional as _Optional
-from typing import Tuple as _Tuple
-from typing import Type as _Type
 from typing import TypeVar as _TypeVar
 from typing import Union as _Union
 from typing import cast as _cast
@@ -46,14 +42,14 @@ class BitFields(_RuntimepyDictCodec):
 
         self.curr_index = 0
         self.bits_available = set(range(self.raw.kind.bits))
-        self.fields: _Dict[str, _BitField] = {}
-        self.by_index: _Dict[int, _Union[_BitField, _Tuple[int, int]]] = {}
+        self.fields: dict[str, _BitField] = {}
+        self.by_index: dict[int, _Union[_BitField, tuple[int, int]]] = {}
 
         # Set this initially false while we're initializing.
         self._finalized: bool = False
 
         # Load initial fields and flags.
-        for item in _cast(_List[_Dict[str, int]], data["fields"]):
+        for item in _cast(list[dict[str, int]], data["fields"]):
             name: str = _cast(str, item.get("name", ""))
             index: _Optional[int] = item.get("index")
             width: int = item["width"]
@@ -95,7 +91,7 @@ class BitFields(_RuntimepyDictCodec):
     def asdict(self) -> _JsonObject:
         """Get these bit fields as a dictionary."""
 
-        fields: _List[_Dict[str, _Union[str, int]]] = []
+        fields: list[dict[str, _Union[str, int]]] = []
 
         # Ensure both real fields and padding are encoded.
         for index, item in self.by_index.items():
@@ -207,7 +203,7 @@ class BitFields(_RuntimepyDictCodec):
         return result
 
     @classmethod
-    def new(cls: _Type[T], value: _Primitivelike = "uint8") -> T:
+    def new(cls: type[T], value: _Primitivelike = "uint8") -> T:
         """Create a new bit-field storage entity."""
 
         return cls.create(

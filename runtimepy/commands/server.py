@@ -5,15 +5,14 @@ An entry-point for the 'server' command.
 # built-in
 from argparse import ArgumentParser as _ArgumentParser
 from argparse import Namespace as _Namespace
-from typing import Any, Dict, List
+from typing import Any
 
 # third-party
 from vcorelib.args import CommandFunction as _CommandFunction
 
 # internal
-from runtimepy import PKG_NAME
 from runtimepy.commands.arbiter import arbiter_cmd
-from runtimepy.commands.common import arbiter_args, cmd_with_jit
+from runtimepy.commands.common import FACTORIES, arbiter_args, cmd_with_jit
 
 
 def port_name(args: _Namespace, port: str = "port") -> str:
@@ -21,7 +20,7 @@ def port_name(args: _Namespace, port: str = "port") -> str:
     return f"{args.factory}_{'udp' if args.udp else 'tcp'}_{port}"
 
 
-def server_data(args: _Namespace) -> Dict[str, Any]:
+def server_data(args: _Namespace) -> dict[str, Any]:
     """Get server data based on command-line arguments."""
 
     return {
@@ -35,13 +34,13 @@ def is_websocket(args: _Namespace) -> bool:
     return "websocket" in args.factory.lower()
 
 
-def client_data(args: _Namespace) -> Dict[str, Any]:
+def client_data(args: _Namespace) -> dict[str, Any]:
     """Get client data based on command-line arguments."""
 
     port = f"${port_name(args)}"
 
-    arg_list: List[Any] = []
-    kwargs: Dict[str, Any] = {}
+    arg_list: list[Any] = []
+    kwargs: dict[str, Any] = {}
 
     if is_websocket(args):
         arg_list.append(f"ws://localhost:{port}")
@@ -64,7 +63,7 @@ def client_data(args: _Namespace) -> Dict[str, Any]:
     return result
 
 
-def config_data(args: _Namespace) -> Dict[str, Any]:
+def config_data(args: _Namespace) -> dict[str, Any]:
     """Get configuration data for the 'server' command."""
 
     servers = []
@@ -86,7 +85,7 @@ def config_data(args: _Namespace) -> Dict[str, Any]:
         clients.append(client_data(args))
 
     return {
-        "includes": [f"package://{PKG_NAME}/factories.yaml"] + args.configs,
+        "includes": [FACTORIES] + args.configs,
         "clients": clients,
         "servers": servers,
         "ports": [

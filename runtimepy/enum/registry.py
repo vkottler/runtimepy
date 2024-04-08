@@ -5,7 +5,6 @@ A module implementing and enumeration registry.
 # built-in
 from enum import IntEnum as _IntEnum
 from typing import Optional as _Optional
-from typing import Type as _Type
 from typing import TypeVar
 from typing import cast as _cast
 
@@ -14,7 +13,7 @@ from vcorelib.io.types import JsonObject as _JsonObject
 
 # internal
 from runtimepy.enum import RuntimeEnum as _RuntimeEnum
-from runtimepy.enum.type import EnumTypelike as _EnumTypelike
+from runtimepy.enum.types import EnumTypelike as _EnumTypelike
 from runtimepy.mapping import EnumMappingData as _EnumMappingData
 from runtimepy.registry import Registry as _Registry
 
@@ -25,7 +24,7 @@ class EnumRegistry(_Registry[_RuntimeEnum]):
     """A runtime enumeration registry."""
 
     @property
-    def kind(self) -> _Type[_RuntimeEnum]:
+    def kind(self) -> type[_RuntimeEnum]:
         """Determine what kind of registry this is."""
         return _RuntimeEnum
 

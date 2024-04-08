@@ -5,22 +5,21 @@ An entry-point for the 'task' command.
 # built-in
 from argparse import ArgumentParser as _ArgumentParser
 from argparse import Namespace as _Namespace
-from typing import Any, Dict
+from typing import Any
 
 # third-party
 from vcorelib.args import CommandFunction as _CommandFunction
 
 # internal
-from runtimepy import PKG_NAME
 from runtimepy.commands.arbiter import arbiter_cmd
-from runtimepy.commands.common import arbiter_args, cmd_with_jit
+from runtimepy.commands.common import FACTORIES, arbiter_args, cmd_with_jit
 
 
-def config_data(args: _Namespace) -> Dict[str, Any]:
+def config_data(args: _Namespace) -> dict[str, Any]:
     """Get configuration data for the 'task' command."""
 
     return {
-        "includes": [f"package://{PKG_NAME}/factories.yaml"],
+        "includes": [FACTORIES],
         "tasks": [
             {
                 "name": args.factory,

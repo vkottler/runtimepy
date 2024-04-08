@@ -5,12 +5,6 @@ machinery.
 
 # built-in
 from importlib import import_module as _import_module
-from typing import Dict as _Dict
-from typing import List as _List
-from typing import Optional as _Optional
-from typing import Tuple as _Tuple
-from typing import Type as _Type
-from typing import Union as _Union
 
 # third-party
 from vcorelib.io.types import JsonObject as _JsonObject
@@ -26,21 +20,9 @@ from runtimepy.net.arbiter.factory import (
 from runtimepy.net.arbiter.factory.task import (
     TaskConnectionArbiter as _TaskConnectionArbiter,
 )
+from runtimepy.net.arbiter.imports.util import import_str_and_item
 from runtimepy.net.arbiter.struct import RuntimeStruct as _RuntimeStruct
 from runtimepy.net.arbiter.task import TaskFactory as _TaskFactory
-
-
-def import_str_and_item(module_path: str) -> _Tuple[str, str]:
-    """
-    Treat the last entry in a '.' delimited string as the item to import from
-    the module in the string preceding it.
-    """
-
-    parts = module_path.split(".")
-    assert len(parts) > 1, module_path
-
-    item = parts.pop()
-    return ".".join(parts), item
 
 
 class ImportConnectionArbiter(
@@ -55,44 +37,11 @@ class ImportConnectionArbiter(
         """Additional initialization tasks."""
 
         super()._init()
-        self._struct_factories: _Dict[str, _Type[_RuntimeStruct]] = {}
-        self._struct_names: _Dict[_Type[_RuntimeStruct], _List[str]] = {}
-
-    def set_app(
-        self,
-        module_path: _Optional[_Union[str, _List[str]]],
-        wait_for_stop: bool = False,
-    ) -> None:
-        """
-        Attempt to update the application method from the provided string.
-        """
-
-        if module_path is None:
-            module_path = []
-        elif isinstance(module_path, str):
-            module_path = [module_path]
-
-        if wait_for_stop:
-            module_path.append("runtimepy.net.apps.wait_for_stop")
-
-        # Load all application methods.
-        apps = []
-        for paths in module_path:
-            if not isinstance(paths, list):
-                paths = [paths]  # type: ignore
-
-            methods = []
-            for path in paths:
-                module, app = import_str_and_item(path)
-                methods.append(getattr(_import_module(module), app))
-
-            apps.append(methods)
-
-        if apps:
-            self._apps = apps
+        self._struct_factories: dict[str, type[_RuntimeStruct]] = {}
+        self._struct_names: dict[type[_RuntimeStruct], list[str]] = {}
 
     def register_struct_factory(
-        self, factory: _Type[_RuntimeStruct], *namespaces: str
+        self, factory: type[_RuntimeStruct], *namespaces: str
     ) -> bool:
         """Attempt to register a periodic task factory."""
 

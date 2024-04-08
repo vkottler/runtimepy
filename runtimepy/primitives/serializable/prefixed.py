@@ -5,7 +5,7 @@ primitive prefix to determine the size of the chunk portion.
 
 # built-in
 from typing import BinaryIO as _BinaryIO
-from typing import Type, TypeVar
+from typing import TypeVar
 
 # internal
 from runtimepy.primitives import Primitivelike, UnsignedInt, create
@@ -85,7 +85,7 @@ class PrefixedChunk(Serializable):
 
     @classmethod
     def create(
-        cls: Type[T],
+        cls: type[T],
         prefix: Primitivelike = "uint16",
         chain: Serializable = None,
     ) -> T:

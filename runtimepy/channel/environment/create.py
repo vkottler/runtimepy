@@ -24,7 +24,7 @@ from runtimepy.channel.environment.base import (
 from runtimepy.channel.environment.base import ChannelResult as _ChannelResult
 from runtimepy.enum import RuntimeEnum as _RuntimeEnum
 from runtimepy.enum.registry import DEFAULT_ENUM_PRIMITIVE
-from runtimepy.enum.type import EnumTypelike as _EnumTypelike
+from runtimepy.enum.types import EnumTypelike as _EnumTypelike
 from runtimepy.mapping import EnumMappingData as _EnumMappingData
 from runtimepy.primitives import ChannelScaling, Primitive
 from runtimepy.primitives import Primitivelike as _Primitivelike
