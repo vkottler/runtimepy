@@ -7,14 +7,16 @@ const staleMs = 500;
 class TabInterface {
   constructor(name, _worker) {
     this.name = name;
+    this.queryName = CSS.escape(this.name);
+
     this.worker = new WorkerInterface(this.name, _worker);
 
     /* Send an initialization message. */
     this.worker.send({kind : "init"});
 
     /* Relevant elements. */
-    this.container = document.getElementById("runtimepy-" + this.name);
-    this.logs = this.query("#" + this.name + "-logs");
+    this.container = document.getElementById(`runtimepy-${this.name}`);
+    this.logs = this.query(`#${this.queryName}-logs`);
 
     this.message_handlers = [];
 
@@ -50,7 +52,7 @@ class TabInterface {
   }
 
   initCommand() {
-    let command = this.query("#" + this.name + "-command")
+    let command = this.query(`#${this.queryName}-command`);
     if (command) {
       command.onkeypress = (event) => {
         if (event.key == "Enter") {
@@ -154,7 +156,7 @@ class TabInterface {
   }
 
   initPlot() {
-    let plot = this.query("#" + this.name + "-plot");
+    let plot = this.query(`#${this.queryName}-plot`);
     if (plot) {
       this.plot = new Plot(plot, this.worker);
       this.show_state_handlers.push(this.plot.handle_shown.bind(this.plot));

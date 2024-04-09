@@ -13,7 +13,7 @@ tasks:
 
 # Add some sample structs.
 structs:
-  - name: struct1
+  - name: example.struct1
     factory: sample_struct
     # Not actually used.
     config:
