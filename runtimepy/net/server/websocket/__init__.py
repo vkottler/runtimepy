@@ -2,11 +2,15 @@
 A module implementing a simple WebSocket server for the package.
 """
 
+# built-in
+from collections import defaultdict
+
 # internal
 from runtimepy.net.arbiter.tcp.json import WebsocketJsonMessageConnection
 from runtimepy.net.server.app.env.tab import ChannelEnvironmentTab
 from runtimepy.net.server.app.env.tab.logger import TabMessageSender
 from runtimepy.net.server.struct import UiState
+from runtimepy.net.server.websocket.state import TabState
 from runtimepy.net.stream.json.types import JsonMessage
 from runtimepy.net.websocket import WebsocketConnection
 
@@ -16,6 +20,7 @@ class RuntimepyWebsocketConnection(WebsocketJsonMessageConnection):
 
     send_interfaces: dict[str, TabMessageSender]
     ui_time: float
+    tabs: dict[str, TabState]
 
     def tab_sender(self, name: str) -> TabMessageSender:
         """Get a tab message-sending interface."""
@@ -45,6 +50,7 @@ class RuntimepyWebsocketConnection(WebsocketJsonMessageConnection):
         super()._register_handlers()
         self.send_interfaces = {}
         self.ui_time = 0.0
+        self.tabs = defaultdict(TabState.create)
 
         async def ui_handler(outbox: JsonMessage, inbox: JsonMessage) -> None:
             """A simple loopback handler."""
@@ -59,23 +65,31 @@ class RuntimepyWebsocketConnection(WebsocketJsonMessageConnection):
                     self._poll_ui_state(ui, ui_time)
 
                 # Allows tabs to respond on a per-frame basis.
-                for name, tab in ChannelEnvironmentTab.all_tabs.items():
-                    result = tab.handle_frame(ui_time)
+                for name in ChannelEnvironmentTab.all_tabs:
+                    result = self.tabs[name].frame(ui_time)
                     if result:
                         outbox[name] = result
 
             # Handle messages from tabs.
             elif "name" in inbox and "event" in inbox:
                 name = inbox["name"]
+
                 try_tab = ChannelEnvironmentTab.all_tabs.get(name)
                 if try_tab is not None:
                     response = await try_tab.handle_message(
-                        inbox["event"], self.tab_sender(name)
+                        inbox["event"], self.tab_sender(name), self.tabs[name]
                     )
                     if response:
                         outbox[name] = response
 
         self.basic_handler("ui", ui_handler)
+
+    def disable_extra(self) -> None:
+        """Additional tasks to perform when disabling."""
+
+        # Disable loggers when the connection closes.
+        for state in self.tabs.values():
+            state.clear_loggers()
 
 
 class RuntimepyDataWebsocketConnection(WebsocketConnection):

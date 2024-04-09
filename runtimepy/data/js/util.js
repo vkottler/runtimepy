@@ -6,12 +6,15 @@ function worker_config(config) {
   for (let port_idx in ports) {
     let port = ports[port_idx];
 
+    /* Load from configuration data at some point? */
+    let hostname = window.location.hostname;
+
     /* This business logic could use some work. */
     if (port["name"].includes("runtimepy_websocket")) {
       if (port["name"].includes("data")) {
-        worker_cfg["data"] = "ws://localhost:" + port["port"];
+        worker_cfg["data"] = "ws://" + hostname + ":" + port["port"];
       } else {
-        worker_cfg["json"] = "ws://localhost:" + port["port"];
+        worker_cfg["json"] = "ws://" + hostname + ":" + port["port"];
       }
     }
   }
