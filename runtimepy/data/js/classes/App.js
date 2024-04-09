@@ -56,14 +56,17 @@ class App {
 
     let splash = document.getElementById("runtimepy-splash");
 
+    let prevTime = 0;
+
     /* Main loop. */
     function render(time) {
+      let deltaT = time - prevTime;
+
       /* Fade splash screen out if necessary. */
       if (splash) {
         let curr = window.getComputedStyle(splash).getPropertyValue("opacity");
         if (curr > 0) {
-          curr -= 0.005;
-          splash.style.opacity = curr;
+          splash.style.opacity = curr - (deltaT / 2500);
         } else {
           splash.style.display = "none";
           splash = undefined;
@@ -75,6 +78,7 @@ class App {
         tabs[shown_tab].poll(time);
       }
 
+      prevTime = time;
       requestAnimationFrame(render);
     }
     requestAnimationFrame(render);

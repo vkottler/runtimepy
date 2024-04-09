@@ -237,6 +237,13 @@ class BaseChannelEnvironment(_NamespaceMixin, FinalizeMixin):
 
         return _cast(_IntChannel, result[0]), result[1]
 
+    def add_int(self, key: _RegistryKey, amount: int) -> int:
+        """Modify an integer channel."""
+
+        chan = self.get_int(key)[0]
+        chan.raw.value += amount
+        return chan.raw.value
+
     def get_bool(self, key: _RegistryKey) -> BoolChannelResult:
         """Get a boolean channel."""
 
