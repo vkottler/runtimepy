@@ -11,6 +11,7 @@ sphinx
 sphinx-book-theme
 pytest-asyncio
 pytest-timeout
+types-psutil
 setuptools-wrapper
 types-setuptools
 uvloop; sys_platform != 'win32' and sys_platform != 'cygwin'
