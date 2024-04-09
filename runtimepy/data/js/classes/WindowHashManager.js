@@ -73,7 +73,7 @@ class WindowHashManager {
     /* Parse status (powers refreshes and link sharing). */
     if (this.original) {
       let boolsChannels = this.original.split("/");
-      let split = boolsChannels[0].split(".");
+      let split = boolsChannels[0].split(",");
       this.tab = split[0];
 
       /* Toggle plot-channel check boxes. */
@@ -102,13 +102,13 @@ class WindowHashManager {
   }
 
   update() {
-    let hash = this.tab
+    let hash = this.tab;
 
     if (!this.tabsShown) {
-      hash += ".hide-tabs"
+      hash += ",hide-tabs"
     }
     if (!this.channelsShown) {
-      hash += ".hide-channels"
+      hash += ",hide-channels"
     }
 
     for (let tab in this.plotChannels) {
