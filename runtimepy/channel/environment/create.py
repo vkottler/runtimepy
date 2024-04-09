@@ -86,17 +86,23 @@ class CreateChannelEnvironment(_BaseChannelEnvironment):
     ) -> _IntChannelResult:
         """Create an integer channel."""
 
-        result = self.channel(
-            name,
-            kind,
-            commandable=commandable,
-            enum=enum,
-            namespace=namespace,
-            scaling=scaling,
-            **kwargs,
+        result = _cast(
+            _IntChannelResult,
+            self.channel(
+                name,
+                kind,
+                commandable=commandable,
+                enum=enum,
+                namespace=namespace,
+                scaling=scaling,
+                **kwargs,
+            ),
         )
+
         assert result[0].raw.kind.is_integer
-        return _cast(_IntChannelResult, result)
+        self.ints.add(result[0])
+
+        return result
 
     def bool_channel(
         self,
@@ -109,16 +115,22 @@ class CreateChannelEnvironment(_BaseChannelEnvironment):
     ) -> _BoolChannelResult:
         """Create a boolean channel."""
 
-        result = self.channel(
-            name,
-            kind,
-            commandable=commandable,
-            enum=enum,
-            namespace=namespace,
-            **kwargs,
+        result = _cast(
+            _BoolChannelResult,
+            self.channel(
+                name,
+                kind,
+                commandable=commandable,
+                enum=enum,
+                namespace=namespace,
+                **kwargs,
+            ),
         )
+
         assert result[0].raw.kind.is_boolean
-        return _cast(_BoolChannelResult, result)
+        self.bools.add(result[0])
+
+        return result
 
     def float_channel(
         self,
@@ -131,16 +143,22 @@ class CreateChannelEnvironment(_BaseChannelEnvironment):
     ) -> _FloatChannel:
         """Create a floating-point channel."""
 
-        result = self.channel(
-            name,
-            kind,
-            commandable=commandable,
-            namespace=namespace,
-            scaling=scaling,
-            **kwargs,
-        )[0]
+        result = _cast(
+            _FloatChannel,
+            self.channel(
+                name,
+                kind,
+                commandable=commandable,
+                namespace=namespace,
+                scaling=scaling,
+                **kwargs,
+            )[0],
+        )
+
         assert result.raw.kind.is_float
-        return _cast(_FloatChannel, result)
+        self.floats.add(result)
+
+        return result
 
     def enum(
         self,

@@ -31,6 +31,9 @@ class UiState(RuntimeStruct):
         # Animation-frame time.
         self.env.float_channel("time", "double")
 
+        # Number of concurrent connections.
+        self.env.int_channel("num_connections", "uint8")
+
         # JSON-messaging interface metrics.
         self.json_metrics = ConnectionMetrics()
         with self.env.names_pushed("json"):

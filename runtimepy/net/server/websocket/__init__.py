@@ -22,6 +22,11 @@ class RuntimepyWebsocketConnection(WebsocketJsonMessageConnection):
     ui_time: float
     tabs: dict[str, TabState]
 
+    # The first UI client has exclusive access to some functions, like
+    # polling metrics.
+    first_client: bool
+    first_message: bool
+
     def tab_sender(self, name: str) -> TabMessageSender:
         """Get a tab message-sending interface."""
 
@@ -38,22 +43,33 @@ class RuntimepyWebsocketConnection(WebsocketJsonMessageConnection):
     def _poll_ui_state(self, ui: UiState, time: float) -> None:
         """Update UI-specific state."""
 
-        # Update time.
-        ui.env["time"] = time
+        # Only one connection needs to perform this task.
+        if self.first_client or ui.env.value("num_connections") == 1:
+            # Update time.
+            ui.env["time"] = time
 
-        # Update connection metrics.
-        ui.json_metrics.update(self.metrics)
+            # Update connection metrics.
+            ui.json_metrics.update(self.metrics)
+
+            # Update other metrics.
+            ui.poll()
 
     def _register_handlers(self) -> None:
         """Register connection-specific command handlers."""
 
         super()._register_handlers()
-        self.send_interfaces = {}
-        self.ui_time = 0.0
-        self.tabs = defaultdict(TabState.create)
 
         async def ui_handler(outbox: JsonMessage, inbox: JsonMessage) -> None:
             """A simple loopback handler."""
+
+            # Add to num_connections.
+            if self.first_message:
+                ui = UiState.singleton()
+                if ui and ui.env.finalized:
+                    self.first_client = (
+                        ui.env.add_int("num_connections", 1) == 1
+                    )
+                self.first_message = False
 
             # Handle frame messages.
             if "time" in inbox:
@@ -84,12 +100,28 @@ class RuntimepyWebsocketConnection(WebsocketJsonMessageConnection):
 
         self.basic_handler("ui", ui_handler)
 
+    def init(self) -> None:
+        """Initialize this instance."""
+
+        super().init()
+
+        self.send_interfaces = {}
+        self.ui_time = 0.0
+        self.tabs = defaultdict(TabState.create)
+        self.first_client = False
+        self.first_message = True
+
     def disable_extra(self) -> None:
         """Additional tasks to perform when disabling."""
 
         # Disable loggers when the connection closes.
         for state in self.tabs.values():
             state.clear_loggers()
+
+        # Subtract from num_connections.
+        ui = UiState.singleton()
+        if ui and ui.env.finalized:
+            ui.env.add_int("num_connections", -1)
 
 
 class RuntimepyDataWebsocketConnection(WebsocketConnection):

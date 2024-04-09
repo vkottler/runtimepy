@@ -46,6 +46,10 @@ def verify_values(env: ChannelEnvironment) -> None:
     env.set("field1", 1)
     assert env.value("field1") == "on"
 
+    env.add_int("int.1", 1)
+    env.add_int("int.1", -1)
+    assert env.value("int.1") == 5
+
 
 def verify_missing_keys(env: ChannelEnvironment) -> None:
     """Verify behavior when using incorrect registry keys."""
