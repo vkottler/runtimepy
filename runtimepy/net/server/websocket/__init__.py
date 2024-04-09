@@ -46,7 +46,8 @@ class RuntimepyWebsocketConnection(WebsocketJsonMessageConnection):
         # Only one connection needs to perform this task.
         if self.first_client or ui.env.value("num_connections") == 1:
             # Update time.
-            ui.env["time"] = time
+            ui.env["time_ms"] = time
+            ui.env["frame_period_ms"] = time - self.ui_time
 
             # Update connection metrics.
             ui.json_metrics.update(self.metrics)
@@ -73,18 +74,18 @@ class RuntimepyWebsocketConnection(WebsocketJsonMessageConnection):
 
             # Handle frame messages.
             if "time" in inbox:
-                ui_time = inbox["time"]
-
                 # Poll UI state.
                 ui = UiState.singleton()
                 if ui and ui.env.finalized:
-                    self._poll_ui_state(ui, ui_time)
+                    self._poll_ui_state(ui, inbox["time"])
 
                 # Allows tabs to respond on a per-frame basis.
                 for name in ChannelEnvironmentTab.all_tabs:
-                    result = self.tabs[name].frame(ui_time)
+                    result = self.tabs[name].frame(inbox["time"])
                     if result:
                         outbox[name] = result
+
+                self.ui_time = inbox["time"]
 
             # Handle messages from tabs.
             elif "name" in inbox and "event" in inbox:
