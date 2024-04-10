@@ -96,7 +96,7 @@ class PeriodicTask(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
 
         if period_s is not None and self.period_s != period_s:
             self.period_s.value = period_s
-            self.logger.info(
+            self.logger.debug(
                 "Task rate set to %s.", _rate_str(self.period_s.value)
             )
             result = True
@@ -160,10 +160,10 @@ class PeriodicTask(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
                         max(self.period_s.value - iter_time.value, 0)
                     )
                 except _asyncio.CancelledError:
-                    self.logger.info("Task was cancelled.")
+                    self.logger.debug("Task was cancelled.")
                     self.disable()
 
-        self.logger.info("Task completed.")
+        self.logger.debug("Task completed.")
 
     async def stop_extra(self) -> None:
         """Extra actions to perform when this task is stopping."""

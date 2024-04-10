@@ -246,8 +246,6 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
                 x.disabled for x in self._connections.values()
             ):
                 async with _AsyncExitStack() as stack:
-                    self.logger.info("Application starting.")
-
                     info = AppInfo(
                         self.logger,
                         stack,
@@ -336,13 +334,13 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
         stage_results = [AppResult(app.__name__) for app in apps]
 
         for _, inf in pairs:
-            inf.logger.info("Starting.")
+            inf.logger.debug("Starting.")
 
         total = 0
         try:
             results = await _asyncio.gather(*(app(inf) for app, inf in pairs))
             for idx, result in enumerate(results):
-                pairs[idx][1].logger.info("Returned %d.", result)
+                pairs[idx][1].logger.debug("Returned %d.", result)
                 total += result
 
                 # Capture a normal result.
