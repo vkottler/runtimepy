@@ -9,6 +9,7 @@ from typing import NamedTuple, Optional
 
 # third-party
 from vcorelib.logging import LoggerType
+from vcorelib.math import nano_str
 
 
 class ResultState(StrEnum):
@@ -45,6 +46,7 @@ class AppResult(NamedTuple):
     state: ResultState = ResultState.NOT_RUN
     code: Optional[int] = None
     exception: Optional[Exception] = None
+    duration_ns: Optional[int] = None
 
     def log(
         self, overall_idx: int, stage_idx: int, logger: LoggerType
@@ -57,6 +59,10 @@ class AppResult(NamedTuple):
         if self.code is not None:
             fmt += " (%d)"
             fmt_args.append(self.code)
+
+        if self.duration_ns:
+            fmt += " %s"
+            fmt_args.append(nano_str(self.duration_ns, is_time=True))
 
         if self.exception is not None:
             logger.exception(fmt + " -", *fmt_args, exc_info=self.exception)
