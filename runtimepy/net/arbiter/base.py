@@ -18,6 +18,7 @@ from vcorelib.asyncio import log_exceptions, run_handle_stop
 from vcorelib.io.types import JsonObject as _JsonObject
 from vcorelib.logging import LoggerMixin as _LoggerMixin
 from vcorelib.logging import LoggerType as _LoggerType
+from vcorelib.math import TIMER
 from vcorelib.namespace import Namespace as _Namespace
 from vcorelib.namespace import NamespaceMixin as _NamespaceMixin
 
@@ -338,14 +339,23 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
 
         total = 0
         try:
-            results = await _asyncio.gather(*(app(inf) for app, inf in pairs))
+            with TIMER.measure_ns() as token:
+                results = await _asyncio.gather(
+                    *(app(inf) for app, inf in pairs)
+                )
+
+            duration_ns = TIMER.result(token)
+
             for idx, result in enumerate(results):
                 pairs[idx][1].logger.debug("Returned %d.", result)
                 total += result
 
                 # Capture a normal result.
                 stage_results[idx] = AppResult(
-                    apps[idx].__name__, ResultState.from_int(result), result
+                    apps[idx].__name__,
+                    ResultState.from_int(result),
+                    result,
+                    duration_ns=duration_ns,
                 )
 
         # Keep track of stages that raise an exception.
