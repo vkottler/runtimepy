@@ -5,9 +5,6 @@ Test the 'net.arbiter' module.
 # built-in
 from contextlib import AsyncExitStack as _AsyncExitStack
 
-# third-party
-from pytest import mark
-
 # module under test
 from runtimepy.net import get_free_socket_name
 from runtimepy.net.apps import init_only
@@ -20,6 +17,7 @@ from tests.resources import (
     SampleTcpConnection,
     SampleWebsocketConnection,
     can_use_uvloop,
+    run_async_test,
 )
 
 
@@ -44,11 +42,8 @@ def test_connection_arbiter_run():
     )
 
 
-@mark.asyncio
-async def test_connection_arbiter_basic():
+async def basic_connection_arbiter(arbiter: ConnectionArbiter) -> None:
     """Test basic interactions with a connection arbiter."""
-
-    arbiter = get_test_arbiter()
 
     # Register a few UDP connections.
     for name in "abc":
@@ -109,3 +104,9 @@ async def test_connection_arbiter_basic():
 
         # Run the application.
         assert await arbiter.app() == 0
+
+
+def test_connection_arbiter_basic():
+    """Test basic interactions with a connection arbiter."""
+
+    run_async_test(basic_connection_arbiter(get_test_arbiter()))

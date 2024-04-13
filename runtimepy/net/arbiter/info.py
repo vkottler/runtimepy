@@ -18,6 +18,7 @@ from typing import Union as _Union
 
 # third-party
 from vcorelib.io.types import JsonObject as _JsonObject
+from vcorelib.logging import LoggerMixin as _LoggerMixin
 from vcorelib.logging import LoggerType as _LoggerType
 from vcorelib.namespace import Namespace as _Namespace
 
@@ -37,7 +38,7 @@ Z = _TypeVar("Z")
 
 
 @dataclass
-class AppInfo:
+class AppInfo(_LoggerMixin):
     """References provided to network applications."""
 
     # A logger for applications to use.

@@ -18,15 +18,12 @@ from tests.resources import (
     SampleConnectionMixin,
     SampleUdpConnection,
     resource,
+    run_async_test,
 )
 
 
-@mark.timeout(60)
-@mark.asyncio
-async def test_connection_arbiter_config_basic():
+async def connection_arbiter_config_basic(arbiter: ConnectionArbiter) -> None:
     """Test basic loading of the connection-arbiter config."""
-
-    arbiter = ConnectionArbiter()
 
     # Register clients and servers from the config.
     await arbiter.load_configs([resource("connection_arbiter", "basic.yaml")])
@@ -34,14 +31,27 @@ async def test_connection_arbiter_config_basic():
     assert await arbiter.app() == 0
 
 
-@mark.asyncio
-async def test_connection_arbiter_config_fails():
+def test_connection_arbiter_config_basic():
+    """Test basic loading of the connection-arbiter config."""
+
+    run_async_test(
+        connection_arbiter_config_basic(ConnectionArbiter()), timeout=60
+    )
+
+
+async def connection_arbiter_config_fails() -> None:
     """Test failure handing."""
 
     for config in ["basic_fail.yaml", "basic_exception.yaml"]:
         arbiter = ConnectionArbiter()
         await arbiter.load_configs([resource("connection_arbiter", config)])
         assert await arbiter.app() != 0
+
+
+def test_connection_arbiter_config_fails():
+    """Test failure handing."""
+
+    run_async_test(connection_arbiter_config_fails())
 
 
 async def echo_message_test_app(app: AppInfo) -> int:
@@ -93,11 +103,8 @@ async def echo_test_app(app: AppInfo) -> int:
     return 0
 
 
-@mark.asyncio
-async def test_connection_arbiter_config_echo():
+async def connection_arbiter_config_echo(arbiter: ConnectionArbiter) -> None:
     """Test various 'echo' connection types."""
-
-    arbiter = ConnectionArbiter(app=[echo_test_app, echo_message_test_app])
 
     # Register clients and servers from the config.
     await arbiter.load_configs(
@@ -105,3 +112,12 @@ async def test_connection_arbiter_config_echo():
     )
 
     assert await arbiter.app() == 0
+
+
+@mark.asyncio
+async def test_connection_arbiter_config_echo():
+    """Test various 'echo' connection types."""
+
+    await connection_arbiter_config_echo(
+        ConnectionArbiter(app=[echo_test_app, echo_message_test_app])
+    )

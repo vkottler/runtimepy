@@ -5,16 +5,14 @@ Test the 'net.stream' module.
 # built-in
 import asyncio
 
-# third-party
-from pytest import mark
-
 # module under test
 from runtimepy.net.stream.json import event_wait
 
+# internal
+from tests.resources import run_async_test
 
-@mark.asyncio
-async def test_event_wait_basic():
+
+def test_event_wait_basic():
     """Test the event wait can time out."""
 
-    event = asyncio.Event()
-    assert not await event_wait(event, 0.0)
+    assert not run_async_test(event_wait(asyncio.Event(), 0.0))

@@ -18,11 +18,16 @@ from runtimepy.net import (
 from runtimepy.net.manager import ConnectionManager
 
 # internal
-from tests.resources import SampleTcpConnection
+from tests.resources import SampleTcpConnection, run_async_test
 
 
-@mark.asyncio
-async def test_tcp_connection_basic():
+def test_tcp_connection_basic():
+    """Test basic interactions with a TCP connection."""
+
+    run_async_test(tcp_connection_basic())
+
+
+async def tcp_connection_basic() -> None:
     """Test basic interactions with a TCP connection."""
 
     async with SampleTcpConnection.create_pair() as (conn1, conn2):
@@ -43,8 +48,13 @@ async def test_tcp_connection_basic():
         )
 
 
-@mark.asyncio
-async def test_tcp_connection_restart():
+def test_tcp_connection_restart():
+    """Test that a TCP connection can be restarted."""
+
+    run_async_test(tcp_connection_restart())
+
+
+async def tcp_connection_restart() -> None:
     """Test that a TCP connection can be restarted."""
 
     host = "127.0.0.1"
@@ -70,14 +80,25 @@ async def test_tcp_connection_restart():
     await client.process(backoff=ExponentialBackoff(max_tries=0))
 
 
-@mark.asyncio
-async def test_tcp_connection_manager_auto_restart():
+def test_tcp_connection_manager_auto_restart():
     """
     Test that a connection manager can automatically restart TCP connections.
     """
 
-    manager = ConnectionManager()
-    sig = asyncio.Event()
+    run_async_test(
+        tcp_connection_manager_auto_restart(
+            ConnectionManager(), asyncio.Event()
+        )
+    )
+
+
+async def tcp_connection_manager_auto_restart(
+    manager: ConnectionManager, sig: asyncio.Event
+) -> None:
+    """
+    Test that a connection manager can automatically restart TCP connections.
+    """
+
     host_queue: asyncio.Queue = asyncio.Queue()
 
     def app(conn: SampleTcpConnection) -> None:

@@ -6,9 +6,10 @@ A module for working with test data.
 import asyncio
 from pathlib import Path
 from sys import version_info
-from typing import List, Tuple
+from typing import Awaitable, List, Optional, Tuple, TypeVar
 
 # third-party
+from vcorelib.asyncio import new_eloop, run_handle_interrupt
 from vcorelib.platform import is_windows
 
 # internal
@@ -131,3 +132,17 @@ def base_args(command: str) -> List[str]:
 
     base.append(command)
     return base
+
+
+DEFAULT_TEST_TIMEOUT = 30
+T = TypeVar("T")
+
+
+def run_async_test(
+    to_run: Awaitable[T], timeout: float = DEFAULT_TEST_TIMEOUT
+) -> Optional[T]:
+    """Run an async test."""
+
+    # Always use a fresh event loop.
+    new_eloop()
+    return run_handle_interrupt(asyncio.wait_for(to_run, timeout))

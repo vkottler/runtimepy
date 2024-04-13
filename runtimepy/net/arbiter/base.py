@@ -210,7 +210,7 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
     async def _build_structs(self, info: AppInfo) -> None:
         """Build structs."""
 
-        with self.log_time("Building structs", reminder=True):
+        with info.log_time("Building structs", reminder=True):
             await _asyncio.gather(
                 *(x.build(info) for x in self._structs.values())
             )
@@ -266,7 +266,7 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
                     await self._build_structs(info)
 
                     # Initialize tasks.
-                    with self.log_time(
+                    with info.log_time(
                         "Initializing periodic tasks", reminder=True
                     ):
                         await _asyncio.gather(
