@@ -4,6 +4,7 @@ A module containing sample connection factories.
 
 # module under test
 from runtimepy.net.arbiter import TaskFactory
+from runtimepy.net.arbiter.config import ConfigObject
 from runtimepy.net.arbiter.tcp import TcpConnectionFactory
 from runtimepy.net.arbiter.udp import UdpConnectionFactory
 from runtimepy.net.arbiter.websocket import WebsocketConnectionFactory
@@ -63,3 +64,9 @@ class SampleWebsocketConn(
     """A connection factory for the sample WebSocket connection."""
 
     kind = SampleWebsocketConnection
+
+
+def config(data: ConfigObject) -> None:
+    """Sample config-builder method."""
+
+    del data
