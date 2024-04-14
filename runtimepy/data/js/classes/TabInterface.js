@@ -29,7 +29,7 @@ class TabInterface {
     this.channelTimestamps = {};
     let table = this.query("tbody");
     if (table) {
-      this.channels = new ChannelTable(this.name, table);
+      this.channels = new ChannelTable(this.name, table, this.worker);
     }
 
     /* Always send a message */
@@ -61,7 +61,7 @@ class TabInterface {
           if (cmd == "cls" || cmd == "clear") {
             this.clearLog();
           } else {
-            this.command(cmd);
+            this.worker.command(cmd);
           }
 
           event.target.value = "";
@@ -69,8 +69,6 @@ class TabInterface {
       };
     }
   }
-
-  command(data) { this.worker.send({kind : "command", value : data}); }
 
   updateChannelStyles(pattern) {
     if (!pattern) {
@@ -118,14 +116,14 @@ class TabInterface {
     /* Initialize enumeration command drop downs. */
     for (let enums of this.queryAll("select")) {
       enums.onchange =
-          (() => { this.command(`set ${enums.id} ${enums.value}`); })
+          (() => { this.worker.command(`set ${enums.id} ${enums.value}`); })
               .bind(this);
     }
 
     /* Initialize toggle buttons. */
     for (let toggle of this.queryAll("td>button")) {
       toggle.onclick =
-          (() => { this.command(`toggle ${toggle.id}`); }).bind(this);
+          (() => { this.worker.command(`toggle ${toggle.id}`); }).bind(this);
     }
 
     /* Initialize channel table and plot divider. */

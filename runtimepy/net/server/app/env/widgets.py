@@ -11,6 +11,7 @@ from svgen.element import Element
 # internal
 from runtimepy.enum import RuntimeEnum
 from runtimepy.net.server.app.bootstrap.elements import (
+    flex,
     input_box,
     set_tooltip,
     toggle_button,
@@ -104,3 +105,29 @@ def channel_table_header(parent: Element) -> None:
     )
     for _ in range(3):
         div(tag="th", parent=ctl_row)
+
+
+def value_input_box(name: str, parent: Element) -> Element:
+    """Create an input box for channel values."""
+
+    input_container = flex(parent=parent)
+    div(
+        tag="input",
+        type="text",
+        parent=input_container,
+        title=f"Set command value for '{name}'.",
+        id=name,
+    ).add_class(
+        "channel-value-input",
+        "rounded-0",
+        "font-monospace",
+        "form-control",
+    )
+    toggle_button(
+        input_container,
+        icon="send",
+        id=name,
+        title=f"Send command value for '{name}'.",
+    )
+
+    return input_container
