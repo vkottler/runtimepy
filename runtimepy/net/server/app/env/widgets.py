@@ -7,6 +7,7 @@ from typing import cast
 
 # third-party
 from svgen.element import Element
+from svgen.element.html import div
 
 # internal
 from runtimepy.enum import RuntimeEnum
@@ -16,7 +17,6 @@ from runtimepy.net.server.app.bootstrap.elements import (
     set_tooltip,
     toggle_button,
 )
-from runtimepy.net.server.app.elements import div
 
 
 def plot_checkbox(parent: Element, name: str) -> None:

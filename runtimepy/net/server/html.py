@@ -36,8 +36,8 @@ async def html_handler(
     # Create the application.
     app = apps.get(request.target.path, default_app)
     if app is not None:
-        document = await app(
-            Html(HttpConnection.identity), request, response, request_data
-        )
-        stream.write("<!DOCTYPE html>\n")
-        document.encode(stream)
+        (
+            await app(
+                Html(HttpConnection.identity), request, response, request_data
+            )
+        ).render(stream)

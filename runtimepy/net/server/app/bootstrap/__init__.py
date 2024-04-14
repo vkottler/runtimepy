@@ -5,9 +5,7 @@ A module implementing interfaces to include Bootstrap
 
 # third-party
 from svgen.element import Element
-
-# internal
-from runtimepy.net.server.app.elements import div
+from svgen.element.html import div
 
 CDN = "cdn.jsdelivr.net"
 BOOTSTRAP_VERSION = "5.3.3"

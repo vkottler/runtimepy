@@ -2,12 +2,14 @@
 A module implementing a channel-environment tab HTML interface.
 """
 
+# third-party
+from svgen.element.html import div
+
 # internal
 from runtimepy import PKG_NAME
 from runtimepy.net.arbiter.info import AppInfo
 from runtimepy.net.server.app.bootstrap.elements import input_box
 from runtimepy.net.server.app.bootstrap.tabs import TabbedContent
-from runtimepy.net.server.app.elements import div
 from runtimepy.net.server.app.env.modal import Modal
 from runtimepy.net.server.app.env.tab import ChannelEnvironmentTab
 from runtimepy.net.server.app.placeholder import dummy_tabs, under_construction

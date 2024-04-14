@@ -7,6 +7,7 @@ from typing import Optional, cast
 
 # third-party
 from svgen.element import Element
+from svgen.element.html import div
 
 # internal
 from runtimepy.channel import AnyChannel
@@ -18,7 +19,6 @@ from runtimepy.net.server.app.bootstrap.elements import (
     set_tooltip,
     toggle_button,
 )
-from runtimepy.net.server.app.elements import div
 from runtimepy.net.server.app.env.tab.base import ChannelEnvironmentTabBase
 from runtimepy.net.server.app.env.widgets import (
     channel_table_header,
