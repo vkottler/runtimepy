@@ -90,3 +90,7 @@ textarea.text-logs {
 button:hover {
   background-color: var(--bs-tertiary-bg);
 }
+
+.channel-value-input {
+  width: 6em;
+}

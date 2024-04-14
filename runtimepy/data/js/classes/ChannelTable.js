@@ -1,13 +1,33 @@
 class ChannelTable {
-  constructor(name, table) {
+  constructor(name, table, worker) {
     this.name = name;
     this.table = table;
+    this.worker = worker;
 
     /* Create row mapping. */
     this.rows = {};
     this.staleState = {};
     for (let child of this.table.children) {
       this.rows[child.id] = child.querySelector(".channel-value");
+    }
+
+    /* Initialize input boxes. */
+    this.channelInputs = {};
+    for (let input of table.querySelectorAll("input.channel-value-input")) {
+      this.channelInputs[input.id] = input;
+
+      let cmd =
+
+          /* Register handler for pressing enter. */
+          input.onkeypress = (event) => {
+            if (event.key == "Enter") {
+              this.worker.command(`set ${input.id} ${input.value}`);
+            }
+          };
+
+      /* Register handler for pressing send button. */
+      input.nextElementSibling.onclick =
+          (event) => { this.worker.command(`set ${input.id} ${input.value}`); };
     }
   }
 
@@ -41,6 +61,11 @@ class ChannelTable {
             addSpace = checkFloat >= 0;
             val = checkFloat.toFixed(5);
           }
+        }
+
+        /* Update input box if one exists. */
+        if (key in this.channelInputs) {
+          this.channelInputs[key].value = val;
         }
 
         /*

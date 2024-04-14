@@ -72,7 +72,7 @@ def sample_env(env: ChannelEnvironment) -> None:
                         description="Sample bit field.",
                     )
                 )
-                env.add_field(BitField("field2", prim, 4, 4))
+                env.add_field(BitField("field2", prim, 4, 4, commandable=True))
 
             for i in range(10):
                 with env.names_pushed(str(i)):

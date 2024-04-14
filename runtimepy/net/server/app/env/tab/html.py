@@ -24,6 +24,7 @@ from runtimepy.net.server.app.env.widgets import (
     channel_table_header,
     enum_dropdown,
     plot_checkbox,
+    value_input_box,
 )
 from runtimepy.net.server.app.placeholder import under_construction
 
@@ -74,21 +75,30 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabBase):
             parent=parent,
             title=f"Underlying primitive type for '{name}'.",
         )
+
+        control_added = False
+
         if enum:
             chan_type.add_class("fw-bold")
 
             if chan.commandable and not chan.type.is_boolean:
                 enum_dropdown(control, name, enum, cast(int, chan.raw.value))
+                control_added = True
 
         if chan.type.is_boolean:
             chan_type.add_class("text-primary-emphasis")
             if chan.commandable:
                 toggle_button(control, id=name, title=f"Toggle '{name}'.")
+                control_added = True
 
         elif chan.type.is_float:
             chan_type.add_class("text-secondary-emphasis")
         else:
             chan_type.add_class("text-primary")
+
+        # Input box with send button.
+        if not control_added and chan.commandable:
+            value_input_box(name, control)
 
         return chan.id
 
@@ -130,6 +140,8 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabBase):
                 toggle_button(control, id=name, title=f"Toggle '{name}'.")
             elif enum:
                 enum_dropdown(control, name, enum, field())
+            else:
+                value_input_box(name, control)
 
         div(
             tag="td",
