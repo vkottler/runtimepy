@@ -61,7 +61,7 @@ class AppResult(NamedTuple):
             fmt_args.append(self.code)
 
         if self.duration_ns:
-            fmt += " %s"
+            fmt += " %ss."
             fmt_args.append(nano_str(self.duration_ns, is_time=True))
 
         if self.exception is not None:

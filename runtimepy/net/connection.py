@@ -288,10 +288,15 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
             self._tasks.append(_asyncio.create_task(self._wait_sig(stop_sig)))
 
         self.exited.clear()
-        await _asyncio.wait(self._tasks, return_when=_asyncio.ALL_COMPLETED)
+
+        # Run tasks in parallel.
+        gather_task = _asyncio.create_task(
+            _asyncio.wait(self._tasks, return_when=_asyncio.ALL_COMPLETED)
+        )
+        await gather_task
 
         # Ensure that tasks have their exceptions retrieved.
-        _log_exceptions(self._tasks, self.logger)
+        _log_exceptions(self._tasks + [gather_task], self.logger)
 
         await self.close()
         self.exited.set()

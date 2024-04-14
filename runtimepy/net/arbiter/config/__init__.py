@@ -4,7 +4,10 @@ connections or servers.
 """
 
 # built-in
+from importlib import import_module as _import_module
 from site import addsitedir as _addsitedir
+from typing import Any as _Any
+from typing import Callable as _Callable
 from typing import Iterable as _Iterable
 
 # third-party
@@ -12,6 +15,7 @@ from vcorelib.dict import merge as _merge
 from vcorelib.dict.env import dict_resolve_env_vars, list_resolve_env_vars
 from vcorelib.io import ARBITER as _ARBITER
 from vcorelib.io.types import JsonObject as _JsonObject
+from vcorelib.logging import LoggerMixin as _LoggerMixin
 from vcorelib.paths import Pathlike as _Pathlike
 from vcorelib.paths import find_file
 from vcorelib.paths import normalize as _normalize
@@ -23,7 +27,19 @@ from runtimepy.net.arbiter.config.util import fix_args, fix_kwargs, list_adder
 from runtimepy.net.arbiter.imports import (
     ImportConnectionArbiter as _ImportConnectionArbiter,
 )
-from runtimepy.net.arbiter.imports.util import get_apps
+from runtimepy.net.arbiter.imports.util import get_apps, import_str_and_item
+
+ConfigObject = dict[str, _Any]
+ConfigBuilder = _Callable[[ConfigObject], None]
+
+
+def handle_config_builders(data: ConfigObject, logger: _LoggerMixin) -> None:
+    """Run any configured configuration-data building methods."""
+
+    for builder in data.get("config_builders", []):
+        module, method = import_str_and_item(str(builder))
+        with logger.log_time("Running config-builder '%s'", builder):
+            getattr(_import_module(module), method)(data)
 
 
 class ConfigConnectionArbiter(_ImportConnectionArbiter):
@@ -82,6 +98,9 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
                     logger=self.logger,
                 )
                 loaded.add(absolute)
+
+        # Run any JIT config methods.
+        handle_config_builders(config_data, self)
 
         assert "root" not in self._config, self._config
         self._config["root"] = config_data  # type: ignore

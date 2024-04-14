@@ -5,6 +5,10 @@ includes:
   - tasks.yaml
   - json.yaml
 
+config_builders:
+  - tests.sample.config
+  - tests.sample.config
+
 app:
   - runtimepy.net.apps.init_only
   - [

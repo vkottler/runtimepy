@@ -39,6 +39,11 @@ properties:
   # Initialization methods.
   init: *applike
 
+  config_builders:
+    type: array
+    items:
+      type: string
+
   # Application configuration data.
   config:
     type: object
