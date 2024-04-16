@@ -51,6 +51,10 @@ def channel_environments(app: AppInfo, tabs: TabbedContent) -> None:
         id="channels-button",
     )
 
+    # Plot settings modal.
+    plot_settings = Modal(tabs, name="plot", icon="graph-up")
+    under_construction(plot_settings.footer)
+
     # Experimental features.
     if app.config_param("experimental", False):
         # Sound tab.

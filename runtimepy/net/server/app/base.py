@@ -28,6 +28,7 @@ class WebApplication:
     ui_classes = [
         "WindowHashManager",
         "WorkerInterface",
+        "PlotModalManager",
         "Plot",
         "ChannelTable",
         "TabInterface",

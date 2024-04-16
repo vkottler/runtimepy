@@ -50,12 +50,14 @@ class Modal:
         button["data-bs-dismiss"] = "modal"
         button["aria-label"] = "close"
 
-        self.body = div(text="Body.", parent=content, class_str="modal-body")
-        self.footer = div(
-            text="Footer.", parent=content, class_str="modal-footer"
-        )
+        self.body = div(parent=content, class_str="modal-body")
+        self.footer = div(parent=content, class_str="modal-footer")
 
         # Add toggle button.
         tabs.add_button(
-            f"Toggle {name}", "#" + modal_id, icon=icon, toggle="modal"
+            f"Toggle {name}",
+            "#" + modal_id,
+            icon=icon,
+            toggle="modal",
+            id=f"{modal_id}-button",
         )

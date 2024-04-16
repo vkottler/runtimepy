@@ -167,6 +167,7 @@ class TabInterface {
               let chan = elem.id.split("-")[1];
               let state = elem.checked;
               hash.handlePlotChannelToggle(this.name, chan, state);
+
               this.worker.send(
                   {kind : "plot", value : {"channel" : chan, "state" : state}});
             }).bind(this));

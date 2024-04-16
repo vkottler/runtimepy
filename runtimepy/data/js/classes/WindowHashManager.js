@@ -30,6 +30,11 @@ class WindowHashManager {
   }
 
   handlePlotChannelToggle(tabName, channel, state) {
+    /* Service settings modal. */
+    if (modalManager) {
+      modalManager.handleChannelToggle(tabName, channel, state);
+    }
+
     if (!(tabName in this.plotChannels)) {
       this.plotChannels[tabName] = {};
     }
