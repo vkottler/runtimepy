@@ -1,5 +1,5 @@
 vcorelib>=3.2.3
-svgen>=0.6.5
+svgen>=0.6.6
 websockets
 psutil
 windows-curses; sys_platform == 'win32' and python_version < '3.12'

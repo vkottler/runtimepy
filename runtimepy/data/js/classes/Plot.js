@@ -12,6 +12,12 @@ class Plot {
     /* Use resize observer to handle resize events. */
     this.resizeObserver = new ResizeObserver(
         ((entries, observer) => { this.handle_resize(); }).bind(this));
+
+    /* Handle click events. */
+    let plotButton = document.getElementById("runtimepy-plot-button");
+    if (plotButton) {
+      this.canvas.onclick = (event) => { plotButton.click(); };
+    }
   }
 
   plotMessage(data, param) { this.worker.toWorker({"plot" : data}, param); }

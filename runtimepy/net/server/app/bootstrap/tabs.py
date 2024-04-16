@@ -4,6 +4,7 @@ A module implementing interfaces for creating tabbed content with bootstrap.
 
 # third-party
 from svgen.element import Element
+from svgen.element.html import div
 
 # internal
 from runtimepy import PKG_NAME
@@ -11,7 +12,6 @@ from runtimepy.net.server.app.bootstrap.elements import (
     BOOTSTRAP_BUTTON,
     collapse_button,
 )
-from runtimepy.net.server.app.elements import div
 
 
 def create_nav_button(

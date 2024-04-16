@@ -27,6 +27,10 @@ body > :first-child {
   background-color: var(--bs-secondary-bg-subtle);
 }
 
+#ui-plot {
+  cursor: pointer;
+}
+
 .stale {
   color: var(--bs-warning-text-emphasis) !important;
 }

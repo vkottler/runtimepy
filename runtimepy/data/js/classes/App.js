@@ -19,6 +19,12 @@ class App {
      */
     worker.addEventListener("message", async (event) => {
       if (event.data == 0) {
+        /* Manage settings modal. */
+        let _modal = document.getElementById("runtimepy-plot");
+        if (_modal) {
+          modalManager = new PlotModalManager(_modal);
+        }
+
         /* Run tab initialization. */
         for await (const init of inits) {
           await init();
@@ -46,6 +52,8 @@ class App {
             }
           }
         };
+
+        startMainLoop();
       }
     }, {once : true});
 
@@ -53,34 +61,36 @@ class App {
     this.worker.postMessage(this.config);
 
     bootstrap_init();
+  }
+}
 
-    let splash = document.getElementById("runtimepy-splash");
+function startMainLoop() {
+  let splash = document.getElementById("runtimepy-splash");
 
-    let prevTime = 0;
+  let prevTime = 0;
 
-    /* Main loop. */
-    function render(time) {
-      let deltaT = time - prevTime;
+  /* Main loop. */
+  function render(time) {
+    let deltaT = time - prevTime;
 
-      /* Fade splash screen out if necessary. */
-      if (splash) {
-        let curr = window.getComputedStyle(splash).getPropertyValue("opacity");
-        if (curr > 0) {
-          splash.style.opacity = curr - (deltaT / 2500);
-        } else {
-          splash.style.display = "none";
-          splash = undefined;
-        }
+    /* Fade splash screen out if necessary. */
+    if (splash) {
+      let curr = window.getComputedStyle(splash).getPropertyValue("opacity");
+      if (curr > 0) {
+        splash.style.opacity = curr - Math.min(0.05, deltaT / 2000);
+      } else {
+        splash.style.display = "none";
+        splash = undefined;
       }
-
-      /* Poll the currently shown tab. */
-      if (shown_tab in tabs) {
-        tabs[shown_tab].poll(time);
-      }
-
-      prevTime = time;
-      requestAnimationFrame(render);
     }
+
+    /* Poll the currently shown tab. */
+    if (shown_tab in tabs) {
+      tabs[shown_tab].poll(time);
+    }
+
+    prevTime = time;
     requestAnimationFrame(render);
   }
+  requestAnimationFrame(render);
 }

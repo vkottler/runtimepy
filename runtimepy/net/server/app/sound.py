@@ -4,11 +4,10 @@ A module implementing a tab for experimenting with sound generation.
 
 # third-party
 from svgen.element import Element
-
-from runtimepy.net.server.app.bootstrap.elements import bootstrap_button
+from svgen.element.html import div
 
 # built-in
-from runtimepy.net.server.app.elements import div
+from runtimepy.net.server.app.bootstrap.elements import bootstrap_button
 from runtimepy.net.server.app.tab import Tab
 
 

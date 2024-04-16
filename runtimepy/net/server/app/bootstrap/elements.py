@@ -4,10 +4,10 @@ A module for creating various bootstrap-related elements.
 
 # third-party
 from svgen.element import Element
+from svgen.element.html import div
 
 # internal
 from runtimepy.net.server.app.bootstrap import icon_str
-from runtimepy.net.server.app.elements import div
 
 TEXT = "font-monospace"
 BOOTSTRAP_BUTTON = f"rounded-0 {TEXT} button-bodge"
