@@ -3,12 +3,13 @@ A module containing useful type definitions for JSON messaging.
 """
 
 # built-in
-from typing import Any, Awaitable, Callable, TypeVar
+from typing import Awaitable, Callable, TypeVar
 
 # third-party
 from vcorelib.dict.codec import JsonCodec
 
-JsonMessage = dict[str, Any]
+# internal
+from runtimepy.message import JsonMessage
 
 #
 # async def message_handler(response: JsonMessage, data: JsonMessage) -> None:

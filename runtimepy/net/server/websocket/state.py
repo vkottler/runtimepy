@@ -11,8 +11,8 @@ import logging
 from vcorelib.logging import DEFAULT_TIME_FORMAT
 
 # internal
+from runtimepy.message import JsonMessage
 from runtimepy.net.server.app.env.tab.logger import ListLogger
-from runtimepy.net.stream.json.types import JsonMessage
 from runtimepy.primitives import AnyPrimitive
 
 # (value, nanosecond timestamp)

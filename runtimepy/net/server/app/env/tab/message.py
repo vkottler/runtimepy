@@ -8,10 +8,10 @@ from typing import Any, cast
 
 # internal
 from runtimepy.channel import Channel
+from runtimepy.message import JsonMessage
 from runtimepy.net.server.app.env.tab.base import ChannelEnvironmentTabBase
 from runtimepy.net.server.app.env.tab.logger import TabMessageSender
 from runtimepy.net.server.websocket.state import TabState
-from runtimepy.net.stream.json.types import JsonMessage
 
 
 class ChannelEnvironmentTabMessaging(ChannelEnvironmentTabBase):

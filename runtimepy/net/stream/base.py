@@ -6,13 +6,10 @@ A module implementing a base, stream-oriented connection interface.
 from io import BytesIO as _BytesIO
 from typing import BinaryIO as _BinaryIO
 
-# third-party
-from vcorelib.io import ByteFifo
-
 # internal
+from runtimepy.message import MessageProcessor
 from runtimepy.net.connection import BinaryMessage
 from runtimepy.net.connection import Connection as _Connection
-from runtimepy.primitives import Uint32, UnsignedInt
 
 
 class PrefixedMessageConnection(_Connection):
@@ -21,19 +18,13 @@ class PrefixedMessageConnection(_Connection):
     stream-oriented protocols.
     """
 
-    message_length_kind: type[UnsignedInt] = Uint32
-    reading_header: bool
+    processor: MessageProcessor
 
     def init(self) -> None:
         """Initialize this instance."""
 
         # Header parsing.
-        self.buffer = ByteFifo()
-        self.reading_header = True
-        self.message_length_in = self.message_length_kind()
-        self.prefix_size = self.message_length_in.size
-
-        self.message_length_out = self.message_length_kind()
+        self.processor = MessageProcessor(byte_order=self.byte_order)
 
     def _send_message(
         self, data: BinaryMessage, addr: tuple[str, int] = None
@@ -48,13 +39,8 @@ class PrefixedMessageConnection(_Connection):
     ) -> None:
         """Handle inter-message prefixes for outgoing messages."""
 
-        self.message_length_out.value = len(data)
-
         with _BytesIO() as stream:
-            self.message_length_out.to_stream(
-                stream, byte_order=self.byte_order
-            )
-            stream.write(data)
+            self.processor.encode(stream, data)
             self._send_message(stream.getvalue(), addr=addr)
 
     def send_message_str(
@@ -78,31 +64,8 @@ class PrefixedMessageConnection(_Connection):
 
         result = True
 
-        self.buffer.ingest(data)
-
-        can_continue = True
-        while can_continue:
-            # Read the message size.
-            if self.reading_header:
-                size = self.buffer.pop(self.prefix_size)
-                if size is not None:
-                    assert len(size) == self.prefix_size
-                    self.message_length_in.update(
-                        size, byte_order=self.byte_order
-                    )
-                    self.reading_header = False
-                else:
-                    can_continue = False
-
-            # Read the message payload.
-            else:
-                message = self.buffer.pop(self.message_length_in.value)
-                if message is not None:
-                    # process message
-                    with _BytesIO(message) as stream:
-                        result &= await self.process_single(stream, addr=addr)
-                    self.reading_header = True
-                else:
-                    can_continue = False
+        for message in self.processor.process(data):
+            with _BytesIO(message) as stream:
+                result &= await self.process_single(stream, addr=addr)
 
         return result

@@ -15,7 +15,8 @@ from vcorelib.paths import find_file
 from runtimepy.channel.environment.command.processor import (
     ChannelCommandProcessor,
 )
-from runtimepy.net.stream.json.types import JsonMessage, TypedHandler
+from runtimepy.message import JsonMessage
+from runtimepy.net.stream.json.types import TypedHandler
 from runtimepy.schemas import RuntimepyDictCodec
 
 
