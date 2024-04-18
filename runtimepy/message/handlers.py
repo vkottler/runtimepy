@@ -16,7 +16,7 @@ from runtimepy.channel.environment.command.processor import (
     ChannelCommandProcessor,
 )
 from runtimepy.message import JsonMessage
-from runtimepy.net.stream.json.types import TypedHandler
+from runtimepy.message.types import TypedHandler
 from runtimepy.schemas import RuntimepyDictCodec
 
 

@@ -6,7 +6,7 @@ Test the 'net.stream' module.
 import asyncio
 
 # module under test
-from runtimepy.net.stream.json import event_wait
+from runtimepy.message.handlers import event_wait
 
 # internal
 from tests.resources import run_async_test

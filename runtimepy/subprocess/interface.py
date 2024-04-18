@@ -14,7 +14,7 @@ from runtimepy.channel.environment.command.processor import (
     ChannelCommandProcessor,
 )
 from runtimepy.message import MessageProcessor
-from runtimepy.net.stream.json.interface import JsonMessageInterface
+from runtimepy.message.interface import JsonMessageInterface
 
 
 class RuntimepyPeerInterface(JsonMessageInterface, LoggerMixin):

@@ -7,7 +7,7 @@ import logging
 from typing import Callable
 
 # internal
-from runtimepy.net.stream.json.types import JsonMessage
+from runtimepy.message import JsonMessage
 
 TabMessageSender = Callable[[JsonMessage], None]
 

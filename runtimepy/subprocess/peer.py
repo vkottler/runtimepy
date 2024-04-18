@@ -61,6 +61,7 @@ class RuntimepyPeer(RuntimepyPeerInterface):
 
     def write(self, data: bytes, addr: tuple[str, int] = None) -> None:
         """Write bytes via this interface."""
+        del addr
         self.protocol.stdin.write(data)
 
     async def service_queues(self) -> None:

@@ -22,7 +22,7 @@ from runtimepy.channel.environment.command.processor import (
 )
 from runtimepy.channel.environment.command.result import CommandResult
 from runtimepy.message import JsonMessage, MessageProcessor
-from runtimepy.net.stream.json.handlers import (
+from runtimepy.message.handlers import (
     ChannelCommand,
     FindFile,
     channel_env_handler,
@@ -30,7 +30,7 @@ from runtimepy.net.stream.json.handlers import (
     find_file_request_handler,
     loopback_handler,
 )
-from runtimepy.net.stream.json.types import (
+from runtimepy.message.types import (
     DEFAULT_LOOPBACK,
     DEFAULT_TIMEOUT,
     RESERVED_KEYS,
