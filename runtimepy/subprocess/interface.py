@@ -20,6 +20,8 @@ from runtimepy.message.interface import JsonMessageInterface
 class RuntimepyPeerInterface(JsonMessageInterface, LoggerMixin):
     """A class implementing an interface for messaging peer subprocesses."""
 
+    poll_period_s: float = 0.01
+
     def __init__(self, env: ChannelEnvironment, **kwargs) -> None:
         """Initialize this instance."""
 

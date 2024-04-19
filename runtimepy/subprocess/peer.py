@@ -19,8 +19,6 @@ T = TypeVar("T", bound="RuntimepyPeer")
 class RuntimepyPeer(RuntimepyPeerInterface):
     """A class implementing an interface for messaging peer subprocesses."""
 
-    poll_period_s: float = 0.01
-
     def __init__(self, protocol: RuntimepySubprocessProtocol) -> None:
         """Initialize this instance."""
 

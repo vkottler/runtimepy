@@ -3,6 +3,8 @@ A module implementing a peer program communication interface.
 """
 
 # built-in
+import asyncio
+import os
 import sys
 from typing import BinaryIO, Type, TypeVar
 
@@ -20,6 +22,7 @@ class PeerProgram(RuntimepyPeerInterface):
 
     def write(self, data: bytes, addr: tuple[str, int] = None) -> None:
         """Write data."""
+
         del addr
         self.output.write(data)
         self.output.flush()
@@ -27,8 +30,16 @@ class PeerProgram(RuntimepyPeerInterface):
     async def run(self, buffer: BinaryIO) -> None:
         """Run this peer program's main loop."""
 
+        # Allow polling stdin.
+        if hasattr(os, "set_blocking"):
+            getattr(os, "set_blocking")(buffer.fileno(), False)
+
         while True:
             data: bytes = buffer.read(1)
+            if data is None:
+                await asyncio.sleep(self.poll_period_s)
+                continue
+
             if not data:
                 break
 
@@ -37,9 +48,11 @@ class PeerProgram(RuntimepyPeerInterface):
                 await self.process_json(msg)
 
     @classmethod
-    async def run_standard(cls: Type[T], env: ChannelEnvironment) -> None:
+    def run_standard(
+        cls: Type[T], env: ChannelEnvironment
+    ) -> asyncio.Task[None]:
         """Run this program using standard input and output."""
 
         peer = cls(env)
         peer.output = sys.stdout.buffer
-        await peer.run(sys.stdin.buffer)
+        return asyncio.create_task(peer.run(sys.stdin.buffer))
