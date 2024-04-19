@@ -19,23 +19,40 @@ T = TypeVar("T", bound="RuntimepyPeer")
 class RuntimepyPeer(RuntimepyPeerInterface):
     """A class implementing an interface for messaging peer subprocesses."""
 
+    poll_period_s: float = 0.01
+
     def __init__(self, protocol: RuntimepySubprocessProtocol) -> None:
         """Initialize this instance."""
 
         super().__init__(ChannelEnvironment())
         self.protocol = protocol
 
+    async def _poll(self) -> None:
+        """Poll input queues."""
+
+        keep_going = True
+        while keep_going:
+            try:
+                keep_going = await self.service_queues()
+                if keep_going:
+                    await asyncio.sleep(self.poll_period_s)
+            except asyncio.CancelledError:
+                keep_going = False
+
     @asynccontextmanager
     async def _context(self: T) -> AsyncIterator[T]:
         """A managed context for the peer."""
 
-        if await self.loopback():
-            await self.wait_json({"meta": self.meta})
+        # Register task that will poll queues.
+        task = asyncio.create_task(self._poll())
+
         try:
+            if await self.loopback():
+                await self.wait_json({"meta": self.meta})
             yield self
         finally:
-            # Change this at some point?
-            self.send_json({"command": "exit"})
+            task.cancel()
+            await task
 
     @classmethod
     @asynccontextmanager
@@ -64,15 +81,23 @@ class RuntimepyPeer(RuntimepyPeerInterface):
         del addr
         self.protocol.stdin.write(data)
 
-    async def service_queues(self) -> None:
+    async def service_queues(self) -> bool:
         """Service data from peer."""
 
+        keep_going = False
+
         # Forward stderr.
-        queue = self.protocol.stderr
-        while not queue.empty():
-            self.handle_stderr(queue.get_nowait())
+        if self.protocol.stderr_queue is not None:
+            keep_going = True
+            queue = self.protocol.stderr
+            while not queue.empty():
+                self.handle_stderr(queue.get_nowait())
 
         # Handle messages from stdout.
-        queue = self.protocol.stdout
-        while not queue.empty():
-            await self.handle_stdout(queue.get_nowait())
+        if self.protocol.stdout_queue is not None:
+            keep_going = True
+            queue = self.protocol.stdout
+            while not queue.empty():
+                await self.handle_stdout(queue.get_nowait())
+
+        return keep_going

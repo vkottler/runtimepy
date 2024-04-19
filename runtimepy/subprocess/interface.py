@@ -31,10 +31,13 @@ class RuntimepyPeerInterface(JsonMessageInterface, LoggerMixin):
 
     def handle_stderr(self, data: bytes) -> None:
         """Forward stderr."""
-        print(data.decode(), file=sys.stderr)
+
+        if data:
+            print(data.decode(), file=sys.stderr)
 
     async def handle_stdout(self, data: bytes) -> None:
         """Handle messages from stdout."""
 
-        for msg in self.processor.messages(data):
-            await self.process_json(msg)
+        if data:
+            for msg in self.processor.messages(data):
+                await self.process_json(msg)

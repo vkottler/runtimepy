@@ -32,3 +32,6 @@ commands:
 init_local: |
   METRICS_NAME = "metrics"
   DEFAULT_EXT = "yaml"
+
+ci_local:
+  - "- run: mk python-editable"

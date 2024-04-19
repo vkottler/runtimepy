@@ -99,13 +99,11 @@ class RuntimepySubprocessProtocol(SubprocessProtocol):
         """Flush standard output."""
         if self.stdout_queue is not None:
             self.stdout_queue.put_nowait(bytes())
-            self.stdout_queue = None
 
     def _flush_stderr(self) -> None:
         """Flush standard error."""
         if self.stderr_queue is not None:
             self.stderr_queue.put_nowait(bytes())
-            self.stderr_queue = None
 
     def process_exited(self) -> None:
         """Handle process exit."""
