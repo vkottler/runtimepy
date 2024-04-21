@@ -20,9 +20,9 @@ from runtimepy.net.arbiter.factory import (
 from runtimepy.net.arbiter.factory.task import (
     TaskConnectionArbiter as _TaskConnectionArbiter,
 )
-from runtimepy.net.arbiter.imports.util import import_str_and_item
 from runtimepy.net.arbiter.struct import RuntimeStruct as _RuntimeStruct
 from runtimepy.net.arbiter.task import TaskFactory as _TaskFactory
+from runtimepy.util import import_str_and_item
 
 
 class ImportConnectionArbiter(

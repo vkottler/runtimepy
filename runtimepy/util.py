@@ -61,3 +61,16 @@ class ListLogger(logging.Handler):
         logger.setFormatter(logging.Formatter(DEFAULT_TIME_FORMAT))
 
         return logger
+
+
+def import_str_and_item(module_path: str) -> tuple[str, str]:
+    """
+    Treat the last entry in a '.' delimited string as the item to import from
+    the module in the string preceding it.
+    """
+
+    parts = module_path.split(".")
+    assert len(parts) > 1, module_path
+
+    item = parts.pop()
+    return ".".join(parts), item
