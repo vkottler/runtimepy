@@ -117,7 +117,8 @@ class RuntimepyPeer(RuntimepyPeerInterface):
         from_str, to_import = import_str_and_item(import_str)
         writer.write(f"from {from_str} import {to_import}")
 
-        writer.write(f'CONFIG_PATH = "{config_path}"')
+        fixed_path = str(config_path).replace("\\", "\\\\")
+        writer.write(f'CONFIG_PATH = "{fixed_path}"')
 
         writer.write('if __name__ == "__main__":')
         with writer.indented():
@@ -147,7 +148,7 @@ class RuntimepyPeer(RuntimepyPeerInterface):
             with tempfile(suffix=".py") as path:
                 # Write file contents.
                 with IndentedFileWriter.from_path(
-                    path, per_indent=4
+                    path, per_indent=4, linesep="\n"
                 ) as writer:
                     cls._write_script(writer, name, config_path, import_str)
 

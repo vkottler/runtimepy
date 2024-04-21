@@ -1,4 +1,4 @@
-vcorelib>=3.2.3
+vcorelib>=3.2.4
 svgen>=0.6.6
 websockets
 psutil

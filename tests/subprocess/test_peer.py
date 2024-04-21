@@ -7,7 +7,6 @@ from sys import executable
 
 # third-party
 from pytest import mark
-from vcorelib.platform import is_windows
 
 # module under test
 from runtimepy.subprocess.sample import SamplePeer
@@ -33,10 +32,9 @@ async def test_subprocess_peer_basic():
 async def test_subprocess_peer_jit():
     """Test JIT script via the subprocess peer interface."""
 
-    if not is_windows():
-        async with SamplePeer.running_program(
-            "test",
-            {"a": 1, "b": 2, "c": 3},
-            "runtimepy.subprocess.sample.SampleProgram",
-        ) as peer:
-            await peer.main()
+    async with SamplePeer.running_program(
+        "test",
+        {"a": 1, "b": 2, "c": 3},
+        "runtimepy.subprocess.sample.SampleProgram",
+    ) as peer:
+        await peer.main()
