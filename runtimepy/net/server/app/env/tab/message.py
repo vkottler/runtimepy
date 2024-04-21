@@ -4,14 +4,15 @@ A module implementing a channel-environment tab message-handling interface.
 
 # built-in
 import logging
-from typing import Any, cast
+from typing import Any, Callable, cast
 
 # internal
 from runtimepy.channel import Channel
 from runtimepy.message import JsonMessage
 from runtimepy.net.server.app.env.tab.base import ChannelEnvironmentTabBase
-from runtimepy.net.server.app.env.tab.logger import TabMessageSender
 from runtimepy.net.server.websocket.state import TabState
+
+TabMessageSender = Callable[[JsonMessage], None]
 
 
 class ChannelEnvironmentTabMessaging(ChannelEnvironmentTabBase):

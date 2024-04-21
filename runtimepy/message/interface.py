@@ -38,6 +38,7 @@ from runtimepy.message.types import (
     T,
     TypedHandler,
 )
+from runtimepy.util import ListLogger
 
 
 class JsonMessageInterface:
@@ -47,12 +48,16 @@ class JsonMessageInterface:
     processor: MessageProcessor
     command: ChannelCommandProcessor
 
+    list_handler: ListLogger
+
     def __init__(self) -> None:
         """Initialize this instance"""
 
         self.targets = TargetResolver()
         self.remote_meta: Optional[JsonMessage] = None
         self._log_messages: list[dict[str, Any]] = []
+
+        self.list_handler = ListLogger.create()
 
         self.meta = {
             "package": PKG_NAME,
@@ -150,6 +155,13 @@ class JsonMessageInterface:
         if isinstance(data, JsonCodec):
             data = data.asdict()
 
+        # Stage any pending log messages.
+        if self.list_handler:
+            for record in self.list_handler.drain():
+                self.stage_remote_log(  # type: ignore
+                    record.msg, *record.args, level=record.levelno
+                )
+
         # Add any pending log messages to this message.
         if self._log_messages:
             assert "__log_messages__" not in data
@@ -191,6 +203,7 @@ class JsonMessageInterface:
                         "remote: " + message["msg"],
                         *message.get("args", []),
                     )
+            del data["__log_messages__"]
 
         return should_respond
 

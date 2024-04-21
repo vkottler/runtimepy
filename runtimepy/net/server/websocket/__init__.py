@@ -9,7 +9,7 @@ from collections import defaultdict
 from runtimepy.message import JsonMessage
 from runtimepy.net.arbiter.tcp.json import WebsocketJsonMessageConnection
 from runtimepy.net.server.app.env.tab import ChannelEnvironmentTab
-from runtimepy.net.server.app.env.tab.logger import TabMessageSender
+from runtimepy.net.server.app.env.tab.message import TabMessageSender
 from runtimepy.net.server.struct import UiState
 from runtimepy.net.server.websocket.state import TabState
 from runtimepy.net.websocket import WebsocketConnection

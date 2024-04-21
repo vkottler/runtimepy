@@ -6,6 +6,7 @@ A module implementing a channel-environment class mixin.
 from runtimepy import METRICS_NAME
 from runtimepy.channel.environment import ChannelEnvironment
 from runtimepy.metrics import ConnectionMetrics, PeriodicTaskMetrics
+from runtimepy.metrics.channel import ChannelMetrics
 
 
 class ChannelEnvironmentMixin:
@@ -58,6 +59,33 @@ class ChannelEnvironmentMixin:
                 description="Dispatch time exceeding period counter.",
             )
 
+    def register_channel_metrics(
+        self, name: str, channel: ChannelMetrics, verb: str
+    ) -> None:
+        """Register individual channel metrics."""
+
+        with self.env.names_pushed(name):
+            self.env.channel(
+                "messages",
+                channel.messages,
+                description=f"Number of messages {verb}.",
+            )
+            self.env.channel(
+                "messages_rate",
+                channel.message_rate,
+                description=f"Messages per second {verb}.",
+            )
+            self.env.channel(
+                "bytes",
+                channel.bytes,
+                description=f"Number of bytes {verb}.",
+            )
+            self.env.channel(
+                "kbps",
+                channel.kbps,
+                description=f"Kilobits per second {verb}.",
+            )
+
     def register_connection_metrics(
         self, metrics: ConnectionMetrics, namespace: str = METRICS_NAME
     ) -> None:
@@ -68,24 +96,4 @@ class ChannelEnvironmentMixin:
                 ("tx", metrics.tx, "transmitted"),
                 ("rx", metrics.rx, "received"),
             ]:
-                with self.env.names_pushed(name):
-                    self.env.channel(
-                        "messages",
-                        direction.messages,
-                        description=f"Number of messages {verb}.",
-                    )
-                    self.env.channel(
-                        "messages_rate",
-                        direction.message_rate,
-                        description=f"Messages per second {verb}.",
-                    )
-                    self.env.channel(
-                        "bytes",
-                        direction.bytes,
-                        description=f"Number of bytes {verb}.",
-                    )
-                    self.env.channel(
-                        "kbps",
-                        direction.kbps,
-                        description=f"Kilobits per second {verb}.",
-                    )
+                self.register_channel_metrics(name, direction, verb)

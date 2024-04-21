@@ -11,7 +11,6 @@ from vcorelib.math import WeightedAverage
 
 # internal
 from runtimepy.metrics.connection import ConnectionMetrics
-from runtimepy.net.arbiter.info import AppInfo
 from runtimepy.net.arbiter.struct import RuntimeStruct
 from runtimepy.primitives import Float
 
@@ -35,10 +34,8 @@ class UiState(RuntimeStruct):
         """Attempt to get the singleton UI struct instance."""
         return UI
 
-    async def build(self, app: AppInfo) -> None:
-        """Build a struct instance's channel environment."""
-
-        del app
+    def init_env(self) -> None:
+        """Initialize this sample environment."""
 
         # Animation-frame time.
         self.time_ms = Float()

@@ -4,11 +4,11 @@ A module implementing a runtimepy peer interface.
 
 # built-in
 import asyncio
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from typing import AsyncIterator, Type, TypeVar
 
 # internal
-from runtimepy.channel.environment import ChannelEnvironment
+from runtimepy.net.arbiter.struct import RuntimeStruct
 from runtimepy.subprocess import spawn_exec, spawn_shell
 from runtimepy.subprocess.interface import RuntimepyPeerInterface
 from runtimepy.subprocess.protocol import RuntimepySubprocessProtocol
@@ -19,10 +19,12 @@ T = TypeVar("T", bound="RuntimepyPeer")
 class RuntimepyPeer(RuntimepyPeerInterface):
     """A class implementing an interface for messaging peer subprocesses."""
 
-    def __init__(self, protocol: RuntimepySubprocessProtocol) -> None:
+    def __init__(
+        self, protocol: RuntimepySubprocessProtocol, struct: RuntimeStruct
+    ) -> None:
         """Initialize this instance."""
 
-        super().__init__(ChannelEnvironment())
+        super().__init__(struct)
         self.protocol = protocol
 
     async def _poll(self) -> None:
@@ -34,6 +36,8 @@ class RuntimepyPeer(RuntimepyPeerInterface):
                 keep_going = await self.service_queues()
                 if keep_going:
                     await asyncio.sleep(self.poll_period_s)
+                    self.poll_metrics()
+
             except asyncio.CancelledError:
                 keep_going = False
 
@@ -45,8 +49,10 @@ class RuntimepyPeer(RuntimepyPeerInterface):
         task = asyncio.create_task(self._poll())
 
         try:
-            if await self.loopback():
-                await self.wait_json({"meta": self.meta})
+            with suppress(AssertionError):
+                if await self.loopback():
+                    await self.wait_json({"meta": self.meta})
+
             yield self
         finally:
             task.cancel()
@@ -54,30 +60,37 @@ class RuntimepyPeer(RuntimepyPeerInterface):
 
     @classmethod
     @asynccontextmanager
-    async def shell(cls: Type[T], cmd: str) -> AsyncIterator[T]:
+    async def shell(
+        cls: Type[T], struct: RuntimeStruct, cmd: str
+    ) -> AsyncIterator[T]:
         """Create an instance from a shell command."""
 
         async with spawn_shell(
             cmd, stdout=asyncio.Queue(), stderr=asyncio.Queue()
         ) as proto:
-            async with cls(proto)._context() as inst:
+            async with cls(proto, struct)._context() as inst:
                 yield inst
 
     @classmethod
     @asynccontextmanager
-    async def exec(cls: Type[T], *args, **kwargs) -> AsyncIterator[T]:
+    async def exec(
+        cls: Type[T], struct: RuntimeStruct, *args, **kwargs
+    ) -> AsyncIterator[T]:
         """Create an instance from comand-line arguments."""
 
         async with spawn_exec(
             *args, stdout=asyncio.Queue(), stderr=asyncio.Queue(), **kwargs
         ) as proto:
-            async with cls(proto)._context() as inst:
+            async with cls(proto, struct)._context() as inst:
                 yield inst
 
     def write(self, data: bytes, addr: tuple[str, int] = None) -> None:
         """Write bytes via this interface."""
+
         del addr
+
         self.protocol.stdin.write(data)
+        self.stdin_metrics.increment(len(data))
 
     async def service_queues(self) -> bool:
         """Service data from peer."""

@@ -10,19 +10,19 @@ import sys
 from vcorelib.asyncio import run_handle_interrupt
 
 # internal
-from runtimepy.channel.environment import ChannelEnvironment
+from runtimepy.net.arbiter.struct import SampleStruct
 from runtimepy.subprocess.program import PeerProgram
 
 
-async def stderr_writer(
-    poll_period_s: float, did_write: asyncio.Event
+async def log_message_sender(
+    struct: SampleStruct, poll_period_s: float, did_write: asyncio.Event
 ) -> None:
     """Write to stderr periodically."""
 
     keep_going = True
     while keep_going:
         try:
-            print("Sup, it's stderr.", file=sys.stderr, flush=True)
+            struct.logger.info("Sup, it's %s.", "a log sending task")
             did_write.set()
             await asyncio.sleep(poll_period_s)
         except asyncio.CancelledError:
@@ -35,21 +35,28 @@ async def main(argv: list[str]) -> int:
     del argv
 
     # Initialize channel environment.
-    env = ChannelEnvironment()
+    struct = SampleStruct("test", {})
 
-    input_poller = PeerProgram.run_standard(env)
+    async with PeerProgram.running(struct) as (task, peer):
+        # Register other async tasks.
+        did_write = asyncio.Event()
+        stderr_task = asyncio.create_task(
+            log_message_sender(struct, 0.1, did_write)
+        )
+        await did_write.wait()
 
-    # Register other async tasks.
-    did_write = asyncio.Event()
-    stderr_task = asyncio.create_task(stderr_writer(0.1, did_write))
-    await did_write.wait()
+        peer.struct.poll()
 
-    # Run program.
-    await input_poller
+        # Generate event telemetry.
+        with peer.streaming_events():
+            peer.struct.poll()
 
-    # Cancel stderr task.
-    stderr_task.cancel()
-    await stderr_task
+        # Run program.
+        await task
+
+        # Cancel stderr task.
+        stderr_task.cancel()
+        await stderr_task
 
     return 0
 

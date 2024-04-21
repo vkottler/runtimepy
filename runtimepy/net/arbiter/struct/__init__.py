@@ -4,7 +4,6 @@ A module implementing a runtime data structure interface.
 
 # built-in
 from abc import ABC as _ABC
-from abc import abstractmethod as _abstractmethod
 
 # internal
 from runtimepy.channel.environment.sample import poll_sample_env, sample_env
@@ -15,18 +14,21 @@ from runtimepy.struct import RuntimeStructBase
 class RuntimeStruct(RuntimeStructBase, _ABC):
     """A class implementing a base runtime structure."""
 
-    @_abstractmethod
-    async def build(self, app: AppInfo) -> None:
-        """Build a struct instance's channel environment."""
-
-
-class SampleStruct(RuntimeStruct):
-    """A sample runtime structure."""
+    def init_env(self) -> None:
+        """Initialize this sample environment."""
 
     async def build(self, app: AppInfo) -> None:
         """Build a struct instance's channel environment."""
 
         del app
+        self.init_env()
+
+
+class SampleStruct(RuntimeStruct):
+    """A sample runtime structure."""
+
+    def init_env(self) -> None:
+        """Initialize this sample environment."""
         sample_env(self.env)
 
     def poll(self) -> None:

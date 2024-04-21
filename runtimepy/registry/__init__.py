@@ -5,6 +5,7 @@ integer identifier.
 
 # built-in
 from abc import abstractmethod as _abstractmethod
+from contextlib import suppress
 from typing import Generic as _Generic
 from typing import Iterator
 from typing import Optional as _Optional
@@ -54,7 +55,8 @@ class Registry(_RuntimepyDictCodec, _Generic[T]):
         """Search for items in the registry by name."""
 
         for name in self.names.search(pattern, exact=exact):
-            yield name, self.items[name]
+            with suppress(KeyError):
+                yield name, self.items[name]
 
     def asdict(self) -> _JsonObject:
         """Get this registry as a dictionary."""
