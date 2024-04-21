@@ -7,8 +7,10 @@ import asyncio
 from contextlib import asynccontextmanager, suppress
 from typing import AsyncIterator, Type, TypeVar
 
+# third-party
+from vcorelib.io.types import JsonObject
+
 # internal
-from runtimepy.net.arbiter.struct import RuntimeStruct
 from runtimepy.subprocess import spawn_exec, spawn_shell
 from runtimepy.subprocess.interface import RuntimepyPeerInterface
 from runtimepy.subprocess.protocol import RuntimepySubprocessProtocol
@@ -20,11 +22,14 @@ class RuntimepyPeer(RuntimepyPeerInterface):
     """A class implementing an interface for messaging peer subprocesses."""
 
     def __init__(
-        self, protocol: RuntimepySubprocessProtocol, struct: RuntimeStruct
+        self,
+        protocol: RuntimepySubprocessProtocol,
+        name: str,
+        config: JsonObject,
     ) -> None:
         """Initialize this instance."""
 
-        super().__init__(struct)
+        super().__init__(name, config)
         self.protocol = protocol
 
     async def _poll(self) -> None:
@@ -63,27 +68,30 @@ class RuntimepyPeer(RuntimepyPeerInterface):
     @classmethod
     @asynccontextmanager
     async def shell(
-        cls: Type[T], struct: RuntimeStruct, cmd: str
+        cls: Type[T], name: str, config: JsonObject, cmd: str
     ) -> AsyncIterator[T]:
         """Create an instance from a shell command."""
 
         async with spawn_shell(
             cmd, stdout=asyncio.Queue(), stderr=asyncio.Queue()
         ) as proto:
-            async with cls(proto, struct)._context() as inst:
+            async with cls(proto, name, config)._context() as inst:
                 yield inst
+
+    async def main(self) -> None:
+        """Program entry."""
 
     @classmethod
     @asynccontextmanager
     async def exec(
-        cls: Type[T], struct: RuntimeStruct, *args, **kwargs
+        cls: Type[T], name: str, config: JsonObject, *args, **kwargs
     ) -> AsyncIterator[T]:
         """Create an instance from comand-line arguments."""
 
         async with spawn_exec(
             *args, stdout=asyncio.Queue(), stderr=asyncio.Queue(), **kwargs
         ) as proto:
-            async with cls(proto, struct)._context() as inst:
+            async with cls(proto, name, config)._context() as inst:
                 yield inst
 
     def write(self, data: bytes, addr: tuple[str, int] = None) -> None:

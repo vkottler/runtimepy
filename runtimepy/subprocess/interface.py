@@ -5,9 +5,10 @@ A module implementing a runtimepy peer interface.
 # built-in
 import asyncio
 from io import BytesIO
-from typing import Optional
+from typing import Optional, Type
 
 # third-party
+from vcorelib.io.types import JsonObject
 from vcorelib.logging import LoggerMixin
 
 # internal
@@ -17,7 +18,7 @@ from runtimepy.channel.registry import ParsedEvent
 from runtimepy.message import JsonMessage, MessageProcessor
 from runtimepy.message.interface import JsonMessageInterface
 from runtimepy.metrics.channel import ChannelMetrics
-from runtimepy.net.arbiter.struct import RuntimeStruct
+from runtimepy.net.arbiter.struct import RuntimeStruct, SampleStruct
 
 
 class RuntimepyPeerInterface(JsonMessageInterface, LoggerMixin):
@@ -25,12 +26,14 @@ class RuntimepyPeerInterface(JsonMessageInterface, LoggerMixin):
 
     poll_period_s: float = 0.01
 
-    def __init__(self, struct: RuntimeStruct) -> None:
+    struct_type: Type[RuntimeStruct] = SampleStruct
+
+    def __init__(self, name: str, config: JsonObject) -> None:
         """Initialize this instance."""
 
         self.processor = MessageProcessor()
 
-        self.struct = struct
+        self.struct = self.struct_type(name, config)
         self._finalize_struct()
 
         self.peer_env: Optional[ChannelEnvironment] = None

@@ -68,11 +68,11 @@ class PeerProgram(RuntimepyPeerInterface):
 
     @classmethod
     def run_standard(
-        cls: Type[T], struct: RuntimeStruct
+        cls: Type[T], name: str, config: JsonObject
     ) -> tuple[asyncio.Task[None], T]:
         """Run this program using standard input and output."""
 
-        peer = cls(struct)
+        peer = cls(name, config)
         peer.json_output = sys.stdout.buffer
         peer.stream_output = sys.stderr.buffer
 
@@ -87,16 +87,13 @@ class PeerProgram(RuntimepyPeerInterface):
     @classmethod
     @asynccontextmanager
     async def running(
-        cls: Type[T],
-        name: str,
-        config: JsonObject,
-        argv: list[str],
+        cls: Type[T], name: str, config: JsonObject, argv: list[str]
     ) -> AsyncIterator[tuple[asyncio.Task[None], asyncio.Task[None], T]]:
         """
         Provide an interface for managed-context cleanup of the peer process.
         """
 
-        io_task, peer = cls.run_standard(cls.struct_type(name, config))
+        io_task, peer = cls.run_standard(name, config)
 
         # Set up logging.
         logger = logging.getLogger()
@@ -106,9 +103,11 @@ class PeerProgram(RuntimepyPeerInterface):
 
         # Wait for environment exchange.
         await peer._peer_env_event.wait()
+        peer.logger.info("Environments exchanged.")
 
         # Start main loop.
         main_task = asyncio.create_task(peer.main(argv))
+        peer.logger.info("Main started.")
 
         try:
             yield io_task, main_task, peer
