@@ -76,7 +76,5 @@ class SamplePeer(RuntimepyPeer):
 
         self.struct.poll()
 
-        events = []
-        while not self.telemetry.empty():
-            events.append(self.telemetry.get_nowait())
-        self.logger.info("%d events parsed.", len(events))
+        for name, events in self.poll_telemetry().items():
+            self.logger.info("'%s' %d events parsed.", name, len(events))

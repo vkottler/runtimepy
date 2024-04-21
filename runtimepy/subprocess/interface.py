@@ -14,7 +14,7 @@ from vcorelib.logging import LoggerMixin
 # internal
 from runtimepy import METRICS_NAME
 from runtimepy.channel.environment import ChannelEnvironment
-from runtimepy.channel.registry import ParsedEvent
+from runtimepy.channel.registry import ChannelEventMap, ParsedEvent
 from runtimepy.message import JsonMessage, MessageProcessor
 from runtimepy.message.interface import JsonMessageInterface
 from runtimepy.metrics.channel import ChannelMetrics
@@ -38,12 +38,20 @@ class RuntimepyPeerInterface(JsonMessageInterface, LoggerMixin):
 
         self.peer_env: Optional[ChannelEnvironment] = None
         self._peer_env_event = asyncio.Event()
-        self.telemetry: asyncio.Queue[ParsedEvent] = asyncio.Queue()
+        self._telemetry: asyncio.Queue[ParsedEvent] = asyncio.Queue()
 
         # Set these for JsonMessageInterface.
         LoggerMixin.__init__(self, logger=self.struct.logger)
         self.command = self.struct.command
         JsonMessageInterface.__init__(self)
+
+    def poll_telemetry(self) -> ChannelEventMap:
+        """Get a map of channel telemetry."""
+
+        events = []
+        while not self._telemetry.empty():
+            events.append(self._telemetry.get_nowait())
+        return ParsedEvent.by_channel(events)
 
     def _set_peer_env(self, data: JsonMessage) -> bool:
         """Set the peer's environment."""
@@ -120,7 +128,7 @@ class RuntimepyPeerInterface(JsonMessageInterface, LoggerMixin):
                     for event in self.peer_env.channels.parse_event_stream(
                         stream
                     ):
-                        self.telemetry.put_nowait(event)
+                        self._telemetry.put_nowait(event)
             else:
                 self.logger.warning("Dropped %d bytes of telemetry.", count)
 
