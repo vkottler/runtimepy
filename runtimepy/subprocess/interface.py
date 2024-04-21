@@ -2,12 +2,19 @@
 A module implementing a runtimepy peer interface.
 """
 
+# built-in
+import asyncio
+from io import BytesIO
+from typing import Optional
+
 # third-party
 from vcorelib.logging import LoggerMixin
 
 # internal
 from runtimepy import METRICS_NAME
-from runtimepy.message import MessageProcessor
+from runtimepy.channel.environment import ChannelEnvironment
+from runtimepy.channel.registry import ParsedEvent
+from runtimepy.message import JsonMessage, MessageProcessor
 from runtimepy.message.interface import JsonMessageInterface
 from runtimepy.metrics.channel import ChannelMetrics
 from runtimepy.net.arbiter.struct import RuntimeStruct
@@ -26,10 +33,44 @@ class RuntimepyPeerInterface(JsonMessageInterface, LoggerMixin):
         self.struct = struct
         self._finalize_struct()
 
+        self.peer_env: Optional[ChannelEnvironment] = None
+        self._peer_env_event = asyncio.Event()
+        self.telemetry: asyncio.Queue[ParsedEvent] = asyncio.Queue()
+
         # Set these for JsonMessageInterface.
         LoggerMixin.__init__(self, logger=self.struct.logger)
         self.command = self.struct.command
         JsonMessageInterface.__init__(self)
+
+    def _set_peer_env(self, data: JsonMessage) -> bool:
+        """Set the peer's environment."""
+
+        result = False
+        if self.peer_env is None:
+            self.peer_env = ChannelEnvironment.load_json(data)
+            self._peer_env_event.set()
+            result = True
+        return result
+
+    def _register_handlers(self) -> None:
+        """Register connection-specific command handlers."""
+
+        super()._register_handlers()
+
+        async def env_handler(outbox: JsonMessage, inbox: JsonMessage) -> None:
+            """A simple channel environment sharing handler."""
+
+            # Exchange environments.
+            if self._set_peer_env(inbox):
+                outbox.update(self.struct.env.export_json())
+
+        self.basic_handler("env", env_handler)
+
+    async def share_environment(self) -> None:
+        """Exchange channel environments."""
+
+        result = await self.wait_json({"env": self.struct.env.export_json()})
+        self._set_peer_env(result["env"])
 
     def _finalize_struct(self) -> None:
         """Initialize struct members."""
@@ -67,10 +108,18 @@ class RuntimepyPeerInterface(JsonMessageInterface, LoggerMixin):
         """Forward stderr."""
 
         if data:
-            self.stderr_metrics.increment(len(data))
+            count = len(data)
+            self.stderr_metrics.increment(count)
 
             # Parse channel events.
-            del data
+            if self.peer_env is not None:
+                with BytesIO(data) as stream:
+                    for event in self.peer_env.channels.parse_event_stream(
+                        stream
+                    ):
+                        self.telemetry.put_nowait(event)
+            else:
+                self.logger.warning("Dropped %d bytes of telemetry.", count)
 
     async def handle_stdout(self, data: bytes) -> None:
         """Handle messages from stdout."""

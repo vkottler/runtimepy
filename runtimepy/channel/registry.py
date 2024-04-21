@@ -132,6 +132,7 @@ class ChannelRegistry(_Registry[_Channel[_Any]]):
         stream: BinaryIO,
         pattern: str = DEFAULT_PATTERN,
         exact: bool = False,
+        flush: bool = False,
     ) -> Iterator[list[str]]:
         """
         Register a stream as a managed context. Returns a list of all channels
@@ -141,7 +142,9 @@ class ChannelRegistry(_Registry[_Channel[_Any]]):
         with ExitStack() as stack:
             names = []
             for name, channel in self.search(pattern, exact=exact):
-                stack.enter_context(channel.event.registered(stream))
+                stack.enter_context(
+                    channel.event.registered(stream, flush=flush)
+                )
                 names.append(name)
 
             yield names

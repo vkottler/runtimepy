@@ -16,6 +16,7 @@ from vcorelib.target.resolver import TargetResolver
 
 # internal
 from runtimepy import PKG_NAME, VERSION
+from runtimepy.channel.environment import ChannelEnvironment
 from runtimepy.channel.environment.command import ENVIRONMENTS
 from runtimepy.channel.environment.command.processor import (
     ChannelCommandProcessor,
@@ -50,6 +51,8 @@ class JsonMessageInterface:
 
     list_handler: ListLogger
 
+    remote_environments: dict[str, ChannelEnvironment]
+
     def __init__(self) -> None:
         """Initialize this instance"""
 
@@ -58,6 +61,8 @@ class JsonMessageInterface:
         self._log_messages: list[dict[str, Any]] = []
 
         self.list_handler = ListLogger.create()
+
+        self.remote_environments = {}
 
         self.meta = {
             "package": PKG_NAME,

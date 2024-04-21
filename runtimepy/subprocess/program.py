@@ -10,8 +10,11 @@ import os
 import sys
 from typing import AsyncIterator, BinaryIO, Iterator, Type, TypeVar
 
+# third-party
+from vcorelib.io.types import JsonObject
+
 # internal
-from runtimepy.net.arbiter.struct import RuntimeStruct
+from runtimepy.net.arbiter.struct import RuntimeStruct, SampleStruct
 from runtimepy.subprocess.interface import RuntimepyPeerInterface
 
 T = TypeVar("T", bound="PeerProgram")
@@ -23,11 +26,15 @@ class PeerProgram(RuntimepyPeerInterface):
     json_output: BinaryIO
     stream_output: BinaryIO
 
+    struct_type: Type[RuntimeStruct] = SampleStruct
+
     @contextmanager
     def streaming_events(self) -> Iterator[None]:
         """Stream events to the stream output."""
 
-        with self.struct.env.channels.registered(self.stream_output):
+        with self.struct.env.channels.registered(
+            self.stream_output, flush=True
+        ):
             yield
 
     def write(self, data: bytes, addr: tuple[str, int] = None) -> None:
@@ -39,7 +46,7 @@ class PeerProgram(RuntimepyPeerInterface):
         self.json_output.flush()
         self.stdout_metrics.increment(len(data))
 
-    async def run(self, buffer: BinaryIO) -> None:
+    async def io_task(self, buffer: BinaryIO) -> None:
         """Run this peer program's main loop."""
 
         # Allow polling stdin.
@@ -69,18 +76,27 @@ class PeerProgram(RuntimepyPeerInterface):
         peer.json_output = sys.stdout.buffer
         peer.stream_output = sys.stderr.buffer
 
-        return asyncio.create_task(peer.run(sys.stdin.buffer)), peer
+        return asyncio.create_task(peer.io_task(sys.stdin.buffer)), peer
+
+    async def main(self, argv: list[str]) -> None:
+        """Program entry."""
+
+    async def cleanup(self) -> None:
+        """Runs when program 'running' context exits."""
 
     @classmethod
     @asynccontextmanager
     async def running(
-        cls: Type[T], struct: RuntimeStruct
-    ) -> AsyncIterator[tuple[asyncio.Task[None], T]]:
+        cls: Type[T],
+        name: str,
+        config: JsonObject,
+        argv: list[str],
+    ) -> AsyncIterator[tuple[asyncio.Task[None], asyncio.Task[None], T]]:
         """
         Provide an interface for managed-context cleanup of the peer process.
         """
 
-        task, peer = cls.run_standard(struct)
+        io_task, peer = cls.run_standard(cls.struct_type(name, config))
 
         # Set up logging.
         logger = logging.getLogger()
@@ -88,9 +104,28 @@ class PeerProgram(RuntimepyPeerInterface):
 
         peer.logger.info("Initialized.")
 
+        # Wait for environment exchange.
+        await peer._peer_env_event.wait()
+
+        # Start main loop.
+        main_task = asyncio.create_task(peer.main(argv))
+
         try:
-            yield task, peer
+            yield io_task, main_task, peer
         finally:
             logger.removeHandler(peer.list_handler)
-            task.cancel()
-            await task
+            for cancel in (io_task, main_task):
+                cancel.cancel()
+                await cancel
+
+            await peer.cleanup()
+
+    @classmethod
+    async def run(
+        cls: Type[T], name: str, config: JsonObject, argv: list[str]
+    ) -> None:
+        """Run the program."""
+
+        async with cls.running(name, config, argv) as (io_task, main_task, _):
+            await main_task
+            await io_task

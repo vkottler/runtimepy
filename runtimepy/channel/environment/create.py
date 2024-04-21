@@ -183,8 +183,10 @@ class CreateChannelEnvironment(_BaseChannelEnvironment):
         """Add a bit field to the environment."""
 
         fields = BitFields.new()
+        fields.claim_field(field)
+
         name = self.namespace(name=field.name, namespace=namespace)
-        fields.fields[name] = field
+
         self.fields.add(fields)
 
         return name

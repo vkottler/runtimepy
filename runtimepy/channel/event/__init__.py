@@ -24,18 +24,20 @@ class PrimitiveEvent:
         self.streaming = False
 
     @contextmanager
-    def registered(self, stream: BinaryIO) -> Iterator[None]:
+    def registered(
+        self, stream: BinaryIO, flush: bool = False
+    ) -> Iterator[None]:
         """Register a stream as a managed context."""
 
         assert not self.streaming, "Already streaming!"
 
         def callback(_, __) -> None:
             """Emit a change event to the stream."""
-            self._poll(stream, force=True)
+            self._poll(stream, flush=flush, force=True)
 
         # Poll immediately.
         self.prev_ns = 0
-        self._poll(stream)
+        self._poll(stream, flush=flush)
 
         raw = self.primitive
         ident = raw.register_callback(callback)
@@ -45,7 +47,9 @@ class PrimitiveEvent:
         assert raw.remove_callback(ident)
         self.streaming = False
 
-    def _poll(self, stream: BinaryIO, force: bool = False) -> int:
+    def _poll(
+        self, stream: BinaryIO, force: bool = False, flush: bool = False
+    ) -> int:
         """
         Poll this event so that if the underlying channel has changed since the
         last write, we write another event.
@@ -64,5 +68,7 @@ class PrimitiveEvent:
             array = self.header.array
             written += array.to_stream(stream)
             written += raw.to_stream(stream, byte_order=array.byte_order)
+            if flush:
+                stream.flush()
 
         return written

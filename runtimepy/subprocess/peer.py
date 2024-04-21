@@ -53,6 +53,8 @@ class RuntimepyPeer(RuntimepyPeerInterface):
                 if await self.loopback():
                     await self.wait_json({"meta": self.meta})
 
+                    await self.share_environment()
+
             yield self
         finally:
             task.cancel()

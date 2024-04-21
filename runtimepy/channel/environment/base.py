@@ -66,9 +66,12 @@ class BaseChannelEnvironment(_NamespaceMixin, FinalizeMixin):
 
         self.channels = channels
         self.enums = enums
-        self.fields = _BitFieldsManager(
-            channels.names, self.enums, fields=fields
-        )
+
+        # Register fields.
+        self.fields = _BitFieldsManager(channels.names, self.enums)
+        if fields:
+            for field in fields:
+                self.fields.add(field)
 
         # Keep a mapping of each channel's name and integer identifier to the
         # underlying enumeration.

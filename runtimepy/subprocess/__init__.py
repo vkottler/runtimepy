@@ -65,17 +65,27 @@ async def close_protocol(
 
     # Log pending data remaining on stdout queue.
     if stdout is not None and not stdout.empty():
+        count = 0
         while not stdout.empty():
             message = stdout.get_nowait()
             if message:
                 logger.warning("stdout message: %s", message)
+            count += len(message)
+
+        if count:
+            logger.warning("stdout had %d remaining bytes.", count)
 
     # Log pending data remaining on stderr queue.
     if stderr is not None and not stderr.empty():
+        count = 0
         while not stderr.empty():
             message = stderr.get_nowait()
             if message:
                 logger.warning("stderr message: %s", message)
+            count += len(message)
+
+        if count:
+            logger.warning("stdout had %d remaining bytes.", count)
 
 
 @asynccontextmanager

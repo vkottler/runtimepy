@@ -4,6 +4,7 @@ Test the 'subprocess.peer' module.
 
 # built-in
 import asyncio
+import logging
 from sys import executable
 
 # third-party
@@ -15,6 +16,8 @@ from runtimepy.subprocess.peer import RuntimepyPeer
 
 # internal
 from tests.subprocess.test_manager import TEST_PROGRAM
+
+LOG = logging.getLogger(__name__)
 
 
 async def basic_peer_test(peer: RuntimepyPeer) -> None:
@@ -39,8 +42,18 @@ async def test_subprocess_peer_basic():
         await basic_peer_test(peer)
         struct.poll()
 
+        events = []
+        while not peer.telemetry.empty():
+            events.append(peer.telemetry.get_nowait())
+        LOG.info("%d events parsed.", len(events))
+
     struct = SampleStruct("test", {})
     async with RuntimepyPeer.exec(struct, executable, str(prog)) as peer:
         struct.poll()
         await basic_peer_test(peer)
         struct.poll()
+
+        events = []
+        while not peer.telemetry.empty():
+            events.append(peer.telemetry.get_nowait())
+        LOG.info("%d events parsed.", len(events))
