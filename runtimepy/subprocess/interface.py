@@ -5,6 +5,7 @@ A module implementing a runtimepy peer interface.
 # built-in
 import asyncio
 from io import BytesIO
+from logging import getLogger
 from typing import Optional, Type
 
 # third-party
@@ -14,11 +15,18 @@ from vcorelib.logging import LoggerMixin
 # internal
 from runtimepy import METRICS_NAME
 from runtimepy.channel.environment import ChannelEnvironment
+from runtimepy.channel.environment.command import register_env
+from runtimepy.channel.environment.command.processor import (
+    ChannelCommandProcessor,
+)
 from runtimepy.channel.registry import ChannelEventMap, ParsedEvent
 from runtimepy.message import JsonMessage, MessageProcessor
 from runtimepy.message.interface import JsonMessageInterface
 from runtimepy.metrics.channel import ChannelMetrics
 from runtimepy.net.arbiter.struct import RuntimeStruct, SampleStruct
+
+HOST_SUFFIX = ".host"
+PEER_SUFFIX = ".peer"
 
 
 class RuntimepyPeerInterface(JsonMessageInterface, LoggerMixin):
@@ -33,10 +41,11 @@ class RuntimepyPeerInterface(JsonMessageInterface, LoggerMixin):
 
         self.processor = MessageProcessor()
 
-        self.struct = self.struct_type(name, config)
+        self.basename = name
+        self.struct = self.struct_type(self.basename + HOST_SUFFIX, config)
         self._finalize_struct()
 
-        self.peer_env: Optional[ChannelEnvironment] = None
+        self.peer: Optional[ChannelCommandProcessor] = None
         self._peer_env_event = asyncio.Event()
         self._telemetry: asyncio.Queue[ParsedEvent] = asyncio.Queue()
 
@@ -57,10 +66,22 @@ class RuntimepyPeerInterface(JsonMessageInterface, LoggerMixin):
         """Set the peer's environment."""
 
         result = False
-        if self.peer_env is None:
-            self.peer_env = ChannelEnvironment.load_json(data)
+
+        if self.peer is None:
+            peer_name = self.basename + PEER_SUFFIX
+            self.peer = ChannelCommandProcessor(
+                ChannelEnvironment.load_json(data), getLogger(peer_name)
+            )
+
+            self.peer.logger.info("Loaded.")
+
+            # Register both environments.
+            register_env(self.struct.name, self.struct.command)
+            register_env(peer_name, self.peer)
+
             self._peer_env_event.set()
             result = True
+
         return result
 
     def _register_handlers(self) -> None:
@@ -123,9 +144,9 @@ class RuntimepyPeerInterface(JsonMessageInterface, LoggerMixin):
             self.stderr_metrics.increment(count)
 
             # Parse channel events.
-            if self.peer_env is not None:
+            if self.peer is not None:
                 with BytesIO(data) as stream:
-                    for event in self.peer_env.channels.parse_event_stream(
+                    for event in self.peer.env.channels.parse_event_stream(
                         stream
                     ):
                         self._telemetry.put_nowait(event)

@@ -30,6 +30,9 @@ factories:
   - {name: runtimepy.net.arbiter.struct.SampleStruct}
   - {name: runtimepy.net.server.struct.UiState}
 
+  # Useful subprocess peer interfaces.
+  - {name: runtimepy.sample.peer.SamplePeer}
+
 ports:
   # Reserve ports for JSON listeners.
   - {name: udp_json, type: udp}

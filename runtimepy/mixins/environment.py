@@ -8,6 +8,9 @@ from runtimepy.channel.environment import ChannelEnvironment
 from runtimepy.metrics import ConnectionMetrics, PeriodicTaskMetrics
 from runtimepy.metrics.channel import ChannelMetrics
 
+# 100 Hz metrics is plenty.
+METRICS_MIN_PERIOD_S = 0.01
+
 
 class ChannelEnvironmentMixin:
     """A simple channel-environment mixin."""
@@ -32,31 +35,37 @@ class ChannelEnvironmentMixin:
                 "dispatches",
                 metrics.dispatches,
                 description="Dispatch call counter for this task.",
+                min_period_s=METRICS_MIN_PERIOD_S,
             )
             self.env.channel(
                 "rate_hz",
                 metrics.rate_hz,
                 description="Measured dispatch rate in Hertz.",
+                min_period_s=METRICS_MIN_PERIOD_S,
             )
             self.env.channel(
                 "average_s",
                 metrics.average_s,
                 description="An averaged dispatch time measurement.",
+                min_period_s=METRICS_MIN_PERIOD_S,
             )
             self.env.channel(
                 "max_s",
                 metrics.max_s,
                 description="Maximum dispatch time measured.",
+                min_period_s=METRICS_MIN_PERIOD_S,
             )
             self.env.channel(
                 "min_s",
                 metrics.min_s,
                 description="Minimum dispatch time measured.",
+                min_period_s=METRICS_MIN_PERIOD_S,
             )
             self.env.channel(
                 "overruns",
                 metrics.overruns,
                 description="Dispatch time exceeding period counter.",
+                min_period_s=METRICS_MIN_PERIOD_S,
             )
 
     def register_channel_metrics(
@@ -69,21 +78,25 @@ class ChannelEnvironmentMixin:
                 "messages",
                 channel.messages,
                 description=f"Number of messages {verb}.",
+                min_period_s=METRICS_MIN_PERIOD_S,
             )
             self.env.channel(
                 "messages_rate",
                 channel.message_rate,
                 description=f"Messages per second {verb}.",
+                min_period_s=METRICS_MIN_PERIOD_S,
             )
             self.env.channel(
                 "bytes",
                 channel.bytes,
                 description=f"Number of bytes {verb}.",
+                min_period_s=METRICS_MIN_PERIOD_S,
             )
             self.env.channel(
                 "kbps",
                 channel.kbps,
                 description=f"Kilobits per second {verb}.",
+                min_period_s=METRICS_MIN_PERIOD_S,
             )
 
     def register_connection_metrics(

@@ -9,7 +9,8 @@ from sys import executable
 from pytest import mark
 
 # module under test
-from runtimepy.subprocess.sample import SamplePeer
+from runtimepy.channel.environment.command import clear_env
+from runtimepy.sample.peer import SamplePeer
 
 # internal
 from tests.subprocess.test_manager import TEST_PROGRAM
@@ -21,9 +22,11 @@ async def test_subprocess_peer_basic():
 
     prog = TEST_PROGRAM.with_name("message_program.py")
 
+    clear_env()
     async with SamplePeer.shell("test", {}, f"{executable} {prog}") as peer:
         await peer.main()
 
+    clear_env()
     async with SamplePeer.exec("test", {}, executable, str(prog)) as peer:
         await peer.main()
 
@@ -32,9 +35,10 @@ async def test_subprocess_peer_basic():
 async def test_subprocess_peer_jit():
     """Test JIT script via the subprocess peer interface."""
 
+    clear_env()
     async with SamplePeer.running_program(
         "test",
         {"a": 1, "b": 2, "c": 3},
-        "runtimepy.subprocess.sample.SampleProgram",
+        "runtimepy.sample.program.SampleProgram",
     ) as peer:
         await peer.main()
