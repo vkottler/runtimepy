@@ -15,6 +15,17 @@ class SamplePeer(RuntimepyPeer):
     async def main(self) -> None:
         """Program entry."""
 
+        # Send remote commands.
+        assert self.peer is not None
+        for cmd in [
+            "set a.0.really_really_long_enum very_long_member_name_3",
+            "set a.0.enum three",
+            "set -f a.0.enum three",
+            "set a.0.really_really_long_enum very_long_member_name_2",
+        ]:
+            self.peer.command(cmd)
+            await self.process_command_queue()
+
         self.struct.poll()
 
         self.stage_remote_log("What's good %s.", "bud")
@@ -24,6 +35,3 @@ class SamplePeer(RuntimepyPeer):
         await asyncio.sleep(0)
 
         self.struct.poll()
-
-        for name, events in self.poll_telemetry().items():
-            self.logger.info("'%s' %d events parsed.", name, len(events))

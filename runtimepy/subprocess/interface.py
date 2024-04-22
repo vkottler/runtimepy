@@ -3,38 +3,41 @@ A module implementing a runtimepy peer interface.
 """
 
 # built-in
+from argparse import Namespace
 import asyncio
 from io import BytesIO
 from logging import getLogger
-from typing import Optional, Type
+from typing import Optional
 
 # third-party
 from vcorelib.io.types import JsonObject
-from vcorelib.logging import LoggerMixin
 
 # internal
 from runtimepy import METRICS_NAME
 from runtimepy.channel.environment import ChannelEnvironment
+from runtimepy.channel.environment.base import FieldOrChannel
 from runtimepy.channel.environment.command import register_env
 from runtimepy.channel.environment.command.processor import (
-    ChannelCommandProcessor,
+    RemoteCommandProcessor,
 )
-from runtimepy.channel.registry import ChannelEventMap, ParsedEvent
 from runtimepy.message import JsonMessage, MessageProcessor
 from runtimepy.message.interface import JsonMessageInterface
 from runtimepy.metrics.channel import ChannelMetrics
-from runtimepy.net.arbiter.struct import RuntimeStruct, SampleStruct
+from runtimepy.mixins.async_command import AsyncCommandProcessingMixin
+from runtimepy.net.arbiter.info import RuntimeStruct, SampleStruct
 
 HOST_SUFFIX = ".host"
 PEER_SUFFIX = ".peer"
 
 
-class RuntimepyPeerInterface(JsonMessageInterface, LoggerMixin):
+class RuntimepyPeerInterface(
+    JsonMessageInterface, AsyncCommandProcessingMixin
+):
     """A class implementing an interface for messaging peer subprocesses."""
 
     poll_period_s: float = 0.01
 
-    struct_type: Type[RuntimeStruct] = SampleStruct
+    struct_type: type[RuntimeStruct] = SampleStruct
 
     def __init__(self, name: str, config: JsonObject) -> None:
         """Initialize this instance."""
@@ -45,22 +48,15 @@ class RuntimepyPeerInterface(JsonMessageInterface, LoggerMixin):
         self.struct = self.struct_type(self.basename + HOST_SUFFIX, config)
         self._finalize_struct()
 
-        self.peer: Optional[ChannelCommandProcessor] = None
+        self.peer: Optional[RemoteCommandProcessor] = None
         self._peer_env_event = asyncio.Event()
-        self._telemetry: asyncio.Queue[ParsedEvent] = asyncio.Queue()
 
         # Set these for JsonMessageInterface.
-        LoggerMixin.__init__(self, logger=self.struct.logger)
+        AsyncCommandProcessingMixin.__init__(self, logger=self.struct.logger)
         self.command = self.struct.command
+
+        self._setup_async_commands()
         JsonMessageInterface.__init__(self)
-
-    def poll_telemetry(self) -> ChannelEventMap:
-        """Get a map of channel telemetry."""
-
-        events = []
-        while not self._telemetry.empty():
-            events.append(self._telemetry.get_nowait())
-        return ParsedEvent.by_channel(events)
 
     def _set_peer_env(self, data: JsonMessage) -> bool:
         """Set the peer's environment."""
@@ -69,9 +65,17 @@ class RuntimepyPeerInterface(JsonMessageInterface, LoggerMixin):
 
         if self.peer is None:
             peer_name = self.basename + PEER_SUFFIX
-            self.peer = ChannelCommandProcessor(
+            self.peer = RemoteCommandProcessor(
                 ChannelEnvironment.load_json(data), getLogger(peer_name)
             )
+
+            def send_cmd_hook(
+                args: Namespace, channel: Optional[FieldOrChannel]
+            ) -> None:
+                """Command hook for sending JSON commands."""
+                self._handle_command(args, channel)
+
+            self.peer.hooks.append(send_cmd_hook)
 
             self.peer.logger.info("Loaded.")
 
@@ -83,6 +87,26 @@ class RuntimepyPeerInterface(JsonMessageInterface, LoggerMixin):
             result = True
 
         return result
+
+    async def handle_command(
+        self, args: Namespace, channel: Optional[FieldOrChannel]
+    ) -> None:
+        """Handle a command."""
+
+        if args.remote:
+            cli_args = [args.command]
+            if args.force:
+                cli_args.append("-f")
+            cli_args.append(args.channel)
+
+            self.logger.info(
+                "Remote command: %s",
+                str(
+                    await self.channel_command(
+                        " ".join(cli_args + args.extra), environment=args.env
+                    )
+                ),
+            )
 
     def _register_handlers(self) -> None:
         """Register connection-specific command handlers."""
@@ -149,7 +173,7 @@ class RuntimepyPeerInterface(JsonMessageInterface, LoggerMixin):
                     for event in self.peer.env.channels.parse_event_stream(
                         stream
                     ):
-                        self._telemetry.put_nowait(event)
+                        self.peer.env.ingest(event)
             else:
                 self.logger.warning("Dropped %d bytes of telemetry.", count)
 

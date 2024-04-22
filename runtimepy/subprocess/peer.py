@@ -44,6 +44,8 @@ class RuntimepyPeer(RuntimepyPeerInterface):
         keep_going = True
         while keep_going:
             try:
+                await self.process_command_queue()
+
                 keep_going = await self.service_queues()
                 if keep_going:
                     await asyncio.sleep(self.poll_period_s)

@@ -43,6 +43,11 @@ def channel_environments(app: AppInfo, tabs: TabbedContent) -> None:
             struct.name, struct.command, app, tabs, icon="bucket"
         ).entry()
 
+    # Subprocess tabs.
+    for name, peer in app.peers.items():
+        print(name)
+        print(peer)
+
     # Toggle channel-table button.
     tabs.add_button(
         "Toggle channel table",

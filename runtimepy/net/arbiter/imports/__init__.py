@@ -20,7 +20,7 @@ from runtimepy.net.arbiter.factory import (
 from runtimepy.net.arbiter.factory.task import (
     TaskConnectionArbiter as _TaskConnectionArbiter,
 )
-from runtimepy.net.arbiter.struct import RuntimeStruct as _RuntimeStruct
+from runtimepy.net.arbiter.info import RuntimeStruct as _RuntimeStruct
 from runtimepy.net.arbiter.task import TaskFactory as _TaskFactory
 from runtimepy.subprocess.peer import RuntimepyPeer as _RuntimepyPeer
 from runtimepy.util import import_str_and_item
@@ -106,6 +106,24 @@ class ImportConnectionArbiter(
 
         if factory in self._struct_factories and name not in self._structs:
             self._structs[name] = self._struct_factories[factory](name, config)
+            result = True
+
+        return result
+
+    def factory_process(
+        self, factory: str, name: str, config: _JsonObject, program: str
+    ) -> bool:
+        """Register a runtime process."""
+
+        result = False
+
+        if factory in self._peer_factories and name not in self._peers:
+            self._peers[name] = (
+                self._peer_factories[factory],
+                name,
+                config,
+                program,
+            )
             result = True
 
         return result

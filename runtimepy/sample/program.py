@@ -36,6 +36,15 @@ class SampleProgram(PeerProgram):
         with self.streaming_events():
             self.struct.poll()
 
+        # Send remote commands.
+        assert self.peer is not None
+        for cmd in [
+            "set a.0.really_really_long_enum very_long_member_name_2",
+            "set -f a.0.enum one",
+        ]:
+            self.peer.command(cmd)
+            await self.process_command_queue()
+
         # Register other async tasks.
         did_write = asyncio.Event()
         self.stderr_task = asyncio.create_task(

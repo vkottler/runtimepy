@@ -3,16 +3,17 @@ A module implementing an application information interface.
 """
 
 # built-in
+from abc import ABC as _ABC
 import asyncio as _asyncio
 from contextlib import AsyncExitStack as _AsyncExitStack
 from dataclasses import dataclass
 from logging import getLogger as _getLogger
 from re import compile as _compile
-from typing import Any
 from typing import Awaitable as _Awaitable
 from typing import Callable as _Callable
 from typing import Iterator as _Iterator
 from typing import MutableMapping as _MutableMapping
+from typing import TYPE_CHECKING, Any
 from typing import TypeVar as _TypeVar
 from typing import Union as _Union
 
@@ -23,18 +24,53 @@ from vcorelib.logging import LoggerType as _LoggerType
 from vcorelib.namespace import Namespace as _Namespace
 
 # internal
+from runtimepy.channel.environment.sample import poll_sample_env, sample_env
 from runtimepy.mapping import DEFAULT_PATTERN
 from runtimepy.net.arbiter.result import OverallResult, results
 from runtimepy.net.connection import Connection as _Connection
 from runtimepy.net.manager import ConnectionManager
+from runtimepy.struct import RuntimeStructBase
 from runtimepy.struct import StructMap as _StructMap
 from runtimepy.task import PeriodicTask, PeriodicTaskManager
 from runtimepy.tui.mixin import TuiMixin
+
+if TYPE_CHECKING:
+    from runtimepy.subprocess.peer import (
+        RuntimepyPeer as _RuntimepyPeer,  # pragma: nocover
+    )
 
 ConnectionMap = _MutableMapping[str, _Connection]
 T = _TypeVar("T", bound=_Connection)
 V = _TypeVar("V", bound=PeriodicTask)
 Z = _TypeVar("Z")
+
+
+class RuntimeStruct(RuntimeStructBase, _ABC):
+    """A class implementing a base runtime structure."""
+
+    def init_env(self) -> None:
+        """Initialize this sample environment."""
+
+    async def build(self, app: "AppInfo") -> None:
+        """Build a struct instance's channel environment."""
+
+        del app
+        self.init_env()
+
+
+class SampleStruct(RuntimeStruct):
+    """A sample runtime structure."""
+
+    def init_env(self) -> None:
+        """Initialize this sample environment."""
+        sample_env(self.env)
+
+    def poll(self) -> None:
+        """
+        A method that other runtime entities can call to perform canonical
+        updates to this struct's environment.
+        """
+        poll_sample_env(self.env)
 
 
 @dataclass
@@ -73,6 +109,9 @@ class AppInfo(_LoggerMixin):
     # A name-to-struct mapping.
     structs: _StructMap
 
+    # A name-to-peer mapping.
+    peers: dict[str, "_RuntimepyPeer"]
+
     def with_new_logger(self, name: str) -> "AppInfo":
         """Get a copy of this AppInfo instance, but with a new logger."""
 
@@ -89,6 +128,7 @@ class AppInfo(_LoggerMixin):
             self.task_manager,
             self.results,
             self.structs,
+            self.peers,
         )
 
     def search(

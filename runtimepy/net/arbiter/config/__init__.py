@@ -197,6 +197,14 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
                 struct["factory"], struct["name"], struct.get("config", {})
             ), f"Couldn't register struct '{name}' ({factory})!"
 
+        # Register processes.
+        for process in config.processes:
+            name = process["name"]
+            factory = process["factory"]
+            assert self.factory_process(
+                factory, name, process.get("config", {}), process["program"]
+            ), f"Couldn't register process '{name}' ({factory})!"
+
         # Load initialization methods.
         self._inits = get_apps(config.inits)
 

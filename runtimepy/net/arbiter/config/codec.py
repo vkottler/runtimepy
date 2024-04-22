@@ -68,6 +68,7 @@ class ConnectionArbiterConfig(_RuntimepyDictCodec):
         self.servers: list[_Any] = data.get("servers", [])  # type: ignore
         self.tasks: list[_Any] = data.get("tasks", [])  # type: ignore
         self.structs: list[_Any] = data.get("structs", [])  # type: ignore
+        self.processes: list[_Any] = data.get("processes", [])  # type: ignore
 
         directory_str = str(data.get("directory", "."))
         self.directory = _Path(directory_str)

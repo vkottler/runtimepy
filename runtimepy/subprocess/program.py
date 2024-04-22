@@ -14,7 +14,7 @@ from typing import AsyncIterator, BinaryIO, Iterator, Type, TypeVar
 from vcorelib.io.types import JsonObject
 
 # internal
-from runtimepy.net.arbiter.struct import RuntimeStruct, SampleStruct
+from runtimepy.net.arbiter.info import RuntimeStruct, SampleStruct
 from runtimepy.subprocess.interface import RuntimepyPeerInterface
 
 T = TypeVar("T", bound="PeerProgram")
@@ -54,6 +54,8 @@ class PeerProgram(RuntimepyPeerInterface):
             getattr(os, "set_blocking")(buffer.fileno(), False)
 
         while True:
+            await self.process_command_queue()
+
             data: bytes = buffer.read(1)
             if data is None:
                 await asyncio.sleep(self.poll_period_s)

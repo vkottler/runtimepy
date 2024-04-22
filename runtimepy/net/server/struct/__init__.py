@@ -11,7 +11,7 @@ from vcorelib.math import WeightedAverage
 
 # internal
 from runtimepy.metrics.connection import ConnectionMetrics
-from runtimepy.net.arbiter.struct import RuntimeStruct
+from runtimepy.net.arbiter.info import RuntimeStruct
 from runtimepy.primitives import Float
 
 UI: Optional["UiState"] = None

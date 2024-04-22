@@ -12,7 +12,7 @@ from asyncio import (
     WriteTransport,
 )
 from subprocess import Popen
-from typing import Optional
+from typing import Optional, cast
 
 # third-party
 from vcorelib.math import default_time_ns
@@ -67,16 +67,13 @@ class RuntimepySubprocessProtocol(SubprocessProtocol):
         self.subproc = self.transport.get_extra_info("subprocess")
 
         transport = self.transport.get_pipe_transport(0)
-        assert isinstance(transport, WriteTransport), transport
-        self.stdin = transport
+        self.stdin = cast(WriteTransport, transport)
 
         transport = self.transport.get_pipe_transport(1)
-        assert isinstance(transport, ReadTransport), transport
-        self.stdout_transport = transport
+        self.stdout_transport = cast(ReadTransport, transport)
 
         transport = self.transport.get_pipe_transport(2)
-        assert isinstance(transport, ReadTransport), transport
-        self.stderr_transport = transport
+        self.stderr_transport = cast(ReadTransport, transport)
 
     def pipe_data_received(self, fd: int, data: bytes) -> None:
         """Handle incoming pipe data."""
