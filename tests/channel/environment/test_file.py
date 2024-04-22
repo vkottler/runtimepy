@@ -7,6 +7,7 @@ from vcorelib.io import ARBITER
 
 # module under test
 from runtimepy.channel.environment import ChannelEnvironment
+from runtimepy.channel.environment.sample import sample_env
 
 # internal
 from tests.resources import resource
@@ -26,3 +27,5 @@ def test_channel_environment_load_json():
 
     new_env = ChannelEnvironment.load_json(env.export_json())
     assert new_env.channels == env.channels
+
+    assert ChannelEnvironment.load_json(sample_env().export_json())

@@ -5,40 +5,30 @@ A module implementing a structure for tracking UI state and metrics.
 # built-in
 from typing import Optional
 
-# third-party
-import psutil
-from vcorelib.math import WeightedAverage
-
 # internal
 from runtimepy.metrics.connection import ConnectionMetrics
-from runtimepy.net.arbiter.info import AppInfo
-from runtimepy.net.arbiter.struct import RuntimeStruct
+from runtimepy.mixins.psutil import PsutilMixin
+from runtimepy.net.arbiter.info import RuntimeStruct
 from runtimepy.primitives import Float
 
 UI: Optional["UiState"] = None
 
 
-class UiState(RuntimeStruct):
+class UiState(RuntimeStruct, PsutilMixin):
     """A sample runtime structure."""
 
     json_metrics: ConnectionMetrics
-    process: psutil.Process
-    cpu_average: WeightedAverage
 
     time_ms: Float
     frame_period_ms: Float
-    memory_percent: Float
-    cpu_percent: Float
 
     @staticmethod
     def singleton() -> Optional["UiState"]:
         """Attempt to get the singleton UI struct instance."""
         return UI
 
-    async def build(self, app: AppInfo) -> None:
-        """Build a struct instance's channel environment."""
-
-        del app
+    def init_env(self) -> None:
+        """Initialize this sample environment."""
 
         # Animation-frame time.
         self.time_ms = Float()
@@ -55,12 +45,7 @@ class UiState(RuntimeStruct):
             self.register_connection_metrics(self.json_metrics)
 
         # System metrics.
-        self.process = psutil.Process()
-        self.cpu_average = WeightedAverage(depth=60)
-        self.memory_percent = Float()
-        self.env.float_channel("memory_percent", self.memory_percent)
-        self.cpu_percent = Float()
-        self.env.float_channel("cpu_percent", self.cpu_percent)
+        self.init_psutil(self.env)
 
         # Update singleton.
         global UI  # pylint: disable=global-statement
@@ -71,12 +56,4 @@ class UiState(RuntimeStruct):
         A method that other runtime entities can call to perform canonical
         updates to this struct's environment.
         """
-
-        self.memory_percent.value = psutil.virtual_memory().percent
-
-        with self.process.oneshot():
-            self.cpu_average(
-                self.process.cpu_percent(),
-                weight=self.frame_period_ms.value,
-            )
-            self.cpu_percent.value = self.cpu_average.average()
+        self.poll_psutil(self.frame_period_ms.value)

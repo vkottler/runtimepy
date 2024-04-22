@@ -16,7 +16,7 @@ structs:
   - name: example.struct1
     factory: sample_struct
     # Not actually used.
-    config:
+    config: &cfg
       a: 1
       b: 2
       c: 3
@@ -25,3 +25,10 @@ structs:
     factory: sample_struct
   - name: struct3
     factory: sample_struct
+
+# Sample peer processes.
+processes:
+  - name: proc1
+    factory: sample_peer
+    config: *cfg
+    program: runtimepy.sample.program.SampleProgram

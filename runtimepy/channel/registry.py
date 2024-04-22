@@ -19,6 +19,7 @@ from runtimepy.channel import Channel as _Channel
 from runtimepy.channel.event.header import PrimitiveEventHeader
 from runtimepy.codec.protocol import Protocol
 from runtimepy.mapping import DEFAULT_PATTERN
+from runtimepy.metrics.channel import ChannelMetrics
 from runtimepy.mixins.regex import CHANNEL_PATTERN as _CHANNEL_PATTERN
 from runtimepy.primitives import ChannelScaling, Primitive
 from runtimepy.primitives import Primitivelike as _Primitivelike
@@ -132,6 +133,8 @@ class ChannelRegistry(_Registry[_Channel[_Any]]):
         stream: BinaryIO,
         pattern: str = DEFAULT_PATTERN,
         exact: bool = False,
+        flush: bool = False,
+        channel: ChannelMetrics = None,
     ) -> Iterator[list[str]]:
         """
         Register a stream as a managed context. Returns a list of all channels
@@ -140,8 +143,10 @@ class ChannelRegistry(_Registry[_Channel[_Any]]):
 
         with ExitStack() as stack:
             names = []
-            for name, channel in self.search(pattern, exact=exact):
-                stack.enter_context(channel.event.registered(stream))
+            for name, chan in self.search(pattern, exact=exact):
+                stack.enter_context(
+                    chan.event.registered(stream, flush=flush, channel=channel)
+                )
                 names.append(name)
 
             yield names

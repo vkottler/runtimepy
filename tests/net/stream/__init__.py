@@ -13,13 +13,14 @@ from vcorelib.dict.codec import BasicDictCodec
 
 # module under test
 from runtimepy import PKG_NAME
+from runtimepy.message import JsonMessage
 from runtimepy.net.arbiter.info import AppInfo
 from runtimepy.net.http.header import RequestHeader
 from runtimepy.net.http.response import ResponseHeader
 from runtimepy.net.server import RuntimepyServerConnection
 from runtimepy.net.server.websocket import RuntimepyWebsocketConnection
 from runtimepy.net.stream import StringMessageConnection
-from runtimepy.net.stream.json import JsonMessage, JsonMessageConnection
+from runtimepy.net.stream.json import JsonMessageConnection
 from runtimepy.net.tcp.http import HttpConnection
 from runtimepy.net.udp import UdpConnection
 from tests.net.server import (

@@ -1,4 +1,7 @@
 ---
+includes:
+  - has_config.yaml
+
 type: object
 additionalProperties: false
 
@@ -7,6 +10,11 @@ properties:
     type: array
     items:
       $ref: package://runtimepy/schemas/ClientConnectionConfig.yaml
+
+  processes:
+    type: array
+    items:
+      $ref: package://runtimepy/schemas/PeerProcessConfig.yaml
 
   servers:
     type: array
@@ -43,10 +51,6 @@ properties:
     type: array
     items:
       type: string
-
-  # Application configuration data.
-  config:
-    type: object
 
   # A 'site' directory to add for discovering modules that may appear in other
   # parts of the configuration. If this isn't specified, the current directory

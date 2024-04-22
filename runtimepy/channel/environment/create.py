@@ -44,6 +44,7 @@ class CreateChannelEnvironment(_BaseChannelEnvironment):
         enum: _Union[_RegistryKey, _RuntimeEnum] = None,
         namespace: _Namespace = None,
         scaling: ChannelScaling = None,
+        min_period_s: float = None,
         **kwargs,
     ) -> _ChannelResult:
         """Create a new channel from the environment."""
@@ -66,7 +67,12 @@ class CreateChannelEnvironment(_BaseChannelEnvironment):
             scaling=scaling,
             **kwargs,
         )
+
         assert result is not None, f"Can't create channel '{name}'!"
+
+        # Set a minimum period if one was specified.
+        if min_period_s is not None:
+            result.event.set_min_period(min_period_s)
 
         # Keep track of any new enum channels.
         if enum is not None:
@@ -183,8 +189,10 @@ class CreateChannelEnvironment(_BaseChannelEnvironment):
         """Add a bit field to the environment."""
 
         fields = BitFields.new()
+        fields.claim_field(field)
+
         name = self.namespace(name=field.name, namespace=namespace)
-        fields.fields[name] = field
+
         self.fields.add(fields)
 
         return name

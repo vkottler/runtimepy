@@ -8,19 +8,7 @@ from importlib import import_module as _import_module
 # internal
 from runtimepy.net.arbiter.config.codec import ConfigApps
 from runtimepy.net.arbiter.info import ArbiterApps
-
-
-def import_str_and_item(module_path: str) -> tuple[str, str]:
-    """
-    Treat the last entry in a '.' delimited string as the item to import from
-    the module in the string preceding it.
-    """
-
-    parts = module_path.split(".")
-    assert len(parts) > 1, module_path
-
-    item = parts.pop()
-    return ".".join(parts), item
+from runtimepy.util import import_str_and_item
 
 
 def get_apps(

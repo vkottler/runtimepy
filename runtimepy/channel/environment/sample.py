@@ -11,8 +11,11 @@ from runtimepy.primitives import Uint8
 from runtimepy.primitives.field import BitField, BitFlag
 
 
-def sample_env(env: ChannelEnvironment) -> None:
+def sample_env(env: ChannelEnvironment = None) -> ChannelEnvironment:
     """Register sample enumerations and channels to an environment."""
+
+    if env is None:
+        env = ChannelEnvironment()
 
     # Register an enum.
     sample_enum = env.enum(
@@ -93,6 +96,8 @@ def sample_env(env: ChannelEnvironment) -> None:
                         commandable=True,
                         scaling=[2.0, 3.0],
                     )
+
+    return env
 
 
 def poll_sample_env(env: ChannelEnvironment) -> None:

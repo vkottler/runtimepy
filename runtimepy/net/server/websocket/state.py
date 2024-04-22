@@ -7,13 +7,10 @@ from collections import defaultdict
 from dataclasses import dataclass
 import logging
 
-# third-party
-from vcorelib.logging import DEFAULT_TIME_FORMAT
-
 # internal
-from runtimepy.net.server.app.env.tab.logger import ListLogger
-from runtimepy.net.stream.json.types import JsonMessage
+from runtimepy.message import JsonMessage
 from runtimepy.primitives import AnyPrimitive
+from runtimepy.util import ListLogger
 
 # (value, nanosecond timestamp)
 Point = tuple[str | int | float | bool, int]
@@ -42,9 +39,8 @@ class TabState:
         result: JsonMessage = {}
 
         # Handle log messages.
-        if self.tab_logger.log_messages:
-            result["log_messages"] = self.tab_logger.log_messages
-            self.tab_logger.log_messages = []
+        if self.tab_logger:
+            result["log_messages"] = self.tab_logger.drain_str()
 
         # Handle channel updates.
         if self.points:
@@ -70,8 +66,6 @@ class TabState:
     def create() -> "TabState":
         """Create a new instance."""
 
-        logger = ListLogger()
-        logger.log_messages = []
-        logger.setFormatter(logging.Formatter(DEFAULT_TIME_FORMAT))
-
-        return TabState(False, False, logger, defaultdict(list), {}, {}, [])
+        return TabState(
+            False, False, ListLogger.create(), defaultdict(list), {}, {}, []
+        )

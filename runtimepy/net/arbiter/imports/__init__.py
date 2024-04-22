@@ -20,9 +20,10 @@ from runtimepy.net.arbiter.factory import (
 from runtimepy.net.arbiter.factory.task import (
     TaskConnectionArbiter as _TaskConnectionArbiter,
 )
-from runtimepy.net.arbiter.imports.util import import_str_and_item
-from runtimepy.net.arbiter.struct import RuntimeStruct as _RuntimeStruct
+from runtimepy.net.arbiter.info import RuntimeStruct as _RuntimeStruct
 from runtimepy.net.arbiter.task import TaskFactory as _TaskFactory
+from runtimepy.subprocess.peer import RuntimepyPeer as _RuntimepyPeer
+from runtimepy.util import import_str_and_item
 
 
 class ImportConnectionArbiter(
@@ -37,13 +38,44 @@ class ImportConnectionArbiter(
         """Additional initialization tasks."""
 
         super()._init()
+
         self._struct_factories: dict[str, type[_RuntimeStruct]] = {}
         self._struct_names: dict[type[_RuntimeStruct], list[str]] = {}
+
+        self._peer_factories: dict[str, type[_RuntimepyPeer]] = {}
+        self._peer_names: dict[type[_RuntimepyPeer], list[str]] = {}
+
+    def register_peer_factory(
+        self, factory: type[_RuntimepyPeer], *namespaces: str
+    ) -> bool:
+        """Attempt to register a subprocess peer factory."""
+
+        result = False
+
+        name = factory.__name__
+        snake_name = to_snake(name)
+
+        if (
+            name not in self._peer_factories
+            and snake_name not in self._peer_factories
+        ):
+            self._peer_factories[name] = factory
+            self._peer_factories[snake_name] = factory
+            self._peer_names[factory] = [*namespaces]
+
+            result = True
+            self.logger.debug(
+                "Registered '%s' (%s) subprocess peer factory.",
+                name,
+                snake_name,
+            )
+
+        return result
 
     def register_struct_factory(
         self, factory: type[_RuntimeStruct], *namespaces: str
     ) -> bool:
-        """Attempt to register a periodic task factory."""
+        """Attempt to register a struct factory."""
 
         result = False
 
@@ -78,6 +110,24 @@ class ImportConnectionArbiter(
 
         return result
 
+    def factory_process(
+        self, factory: str, name: str, config: _JsonObject, program: str
+    ) -> bool:
+        """Register a runtime process."""
+
+        result = False
+
+        if factory in self._peer_factories and name not in self._peers:
+            self._peers[name] = (
+                self._peer_factories[factory],
+                name,
+                config,
+                program,
+            )
+            result = True
+
+        return result
+
     def register_module_factory(
         self, module_path: str, *namespaces: str, **kwargs
     ) -> bool:
@@ -87,14 +137,16 @@ class ImportConnectionArbiter(
 
         raw_import = getattr(_import_module(module), factory_class)
 
-        # Handle factories that don't need factory-class proxying.
-        if (
-            isinstance(raw_import, type)
-            and _RuntimeStruct in raw_import.__bases__
-        ):
-            result = self.register_struct_factory(raw_import, *namespaces)
+        result = False
 
-        else:
+        # Handle factories that don't need factory-class proxying.
+        if isinstance(raw_import, type):
+            if _RuntimeStruct in raw_import.__bases__:
+                result = self.register_struct_factory(raw_import, *namespaces)
+            elif _RuntimepyPeer in raw_import.__bases__:
+                result = self.register_peer_factory(raw_import, *namespaces)
+
+        if not result:
             # We need to call the factory class to create an instance.
             inst = raw_import(**kwargs)
 

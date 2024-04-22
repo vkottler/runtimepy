@@ -5,7 +5,7 @@ description: A framework for implementing Python services.
 entry: {{entry}}
 
 requirements:
-  - vcorelib>=3.2.3
+  - vcorelib>=3.2.4
   - svgen>=0.6.6
   - websockets
   - psutil
@@ -32,3 +32,6 @@ commands:
 init_local: |
   METRICS_NAME = "metrics"
   DEFAULT_EXT = "yaml"
+
+ci_local:
+  - "- run: mk python-editable"

@@ -1,7 +1,7 @@
 [DESIGN]
 max-args=8
 max-attributes=14
-max-parents=12
+max-parents=13
 max-branches=13
 
 [MESSAGES CONTROL]

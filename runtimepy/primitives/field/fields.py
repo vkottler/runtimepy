@@ -180,6 +180,14 @@ class BitFields(_RuntimepyDictCodec):
         self.by_index[result] = (width, val)
         return result
 
+    def claim_field(self, field: _BitField) -> _BitField:
+        """Claim a bit field."""
+
+        assert field.name not in self.fields, field.name
+        self.fields[field.name] = field
+        self.by_index[field.index] = field
+        return field
+
     def field(
         self,
         name: str,
@@ -192,15 +200,16 @@ class BitFields(_RuntimepyDictCodec):
 
         assert width != 1, "Use bit-flags for single-width fields!"
 
-        index = self._claim_bits(width, index=index)
-
-        result = _BitField(
-            name, self.raw, index, width, enum=enum, description=description
+        return self.claim_field(
+            _BitField(
+                name,
+                self.raw,
+                self._claim_bits(width, index=index),
+                width,
+                enum=enum,
+                description=description,
+            )
         )
-
-        self.fields[name] = result
-        self.by_index[index] = result
-        return result
 
     @classmethod
     def new(cls: type[T], value: _Primitivelike = "uint8") -> T:

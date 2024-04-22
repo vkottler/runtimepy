@@ -183,3 +183,13 @@ class ChannelCommandProcessor(ChannelEnvironmentMixin):
 
 
 EnvironmentMap = dict[str, ChannelCommandProcessor]
+
+
+class RemoteCommandProcessor(ChannelCommandProcessor):
+    """A command processing interface for channel environments."""
+
+    def handle_command(self, args: Namespace) -> CommandResult:
+        """Handle a command from parsed arguments."""
+
+        args.remote = True
+        return super().handle_command(args)

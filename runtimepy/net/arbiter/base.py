@@ -35,18 +35,20 @@ from runtimepy.net.arbiter.info import (
     ConnectionMap,
     NetworkApplication,
     NetworkApplicationlike,
+    RuntimeStruct,
 )
 from runtimepy.net.arbiter.result import AppResult, ResultState
-from runtimepy.net.arbiter.struct import RuntimeStruct
 from runtimepy.net.arbiter.task import (
     ArbiterTaskManager as _ArbiterTaskManager,
 )
 from runtimepy.net.connection import Connection as _Connection
 from runtimepy.net.manager import ConnectionManager as _ConnectionManager
 from runtimepy.net.server import RuntimepyServerConnection
+from runtimepy.subprocess.peer import RuntimepyPeer as _RuntimepyPeer
 from runtimepy.tui.mixin import CursesWindow, TuiMixin
 
 ServerTask = _Awaitable[None]
+RuntimeProcessTask = tuple[type[_RuntimepyPeer], str, _JsonObject, str]
 
 
 async def init_only(app: AppInfo) -> int:
@@ -126,6 +128,10 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
         # Runtime structures.
         self._structs: dict[str, RuntimeStruct] = {}
 
+        # Runtime procesess.
+        self._peers: dict[str, RuntimeProcessTask] = {}
+        self._runtime_peers: dict[str, _RuntimepyPeer] = {}
+
         self._servers: list[_asyncio.Task[None]] = []
         self._servers_started = _asyncio.Semaphore(0)
 
@@ -182,7 +188,6 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
     def _register_envs(self) -> None:
         """Register environments."""
 
-        clear_env()
         for name, conn in self._connections.items():
             register_env(name, conn.command)
         for struct in self._structs.values():
@@ -190,10 +195,6 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
 
     async def _init_connections(self) -> None:
         """Initialize network connections."""
-
-        # Wait for servers to start.
-        for _ in range(len(self._servers)):
-            await self._servers_started.acquire()
 
         # Start deferred connections.
         for key, value in zip(
@@ -217,6 +218,98 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
             for struct in self._structs.values():
                 struct.env.finalize(strict=False)
 
+    async def _start_processes(self, stack: _AsyncExitStack) -> None:
+        """Start processes."""
+
+        for name, (peer, name, config, import_str) in self._peers.items():
+            self._runtime_peers[name] = await stack.enter_async_context(
+                peer.running_program(name, config, import_str)
+            )
+            self.logger.info("Started process '%s'.", name)
+
+    async def _main(
+        self,
+        stack: _AsyncExitStack,
+        app: NetworkApplicationlike = None,
+        check_connections: bool = True,
+        config: _JsonObject = None,
+    ) -> tuple[int, Optional[AppInfo]]:
+        """Main application entry."""
+
+        result = -1
+        info: Optional[AppInfo] = None
+
+        clear_env()
+
+        # Wait for servers to start.
+        for _ in range(len(self._servers)):
+            await self._servers_started.acquire()
+
+        # Start processes.
+        await self._start_processes(stack)
+
+        with self.log_time("Connection initialization", reminder=True):
+            await self._init_connections()
+
+        # Register environments.
+        self._register_envs()
+        tasks = {x.name: x for x in self.task_manager.tasks}
+        for task in tasks.values():
+            register_env(task.name, task.command)
+
+        # Run application, but only if all the registered connections
+        # are still alive after initialization.
+        if not check_connections or not any(
+            x.disabled for x in self._connections.values()
+        ):
+            info = AppInfo(
+                self.logger,
+                stack,
+                self._connections,
+                self.manager,
+                self._namespace,
+                self.stop_sig,
+                config if config is not None else self._config,
+                self,
+                tasks,  # type: ignore
+                self.task_manager,
+                [],
+                self._structs,  # type: ignore
+                self._runtime_peers,
+            )
+
+            # Build structs.
+            await self._build_structs(info)
+
+            # Initialize tasks.
+            with info.log_time("Initializing periodic tasks", reminder=True):
+                await _asyncio.gather(
+                    *(x.init(info) for x in self.task_manager.tasks)
+                )
+                for task in self.task_manager.tasks:
+                    task.env.finalize(strict=False)
+
+            # Wire runtime data to server JSON.
+            self._setup_server_json(info)
+
+            # Start tasks.
+            await stack.enter_async_context(
+                self.task_manager.running(stop_sig=self.stop_sig)
+            )
+
+            # Run initialization methods.
+            result = await self._run_apps_list(self._inits, info)
+            if result == 0:
+                # Get application methods.
+                apps = self._apps
+                if app is not None:
+                    apps = normalize_app(app)
+
+                # Run applications in order.
+                result = await self._run_apps_list(apps, info)
+
+        return result, info
+
     async def _entry(
         self,
         app: NetworkApplicationlike = None,
@@ -232,67 +325,13 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
         info: Optional[AppInfo] = None
 
         try:
-            with self.log_time("Connection initialization", reminder=True):
-                await self._init_connections()
-
-            # Register environments.
-            self._register_envs()
-            tasks = {x.name: x for x in self.task_manager.tasks}
-            for task in tasks.values():
-                register_env(task.name, task.command)
-
-            # Run application, but only if all the registered connections are
-            # still alive after initialization.
-            if not check_connections or not any(
-                x.disabled for x in self._connections.values()
-            ):
-                async with _AsyncExitStack() as stack:
-                    info = AppInfo(
-                        self.logger,
-                        stack,
-                        self._connections,
-                        self.manager,
-                        self._namespace,
-                        self.stop_sig,
-                        config if config is not None else self._config,
-                        self,
-                        tasks,  # type: ignore
-                        self.task_manager,
-                        [],
-                        self._structs,  # type: ignore
-                    )
-
-                    # Build structs.
-                    await self._build_structs(info)
-
-                    # Initialize tasks.
-                    with info.log_time(
-                        "Initializing periodic tasks", reminder=True
-                    ):
-                        await _asyncio.gather(
-                            *(x.init(info) for x in self.task_manager.tasks)
-                        )
-                        for task in self.task_manager.tasks:
-                            task.env.finalize(strict=False)
-
-                    # Wire runtime data to server JSON.
-                    self._setup_server_json(info)
-
-                    # Start tasks.
-                    await stack.enter_async_context(
-                        self.task_manager.running(stop_sig=self.stop_sig)
-                    )
-
-                    # Run initialization methods.
-                    result = await self._run_apps_list(self._inits, info)
-                    if result == 0:
-                        # Get application methods.
-                        apps = self._apps
-                        if app is not None:
-                            apps = normalize_app(app)
-
-                        # Run applications in order.
-                        result = await self._run_apps_list(apps, info)
+            async with _AsyncExitStack() as stack:
+                result, info = await self._main(
+                    stack,
+                    app=app,
+                    check_connections=check_connections,
+                    config=config,
+                )
         finally:
             for conn in self._connections.values():
                 conn.disable(f"app exit {result}")

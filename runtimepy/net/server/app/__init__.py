@@ -6,10 +6,10 @@ A module implementing application methods for this package's server interface.
 from importlib import import_module as _import_module
 
 # internal
-from runtimepy.net.arbiter.imports.util import import_str_and_item
 from runtimepy.net.arbiter.info import AppInfo
 from runtimepy.net.server import RuntimepyServerConnection
 from runtimepy.net.server.app.create import config_param, create_app
+from runtimepy.util import import_str_and_item
 
 
 async def setup(app: AppInfo) -> int:

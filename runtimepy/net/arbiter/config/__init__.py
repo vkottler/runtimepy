@@ -27,7 +27,8 @@ from runtimepy.net.arbiter.config.util import fix_args, fix_kwargs, list_adder
 from runtimepy.net.arbiter.imports import (
     ImportConnectionArbiter as _ImportConnectionArbiter,
 )
-from runtimepy.net.arbiter.imports.util import get_apps, import_str_and_item
+from runtimepy.net.arbiter.imports.util import get_apps
+from runtimepy.util import import_str_and_item
 
 ConfigObject = dict[str, _Any]
 ConfigBuilder = _Callable[[ConfigObject], None]
@@ -195,6 +196,14 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
             assert self.factory_struct(
                 struct["factory"], struct["name"], struct.get("config", {})
             ), f"Couldn't register struct '{name}' ({factory})!"
+
+        # Register processes.
+        for process in config.processes:
+            name = process["name"]
+            factory = process["factory"]
+            assert self.factory_process(
+                factory, name, process.get("config", {}), process["program"]
+            ), f"Couldn't register process '{name}' ({factory})!"
 
         # Load initialization methods.
         self._inits = get_apps(config.inits)
