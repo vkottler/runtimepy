@@ -8,8 +8,8 @@ from runtimepy.channel.environment import ChannelEnvironment
 from runtimepy.metrics import ConnectionMetrics, PeriodicTaskMetrics
 from runtimepy.metrics.channel import ChannelMetrics
 
-# 100 Hz metrics is plenty.
-METRICS_MIN_PERIOD_S = 0.01
+# 10 Hz metrics.
+METRICS_MIN_PERIOD_S = 0.1
 
 
 class ChannelEnvironmentMixin:

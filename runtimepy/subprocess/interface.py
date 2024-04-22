@@ -46,7 +46,6 @@ class RuntimepyPeerInterface(
 
         self.basename = name
         self.struct = self.struct_type(self.basename + HOST_SUFFIX, config)
-        self._finalize_struct()
 
         self.peer: Optional[RemoteCommandProcessor] = None
         self._peer_env_event = asyncio.Event()
@@ -58,15 +57,25 @@ class RuntimepyPeerInterface(
         self._setup_async_commands()
         JsonMessageInterface.__init__(self)
 
+        self.struct_pre_finalize()
+        self._finalize_struct()
+
+    def struct_pre_finalize(self) -> None:
+        """Configure struct before finalization."""
+
+    @property
+    def peer_name(self) -> str:
+        """Get the name of the peer's environment."""
+        return self.basename + PEER_SUFFIX
+
     def _set_peer_env(self, data: JsonMessage) -> bool:
         """Set the peer's environment."""
 
         result = False
 
         if self.peer is None:
-            peer_name = self.basename + PEER_SUFFIX
             self.peer = RemoteCommandProcessor(
-                ChannelEnvironment.load_json(data), getLogger(peer_name)
+                ChannelEnvironment.load_json(data), getLogger(self.peer_name)
             )
 
             def send_cmd_hook(
@@ -81,7 +90,7 @@ class RuntimepyPeerInterface(
 
             # Register both environments.
             register_env(self.struct.name, self.struct.command)
-            register_env(peer_name, self.peer)
+            register_env(self.peer_name, self.peer)
 
             self._peer_env_event.set()
             result = True

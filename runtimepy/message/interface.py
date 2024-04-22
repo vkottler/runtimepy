@@ -42,6 +42,20 @@ from runtimepy.message.types import (
 from runtimepy.util import ListLogger
 
 
+class Identifier:
+    """A simple message indentifier interface."""
+
+    def __init__(self) -> None:
+        """Initialize this instance."""
+        self.curr_id: int = 1
+
+    def __call__(self) -> int:
+        """Get the next identifier."""
+        curr = self.curr_id
+        self.curr_id += 2
+        return curr
+
+
 class JsonMessageInterface:
     """A JSON messaging interface class."""
 
@@ -70,7 +84,7 @@ class JsonMessageInterface:
             "kind": type(self).__name__,
         }
 
-        self.curr_id: int = 1
+        self.curr_id = Identifier()
 
         self.ids_waiting: dict[int, asyncio.Event] = {}
         self.id_responses: dict[int, JsonMessage] = {}
@@ -214,23 +228,23 @@ class JsonMessageInterface:
 
     async def wait_json(
         self,
-        data: Union[JsonMessage, JsonCodec],
+        data: Union[JsonMessage, JsonCodec] = None,
         addr: tuple[str, int] = None,
         timeout: float = DEFAULT_TIMEOUT,
     ) -> JsonMessage:
         """Send a JSON message and wait for a response."""
 
+        if data is None:
+            data = {}
         if isinstance(data, JsonCodec):
             data = data.asdict()
 
         data = copy(data)
         assert "__id__" not in data, data
-        data["__id__"] = self.curr_id
+        ident = self.curr_id()
+        data["__id__"] = ident
 
         got_response = asyncio.Event()
-
-        ident = self.curr_id
-        self.curr_id += 1
 
         assert ident not in self.ids_waiting
         self.ids_waiting[ident] = got_response

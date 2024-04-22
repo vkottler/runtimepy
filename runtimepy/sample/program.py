@@ -22,19 +22,25 @@ class SampleProgram(PeerProgram):
         keep_going = True
         while keep_going:
             try:
-                self.struct.logger.info("Sup, it's %s.", "a log sending task")
+                self.struct.logger.info("Sup, it's %s.", self.struct.name)
                 did_write.set()
                 await asyncio.sleep(poll_period_s)
             except asyncio.CancelledError:
                 keep_going = False
+
+    def pre_environment_exchange(self) -> None:
+        """Perform early initialization tasks."""
+
+        # Trigger missed telemetry.
+        with self.streaming_events():
+            self.struct.poll()
 
     async def main(self, argv: list[str]) -> None:
         """Program entry."""
 
         del argv
 
-        with self.streaming_events():
-            self.struct.poll()
+        self.struct.poll()
 
         # Send remote commands.
         assert self.peer is not None
@@ -55,10 +61,6 @@ class SampleProgram(PeerProgram):
         self.struct.poll()
 
         await self.wait_json({"a": 1, "b": 2, "c": 3})
-
-        # Generate event telemetry.
-        with self.streaming_events():
-            self.struct.poll()
 
     async def cleanup(self) -> None:
         """Runs when program 'running' context exits."""

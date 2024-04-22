@@ -11,6 +11,7 @@ from vcorelib.math import to_nanos
 
 # internal
 from runtimepy.channel.event.header import PrimitiveEventHeader
+from runtimepy.metrics.channel import ChannelMetrics
 from runtimepy.primitives import AnyPrimitive
 
 
@@ -39,7 +40,10 @@ class PrimitiveEvent:
 
     @contextmanager
     def registered(
-        self, stream: BinaryIO, flush: bool = False
+        self,
+        stream: BinaryIO,
+        flush: bool = False,
+        channel: ChannelMetrics = None,
     ) -> Iterator[None]:
         """Register a stream as a managed context."""
 
@@ -47,11 +51,12 @@ class PrimitiveEvent:
 
         def callback(_, __) -> None:
             """Emit a change event to the stream."""
-            self._poll(stream, flush=flush)
+            self._poll(stream, flush=flush, channel=channel)
 
         # Poll immediately.
         self.prev_ns = 0
-        self._poll(stream, flush=flush)
+
+        self._poll(stream, flush=flush, channel=channel)
 
         raw = self.primitive
         ident = raw.register_callback(callback)
@@ -61,7 +66,12 @@ class PrimitiveEvent:
         assert raw.remove_callback(ident)
         self.streaming = False
 
-    def _poll(self, stream: BinaryIO, flush: bool = False) -> int:
+    def _poll(
+        self,
+        stream: BinaryIO,
+        flush: bool = False,
+        channel: ChannelMetrics = None,
+    ) -> int:
         """
         Poll this event so that if the underlying channel has changed since the
         last write, we write another event.
@@ -83,5 +93,8 @@ class PrimitiveEvent:
             written += raw.to_stream(stream, byte_order=array.byte_order)
             if flush:
                 stream.flush()
+
+        if channel is not None:
+            channel.increment(written)
 
         return written

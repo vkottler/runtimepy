@@ -38,15 +38,24 @@ class RuntimepyPeer(RuntimepyPeerInterface):
         super().__init__(name, config)
         self.protocol = protocol
 
+        # Offset message identifiers.
+        self.curr_id.curr_id += 1
+
     async def _poll(self) -> None:
         """Poll input queues."""
 
         keep_going = True
+        task = None
+
         while keep_going:
             try:
-                await self.process_command_queue()
+                if task is None:
+                    task = asyncio.create_task(self.process_command_queue())
+                elif task.done():
+                    task = None
 
                 keep_going = await self.service_queues()
+
                 if keep_going:
                     await asyncio.sleep(self.poll_period_s)
                     self.poll_metrics()
