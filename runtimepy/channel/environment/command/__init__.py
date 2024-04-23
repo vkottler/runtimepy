@@ -25,7 +25,8 @@ from runtimepy.channel.environment.command.processor import (
     EnvironmentMap,
 )
 from runtimepy.channel.registry import ParsedEvent
-from runtimepy.mapping import DEFAULT_PATTERN, name_search
+from runtimepy.mapping import DEFAULT_PATTERN
+from runtimepy.util import name_search
 
 # Declared so we re-export FieldOrChannel after moving where it's declared.
 __all__ = [
@@ -115,7 +116,7 @@ class GlobalEnvironment(UserDict[str, ChannelCommandProcessor], LoggerMixin):
         """Reade events from a specific environment."""
 
         with self.valid_root.joinpath(env, path).open("rb") as path_fd:
-            yield from self[env].env.channels.parse_event_stream(path_fd)
+            yield from self[env].env.parse_event_stream(path_fd)
 
     def export(self, env: str) -> Path:
         """Export an environment to a sub-directory of the root directory."""

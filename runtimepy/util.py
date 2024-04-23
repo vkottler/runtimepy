@@ -4,7 +4,8 @@ A module implementing package utilities.
 
 # built-in
 import logging
-from typing import NamedTuple
+import re
+from typing import Iterable, Iterator, NamedTuple
 
 # third-party
 from vcorelib.logging import DEFAULT_TIME_FORMAT
@@ -74,3 +75,30 @@ def import_str_and_item(module_path: str) -> tuple[str, str]:
 
     item = parts.pop()
     return ".".join(parts), item
+
+
+def name_search(
+    names: Iterable[str], pattern: str, exact: bool = False
+) -> Iterator[str]:
+    """A simple name searching method."""
+
+    compiled = re.compile(pattern)
+    for name in names:
+        if compiled.search(name) is not None:
+            if not exact or name == pattern:
+                yield name
+
+
+class Identifier:
+    """A simple message indentifier interface."""
+
+    def __init__(self) -> None:
+        """Initialize this instance."""
+        self.curr_id: int = 1
+        self.scale = 2
+
+    def __call__(self) -> int:
+        """Get the next identifier."""
+        curr = self.curr_id
+        self.curr_id += self.scale
+        return curr

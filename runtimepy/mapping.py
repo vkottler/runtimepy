@@ -3,9 +3,8 @@ A module implementing a generic, two-way mapping interface.
 """
 
 # built-in
-import re
 from typing import Generic as _Generic
-from typing import Iterable, Iterator
+from typing import Iterator
 from typing import MutableMapping as _MutableMapping
 from typing import Optional as _Optional
 from typing import TypeVar as _TypeVar
@@ -17,6 +16,7 @@ from vcorelib.logging import LoggerMixin
 
 # internal
 from runtimepy.mixins.regex import RegexMixin as _RegexMixin
+from runtimepy.util import name_search
 
 # This determines types that are valid as keys.
 T = _TypeVar("T", int, bool)
@@ -37,18 +37,6 @@ EnumMappingData = _Union[
     _MutableMapping[str, int],
 ]
 DEFAULT_PATTERN = ".*"
-
-
-def name_search(
-    names: Iterable[str], pattern: str, exact: bool = False
-) -> Iterator[str]:
-    """A simple name searching method."""
-
-    compiled = re.compile(pattern)
-    for name in names:
-        if compiled.search(name) is not None:
-            if not exact or name == pattern:
-                yield name
 
 
 class TwoWayNameMapping(_RegexMixin, LoggerMixin, _Generic[T]):

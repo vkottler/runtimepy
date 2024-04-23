@@ -39,21 +39,7 @@ from runtimepy.message.types import (
     T,
     TypedHandler,
 )
-from runtimepy.util import ListLogger
-
-
-class Identifier:
-    """A simple message indentifier interface."""
-
-    def __init__(self) -> None:
-        """Initialize this instance."""
-        self.curr_id: int = 1
-
-    def __call__(self) -> int:
-        """Get the next identifier."""
-        curr = self.curr_id
-        self.curr_id += 2
-        return curr
+from runtimepy.util import Identifier, ListLogger
 
 
 class JsonMessageInterface:

@@ -179,9 +179,7 @@ class RuntimepyPeerInterface(
             # Parse channel events.
             if self.peer is not None:
                 with BytesIO(data) as stream:
-                    for event in self.peer.env.channels.parse_event_stream(
-                        stream
-                    ):
+                    for event in self.peer.env.parse_event_stream(stream):
                         self.peer.env.ingest(event)
             else:
                 self.logger.warning("Dropped %d bytes of telemetry.", count)

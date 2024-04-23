@@ -15,22 +15,18 @@ from runtimepy.channel.environment.create import (
 from runtimepy.channel.environment.file import (
     FileChannelEnvironment as _FileChannelEnvironment,
 )
-from runtimepy.channel.registry import ParsedEvent
+from runtimepy.channel.environment.telemetry import (
+    TelemetryChannelEnvironment as _TelemetryChannelEnvironment,
+)
 
 
 class ChannelEnvironment(
+    _TelemetryChannelEnvironment,
     _ArrayChannelEnvironment,
     _FileChannelEnvironment,
     _CreateChannelEnvironment,
 ):
     """A class integrating channel and enumeration registries."""
-
-    def ingest(self, point: ParsedEvent) -> None:
-        """
-        Update internal state based on an event. Note that the event timestamp
-        is not respected.
-        """
-        self.set(point.name, point.value)
 
     @property
     def names(self) -> _Iterator[str]:

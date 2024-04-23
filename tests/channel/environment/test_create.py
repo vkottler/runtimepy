@@ -32,6 +32,8 @@ def test_channel_environment_create_basic():
     underlying = Uint8()
 
     assert env.add_field(BitField(name, underlying, 0, 1, commandable=True))
+    env.finalize()
+
     assert not env.value("test_field")
 
     env.set("test_field", True)

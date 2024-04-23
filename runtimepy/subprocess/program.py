@@ -36,7 +36,7 @@ class PeerProgram(RuntimepyPeerInterface, PsutilMixin):
     def streaming_events(self) -> Iterator[None]:
         """Stream events to the stream output."""
 
-        with self.struct.env.channels.registered(
+        with self.struct.env.registered(
             self.stream_output, flush=True, channel=self.stream_metrics
         ):
             yield

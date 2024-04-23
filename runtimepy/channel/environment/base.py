@@ -73,6 +73,8 @@ class BaseChannelEnvironment(_NamespaceMixin, FinalizeMixin):
             for field in fields:
                 self.fields.add(field)
 
+        self.to_add: list[_BitFields] = []
+
         # Keep a mapping of each channel's name and integer identifier to the
         # underlying enumeration.
         self.channel_enums: dict[_AnyChannel, _RuntimeEnum] = {
@@ -282,3 +284,20 @@ class BaseChannelEnvironment(_NamespaceMixin, FinalizeMixin):
             prim = self.fields[key].raw
 
         return prim.age_ns()
+
+    def add_field(self, field: _BitField, namespace: Namespace = None) -> str:
+        """Add a bit field to the environment."""
+
+        result = self.fields.add_field(field)
+        if result is not None:
+            self.to_add.append(result)
+
+        return self.namespace(name=field.name, namespace=namespace)
+
+    def finalize(self, strict: bool = True) -> None:
+        """Finalize this instance."""
+
+        for fields in self.to_add:
+            self.fields.add(fields)
+
+        super().finalize(strict=strict)
