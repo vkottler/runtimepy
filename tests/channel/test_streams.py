@@ -31,7 +31,7 @@ def test_channel_registry_streams_basic():
 
         # Open for reading and verify events.
         with path.open("rb") as path_fd:
-            events = list(env.channels.parse_event_stream(path_fd))
+            events = list(env.parse_event_stream(path_fd))
 
             assert len(events) == 6
 

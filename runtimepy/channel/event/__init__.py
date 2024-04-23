@@ -44,6 +44,7 @@ class PrimitiveEvent:
         stream: BinaryIO,
         flush: bool = False,
         channel: ChannelMetrics = None,
+        force: bool = False,
     ) -> Iterator[None]:
         """Register a stream as a managed context."""
 
@@ -51,7 +52,7 @@ class PrimitiveEvent:
 
         def callback(_, __) -> None:
             """Emit a change event to the stream."""
-            self._poll(stream, flush=flush, channel=channel)
+            self._poll(stream, flush=flush, channel=channel, force=force)
 
         # Poll immediately.
         self.prev_ns = 0
@@ -71,6 +72,7 @@ class PrimitiveEvent:
         stream: BinaryIO,
         flush: bool = False,
         channel: ChannelMetrics = None,
+        force: bool = False,
     ) -> int:
         """
         Poll this event so that if the underlying channel has changed since the
@@ -83,7 +85,7 @@ class PrimitiveEvent:
         raw = self.primitive
         curr_ns = raw.last_updated_ns
 
-        if curr_ns - self.prev_ns >= self.min_period_ns:
+        if force or curr_ns - self.prev_ns >= self.min_period_ns:
             self.prev_ns = curr_ns
             self.header["timestamp"] = curr_ns
 

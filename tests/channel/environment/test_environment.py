@@ -11,6 +11,7 @@ from pytest import raises
 
 # module under test
 from runtimepy.channel.environment import ChannelEnvironment
+from runtimepy.channel.environment.sample import sample_env
 
 # internal
 from tests.resources import resource
@@ -95,6 +96,17 @@ def verify_bitfields(env: ChannelEnvironment) -> None:
     assert env.fields[20].name == "field4"
 
 
+def test_channel_environment_fields():
+    """Test adding bit fields to a channel environment."""
+
+    env = sample_env()
+    env.finalize()
+
+    assert env.fields.get_flag("flag1")
+
+    assert env
+
+
 def test_channel_environment_basic():
     """Test basic interactions with a channel environment."""
 
@@ -102,6 +114,7 @@ def test_channel_environment_basic():
     env = ChannelEnvironment.load_directory(
         resource("channels", "environment", "sample")
     )
+
     verify_values(env)
     verify_bitfields(env)
 

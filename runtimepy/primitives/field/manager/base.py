@@ -19,7 +19,7 @@ from vcorelib.paths import Pathlike as _Pathlike
 # internal
 from runtimepy.enum import RuntimeEnum as _RuntimeEnum
 from runtimepy.enum.registry import EnumRegistry as _EnumRegistry
-from runtimepy.primitives import StrToBool
+from runtimepy.primitives import AnyPrimitive, StrToBool
 from runtimepy.primitives.field import BitField as _BitField
 from runtimepy.primitives.field import BitFlag as _BitFlag
 from runtimepy.primitives.field.fields import BitFields as _BitFields
@@ -61,6 +61,7 @@ class BitFieldsManagerBase:
             fields = []
 
         self.fields: list[_BitFields] = []
+        self.by_primitive: dict[AnyPrimitive, _BitFields] = {}
         self.lookup: dict[str, int] = {}
         self.enum_lookup: dict[str, _RuntimeEnum] = {}
 
@@ -195,3 +196,20 @@ class BitFieldsManagerBase:
         if result is None:
             raise KeyError(f"No field '{key}'!")
         return result
+
+    def add_field(self, field: _BitField) -> _Optional[_BitFields]:
+        """Add a bit field to the environment."""
+
+        prim = field.raw
+        new_primitive = prim not in self.by_primitive
+        new_fields = None
+
+        if new_primitive:
+            new_fields = _BitFields.new()
+            new_fields.raw = prim
+            self.by_primitive[prim] = new_fields
+
+        self.by_primitive[prim].claim_field(field)
+
+        # self.add(new_fields, finalize=False)
+        return new_fields

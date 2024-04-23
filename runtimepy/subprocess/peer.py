@@ -58,7 +58,6 @@ class RuntimepyPeer(RuntimepyPeerInterface):
 
                 if keep_going:
                     await asyncio.sleep(self.poll_period_s)
-                    self.poll_metrics()
 
             except asyncio.CancelledError:
                 keep_going = False

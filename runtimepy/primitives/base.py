@@ -20,11 +20,16 @@ from runtimepy.primitives.byte_order import (
 from runtimepy.primitives.byte_order import ByteOrder as _ByteOrder
 from runtimepy.primitives.scaling import ChannelScaling, Numeric, apply, invert
 from runtimepy.primitives.types import AnyPrimitiveType as _AnyPrimitiveType
+from runtimepy.util import Identifier
 
 T = _TypeVar("T", bool, int, float)
 
 # Current value first, new value next.
 PrimitiveChangeCallaback = _Callable[[T, T], None]
+
+IDENT = Identifier()
+IDENT.curr_id = 0
+IDENT.scale = 1
 
 
 class Primitive(_Generic[T]):
@@ -35,6 +40,10 @@ class Primitive(_Generic[T]):
 
     # Nominally set the primitive type at the class level.
     kind: _AnyPrimitiveType
+
+    def __hash__(self) -> int:
+        """A hash for this instance."""
+        return self._hash
 
     def __init__(
         self, value: T = None, scaling: ChannelScaling = None
@@ -49,6 +58,7 @@ class Primitive(_Generic[T]):
         self(value=value)
         self.last_updated_ns: int = default_time_ns()
         self.scaling = scaling
+        self._hash = IDENT()
 
     def age_ns(self, now: int = None) -> int:
         """Get the age of this primitive's value in nanoseconds."""

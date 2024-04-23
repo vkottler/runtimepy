@@ -129,6 +129,8 @@ class BitField(BitFieldBase, _RegexMixin, _EnumMixin):
         }
         if self.is_enum:
             result["enum"] = self.enum
+        if self.commandable:
+            result["commandable"] = True
         return result
 
 

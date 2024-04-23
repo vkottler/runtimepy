@@ -54,6 +54,7 @@ class BitFields(_RuntimepyDictCodec):
             index: _Optional[int] = item.get("index")
             width: int = item["width"]
             value: int = int(item["value"])
+            commandable: bool = bool(item.get("commandable", False))
             enum = item.get("enum")
             desc: _Optional[str] = _cast(str, item.get("description"))
 
@@ -66,13 +67,22 @@ class BitFields(_RuntimepyDictCodec):
 
             if width == 1:
                 flag = self.flag(
-                    name, index=index, enum=enum, description=desc
+                    name,
+                    index=index,
+                    enum=enum,
+                    description=desc,
+                    commandable=commandable,
                 )
                 flag(value)
                 item["index"] = flag.index
             else:
                 field = self.field(
-                    name, width, index=index, enum=enum, description=desc
+                    name,
+                    width,
+                    index=index,
+                    enum=enum,
+                    description=desc,
+                    commandable=commandable,
                 )
                 field(value)
                 item["index"] = field.index
@@ -132,13 +142,14 @@ class BitFields(_RuntimepyDictCodec):
         index: int = None,
         enum: _RegistryKey = None,
         description: str = None,
+        **kwargs,
     ) -> _BitFlag:
         """Create a new bit flag."""
 
         index = self._claim_bits(1, index=index)
 
         result = _BitFlag(
-            name, self.raw, index, enum=enum, description=description
+            name, self.raw, index, enum=enum, description=description, **kwargs
         )
 
         self.fields[name] = result
@@ -195,6 +206,7 @@ class BitFields(_RuntimepyDictCodec):
         index: int = None,
         enum: _RegistryKey = None,
         description: str = None,
+        **kwargs,
     ) -> _BitField:
         """Create a new bit field."""
 
@@ -208,6 +220,7 @@ class BitFields(_RuntimepyDictCodec):
                 width,
                 enum=enum,
                 description=description,
+                **kwargs,
             )
         )
 

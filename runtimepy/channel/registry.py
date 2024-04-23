@@ -7,7 +7,7 @@ from contextlib import ExitStack, contextmanager
 from typing import Any as _Any
 from typing import BinaryIO, Iterable, Iterator, NamedTuple
 from typing import Optional as _Optional
-from typing import Union, cast
+from typing import Union
 
 # third-party
 from vcorelib.io import ByteFifo
@@ -150,47 +150,3 @@ class ChannelRegistry(_Registry[_Channel[_Any]]):
                 names.append(name)
 
             yield names
-
-    def parse_event_stream(self, stream: BinaryIO) -> Iterator[ParsedEvent]:
-        """Parse individual events from a stream."""
-
-        # Ingest stream.
-        self.event_fifo.ingest(stream.read())
-
-        ident = -1
-        name = ""
-
-        keep_going = True
-        while keep_going:
-            keep_going = False
-
-            # Read header.
-            if not self.header_ready:
-                read_size = self.event_header.size
-                data = self.event_fifo.pop(read_size)
-                if data is not None:
-                    self.event_header.array.update(data)
-
-                    # Update local variables.
-                    ident = cast(int, self.event_header["identifier"])
-                    name = self.names.name(ident)  # type: ignore
-                    assert name is not None, ident
-
-                    # Update state.
-                    self.header_ready = True
-                    keep_going = True
-            else:
-                kind = self[name].type
-                data = self.event_fifo.pop(kind.size)
-                if data is not None:
-                    yield ParsedEvent(
-                        name,
-                        cast(int, self.event_header["timestamp"]),
-                        kind.decode(
-                            data, byte_order=self.event_header.array.byte_order
-                        ),
-                    )
-
-                    # Update state.
-                    self.header_ready = False
-                    keep_going = True

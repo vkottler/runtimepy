@@ -39,21 +39,7 @@ from runtimepy.message.types import (
     T,
     TypedHandler,
 )
-from runtimepy.util import ListLogger
-
-
-class Identifier:
-    """A simple message indentifier interface."""
-
-    def __init__(self) -> None:
-        """Initialize this instance."""
-        self.curr_id: int = 1
-
-    def __call__(self) -> int:
-        """Get the next identifier."""
-        curr = self.curr_id
-        self.curr_id += 2
-        return curr
+from runtimepy.util import Identifier, ListLogger
 
 
 class JsonMessageInterface:
@@ -111,12 +97,28 @@ class JsonMessageInterface:
         """Register connection-specific command handlers."""
 
         # Extra handlers.
+        self.basic_handler("poll", self._poll_handler)
         self.typed_handler("find_file", FindFile, find_file_request_handler)
         self.typed_handler(
             "channel_command",
             ChannelCommand,
             channel_env_handler(ENVIRONMENTS.data, self.command),
         )
+
+    async def poll_handler(self) -> None:
+        """Poll this instance."""
+
+    async def _poll_handler(
+        self, outbox: JsonMessage, inbox: JsonMessage
+    ) -> None:
+        """Handle a 'poll' message."""
+
+        await self.poll_handler()
+
+        # Handle loopback.
+        val = inbox.get("loopback", 0)
+        if val > 0:
+            outbox["loopback"] = val - 1
 
     def typed_handler(
         self, key: str, kind: type[T], handler: TypedHandler[T]
