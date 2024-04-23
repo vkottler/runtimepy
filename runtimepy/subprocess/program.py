@@ -181,3 +181,9 @@ class PeerProgram(RuntimepyPeerInterface, PsutilMixin):
         async with cls.running(name, config, argv) as (io_task, main_task, _):
             await main_task
             await io_task
+
+    async def poll_handler(self) -> None:
+        """Handle a 'poll' message."""
+
+        self.struct.poll()
+        self.poll_metrics()

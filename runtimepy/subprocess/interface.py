@@ -194,3 +194,7 @@ class RuntimepyPeerInterface(
 
             for msg in self.processor.messages(data):
                 await self.process_json(msg)
+
+    async def poll_handler(self) -> None:
+        """Handle a 'poll' message."""
+        self.struct.poll()

@@ -46,3 +46,32 @@ class Sample(TaskFactory[SampleTask]):
     """A TUI application factory."""
 
     kind = SampleTask
+
+
+class SampleAppTask(ArbiterTask):
+    """A base TUI application."""
+
+    app: AppInfo
+
+    async def init(self, app: AppInfo) -> None:
+        """Initialize this task with application information."""
+        self.app = app
+
+    async def dispatch(self) -> bool:
+        """Dispatch an iteration of this task."""
+
+        for name, struct in self.app.structs.items():
+            if "struct" in name:
+                struct.poll()
+
+        # Send poll message to peer process.
+        for peer in self.app.peers.values():
+            peer.send_json({"poll": {"loopback": 1}})
+
+        return True
+
+
+class SampleApp(TaskFactory[SampleAppTask]):
+    """A TUI application factory."""
+
+    kind = SampleAppTask

@@ -25,6 +25,7 @@ factories:
   # Useful tasks.
   - {name: runtimepy.task.trig.Sinusoid}
   - {name: runtimepy.task.sample.Sample}
+  - {name: runtimepy.task.sample.SampleApp}
 
   # Useful structs.
   - {name: runtimepy.net.arbiter.info.SampleStruct}

@@ -11,6 +11,21 @@ tasks:
   - {name: wave2, factory: sinusoid, period_s: 0.02}
   - {name: wave3, factory: sinusoid, period_s: 0.03}
 
+  # Drive interactions with runtime entities that won't otherwise be polled.
+  - {name: app, factory: SampleApp, period_s: 0.25}
+
+# UDP JSON clients.
+clients:
+  - factory: udp_json
+    name: udp_json_client
+    defer: true
+    kwargs:
+      remote_addr: [localhost, "$udp_json"]
+  - factory: udp_json
+    name: udp_json_server
+    kwargs:
+      local_addr: [localhost, "$udp_json"]
+
 # Add some sample structs.
 structs:
   - name: example.struct1
