@@ -4,9 +4,11 @@ class WindowHashManager {
     this.original = this.hash();
 
     this.tab = "";
+    this.tabFilter = "";
     this.tabsShown = true;
     this.channelsShown = true;
     this.plotChannels = {};
+    this.filters = {};
   }
 
   tabClick(event) {
@@ -29,6 +31,11 @@ class WindowHashManager {
     this.update();
   }
 
+  handleChannelFilter(tabName, value) {
+    this.filters[tabName] = value;
+    this.update();
+  }
+
   handlePlotChannelToggle(tabName, channel, state) {
     /* Service settings modal. */
     if (modalManager) {
@@ -48,6 +55,29 @@ class WindowHashManager {
     let elem = tabs[tabName].query("#plot-" + CSS.escape(channelName));
     if (elem) {
       elem.click();
+    }
+  }
+
+  setTabFilter(value) {
+    this.tabFilter = value;
+    this.update();
+  }
+
+  updateTabFilter(value) {
+    this.tabFilter = value;
+    if (tabFilter) {
+      tabFilter.input.value = value;
+      tabFilter.updateStyles(value);
+    }
+  }
+
+  setTabChannelFilter(tabName, value) {
+    this.filters[tabName] = value;
+
+    let elem = tabs[tabName].query("#channel-filter");
+    if (elem) {
+      elem.value = value;
+      tabs[tabName].updateChannelStyles(value);
     }
   }
 
@@ -85,7 +115,16 @@ class WindowHashManager {
       for (let i = 1; i < boolsChannels.length; i++) {
         let nameChannels = boolsChannels[i].split(":");
         for (let chan of nameChannels[1].split(",")) {
-          this.togglePlotChannel(nameChannels[0], chan);
+          if (!chan.includes("=")) {
+            /* Handle regular channel names. */
+            this.togglePlotChannel(nameChannels[0], chan);
+          } else {
+            /* Handle key-value pairs. */
+            let keyVal = chan.split("=");
+            if (keyVal.length == 2 && keyVal[0] == "filter" && keyVal[1]) {
+              this.setTabChannelFilter(nameChannels[0], keyVal[1]);
+            }
+          }
         }
       }
 
@@ -94,6 +133,16 @@ class WindowHashManager {
       }
       if (split.includes("hide-channels")) {
         channelsButton.click();
+      }
+
+      /* Check for tab filter. */
+      for (let item of split) {
+        if (item.includes("=")) {
+          let keyVal = item.split("=");
+          if (keyVal.length == 2 && keyVal[0] == "filter" && keyVal[1]) {
+            this.updateTabFilter(keyVal[1]);
+          }
+        }
       }
     }
   }
@@ -109,6 +158,9 @@ class WindowHashManager {
   update() {
     let hash = this.tab;
 
+    if (this.tabFilter) {
+      hash += ",filter=" + this.tabFilter;
+    }
     if (!this.tabsShown) {
       hash += ",hide-tabs"
     }
@@ -116,21 +168,39 @@ class WindowHashManager {
       hash += ",hide-channels"
     }
 
-    for (let tab in this.plotChannels) {
+    for (let tab in tabs) {
       let firstChan = true;
-      let channels = this.plotChannels[tab];
-      for (let name in channels) {
-        if (channels[name]) {
-          if (firstChan) {
-            hash += "/" + tab + ":"
-            firstChan = false;
-          }
 
-          if (hash.slice(-1) != ":") {
-            hash += ",";
+      /* Write plot channels if present. */
+      if (tab in this.plotChannels) {
+        let channels = this.plotChannels[tab];
+
+        for (let name in channels) {
+          if (channels[name]) {
+            if (firstChan) {
+              hash += "/" + tab + ":"
+              firstChan = false;
+            }
+
+            if (hash.slice(-1) != ":") {
+              hash += ",";
+            }
+            hash += name;
           }
-          hash += name;
         }
+      }
+
+      /* Write tab filter if present. */
+      if (tab in this.filters && this.filters[tab]) {
+        if (firstChan) {
+          hash += "/" + tab + ":"
+          firstChan = false;
+        }
+
+        if (hash.slice(-1) != ":") {
+          hash += ",";
+        }
+        hash += "filter=" + this.filters[tab];
       }
     }
 

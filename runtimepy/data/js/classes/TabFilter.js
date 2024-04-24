@@ -15,6 +15,8 @@ class TabFilter {
   }
 
   updateStyles(pattern) {
+    hash.setTabFilter(pattern);
+
     if (!pattern) {
       pattern = ".*";
     }
