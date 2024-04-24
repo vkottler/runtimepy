@@ -22,6 +22,8 @@ function worker_config(config) {
   return worker_cfg;
 }
 
+let tabFilter = undefined;
+
 function bootstrap_init() {
   /*
    * Enable tooltips.
@@ -34,6 +36,6 @@ function bootstrap_init() {
   /* Initialize tab filter. */
   let tabs = document.getElementById("runtimepy-tabs");
   if (tabs) {
-    const tabFilter = new TabFilter(tabs);
+    tabFilter = new TabFilter(tabs);
   }
 }

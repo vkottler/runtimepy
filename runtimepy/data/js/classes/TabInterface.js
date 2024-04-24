@@ -71,6 +71,8 @@ class TabInterface {
   }
 
   updateChannelStyles(pattern) {
+    hash.handleChannelFilter(this.name, pattern);
+
     if (!pattern) {
       pattern = ".*";
     }
@@ -96,6 +98,7 @@ class TabInterface {
       } else {
         curr += event.key;
       }
+
       this.updateChannelStyles(curr);
     }
   }
