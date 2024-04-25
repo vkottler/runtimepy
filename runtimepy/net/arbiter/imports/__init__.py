@@ -141,9 +141,9 @@ class ImportConnectionArbiter(
 
         # Handle factories that don't need factory-class proxying.
         if isinstance(raw_import, type):
-            if _RuntimeStruct in raw_import.__bases__:
+            if issubclass(raw_import, _RuntimeStruct):
                 result = self.register_struct_factory(raw_import, *namespaces)
-            elif _RuntimepyPeer in raw_import.__bases__:
+            elif issubclass(raw_import, _RuntimepyPeer):
                 result = self.register_peer_factory(raw_import, *namespaces)
 
         if not result:

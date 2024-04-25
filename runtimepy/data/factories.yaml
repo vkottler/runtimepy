@@ -28,6 +28,7 @@ factories:
   - {name: runtimepy.task.sample.SampleApp}
 
   # Useful structs.
+  - {name: runtimepy.net.arbiter.info.TrigStruct}
   - {name: runtimepy.net.arbiter.info.SampleStruct}
   - {name: runtimepy.net.server.struct.UiState}
 
