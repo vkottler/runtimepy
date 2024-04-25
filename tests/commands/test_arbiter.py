@@ -4,6 +4,7 @@ Test the 'commands.arbiter' module.
 
 # third-party
 from pytest import mark
+from vcorelib.platform import is_windows
 
 # module under test
 from runtimepy.entry import main as runtimepy_main
@@ -42,13 +43,8 @@ def test_arbiter_command_advanced():
 
     # Run with dummy load.
     for entry in ["runtimepy_http"]:
-        assert (
-            runtimepy_main(
-                base
-                + [
-                    str(resource("connection_arbiter", f"{entry}.yaml")),
-                    "dummy_load",
-                ]
-            )
-            == 0
-        )
+        args = base + [str(resource("connection_arbiter", f"{entry}.yaml"))]
+        if not is_windows():
+            args.append("dummy_load")
+
+        assert runtimepy_main(args) == 0

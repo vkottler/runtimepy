@@ -10,7 +10,7 @@ from sys import executable
 from typing import AsyncIterator, Type, TypeVar
 
 # third-party
-from vcorelib.io import ARBITER
+from vcorelib.io import ARBITER, DEFAULT_INCLUDES_KEY
 from vcorelib.io.file_writer import IndentedFileWriter
 from vcorelib.io.types import JsonObject
 from vcorelib.paths.context import tempfile
@@ -73,7 +73,6 @@ class RuntimepyPeer(RuntimepyPeerInterface):
             with suppress(AssertionError):
                 if await self.loopback():
                     await self.wait_json({"meta": self.meta})
-
                     await self.share_environment()
 
             yield self
@@ -122,7 +121,7 @@ class RuntimepyPeer(RuntimepyPeerInterface):
 
         writer.write("import sys")
         writer.write("from vcorelib.asyncio import run_handle_interrupt")
-        writer.write("from vcorelib.io import ARBITER")
+        writer.write("from vcorelib.io import ARBITER, DEFAULT_INCLUDES_KEY")
 
         from_str, to_import = import_str_and_item(import_str)
         writer.write(f"from {from_str} import {to_import}")
@@ -135,7 +134,8 @@ class RuntimepyPeer(RuntimepyPeerInterface):
             writer.write(
                 f'run_handle_interrupt({to_import}.run("{name}", '
                 "ARBITER.decode(CONFIG_PATH, "
-                "require_success=True).data, sys.argv))"
+                "require_success=True, includes_key=DEFAULT_INCLUDES_KEY"
+                ").data, sys.argv))"
             )
             writer.write("sys.exit(0)")
 
@@ -153,6 +153,14 @@ class RuntimepyPeer(RuntimepyPeerInterface):
 
         with tempfile(suffix=".json") as config_path:
             # Encode configuration data.
+            assert ARBITER.encode(config_path, config)[0]
+
+            # Decode to load includes.
+            config = ARBITER.decode(
+                config_path,
+                require_success=True,
+                includes_key=DEFAULT_INCLUDES_KEY,
+            ).data
             assert ARBITER.encode(config_path, config)[0]
 
             with tempfile(suffix=".py") as path:

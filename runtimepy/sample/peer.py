@@ -6,6 +6,8 @@ A sample peer program interface.
 import asyncio
 
 # internal
+from runtimepy.net.http.header import RequestHeader
+from runtimepy.net.tcp.http import HttpConnection
 from runtimepy.subprocess.peer import RuntimepyPeer
 
 
@@ -35,3 +37,18 @@ class SamplePeer(RuntimepyPeer):
         await asyncio.sleep(0)
 
         self.struct.poll()
+
+        # Query UI.
+        if self.peer_config is not None and "servers" in self.peer_config:
+            for server in self.peer_config["servers"]:
+                if server["factory"] == "runtimepy_http":
+                    port = server["kwargs"]["port"]
+
+                    conn = await HttpConnection.create_connection(
+                        host="localhost", port=port
+                    )
+                    sig = asyncio.Event()
+                    task = asyncio.create_task(conn.process(stop_sig=sig))
+                    await conn.request(RequestHeader(target="/index.html"))
+                    sig.set()
+                    await task

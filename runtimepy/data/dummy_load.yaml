@@ -45,5 +45,13 @@ structs:
 processes:
   - name: proc1
     factory: sample_peer
-    config: *cfg
+
+    # The peer itself runs an arbiter process.
+    config:
+      includes:
+        - package://runtimepy/server.yaml
+
+      app: runtimepy.sample.program.run
+      config: *cfg
+
     program: runtimepy.sample.program.SampleProgram

@@ -134,6 +134,7 @@ def base_args(command: str) -> List[str]:
     return base
 
 
+# Tests can take a long time on Windows.
 DEFAULT_TEST_TIMEOUT = 30
 T = TypeVar("T")
 
