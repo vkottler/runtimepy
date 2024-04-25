@@ -6,6 +6,7 @@ A module implementing a sample peer-program interface.
 import asyncio
 
 # internal
+from runtimepy.net.arbiter.info import AppInfo
 from runtimepy.subprocess.program import PeerProgram
 
 
@@ -35,36 +36,46 @@ class SampleProgram(PeerProgram):
         with self.streaming_events():
             self.struct.poll()
 
-    async def main(self, argv: list[str]) -> None:
-        """Program entry."""
-
-        del argv
-
-        self.struct.poll()
-
-        # Send remote commands.
-        assert self.peer is not None
-        for cmd in [
-            "set a.0.really_really_long_enum very_long_member_name_2",
-            "set -f a.0.enum one",
-        ]:
-            self.peer.command(cmd)
-            await self.process_command_queue()
-
-        # Register other async tasks.
-        did_write = asyncio.Event()
-        self.stderr_task = asyncio.create_task(
-            self.log_message_sender(0.1, did_write)
-        )
-        await did_write.wait()
-
-        self.struct.poll()
-
-        await self.wait_json({"a": 1, "b": 2, "c": 3})
-
     async def cleanup(self) -> None:
         """Runs when program 'running' context exits."""
 
         # Cancel stderr task.
-        self.stderr_task.cancel()
-        await self.stderr_task
+        if hasattr(self, "stderr_task"):
+            self.stderr_task.cancel()
+            await self.stderr_task
+
+
+async def run(app: AppInfo) -> int:
+    """A network application that doesn't do anything."""
+
+    await app.all_finalized()
+
+    prog = SampleProgram.singleton()
+
+    await prog.share_config({"config": app.original_config()})
+
+    assert prog is not None
+
+    prog.struct.poll()
+
+    # Send remote commands.
+    assert prog.peer is not None
+    for cmd in [
+        "set a.0.really_really_long_enum very_long_member_name_2",
+        "set -f a.0.enum one",
+    ]:
+        prog.peer.command(cmd)
+        await prog.process_command_queue()
+
+    # Register other async tasks.
+    did_write = asyncio.Event()
+    prog.stderr_task = asyncio.create_task(
+        prog.log_message_sender(0.1, did_write)
+    )
+    await did_write.wait()
+
+    prog.struct.poll()
+
+    await prog.wait_json({"a": 1, "b": 2, "c": 3})
+
+    return 0

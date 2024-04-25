@@ -6,7 +6,8 @@ A module implementing a runtimepy peer interface.
 from argparse import Namespace
 import asyncio
 from io import BytesIO
-from logging import getLogger
+from json import dumps
+from logging import INFO, getLogger
 from typing import Optional
 
 # third-party
@@ -48,6 +49,8 @@ class RuntimepyPeerInterface(
         self.struct = self.struct_type(self.basename + HOST_SUFFIX, config)
 
         self.peer: Optional[RemoteCommandProcessor] = None
+        self.peer_config: Optional[JsonMessage] = None
+        self.peer_config_event = asyncio.Event()
         self._peer_env_event = asyncio.Event()
 
         # Set these for JsonMessageInterface.
@@ -62,6 +65,18 @@ class RuntimepyPeerInterface(
 
     def struct_pre_finalize(self) -> None:
         """Configure struct before finalization."""
+
+    def handle_log_message(self, message: JsonMessage) -> None:
+        """Handle a log message."""
+
+        logger = self.logger
+        msg = "remote: " + message["msg"]
+
+        if self.peer is not None:
+            logger = self.peer.logger
+            msg = message["msg"]
+
+        logger.log(message.get("level", INFO), msg, *message.get("args", []))
 
     @property
     def peer_name(self) -> str:
@@ -130,6 +145,27 @@ class RuntimepyPeerInterface(
                 outbox.update(self.struct.env.export_json())
 
         self.basic_handler("env", env_handler)
+
+        async def config_handler(
+            outbox: JsonMessage, inbox: JsonMessage
+        ) -> None:
+            """Store peer's configuration."""
+
+            if self.peer_config is None:
+                self.peer_config = inbox["config"]
+                outbox["config"] = self.struct.config
+                self.logger.info(
+                    "Peer's configuration: '%s'.",
+                    dumps(self.peer_config, indent=4),
+                )
+                self.peer_config_event.set()
+
+        self.basic_handler("config", config_handler)
+
+    async def share_config(self, data: JsonMessage) -> None:
+        """Exchange configuration data."""
+
+        await self.wait_json({"config": data})
 
     async def share_environment(self) -> None:
         """Exchange channel environments."""

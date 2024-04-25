@@ -7,6 +7,7 @@ from sys import executable
 
 # third-party
 from pytest import mark
+from vcorelib.io import DEFAULT_INCLUDES_KEY
 
 # module under test
 from runtimepy.channel.environment.command import clear_env
@@ -38,7 +39,11 @@ async def test_subprocess_peer_jit():
     clear_env()
     async with SamplePeer.running_program(
         "test",
-        {"a": 1, "b": 2, "c": 3},
+        {
+            "app": "runtimepy.sample.program.run",
+            "config": {"a": 100, "b": 2, "c": 3},
+            DEFAULT_INCLUDES_KEY: ["package://runtimepy/server.yaml"],
+        },
         "runtimepy.sample.program.SampleProgram",
     ) as peer:
         await peer.main()

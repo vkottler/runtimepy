@@ -9,18 +9,22 @@ import logging
 import os
 import signal
 import sys
-from typing import AsyncIterator, BinaryIO, Iterator, Type, TypeVar
+from typing import AsyncIterator, BinaryIO, Iterator, Optional, Type, TypeVar
 
 # third-party
+from vcorelib.io import ARBITER
 from vcorelib.io.types import JsonObject
+from vcorelib.paths.context import tempfile
 
 # internal
 from runtimepy.metrics.channel import ChannelMetrics
 from runtimepy.mixins.psutil import PsutilMixin
+from runtimepy.net.arbiter import ConnectionArbiter
 from runtimepy.net.arbiter.info import RuntimeStruct, SampleStruct
 from runtimepy.subprocess.interface import RuntimepyPeerInterface
 
 T = TypeVar("T", bound="PeerProgram")
+PROGRAM: Optional["PeerProgram"] = None
 
 
 class PeerProgram(RuntimepyPeerInterface, PsutilMixin):
@@ -31,6 +35,16 @@ class PeerProgram(RuntimepyPeerInterface, PsutilMixin):
     stream_metrics: ChannelMetrics
 
     struct_type: Type[RuntimeStruct] = SampleStruct
+
+    got_eof: asyncio.Event
+
+    _singleton: Optional["PeerProgram"] = None
+
+    @classmethod
+    def singleton(cls: type[T]) -> T:
+        """Get a shared single instance of a protocol for this class."""
+        assert cls._singleton is not None
+        return cls._singleton  # type: ignore
 
     @contextmanager
     def streaming_events(self) -> Iterator[None]:
@@ -104,6 +118,9 @@ class PeerProgram(RuntimepyPeerInterface, PsutilMixin):
                     self.stdin_metrics.increment(accumulator)
                     accumulator = 0
 
+        # Signal the end of input processing.
+        self.got_eof.set()
+
     @classmethod
     def run_standard(
         cls: Type[T], name: str, config: JsonObject
@@ -113,12 +130,27 @@ class PeerProgram(RuntimepyPeerInterface, PsutilMixin):
         peer = cls(name, config)
         peer.json_output = sys.stdout.buffer
         peer.stream_output = sys.stderr.buffer
+        peer.got_eof = asyncio.Event()
         peer.stream_metrics = ChannelMetrics()
+
+        global PROGRAM  # pylint: disable=global-statement
+        PROGRAM = peer
+        assert cls._singleton is None
+        cls._singleton = peer
 
         return asyncio.create_task(peer.io_task(sys.stdin.buffer)), peer
 
     async def main(self, argv: list[str]) -> None:
         """Program entry."""
+
+        del argv
+
+        with tempfile(suffix=".json") as config_path:
+            arbiter = ConnectionArbiter(stop_sig=self.got_eof)
+            ARBITER.encode(config_path, self.struct.config)
+            await arbiter.load_configs([config_path], wait_for_stop=True)
+
+        await arbiter.app()
 
     async def cleanup(self) -> None:
         """Runs when program 'running' context exits."""

@@ -12,5 +12,9 @@ from vcorelib.asyncio import run_handle_interrupt
 from runtimepy.sample.program import SampleProgram
 
 if __name__ == "__main__":
-    run_handle_interrupt(SampleProgram.run("state", {}, sys.argv))
+    run_handle_interrupt(
+        SampleProgram.run(
+            "state", {"app": "runtimepy.sample.program.run"}, sys.argv
+        )
+    )
     sys.exit(0)

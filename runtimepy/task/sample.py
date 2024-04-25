@@ -66,7 +66,7 @@ class SampleAppTask(ArbiterTask):
 
         # Send poll message to peer process.
         for peer in self.app.peers.values():
-            peer.send_json({"poll": {"loopback": 1}})
+            peer.send_poll()
 
         return True
 

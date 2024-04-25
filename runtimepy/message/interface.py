@@ -108,6 +108,13 @@ class JsonMessageInterface:
     async def poll_handler(self) -> None:
         """Poll this instance."""
 
+    def send_poll(self, loopback: int = 1) -> None:
+        """
+        Send a poll message with a default loopback of 1, so that this instance
+        will also be polled.
+        """
+        self.send_json({"poll": {"loopback": loopback}})
+
     async def _poll_handler(
         self, outbox: JsonMessage, inbox: JsonMessage
     ) -> None:
@@ -193,6 +200,16 @@ class JsonMessageInterface:
             self.processor.encode_json(stream, data)
             self.write(stream.getvalue(), addr=addr)
 
+    def handle_log_message(self, message: JsonMessage) -> None:
+        """Handle a log message."""
+
+        if "msg" in message and message["msg"]:
+            self.logger.log(
+                message.get("level", logging.INFO),
+                "remote: " + message["msg"],
+                *message.get("args", []),
+            )
+
     def _handle_reserved(
         self, data: JsonMessage, response: JsonMessage
     ) -> bool:
@@ -218,12 +235,7 @@ class JsonMessageInterface:
         # Log messages sent by the peer.
         if "__log_messages__" in data:
             for message in data["__log_messages__"]:
-                if "msg" in message and message["msg"]:
-                    self.logger.log(
-                        message.get("level", logging.INFO),
-                        "remote: " + message["msg"],
-                        *message.get("args", []),
-                    )
+                self.handle_log_message(message)
             del data["__log_messages__"]
 
         return should_respond

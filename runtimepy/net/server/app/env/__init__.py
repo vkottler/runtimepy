@@ -14,6 +14,7 @@ from runtimepy.net.server.app.env.modal import Modal
 from runtimepy.net.server.app.env.tab import ChannelEnvironmentTab
 from runtimepy.net.server.app.placeholder import dummy_tabs, under_construction
 from runtimepy.net.server.app.sound import SoundTab
+from runtimepy.subprocess.program import PROGRAM
 
 
 def channel_environments(app: AppInfo, tabs: TabbedContent) -> None:
@@ -44,7 +45,7 @@ def channel_environments(app: AppInfo, tabs: TabbedContent) -> None:
         ).entry()
 
     # Subprocess tabs.
-    for name, peer in app.peers.items():
+    for peer in app.peers.values():
         # Host side.
         ChannelEnvironmentTab(
             peer.struct.name, peer.struct.command, app, tabs, icon="cpu-fill"
@@ -54,6 +55,23 @@ def channel_environments(app: AppInfo, tabs: TabbedContent) -> None:
         assert peer.peer is not None
         ChannelEnvironmentTab(
             peer.peer_name, peer.peer, app, tabs, icon="cpu"
+        ).entry()
+
+    # If we are a peer program, load environments.
+    if PROGRAM is not None:
+        # Host side.
+        ChannelEnvironmentTab(
+            PROGRAM.struct.name,
+            PROGRAM.struct.command,
+            app,
+            tabs,
+            icon="cpu-fill",
+        ).entry()
+
+        # Remote side.
+        assert PROGRAM.peer is not None
+        ChannelEnvironmentTab(
+            PROGRAM.peer_name, PROGRAM.peer, app, tabs, icon="cpu"
         ).entry()
 
     # Toggle channel-table button.
