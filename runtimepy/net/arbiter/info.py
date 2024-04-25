@@ -48,13 +48,15 @@ Z = _TypeVar("Z")
 class RuntimeStruct(RuntimeStructBase, _ABC):
     """A class implementing a base runtime structure."""
 
+    app: "AppInfo"
+
     def init_env(self) -> None:
         """Initialize this sample environment."""
 
     async def build(self, app: "AppInfo") -> None:
         """Build a struct instance's channel environment."""
 
-        del app
+        self.app = app
         self.init_env()
 
 
