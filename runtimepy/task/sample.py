@@ -8,12 +8,13 @@ from logging import DEBUG
 
 # internal
 from runtimepy.channel.environment.sample import poll_sample_env, sample_env
+from runtimepy.mixins.trig import TrigMixin
 from runtimepy.net.arbiter import AppInfo
 from runtimepy.net.arbiter.task import ArbiterTask, TaskFactory
 from runtimepy.net.stream.json import JsonMessageConnection
 
 
-class SampleTask(ArbiterTask):
+class SampleTask(ArbiterTask, TrigMixin):
     """A base TUI application."""
 
     async def init(self, app: AppInfo) -> None:
@@ -21,6 +22,7 @@ class SampleTask(ArbiterTask):
 
         await super().init(app)
         sample_env(self.env)
+        TrigMixin.__init__(self, self.env)
 
     async def dispatch(self) -> bool:
         """Dispatch an iteration of this task."""
@@ -38,6 +40,8 @@ class SampleTask(ArbiterTask):
                     )
                 )
             )
+
+            self.dispatch_trig(self.metrics.dispatches.value)
 
         return True
 

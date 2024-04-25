@@ -26,9 +26,11 @@ from vcorelib.namespace import Namespace as _Namespace
 # internal
 from runtimepy.channel.environment.sample import poll_sample_env, sample_env
 from runtimepy.mapping import DEFAULT_PATTERN
+from runtimepy.mixins.trig import TrigMixin
 from runtimepy.net.arbiter.result import OverallResult, results
 from runtimepy.net.connection import Connection as _Connection
 from runtimepy.net.manager import ConnectionManager
+from runtimepy.primitives import Uint32
 from runtimepy.struct import RuntimeStructBase
 from runtimepy.struct import StructMap as _StructMap
 from runtimepy.task import PeriodicTask, PeriodicTaskManager
@@ -48,28 +50,56 @@ Z = _TypeVar("Z")
 class RuntimeStruct(RuntimeStructBase, _ABC):
     """A class implementing a base runtime structure."""
 
+    app: "AppInfo"
+
     def init_env(self) -> None:
         """Initialize this sample environment."""
 
     async def build(self, app: "AppInfo") -> None:
         """Build a struct instance's channel environment."""
 
-        del app
+        self.app = app
         self.init_env()
 
 
-class SampleStruct(RuntimeStruct):
-    """A sample runtime structure."""
+class TrigStruct(RuntimeStruct, TrigMixin):
+    """A simple trig struct."""
+
+    iterations: Uint32
 
     def init_env(self) -> None:
         """Initialize this sample environment."""
-        sample_env(self.env)
+
+        TrigMixin.__init__(self, self.env)
+        self.iterations = Uint32()
+        self.env.int_channel("iterations", self.iterations, commandable=True)
 
     def poll(self) -> None:
         """
         A method that other runtime entities can call to perform canonical
         updates to this struct's environment.
         """
+
+        # Pylint bug?
+        self.dispatch_trig(self.iterations.value)  # pylint: disable=no-member
+        self.iterations.value += 1  # pylint: disable=no-member
+
+
+class SampleStruct(TrigStruct):
+    """A sample runtime structure."""
+
+    def init_env(self) -> None:
+        """Initialize this sample environment."""
+
+        sample_env(self.env)
+        super().init_env()
+
+    def poll(self) -> None:
+        """
+        A method that other runtime entities can call to perform canonical
+        updates to this struct's environment.
+        """
+        super().poll()
         poll_sample_env(self.env)
 
 
