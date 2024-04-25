@@ -14,7 +14,6 @@ from runtimepy.net.server.app.env.modal import Modal
 from runtimepy.net.server.app.env.tab import ChannelEnvironmentTab
 from runtimepy.net.server.app.placeholder import dummy_tabs, under_construction
 from runtimepy.net.server.app.sound import SoundTab
-from runtimepy.subprocess.program import PROGRAM
 
 
 def channel_environments(app: AppInfo, tabs: TabbedContent) -> None:
@@ -58,6 +57,9 @@ def channel_environments(app: AppInfo, tabs: TabbedContent) -> None:
         ).entry()
 
     # If we are a peer program, load environments.
+    # pylint:disable=import-outside-toplevel
+    from runtimepy.subprocess.program import PROGRAM
+
     if PROGRAM is not None:
         # Host side.
         ChannelEnvironmentTab(
