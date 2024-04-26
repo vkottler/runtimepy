@@ -9,6 +9,7 @@ from contextlib import suppress as _suppress
 from logging import getLogger as _getLogger
 import socket as _socket
 from typing import Any as _Any
+from typing import Optional as _Optional
 from typing import TypeVar as _TypeVar
 from typing import Union as _Union
 
@@ -37,6 +38,9 @@ class UdpConnection(_Connection, _TransportMixin):
     uses_text_tx_queue = False
     uses_binary_tx_queue = False
 
+    # Simplify talkback implementations.
+    latest_rx_address: _Optional[tuple[str, int]]
+
     def __init__(
         self, transport: _DatagramTransport, protocol: UdpQueueProtocol
     ) -> None:
@@ -54,6 +58,7 @@ class UdpConnection(_Connection, _TransportMixin):
 
         # Store connection-instantiation arguments.
         self._conn_kwargs: dict[str, _Any] = {}
+        self.latest_rx_address = None
 
     def _set_protocol(self, protocol: UdpQueueProtocol) -> None:
         """Set a protocol instance for this connection."""
@@ -188,6 +193,7 @@ class UdpConnection(_Connection, _TransportMixin):
 
                 if message is not None:
                     data = message[0]
+                    self.latest_rx_address = message[1]
                     result = await self.process_datagram(data, message[1])
                     self.metrics.rx.increment(len(data))
 
