@@ -8,5 +8,11 @@ from runtimepy.net.udp.connection import (
     NullUdpConnection,
     UdpConnection,
 )
+from runtimepy.net.udp.queue import QueueUdpConnection
 
-__all__ = ["UdpConnection", "EchoUdpConnection", "NullUdpConnection"]
+__all__ = [
+    "UdpConnection",
+    "EchoUdpConnection",
+    "NullUdpConnection",
+    "QueueUdpConnection",
+]
