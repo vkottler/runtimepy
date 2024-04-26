@@ -6,6 +6,9 @@ factories:
   - {name: runtimepy.net.factories.UdpJson}
   - {name: runtimepy.net.factories.WebsocketJson}
 
+  # Queue wrappers.
+  - {name: runtimepy.net.factories.UdpQueue}
+
   # Echo and null connections (useful for testing and debugging).
   - {name: runtimepy.net.factories.TcpEcho, namespaces: [tcp, echo]}
   - {name: runtimepy.net.factories.UdpEcho, namespaces: [udp, echo]}

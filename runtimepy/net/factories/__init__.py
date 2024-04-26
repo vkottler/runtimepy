@@ -31,6 +31,7 @@ from runtimepy.net.tcp.http import HttpConnection
 from runtimepy.net.udp import (
     EchoUdpConnection,
     NullUdpConnection,
+    QueueUdpConnection,
     UdpConnection,
 )
 from runtimepy.net.websocket import (
@@ -91,6 +92,12 @@ class UdpJson(UdpConnectionFactory[UdpJsonMessageConnection]):
     """UDP JSON-connection factory."""
 
     kind = UdpJsonMessageConnection
+
+
+class UdpQueue(UdpConnectionFactory[QueueUdpConnection]):
+    """UDP queue-connection factory."""
+
+    kind = QueueUdpConnection
 
 
 class TcpEcho(TcpConnectionFactory[EchoTcpConnection]):
