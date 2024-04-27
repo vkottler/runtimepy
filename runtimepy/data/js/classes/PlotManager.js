@@ -17,6 +17,30 @@ class PlotManager {
 
     this.webglps = {};
     this.lines = {};
+
+    this.plotChannelStates = {};
+  }
+
+  handlePlotChannelState(name, channel, state) {
+    if (!(name in this.plotChannelStates)) {
+      this.plotChannelStates[name] = {};
+    }
+    this.plotChannelStates[name][channel] = state;
+  }
+
+  handlePoints(name, points) {
+    if (!(name in this.plotChannelStates)) {
+      return;
+    }
+
+    const states = this.plotChannelStates[name];
+    for (const key in points) {
+      if (key in states && states[key]) {
+        /* Handle updating line data. */
+        console.log(key);
+        console.log(points[key]);
+      }
+    }
   }
 
   render(time) {
@@ -59,6 +83,11 @@ class PlotManager {
       canvas.width = data["width"];
       canvas.height = data["height"];
       this.updateSize(name);
+    }
+
+    /* Handle channel state changes. */
+    if ("channel" in data && "state" in data) {
+      this.handlePlotChannelState(data["name"], data["channel"], data["state"]);
     }
 
     /* Handle shown state. */

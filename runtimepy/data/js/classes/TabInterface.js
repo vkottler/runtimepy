@@ -165,15 +165,15 @@ class TabInterface {
       /* Initialize plot-channel buttons. */
       for (let elem of this.queryAll("input.form-check-input")) {
         elem.addEventListener(
-            "change",
-            ((event) => {
-              let chan = elem.id.split("-")[1];
-              let state = elem.checked;
-              hash.handlePlotChannelToggle(this.name, chan, state);
+            "change", ((event) => {
+                        let chan = elem.id.split("-")[1];
+                        let state = elem.checked;
+                        hash.handlePlotChannelToggle(this.name, chan, state);
 
-              this.worker.send(
-                  {kind : "plot", value : {"channel" : chan, "state" : state}});
-            }).bind(this));
+                        let msg = {"channel" : chan, "state" : state};
+                        this.worker.toWorker({"plot" : msg});
+                        this.worker.send({kind : "plot", value : msg});
+                      }).bind(this));
       }
 
       /* Initialize plotted-channel clearing interface. */
@@ -241,8 +241,6 @@ class TabInterface {
     if ("points" in data) {
       for (let key in data["points"]) {
         let points = data["points"][key];
-
-        /* At some point, forward these to plot. */
 
         /* Update channel-table tracking based on most recent point only. */
         this.channelsPending[key] = points[points.length - 1][0];

@@ -49,7 +49,16 @@ async function start(config) {
   };
 
   /* Add message handler to forward UI messages to the main thread. */
-  conns["json"].message_handlers["ui"] = (data) => { postMessage(data); };
+  conns["json"].message_handlers["ui"] = (data) => {
+    /* Handle plot points. */
+    for (const key in data) {
+      const msg = data[key];
+      if ("points" in msg) {
+        plots.handlePoints(key, msg["points"]);
+      }
+    }
+    postMessage(data);
+  };
 
   /* Tell main thread we're ready to go. */
   postMessage(0);
