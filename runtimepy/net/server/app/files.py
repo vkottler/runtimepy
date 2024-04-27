@@ -77,6 +77,14 @@ def set_text_to_kind(
 WORKER_TYPE = "text/js-worker"
 
 
+def handle_worker(writer: IndentedFileWriter) -> bool:
+    """Boilerplate contents for worker thread block."""
+
+    return write_found_file(
+        writer, kind_url("js", "webgl-debug", subdir="third-party")
+    )
+
+
 def append_kind(
     element: Element,
     *names: str,
@@ -98,6 +106,9 @@ def append_kind(
                 writer, kind_url(kind, name, subdir=subdir, package=package)
             ):
                 found_count += 1
+
+        if worker and handle_worker(writer):
+            found_count += 1
 
         if found_count:
             elem.text = stream.getvalue()

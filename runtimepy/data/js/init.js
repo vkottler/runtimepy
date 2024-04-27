@@ -13,5 +13,5 @@ const worker = new Worker(window.URL.createObjectURL(new Blob(
         document.querySelectorAll("script[type='text\/js-worker']"),
         (script) => script.textContent,
         ),
-    {type : "text/javascript"},
+    {type : "module"},
     )));
