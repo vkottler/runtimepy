@@ -24,9 +24,6 @@ class PlotDrawer {
     if (state) {
       this.newLine(name);
     } else {
-      if (name in this.channels) {
-        this.channels[name].reset();
-      }
       delete this.lines[name];
     }
 
@@ -52,6 +49,10 @@ class PlotDrawer {
     const color = new WebglPlotBundle.ColorRGBA(Math.random(), Math.random(),
                                                 Math.random(), 1);
     this.lines[key] = new WebglPlotBundle.WebglLine(color, this.canvas.width);
+
+    if (key in this.channels) {
+      this.channels[key].draw(this.lines[key]);
+    }
   }
 
   updateLines() {

@@ -27,6 +27,7 @@ class WebApplication:
     worker_classes = [
         "JsonConnection",
         "DataConnection",
+        "PointBuffer",
         "PointManager",
         "PlotDrawer",
         "PlotManager",
