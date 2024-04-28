@@ -231,7 +231,6 @@ class TabInterface {
       this.log(data["log_message"]);
     }
     if ("log_messages" in data) {
-      console.log();
       for (let msg of data["log_messages"]) {
         this.log(msg);
       }

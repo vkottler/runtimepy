@@ -15,31 +15,18 @@ class PlotManager {
 
     this.shown = "UNKNOWN";
 
-    this.webglps = {};
-    this.lines = {};
-
-    this.plotChannelStates = {};
+    this.drawers = {};
   }
 
   handlePlotChannelState(name, channel, state) {
-    if (!(name in this.plotChannelStates)) {
-      this.plotChannelStates[name] = {};
+    if (name in this.drawers) {
+      this.drawers[name].channelState(channel, state);
     }
-    this.plotChannelStates[name][channel] = state;
   }
 
   handlePoints(name, points) {
-    if (!(name in this.plotChannelStates)) {
-      return;
-    }
-
-    const states = this.plotChannelStates[name];
-    for (const key in points) {
-      if (key in states && states[key]) {
-        /* Handle updating line data. */
-        console.log(key);
-        console.log(points[key]);
-      }
+    if (name in this.drawers) {
+      this.drawers[name].handlePoints(points);
     }
   }
 
@@ -50,22 +37,8 @@ class PlotManager {
   }
 
   updateSize(name) {
-    let canvas = this.plots[name];
-
-    if (name in this.webglps) {
-      const wglp = this.webglps[name];
-
-      /* is this the demo? */
-      const color = new WebglPlotBundle.ColorRGBA(Math.random(), Math.random(),
-                                                  Math.random(), 1);
-
-      const line = new WebglPlotBundle.WebglLine(color, canvas.width);
-      line.arrangeX();
-      wglp.removeAllLines();
-      wglp.addLine(line);
-      this.lines[name] = line;
-
-      wglp.viewport(0, 0, canvas.width, canvas.height);
+    if (name in this.drawers) {
+      this.drawers[name].updateSize();
     }
   }
 
@@ -96,14 +69,10 @@ class PlotManager {
         this.shown = name;
 
         /* Create webgl context for this tab. */
-        let created = name in this.webglps || name in this.contexts;
+        let created = name in this.drawers || name in this.contexts;
         if (!created) {
           if (webglContextCount < webglContextMax && name in this.plots) {
-            const canvas = this.plots[name];
-
-            const glps = new WebglPlotBundle.WebglPlot(canvas);
-            this.webglps[name] = glps;
-
+            this.drawers[name] = new PlotDrawer(this.plots[name]);
             webglContextCount++;
             this.updateSize(name);
             created = true;
@@ -144,26 +113,10 @@ class PlotManager {
   }
 
   drawPlot(name, time) {
-    const canvas = this.plots[name];
-
-    if (name in this.webglps) {
-      const wglp = this.webglps[name];
-
-      const freq = 0.001;
-      const amp = 0.5;
-      const noise = 0.1;
-
-      let line = this.lines[name];
-      for (let i = 0; i < line.numPoints; i++) {
-        const ySin = Math.sin(Math.PI * i * freq * Math.PI * 2);
-        const yNoise = Math.random() - 0.5;
-        line.setY(i, ySin * amp + yNoise * noise);
-      }
-
-      wglp.update();
-
+    if (name in this.drawers) {
+      this.drawers[name].update();
     } else if (name in this.contexts) {
-      this.draw2d(canvas, this.contexts[name], time);
+      this.draw2d(this.plots[name], this.contexts[name], time);
     }
   }
 }
