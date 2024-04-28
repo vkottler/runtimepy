@@ -16,11 +16,17 @@ class PlotManager {
     this.shown = "UNKNOWN";
 
     this.drawers = {};
+    this.channelsToPlot = {};
   }
 
   handlePlotChannelState(name, channel, state) {
     if (name in this.drawers) {
       this.drawers[name].channelState(channel, state);
+    } else if (state) {
+      if (!(name in this.channelsToPlot)) {
+        this.channelsToPlot[name] = [];
+      }
+      this.channelsToPlot[name].push(channel);
     }
   }
 
@@ -72,9 +78,20 @@ class PlotManager {
         let created = name in this.drawers || name in this.contexts;
         if (!created) {
           if (webglContextCount < webglContextMax && name in this.plots) {
-            this.drawers[name] = new PlotDrawer(this.plots[name]);
+            let drawer = new PlotDrawer(this.plots[name]);
+            this.drawers[name] = drawer;
+
             webglContextCount++;
             this.updateSize(name);
+
+            /* Handle plotting channels immediately if necessary. */
+            if (name in this.channelsToPlot) {
+              for (let chan of this.channelsToPlot[name]) {
+                drawer.channelState(chan, true);
+              }
+              delete this.channelsToPlot[name];
+            }
+
             created = true;
           }
         }

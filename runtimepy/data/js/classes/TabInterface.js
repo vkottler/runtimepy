@@ -169,10 +169,7 @@ class TabInterface {
                         let chan = elem.id.split("-")[1];
                         let state = elem.checked;
                         hash.handlePlotChannelToggle(this.name, chan, state);
-
-                        let msg = {"channel" : chan, "state" : state};
-                        this.worker.toWorker({"plot" : msg});
-                        this.worker.send({kind : "plot", value : msg});
+                        this.sendPlotChannelState(chan, state);
                       }).bind(this));
       }
 
@@ -180,6 +177,12 @@ class TabInterface {
       this.query("#clear-plotted-channels").onclick =
           (() => { hash.clearPlotChannels(this.name); }).bind(this);
     }
+  }
+
+  sendPlotChannelState(chan, state) {
+    let msg = {"channel" : chan, "state" : state};
+    this.worker.toWorker({"plot" : msg});
+    this.worker.send({kind : "plot", value : msg});
   }
 
   query(data) { return this.container.querySelector(data); }

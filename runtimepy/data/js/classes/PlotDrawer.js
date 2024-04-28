@@ -1,52 +1,75 @@
 class PlotDrawer {
   constructor(canvas) {
     this.canvas = canvas;
+
+    // this.wglp = new WebglPlotBundle.WebglPlot(this.canvas, {debug : true});
+    // this.wglp.webgl = WebGLDebugUtils.makeDebugContext(this.wglp.webgl);
     this.wglp = new WebglPlotBundle.WebglPlot(this.canvas);
 
     /* Which channels are selected for plotting. */
     this.states = {};
 
+    /* Point managers for individual channels. */
+    this.channels = {};
+
     /* need to make this an N entity for multiple channels */
-    this.line = null;
+    this.lines = {};
   }
 
-  update() {
-    /* handle all new points */
+  update() { this.wglp.update(); }
 
-    const freq = 0.001;
-    const amp = 0.5;
-    const noise = 0.1;
+  channelState(name, state) {
+    this.states[name] = state;
 
-    for (let i = 0; i < this.line.numPoints; i++) {
-      const ySin = Math.sin(Math.PI * i * freq * Math.PI * 2);
-      const yNoise = Math.random() - 0.5;
-      this.line.setY(i, ySin * amp + yNoise * noise);
+    if (state) {
+      this.newLine(name);
+    } else {
+      if (name in this.channels) {
+        this.channels[name].reset();
+      }
+      delete this.lines[name];
     }
 
-    this.wglp.update();
+    this.updateLines();
   }
-
-  channelState(name, state) { this.states[name] = state; }
 
   handlePoints(points) {
     for (const key in points) {
       if (key in this.states && this.states[key]) {
-        /* Handle updating line data. */
-        console.log(key);
-        console.log(points[key]);
+        /* Add point manager and create line for plotted channel. */
+        if (!(key in this.channels)) {
+          this.channels[key] = new PointManager();
+        }
+        if (key in this.lines) {
+          this.channels[key].handlePoints(points[key], this.lines[key]);
+        }
       }
     }
   }
 
-  updateSize() {
-    /* is this the demo? */
+  newLine(key) {
+    /* Random color. */
     const color = new WebglPlotBundle.ColorRGBA(Math.random(), Math.random(),
                                                 Math.random(), 1);
+    this.lines[key] = new WebglPlotBundle.WebglLine(color, this.canvas.width);
+  }
 
-    this.line = new WebglPlotBundle.WebglLine(color, this.canvas.width);
-    this.line.arrangeX();
+  updateLines() {
+    /* Clear lines. */
     this.wglp.removeAllLines();
-    this.wglp.addLine(this.line);
+
+    /* Put lines back. */
+    for (let key in this.lines) {
+      this.wglp.addLine(this.lines[key]);
+    }
+  }
+
+  updateSize() {
+    /* Re-add all lines. */
+    for (let key in this.lines) {
+      this.newLine(key);
+    }
+    this.updateLines();
 
     this.wglp.viewport(0, 0, this.canvas.width, this.canvas.height);
   }

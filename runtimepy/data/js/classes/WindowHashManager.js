@@ -48,6 +48,9 @@ class WindowHashManager {
     let channelStates = this.plotChannels[tabName];
     channelStates[channel] = state;
 
+    /* Update plotter. */
+    tabs[tabName].sendPlotChannelState(channel, state);
+
     this.update();
   }
 
@@ -116,8 +119,11 @@ class WindowHashManager {
         let nameChannels = boolsChannels[i].split(":");
         for (let chan of nameChannels[1].split(",")) {
           if (!chan.includes("=")) {
+            /* Not sure why a click doesn't work. */
+            // this.togglePlotChannel(nameChannels[0], chan);
+
             /* Handle regular channel names. */
-            this.togglePlotChannel(nameChannels[0], chan);
+            this.handlePlotChannelToggle(nameChannels[0], chan, true);
           } else {
             /* Handle key-value pairs. */
             let keyVal = chan.split("=");
