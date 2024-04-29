@@ -37,21 +37,84 @@ class PointBuffer {
       this.timestamps[this.tail] = point[1];
 
       /* Advance tail. */
-      this.tail = (this.tail + 1) % this.capacity;
+      this.tail = this.incrIndex(this.tail);
 
       /* Keep track of capacity utilization. */
       this.elements = Math.min(this.elements + 1, this.capacity);
 
       /* Ensure head advances if necessary. */
       if (this.head == this.tail) {
-        this.head = (this.head + 1) % this.capacity;
+        this.head = this.incrIndex(this.head);
       }
     }
 
     this.draw(line);
   }
 
+  normalizeTimestamps(newestIdx, oldestIdx) {
+    /*
+     * Determine slope+offset so each timestamp can be mapped to (-1,1)
+     * domain.
+     */
+    let oldestTimestamp = this.timestamps[oldestIdx];
+    let slope = 2 / (this.timestamps[newestIdx] - oldestTimestamp);
+
+    /* Build array of plot-able timestamp X values. */
+    let times = [];
+    let idx = oldestIdx;
+    while (idx != newestIdx) {
+      times.push(((this.timestamps[idx] - oldestTimestamp) * slope) - 1);
+      idx = this.incrIndex(idx);
+    }
+    times.push(((this.timestamps[idx] - oldestTimestamp) * slope) - 1);
+
+    return times;
+  }
+
+  normalizeValues(newestIdx, oldestIdx) {
+    let maxVal = null;
+    let minVal = null;
+
+    /* First pass: find current min and max values. */
+    let idx = oldestIdx;
+    let curr;
+    while (idx != newestIdx) {
+      curr = this.values[idx];
+
+      if (maxVal == null || curr > maxVal) {
+        maxVal = curr;
+      }
+      if (minVal == null || curr < minVal) {
+        minVal = curr;
+      }
+
+      idx = this.incrIndex(idx);
+    }
+    if (maxVal == null || curr > maxVal) {
+      maxVal = curr;
+    }
+    if (minVal == null || curr < minVal) {
+      minVal = curr;
+    }
+
+    let slope = 2 / (maxVal - minVal);
+
+    /* Second pass: populate normalized data. */
+    let values = [];
+    idx = oldestIdx;
+    while (idx != newestIdx) {
+      values.push(((this.values[idx] - minVal) * slope) - 1);
+      idx = this.incrIndex(idx);
+    }
+    values.push(((this.values[idx] - minVal) * slope) - 1);
+
+    return values;
+  }
+
+  incrIndex(val) { return (val + 1) % this.capacity; }
+
   draw(line) {
+    /* Need at least two points to draw a line. */
     if (this.elements < 2) {
       return;
     }
@@ -63,48 +126,26 @@ class PointBuffer {
       newestIdx = this.capacity - 1;
     }
 
-    /*
-     * Determine slope+offset so each timestamp can be mapped to (-1,1)
-     * domain.
-     */
-    let oldestTimestamp = this.timestamps[oldestIdx];
-    let delta = this.timestamps[newestIdx] - oldestTimestamp;
-    let slope = 2 / delta;
-
-    /*
-     * Determine slope+offset so each value can be mapped to (-1,1).
-     */
-
-    /* Build array of plot-able timestamp X values. */
-    let times = [];
-    let idx = oldestIdx;
-    while (idx != newestIdx) {
-      times.push(((this.timestamps[idx] - oldestTimestamp) * slope) - 1);
-      idx = (idx + 1) % this.capacity;
-    }
-    times.push(((this.timestamps[idx] - oldestTimestamp) * slope) - 1);
+    /* Build arrays of plot-able (normalized) timestamps and values. */
+    let times = this.normalizeTimestamps(newestIdx, oldestIdx);
+    let values = this.normalizeValues(newestIdx, oldestIdx);
 
     /* Set points. */
-    idx = oldestIdx;
+    let idx = oldestIdx;
     let lineIdx = 0;
     while (idx != newestIdx && lineIdx < line.numPoints) {
       line.setX(lineIdx, times[lineIdx]);
-
-      /* Need to use real values. */
-      line.setY(lineIdx, (2 * Math.random()) - 1);
-      // line.setY(lineIdx, this.values[idx]);
-
-      idx = (idx + 1) % this.capacity;
+      line.setY(lineIdx, values[lineIdx]);
+      idx = this.incrIndex(idx);
       lineIdx++;
     }
 
-    /* Write the last point forward until the line is fully plotted. */
+    /*
+     * Write the last point forward until the line is fully plotted. This has
+     * to be done, otherwise there will be lines connecting to (0, 0).
+     */
     let lastX = times[lineIdx];
-
-    /* Need to use real values. */
-    let lastY = (2 * Math.random()) - 1;
-    // let lastY = this.values[idx];
-
+    let lastY = values[lineIdx];
     while (lineIdx < line.numPoints) {
       line.setX(lineIdx, lastX);
       line.setY(lineIdx, lastY);

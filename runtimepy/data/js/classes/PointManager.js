@@ -4,7 +4,7 @@ class PointManager {
                                                Math.random(), 1);
 
     /* How should capacity be controlled? */
-    this.buffer = new PointBuffer(100);
+    this.buffer = new PointBuffer(256);
   }
 
   draw(line) { this.buffer.draw(line); }
