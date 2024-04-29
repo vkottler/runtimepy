@@ -24,7 +24,14 @@ TabPopulater = Callable[[TabbedContent], None]
 class WebApplication:
     """A simple web-application interface."""
 
-    worker_classes = ["JsonConnection", "DataConnection", "PlotManager"]
+    worker_classes = [
+        "JsonConnection",
+        "DataConnection",
+        "PointBuffer",
+        "PointManager",
+        "PlotDrawer",
+        "PlotManager",
+    ]
     ui_classes = [
         "WindowHashManager",
         "WorkerInterface",

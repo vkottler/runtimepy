@@ -30,13 +30,6 @@ class App {
           await init();
         }
 
-        hash.initButtons();
-
-        /* Switch tabs if necessary. */
-        if (hash.tab) {
-          this.switchTab(hash.tab);
-        }
-
         /* Prepare worker message handler. */
         this.worker.onmessage = async (event) => {
           /* Check for reload recommendation. */
@@ -52,6 +45,13 @@ class App {
             }
           }
         };
+
+        hash.initButtons();
+
+        /* Switch tabs if necessary. */
+        if (hash.tab) {
+          this.switchTab(hash.tab);
+        }
 
         startMainLoop();
       }

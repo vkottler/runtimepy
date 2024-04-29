@@ -165,21 +165,24 @@ class TabInterface {
       /* Initialize plot-channel buttons. */
       for (let elem of this.queryAll("input.form-check-input")) {
         elem.addEventListener(
-            "change",
-            ((event) => {
-              let chan = elem.id.split("-")[1];
-              let state = elem.checked;
-              hash.handlePlotChannelToggle(this.name, chan, state);
-
-              this.worker.send(
-                  {kind : "plot", value : {"channel" : chan, "state" : state}});
-            }).bind(this));
+            "change", ((event) => {
+                        let chan = elem.id.split("-")[1];
+                        let state = elem.checked;
+                        hash.handlePlotChannelToggle(this.name, chan, state);
+                        this.sendPlotChannelState(chan, state);
+                      }).bind(this));
       }
 
       /* Initialize plotted-channel clearing interface. */
       this.query("#clear-plotted-channels").onclick =
           (() => { hash.clearPlotChannels(this.name); }).bind(this);
     }
+  }
+
+  sendPlotChannelState(chan, state) {
+    let msg = {"channel" : chan, "state" : state};
+    this.worker.toWorker({"plot" : msg});
+    this.worker.send({kind : "plot", value : msg});
   }
 
   query(data) { return this.container.querySelector(data); }
@@ -231,7 +234,6 @@ class TabInterface {
       this.log(data["log_message"]);
     }
     if ("log_messages" in data) {
-      console.log();
       for (let msg of data["log_messages"]) {
         this.log(msg);
       }
@@ -241,8 +243,6 @@ class TabInterface {
     if ("points" in data) {
       for (let key in data["points"]) {
         let points = data["points"][key];
-
-        /* At some point, forward these to plot. */
 
         /* Update channel-table tracking based on most recent point only. */
         this.channelsPending[key] = points[points.length - 1][0];
