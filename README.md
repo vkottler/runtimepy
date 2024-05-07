@@ -2,11 +2,26 @@
     =====================================
     generator=datazen
     version=3.1.4
-    hash=72952b0b2e4342ce27726da3c02bc379
+    hash=ba7202900b5f7c8376c1b89243c9d797
     =====================================
 -->
 
-# runtimepy ([4.4.0](https://pypi.org/project/runtimepy/))
+# Quick Demo
+
+[compressed-sample.webm](https://github.com/vkottler/runtimepy/assets/15205052/b2593711-1c4f-41a8-9d1d-8c22f1038b12)
+
+Starting up `runtimepy` such that GUI browser is spawned:
+
+![demo webm 1](im/part1-compressed.gif)
+
+A continuation of the previous GIF:
+
+![demo webm 2](im/part2-compressed.gif)
+
+See below, or head directly to [human-written documentation](md/main.md) for
+an explanation.
+
+# runtimepy ([4.4.1](https://pypi.org/project/runtimepy/))
 
 [![python](https://img.shields.io/pypi/pyversions/runtimepy.svg)](https://pypi.org/project/runtimepy/)
 ![Build Status](https://github.com/vkottler/runtimepy/workflows/Python%20Package/badge.svg)
@@ -41,6 +56,8 @@ This package is tested on the following platforms:
 * `windows-latest`
 
 # Introduction
+
+See [human-written documentation](md/main.md) for this project.
 
 # Command-line Options
 
