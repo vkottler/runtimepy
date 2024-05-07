@@ -46,5 +46,6 @@ def test_arbiter_command_advanced():
         args = base + [str(resource("connection_arbiter", f"{entry}.yaml"))]
         if not is_windows():
             args.append("dummy_load")
+            args.append("browser")
 
         assert runtimepy_main(args) == 0

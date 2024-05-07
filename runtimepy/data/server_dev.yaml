@@ -1,6 +1,7 @@
 ---
 includes:
   - package://runtimepy/dummy_load.yaml
+  - package://runtimepy/browser.yaml
 
 config:
   localhost: true
@@ -14,6 +15,9 @@ config:
 
   # This is the default.
   # html_method: runtimepy.net.server.app.channel_environments
+
+  # For a simple demo.
+  xdg_fragment: "wave1,hide-tabs,hide-channels/wave1:sin,cos"
 
 port_overrides:
   runtimepy_http_server: 8000

@@ -3,11 +3,17 @@ class PointManager {
     this.color = new WebglPlotBundle.ColorRGBA(Math.random(), Math.random(),
                                                Math.random(), 1);
 
-    /* How should capacity be controlled? */
-    this.buffer = new PointBuffer(256);
+    /* How should capacity be controlled? Try to find UI element (probably
+     * needs to be passed in). */
+    this.buffer = new PointBuffer(512);
   }
 
-  draw(line) { this.buffer.draw(line); }
+  draw(line, minTimestamp, maxTimestamp) {
+    this.buffer.draw(line, minTimestamp, maxTimestamp);
+  }
 
-  handlePoints(points, line) { this.buffer.ingest(points, line); }
+  handlePoints(points) {
+    this.buffer.ingest(points);
+    return [ this.buffer.oldestTimestamp, this.buffer.newestTimestamp ];
+  }
 }
