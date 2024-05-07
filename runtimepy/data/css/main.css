@@ -27,7 +27,7 @@ body > :first-child {
   background-color: var(--bs-secondary-bg-subtle);
 }
 
-#ui-plot {
+.click-plot {
   cursor: pointer;
 }
 

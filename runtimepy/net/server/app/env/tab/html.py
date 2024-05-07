@@ -255,5 +255,5 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabBase):
             tag="canvas",
             id=self.get_id("plot"),
             parent=div(parent=container, class_str="w-100 h-100 border-start"),
-            class_str="w-100 h-100",
+            class_str="w-100 h-100 click-plot",
         )

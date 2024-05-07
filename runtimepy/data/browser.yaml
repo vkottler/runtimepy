@@ -1,0 +1,4 @@
+---
+config:
+  # Attempt to open a browser automatically.
+  xdg_open_http: true

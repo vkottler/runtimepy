@@ -72,7 +72,7 @@ jobs:
 
       - run: |
           mk python-release owner=vkottler \
-                            repo=runtimepy version=4.4.0
+                            repo=runtimepy version=4.4.1
         if: |
           matrix.python-version == '3.11'
           && matrix.system == 'ubuntu-latest'
