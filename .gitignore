@@ -17,3 +17,5 @@ mklocal
 docs
 compile_commands.json
 src
+*.webm
+*.log

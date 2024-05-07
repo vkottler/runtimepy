@@ -12,8 +12,12 @@ class PlotDrawer {
     /* Point managers for individual channels. */
     this.channels = {};
 
-    /* need to make this an N entity for multiple channels */
+    /* Line objects by channel name. */
     this.lines = {};
+
+    /* Keep track of x-axis bounds for each channel. */
+    this.oldestTimestamps = {};
+    this.newestTimestamps = {};
   }
 
   update() { this.wglp.update(); }
@@ -25,12 +29,16 @@ class PlotDrawer {
       this.newLine(name);
     } else {
       delete this.lines[name];
+      delete this.oldestTimestamps[name];
+      delete this.newestTimestamps[name];
+      this.channels[name].buffer.reset();
     }
 
     this.updateLines();
   }
 
   handlePoints(points) {
+    /* Handle ingesting new point data. */
     for (const key in points) {
       if (key in this.states && this.states[key]) {
         /* Add point manager and create line for plotted channel. */
@@ -38,7 +46,34 @@ class PlotDrawer {
           this.channels[key] = new PointManager();
         }
         if (key in this.lines) {
-          this.channels[key].handlePoints(points[key], this.lines[key]);
+          let result = this.channels[key].handlePoints(points[key]);
+
+          /* Update timestamp tracking. */
+          this.oldestTimestamps[key] = result[0];
+          this.newestTimestamps[key] = result[1];
+        }
+      }
+    }
+
+    /* Compute x-axis bounds (min and max timestamps). */
+    let minTimestamp = null;
+    let maxTimestamp = null;
+    for (const key in this.oldestTimestamps) {
+      let oldest = this.oldestTimestamps[key];
+      let newest = this.newestTimestamps[key];
+      if (minTimestamp == null || oldest < minTimestamp) {
+        minTimestamp = oldest;
+      }
+      if (maxTimestamp == null || newest > maxTimestamp) {
+        maxTimestamp = newest;
+      }
+    }
+
+    /* Re-draw all lines. */
+    if (minTimestamp != null && maxTimestamp != null) {
+      for (const key in this.channels) {
+        if (key in this.lines) {
+          this.channels[key].draw(this.lines[key], minTimestamp, maxTimestamp);
         }
       }
     }

@@ -11,6 +11,8 @@ class PointBuffer {
     this.head = 0;
     this.tail = 0;
     this.elements = 0;
+    this.oldestTimestamp = null;
+    this.newestTimestamp = null;
   }
 
   updateCapacity(capacity) {
@@ -30,7 +32,7 @@ class PointBuffer {
     this.timestamps = newTimestamps;
   }
 
-  ingest(points, line) {
+  ingest(points) {
     for (let point of points) {
       /* Store point. */
       this.values[this.tail] = point[0];
@@ -48,16 +50,18 @@ class PointBuffer {
       }
     }
 
-    this.draw(line);
+    /* Update tracking of oldest and newest point timestamps. */
+    this.oldestTimestamp = this.timestamps[this.head];
+    this.newestTimestamp = this.timestamps[this.newestIdx()];
   }
 
-  normalizeTimestamps(newestIdx, oldestIdx) {
+  normalizeTimestamps(newestIdx, oldestIdx, oldestTimestamp, newestTimestamp) {
     /*
      * Determine slope+offset so each timestamp can be mapped to (-1,1)
      * domain.
      */
-    let oldestTimestamp = this.timestamps[oldestIdx];
-    let slope = 2 / (this.timestamps[newestIdx] - oldestTimestamp);
+
+    let slope = 2 / (newestTimestamp - oldestTimestamp);
 
     /* Build array of plot-able timestamp X values. */
     let times = [];
@@ -113,7 +117,15 @@ class PointBuffer {
 
   incrIndex(val) { return (val + 1) % this.capacity; }
 
-  draw(line) {
+  newestIdx() {
+    let result = this.tail - 1;
+    if (result < 0) {
+      result = this.capacity - 1;
+    }
+    return result;
+  }
+
+  draw(line, oldestTimestamp, newestTimestamp) {
     /* Need at least two points to draw a line. */
     if (this.elements < 2) {
       return;
@@ -121,13 +133,12 @@ class PointBuffer {
 
     /* Find indices for oldest and newest points. */
     let oldestIdx = this.head;
-    let newestIdx = this.tail - 1;
-    if (newestIdx < 0) {
-      newestIdx = this.capacity - 1;
-    }
 
     /* Build arrays of plot-able (normalized) timestamps and values. */
-    let times = this.normalizeTimestamps(newestIdx, oldestIdx);
+    let newestIdx = this.newestIdx();
+
+    let times = this.normalizeTimestamps(newestIdx, oldestIdx, oldestTimestamp,
+                                         newestTimestamp);
     let values = this.normalizeValues(newestIdx, oldestIdx);
 
     /* Set points. */
