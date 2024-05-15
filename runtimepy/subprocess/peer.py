@@ -4,10 +4,16 @@ A module implementing a runtimepy peer interface.
 
 # built-in
 import asyncio
-from contextlib import asynccontextmanager, suppress
+from contextlib import (
+    AsyncExitStack,
+    ExitStack,
+    asynccontextmanager,
+    contextmanager,
+    suppress,
+)
 from pathlib import Path
 from sys import executable
-from typing import AsyncIterator, Type, TypeVar
+from typing import AsyncIterator, Iterator, Type, TypeVar
 
 # third-party
 from vcorelib.io import ARBITER, DEFAULT_INCLUDES_KEY
@@ -140,18 +146,27 @@ class RuntimepyPeer(RuntimepyPeerInterface):
             writer.write("sys.exit(0)")
 
     @classmethod
-    @asynccontextmanager
-    async def running_program(
-        cls: Type[T],
-        name: str,
-        config: JsonObject,
-        import_str: str,
-        *args,
-        **kwargs,
-    ) -> AsyncIterator[T]:
-        """Run a peer subprocess."""
+    def _write_script_harness(
+        cls: Type[T], name: str, path: Path, config_path: Path, import_str: str
+    ) -> None:
+        """Handles creating file-writer to write script."""
 
-        with tempfile(suffix=".json") as config_path:
+        # Write file contents.
+        with IndentedFileWriter.from_path(
+            path, per_indent=4, linesep="\n"
+        ) as writer:
+            cls._write_script(writer, name, config_path, import_str)
+
+    @classmethod
+    @contextmanager
+    def _prepare_jit_script(
+        cls: Type[T], name: str, config: JsonObject, import_str: str
+    ) -> Iterator[Path]:
+        """Prepare a JIT script for this process to invoke."""
+
+        with ExitStack() as stack:
+            config_path = stack.enter_context(tempfile(suffix=".json"))
+
             # Encode configuration data.
             assert ARBITER.encode(config_path, config)[0]
 
@@ -163,18 +178,41 @@ class RuntimepyPeer(RuntimepyPeerInterface):
             ).data
             assert ARBITER.encode(config_path, config)[0]
 
-            with tempfile(suffix=".py") as path:
-                # Write file contents.
-                with IndentedFileWriter.from_path(
-                    path, per_indent=4, linesep="\n"
-                ) as writer:
-                    cls._write_script(writer, name, config_path, import_str)
+            path = stack.enter_context(tempfile(suffix=".py"))
 
-                # Run program.
-                async with cls.exec(
-                    name, config, executable, str(path), *args, **kwargs
-                ) as inst:
-                    yield inst
+            # Write file contents.
+            cls._write_script_harness(name, path, config_path, import_str)
+
+            yield path
+
+    @classmethod
+    @asynccontextmanager
+    async def running_program(
+        cls: Type[T],
+        name: str,
+        config: JsonObject,
+        import_str: str,
+        *args,
+        **kwargs,
+    ) -> AsyncIterator[T]:
+        """Run a peer subprocess."""
+
+        async with AsyncExitStack() as stack:
+            # Run program.
+            yield await stack.enter_async_context(
+                cls.exec(
+                    name,
+                    config,
+                    executable,
+                    str(
+                        stack.enter_context(
+                            cls._prepare_jit_script(name, config, import_str)
+                        )
+                    ),
+                    *args,
+                    **kwargs,
+                )
+            )
 
     def write(self, data: bytes, addr: tuple[str, int] = None) -> None:
         """Write bytes via this interface."""

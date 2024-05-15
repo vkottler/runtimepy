@@ -7,6 +7,7 @@ import asyncio as _asyncio
 from asyncio import Semaphore as _Semaphore
 from asyncio import Transport as _Transport
 from asyncio import get_event_loop as _get_event_loop
+from contextlib import AsyncExitStack as _AsyncExitStack
 from contextlib import asynccontextmanager as _asynccontextmanager
 from logging import getLogger as _getLogger
 import socket as _socket
@@ -202,7 +203,11 @@ class TcpConnection(_Connection, _TransportMixin):
             conn1 = conn
             cond.release()
 
-        async with cls.serve(callback, port=0, backlog=1) as server:
+        async with _AsyncExitStack() as stack:
+            server = await stack.enter_async_context(
+                cls.serve(callback, port=0, backlog=1)
+            )
+
             host = server.sockets[0].getsockname()
             conn2 = await cls.create_connection(host="localhost", port=host[1])
             await cond.acquire()

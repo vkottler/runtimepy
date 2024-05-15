@@ -3,7 +3,7 @@ Test interactions with global environments.
 """
 
 # built-in
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 import logging
 from typing import Iterator
 
@@ -56,7 +56,9 @@ ENVS = ["a", "b", "c"]
 def global_test_env() -> Iterator[GlobalEnvironment]:
     """Create a global environment configured for testing purposes."""
 
-    with GlobalEnvironment.temporary() as envs:
+    with ExitStack() as stack:
+        envs = stack.enter_context(GlobalEnvironment.temporary())
+
         for name in ENVS:
             envs.register(name, sample_env(name))
 
