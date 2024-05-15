@@ -130,6 +130,7 @@ class ChannelTui(TuiMixin):
         for idx, item in enumerate(self.channel_names):
             val = self.env.value(item)
 
+            val_str = ""
             if isinstance(val, float):
                 val_str = f"{val:5.6f}"
             elif isinstance(val, int):

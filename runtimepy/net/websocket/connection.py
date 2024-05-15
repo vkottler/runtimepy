@@ -6,6 +6,7 @@ from __future__ import annotations
 
 # built-in
 import asyncio as _asyncio
+from contextlib import AsyncExitStack as _AsyncExitStack
 from contextlib import asynccontextmanager as _asynccontextmanager
 from contextlib import suppress as _suppress
 from logging import getLogger as _getLogger
@@ -165,14 +166,21 @@ class WebsocketConnection(Connection):
             server_conn = cls(protocol)
             return True
 
-        # Start a server.
-        async with _serve(server_init, host="0.0.0.0", port=0) as server:
+        async with _AsyncExitStack() as stack:
+            # Start a server.
+            server = await stack.enter_async_context(
+                _serve(server_init, host="0.0.0.0", port=0)
+            )
+
             host = list(server.sockets)[0].getsockname()
 
+            client_conn = await stack.enter_async_context(
+                cls.client(f"ws://localhost:{host[1]}")
+            )
+
             # Connect a client and yield both sides of the connection.
-            async with cls.client(f"ws://localhost:{host[1]}") as client_conn:
-                assert server_conn is not None
-                yield server_conn, client_conn
+            assert server_conn is not None
+            yield server_conn, client_conn
 
     @classmethod
     @_asynccontextmanager
