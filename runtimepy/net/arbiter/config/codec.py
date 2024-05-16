@@ -5,7 +5,6 @@ A module implementing the configuration-object codec interface.
 # built-in
 from pathlib import Path as _Path
 import socket as _socket
-import sys
 from typing import Any as _Any
 from typing import Optional as _Optional
 from typing import Union as _Union
@@ -70,12 +69,7 @@ class ConnectionArbiterConfig(_RuntimepyDictCodec):
         self.structs: list[_Any] = data.get("structs", [])  # type: ignore
         self.processes: list[_Any] = data.get("processes", [])  # type: ignore
 
-        directory_str = str(data.get("directory", "."))
-        self.directory = _Path(directory_str)
-
-        # Add directory to Python path.
-        if directory_str not in sys.path:
-            sys.path.append(directory_str)
+        self.directory = _Path(str(data.get("directory", ".")))
 
     def asdict(self) -> _JsonObject:
         """Obtain a dictionary representing this instance."""
