@@ -6,6 +6,7 @@ connections or servers.
 # built-in
 from importlib import import_module as _import_module
 from site import addsitedir as _addsitedir
+import sys
 from typing import Any as _Any
 from typing import Callable as _Callable
 from typing import Iterable as _Iterable
@@ -100,23 +101,36 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
                 )
                 loaded.add(absolute)
 
+        # Add the working directory and parent directories for module loading
+        # / package discovery.
+        directories = set(str(_normalize(x).parent) for x in paths)
+
+        directories.add(
+            str(
+                config_data.setdefault(
+                    "directory", str(_normalize(".").resolve())
+                )
+            )
+        )
+
+        for directory in directories:
+            # Add the site directory to facilitate module discovery.
+            _addsitedir(directory)
+
+            # Add directory to Python path.
+            if directory not in sys.path:
+                sys.path.append(directory)
+
         # Run any JIT config methods.
         handle_config_builders(config_data, self)
 
         assert "root" not in self._config, self._config
         self._config["root"] = config_data  # type: ignore
 
-        config = ConnectionArbiterConfig(data=config_data)
-
-        # Set the directory to be the parent directory of the configuration
-        # file if it wasn't set.
-        if "directory" not in config.data:
-            config.directory = _normalize(list(paths)[0]).parent
-
-        # Add the site directory to facilitate module discovery.
-        _addsitedir(str(config.directory))
-
-        await self.process_config(config, wait_for_stop=wait_for_stop)
+        await self.process_config(
+            ConnectionArbiterConfig(data=config_data),
+            wait_for_stop=wait_for_stop,
+        )
 
     async def process_config(
         self, config: ConnectionArbiterConfig, wait_for_stop: bool = False

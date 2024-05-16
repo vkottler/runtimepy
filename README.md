@@ -2,11 +2,11 @@
     =====================================
     generator=datazen
     version=3.1.4
-    hash=96565153e5d7cfc5246e357a4f11211a
+    hash=5aa9f26bd1c52cbd6e0cf858cefe43e4
     =====================================
 -->
 
-# runtimepy ([4.4.3](https://pypi.org/project/runtimepy/))
+# runtimepy ([4.4.4](https://pypi.org/project/runtimepy/))
 
 [![python](https://img.shields.io/pypi/pyversions/runtimepy.svg)](https://pypi.org/project/runtimepy/)
 ![Build Status](https://github.com/vkottler/runtimepy/workflows/Python%20Package/badge.svg)
@@ -91,7 +91,7 @@ options:
   -w, --wait-for-stop, --wait_for_stop
                         ensure that a 'wait_for_stop' application method is
                         run last
-  --no-poller, -p       don't run a connection-metrics poller task
+  --no-poller           don't run a connection-metrics poller task
 
 ```
 
@@ -100,7 +100,8 @@ options:
 ```
 $ ./venv3.12/bin/runtimepy server -h
 
-usage: runtimepy server [-h] [-i] [-w] [--host HOST] [-p PORT] [-u] [-l]
+usage: runtimepy server [-h] [-i] [-w] [--no-poller] [--host HOST] [-p PORT]
+                        [-u] [-l]
                         factory [configs ...]
 
 positional arguments:
@@ -114,6 +115,7 @@ options:
   -w, --wait-for-stop, --wait_for_stop
                         ensure that a 'wait_for_stop' application method is
                         run last
+  --no-poller           don't run a connection-metrics poller task
   --host HOST           host address to listen on (default: '0.0.0.0')
   -p PORT, --port PORT  port to listen on (default: 0)
   -u, --udp             whether or not this is a UDP-based server (otherwise
@@ -127,7 +129,8 @@ options:
 ```
 $ ./venv3.12/bin/runtimepy task -h
 
-usage: runtimepy task [-h] [-i] [-w] [-r RATE] factory [configs ...]
+usage: runtimepy task [-h] [-i] [-w] [--no-poller] [-r RATE]
+                      factory [configs ...]
 
 positional arguments:
   factory               name of task factory to create task with
@@ -140,6 +143,7 @@ options:
   -w, --wait-for-stop, --wait_for_stop
                         ensure that a 'wait_for_stop' application method is
                         run last
+  --no-poller           don't run a connection-metrics poller task
   -r RATE, --rate RATE  rate (in Hz) that the task should run (default: 10)
 
 ```
