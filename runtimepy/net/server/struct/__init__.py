@@ -22,6 +22,8 @@ class UiState(RuntimeStruct, PsutilMixin):
     time_ms: Float
     frame_period_ms: Float
 
+    use_psutil: bool
+
     @staticmethod
     def singleton() -> Optional["UiState"]:
         """Attempt to get the singleton UI struct instance."""
@@ -45,7 +47,9 @@ class UiState(RuntimeStruct, PsutilMixin):
             self.register_connection_metrics(self.json_metrics)
 
         # System metrics.
-        self.init_psutil(self.env)
+        self.use_psutil = self.config.get("psutil", True)  # type: ignore
+        if self.use_psutil:
+            self.init_psutil(self.env)
 
         # Update singleton.
         global UI  # pylint: disable=global-statement
@@ -56,4 +60,6 @@ class UiState(RuntimeStruct, PsutilMixin):
         A method that other runtime entities can call to perform canonical
         updates to this struct's environment.
         """
-        self.poll_psutil(self.frame_period_ms.value)
+
+        if self.use_psutil:
+            self.poll_psutil(self.frame_period_ms.value)
