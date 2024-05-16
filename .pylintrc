@@ -1,5 +1,5 @@
 [DESIGN]
-max-args=8
+max-args=9
 max-attributes=14
 max-parents=13
 max-branches=13

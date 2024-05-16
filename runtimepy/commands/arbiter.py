@@ -22,7 +22,11 @@ async def entry(
 ) -> int:
     """The async command entry."""
 
-    arbiter = ConnectionArbiter(stop_sig=stop_sig, window=window)
+    arbiter = ConnectionArbiter(
+        stop_sig=stop_sig,
+        window=window,
+        metrics_poller_task=not args.no_poller,
+    )
 
     await arbiter.load_configs(args.configs, wait_for_stop=args.wait_for_stop)
 
