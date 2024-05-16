@@ -88,6 +88,7 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
         app: NetworkApplicationlike = None,
         config: _JsonObject = None,
         window: Optional[CursesWindow] = None,
+        metrics_poller_task: bool = True,
     ) -> None:
         """Initialize this connection arbiter."""
 
@@ -101,7 +102,8 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
         self.task_manager = _ArbiterTaskManager()
 
         # Ensure that connection metrics are polled.
-        self.task_manager.register(metrics_poller(self.manager))
+        if metrics_poller_task:
+            self.task_manager.register(metrics_poller(self.manager))
 
         if stop_sig is None:
             stop_sig = _asyncio.Event()

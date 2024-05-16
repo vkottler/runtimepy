@@ -2,11 +2,11 @@
     =====================================
     generator=datazen
     version=3.1.4
-    hash=1ae8fd40e748b26eee565d5869d31e37
+    hash=96565153e5d7cfc5246e357a4f11211a
     =====================================
 -->
 
-# runtimepy ([4.4.2](https://pypi.org/project/runtimepy/))
+# runtimepy ([4.4.3](https://pypi.org/project/runtimepy/))
 
 [![python](https://img.shields.io/pypi/pyversions/runtimepy.svg)](https://pypi.org/project/runtimepy/)
 ![Build Status](https://github.com/vkottler/runtimepy/workflows/Python%20Package/badge.svg)
@@ -79,7 +79,7 @@ commands:
 ```
 $ ./venv3.12/bin/runtimepy arbiter -h
 
-usage: runtimepy arbiter [-h] [-i] [-w] configs [configs ...]
+usage: runtimepy arbiter [-h] [-i] [-w] [--no-poller] configs [configs ...]
 
 positional arguments:
   configs               the configuration to load
@@ -91,6 +91,7 @@ options:
   -w, --wait-for-stop, --wait_for_stop
                         ensure that a 'wait_for_stop' application method is
                         run last
+  --no-poller, -p       don't run a connection-metrics poller task
 
 ```
 

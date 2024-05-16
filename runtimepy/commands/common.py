@@ -41,6 +41,11 @@ def arbiter_flags(parser: _ArgumentParser) -> None:
         action="store_true",
         help="ensure that a 'wait_for_stop' application method is run last",
     )
+    parser.add_argument(
+        "--no-poller",
+        action="store_true",
+        help="don't run a connection-metrics poller task",
+    )
 
 
 def curses_wrap_if(method: _CommandFunction, args: _Namespace) -> int:
