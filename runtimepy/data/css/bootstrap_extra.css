@@ -76,7 +76,7 @@ textarea.text-logs {
 }
 
 .vertical-divider {
-  flex-basis: 0.5em;
+  flex-basis: 0.75em;
   flex-grow: 0;
   flex-shrink: 0;
   background-color: var(--bs-secondary-bg-subtle);
