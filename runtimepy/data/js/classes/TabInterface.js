@@ -136,24 +136,35 @@ class TabInterface {
     }
   }
 
-  setupVerticalDivider(elem) {
-    elem.addEventListener("mousedown", (event) => {
+  setupVerticalDividerEvents(elem, down, move, up) {
+    elem.addEventListener(down, (event) => {
       let elem = this.query(".channel-column");
-      let origX = event.clientX;
+
+      let origX = event.clientX || event.touches[0].clientX;
 
       /* Track mouse movement while the mouse is held down. */
       let handleMouse = (event) => {
-        let deltaX = origX - event.clientX;
+        let eventX = event.clientX || event.touches[0].clientX;
+
+        let deltaX = origX - eventX;
         elem.style.width = elem.getBoundingClientRect().width - deltaX + "px";
-        origX = event.clientX;
+        origX = eventX;
       };
-      document.addEventListener("mousemove", handleMouse);
+      document.addEventListener(move, handleMouse);
 
       /* Remove mouse handler on mouse release. */
-      document.addEventListener("mouseup", (event) => {
-        document.removeEventListener("mousemove", handleMouse);
+      document.addEventListener(up, (event) => {
+        document.removeEventListener(move, handleMouse);
       }, {once : true});
     });
+  }
+
+  setupVerticalDivider(elem) {
+    /* For mouse. */
+    this.setupVerticalDividerEvents(elem, "mousedown", "mousemove", "mouseup");
+
+    /* For touch. */
+    this.setupVerticalDividerEvents(elem, "touchstart", "touchmove", "touchend");
   }
 
   initPlot() {
