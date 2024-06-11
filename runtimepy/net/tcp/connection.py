@@ -36,6 +36,7 @@ from runtimepy.net.tcp.protocol import QueueProtocol
 
 LOG = _getLogger(__name__)
 T = _TypeVar("T", bound="TcpConnection")
+V = _TypeVar("V", bound="TcpConnection")
 ConnectionCallback = _Callable[[T], None]
 
 
@@ -191,29 +192,38 @@ class TcpConnection(_Connection, _TransportMixin):
 
     @classmethod
     @_asynccontextmanager
-    async def create_pair(cls: type[T]) -> _AsyncIterator[tuple[T, T]]:
+    async def create_pair(
+        cls: type[T], peer: type[V] = None
+    ) -> _AsyncIterator[tuple[V, T]]:
         """Create a connection pair."""
 
         cond = _Semaphore(0)
-        conn1: _Optional[T] = None
+        server_conn: _Optional[V] = None
 
-        def callback(conn: T) -> None:
+        def callback(conn: V) -> None:
             """Signal the semaphore."""
-            nonlocal conn1
-            conn1 = conn
+            nonlocal server_conn
+            server_conn = conn
             cond.release()
 
         async with _AsyncExitStack() as stack:
+            # Use the same class for the server end by default.
+            if peer is None:
+                peer = cls  # type: ignore
+            assert peer is not None
+
             server = await stack.enter_async_context(
-                cls.serve(callback, port=0, backlog=1)
+                peer.serve(callback, port=0, backlog=1)
             )
 
             host = server.sockets[0].getsockname()
-            conn2 = await cls.create_connection(host="localhost", port=host[1])
+            client = await cls.create_connection(
+                host="localhost", port=host[1]
+            )
             await cond.acquire()
 
-            assert conn1 is not None
-            yield conn1, conn2
+            assert server_conn is not None
+            yield server_conn, client
 
     async def close(self) -> None:
         """Close this connection."""

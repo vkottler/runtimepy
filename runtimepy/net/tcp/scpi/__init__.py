@@ -22,14 +22,13 @@ class ScpiConnection(TcpConnection):
     async def async_init(self) -> bool:
         """Initialize this instance."""
 
-        self.logger.info(await self.send_command("*IDN?"))
-
-        return True
+        # Any SCPI device should respond to this query.
+        return bool(await self.send_command("*IDN", log=True, query=True))
 
     async def process_text(self, data: str) -> bool:
         """Process a text frame."""
 
-        for item in data.split("\r\n"):
+        for item in data.splitlines():
             if item:
                 await self.message_queue.put(item)
 
@@ -39,15 +38,37 @@ class ScpiConnection(TcpConnection):
         """Process a binary frame."""
         return await self.process_text(data.decode())
 
-    async def send_command(self, command: str, response: bool = True) -> str:
+    async def send_command(
+        self,
+        command: str,
+        response: bool = True,
+        log: bool = False,
+        query: bool = False,
+        timeout: float = 1.0,
+    ) -> str:
         """Send a command."""
+
+        result = ""
+
+        if query:
+            command += "?"
 
         async with self.command_lock:
             self.send_text(command + "\n")
 
-            result = ""
-            if response:
-                result = await self.message_queue.get()
+            if response or query:
+                try:
+                    result = await asyncio.wait_for(
+                        self.message_queue.get(), timeout
+                    )
+                    if log:
+                        self.logger.info("(%s) %s", command, result)
+                except asyncio.TimeoutError:
+                    self.logger.error(
+                        "Peer didn't respond to '%s'! (timeout: %.2f)",
+                        command,
+                        timeout,
+                    )
 
         return result
 

@@ -4,6 +4,7 @@ Test the 'net.tcp.connection' module.
 
 # built-in
 import asyncio
+from typing import cast
 
 # third-party
 from pytest import mark
@@ -30,19 +31,24 @@ def test_tcp_connection_basic():
 async def tcp_connection_basic() -> None:
     """Test basic interactions with a TCP connection."""
 
-    async with SampleTcpConnection.create_pair() as (conn1, conn2):
-        conn1.send_text("Hello!\n")
-        conn2.send_text("Hello!\n")
+    # Not sure how to improve the typing situation while keeping the
+    # peer-class flexibility.
+    _server: SampleTcpConnection
+    async with SampleTcpConnection.create_pair() as (_server, client):
+        server = cast(SampleTcpConnection, _server)
+
+        server.send_text("Hello!\n")
+        client.send_text("Hello!\n")
         for idx in range(10):
-            conn1.send_binary((str(idx) + "\n").encode())
-            conn2.send_binary((str(idx) + "\n").encode())
-        conn1.send_text("stop\n")
-        conn2.send_text("stop\n")
+            server.send_binary((str(idx) + "\n").encode())
+            client.send_binary((str(idx) + "\n").encode())
+        server.send_text("stop\n")
+        client.send_text("stop\n")
 
         await asyncio.wait(
             [
-                asyncio.create_task(conn1.process()),
-                asyncio.create_task(conn2.process()),
+                asyncio.create_task(server.process()),
+                asyncio.create_task(client.process()),
             ],
             return_when=asyncio.ALL_COMPLETED,
         )

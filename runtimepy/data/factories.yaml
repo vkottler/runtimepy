@@ -25,6 +25,8 @@ factories:
   - {name: runtimepy.net.factories.RuntimepyWebsocketJson}
   - {name: runtimepy.net.factories.RuntimepyWebsocketData}
 
+  - {name: runtimepy.net.tcp.scpi.ScpiConn}
+
   # Useful tasks.
   - {name: runtimepy.task.trig.Sinusoid}
   - {name: runtimepy.task.sample.Sample}
