@@ -48,12 +48,23 @@ class PlotManager {
     }
   }
 
+  updateDepth(name, wheelDelta) {
+    if (name in this.drawers) {
+      this.drawers[name].updateDepth(wheelDelta);
+    }
+  }
+
   async handleMessage(data) {
     let name = data["name"];
 
     /* Handle initial transfer. */
     if ("canvas" in data) {
       this.plots[name] = data["canvas"];
+    }
+
+    /* Handle scroll events. */
+    if ("wheelDelta" in data) {
+      this.updateDepth(name, data["wheelDelta"]);
     }
 
     /* Handle size updates. */

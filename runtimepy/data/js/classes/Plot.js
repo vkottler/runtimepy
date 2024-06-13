@@ -17,8 +17,11 @@ class Plot {
     let plotButton = document.getElementById("runtimepy-plot-button");
     if (plotButton) {
       this.canvas.onclick = (event) => { plotButton.click(); };
+      this.canvas.onwheel = this.onWheel.bind(this);
     }
   }
+
+  onWheel(event) { this.plotMessage({"wheelDelta" : event.wheelDelta}); }
 
   plotMessage(data, param) { this.worker.toWorker({"plot" : data}, param); }
 
