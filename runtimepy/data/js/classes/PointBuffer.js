@@ -90,15 +90,23 @@ class PointBuffer {
     if (slope > 0) {
       /* Build array of plot-able timestamp X values. */
       let idx = oldestIdx;
+
       while (idx != newestIdx) {
         times.push(((this.timestamps[idx] - oldestTimestamp) * slope) - 1);
         idx = this.incrIndex(idx);
       }
       times.push(((this.timestamps[idx] - oldestTimestamp) * slope) - 1);
+
     } else {
       /* need to root-cause this off-by-one issue */
       console.log(`${newestIdx}, ${oldestIdx}, ${this.elements}`);
       console.log(slope);
+
+      let idx = oldestIdx;
+      while (idx != newestIdx) {
+        times.push(oldestTimestamp)
+        idx = this.incrIndex(idx);
+      }
     }
 
     return times;
