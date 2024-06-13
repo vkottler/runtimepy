@@ -106,13 +106,15 @@ class BaseChannelEnvironment(_NamespaceMixin, FinalizeMixin):
         """Mapping-set interface."""
         return self.set(key, value)
 
-    def set(self, key: _RegistryKey, value: ChannelValue) -> None:
+    def set(
+        self, key: _RegistryKey, value: ChannelValue, scaled: bool = True
+    ) -> None:
         """Attempt to set an arbitrary channel value."""
 
         # Set a field value if this key maps to a bit-field.
         if self.fields.has_field(key):
             assert not isinstance(value, float)
-            self.fields.set(key, value)
+            self.fields.set(key, value, scaled=scaled)
             return
 
         chan, enum = self[key]
@@ -155,7 +157,10 @@ class BaseChannelEnvironment(_NamespaceMixin, FinalizeMixin):
                 )
 
         # Assign the value to the channel.
-        chan.raw.scaled = value  # type: ignore
+        if scaled:
+            chan.raw.scaled = value  # type: ignore
+        else:
+            chan.raw.value = value  # type: ignore
 
     def apply(self, values: ValueMap) -> None:
         """Apply a map of values to the environment."""
@@ -172,17 +177,19 @@ class BaseChannelEnvironment(_NamespaceMixin, FinalizeMixin):
         }
 
     def value(
-        self, key: _RegistryKey, resolve_enum: bool = True
+        self, key: _RegistryKey, resolve_enum: bool = True, scaled: bool = True
     ) -> ChannelValue:
         """Attempt to get a channel's current value."""
 
         # Get the value from a field if this key points to a bit-field.
         if self.fields.has_field(key):
-            return self.fields.get(key, resolve_enum=resolve_enum)
+            return self.fields.get(
+                key, resolve_enum=resolve_enum, scaled=scaled
+            )
 
         chan, enum = self[key]
 
-        value: ChannelValue = chan.raw.scaled
+        value: ChannelValue = chan.raw.scaled if scaled else chan.raw.value
 
         # Resolve enumeration values to strings.
         if enum is not None and resolve_enum:

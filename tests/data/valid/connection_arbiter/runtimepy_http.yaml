@@ -8,6 +8,7 @@ app:
 config:
   experimental: true
   foo: bar
+  xdg_fragment: "wave1,hide-tabs,hide-channels/wave1:sin,cos"
 
 clients:
   - factory: runtimepy_http

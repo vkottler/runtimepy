@@ -173,3 +173,5 @@ def test_channel_environment_basic():
     assert env.get_int(4) is not None
 
     verify_missing_keys(env)
+
+    env.set("float.1", 1.0, scaled=False)
