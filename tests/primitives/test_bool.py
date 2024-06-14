@@ -17,3 +17,19 @@ def test_bool_basic():
 
     prim.clear()
     assert copied()
+
+    call_count = 0
+
+    def change_cb(_: bool, __: bool) -> None:
+        """A sample callback."""
+        nonlocal call_count
+        call_count += 1
+
+    with prim.callback(change_cb):
+        prim.toggle()
+        prim.toggle()
+
+    prim.toggle()
+    prim.toggle()
+
+    assert call_count == 2

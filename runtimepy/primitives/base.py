@@ -3,11 +3,13 @@ A module implementing a base, primitive-type storage entity.
 """
 
 # built-in
+from contextlib import contextmanager as _contextmanager
 from copy import copy as _copy
 from math import isclose as _isclose
 from typing import BinaryIO as _BinaryIO
 from typing import Callable as _Callable
 from typing import Generic as _Generic
+from typing import Iterator as _Iterator
 from typing import TypeVar as _TypeVar
 
 # third-party
@@ -103,6 +105,18 @@ class Primitive(_Generic[T]):
         if result:
             del self.callbacks[callback_id]
         return result
+
+    @_contextmanager
+    def callback(
+        self, callback: PrimitiveChangeCallaback[T]
+    ) -> _Iterator[None]:
+        """Register a callback as a managed context."""
+
+        ident = self.register_callback(callback)
+        try:
+            yield
+        finally:
+            self.remove_callback(ident)
 
     @property
     def value(self) -> T:
