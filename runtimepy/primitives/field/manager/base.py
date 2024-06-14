@@ -108,8 +108,16 @@ class BitFieldsManagerBase:
 
         return index
 
-    def set(self, key: _RegistryKey, value: _Union[int, bool, str]) -> None:
+    def set(
+        self,
+        key: _RegistryKey,
+        value: _Union[int, bool, str],
+        scaled: bool = True,
+    ) -> None:
         """Set a value of a field."""
+
+        # Bit fields don't support scaling.
+        del scaled
 
         field = self[key]
 
@@ -125,9 +133,12 @@ class BitFieldsManagerBase:
         field(int(value))
 
     def get(
-        self, key: _RegistryKey, resolve_enum: bool = True
+        self, key: _RegistryKey, resolve_enum: bool = True, scaled: bool = True
     ) -> _Union[int, bool, str]:
         """Get the value of a field."""
+
+        # Bit fields don't support scaling.
+        del scaled
 
         field = self[key]
         value: _Union[int, str] = field()

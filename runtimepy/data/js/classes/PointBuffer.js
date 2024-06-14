@@ -4,7 +4,18 @@ class PointBuffer {
     this.values = [];
     this.timestamps = [];
 
+    this.elements = 0;
     this.updateCapacity(capacity);
+  }
+
+  bumpCapacity(bumpUp) {
+    /*
+     * need persistent settings for scroll behavior? (configurable?)
+     */
+    let scale_factor = 1.25;
+    let newCapacity = Math.max(16, bumpUp ? this.capacity * scale_factor
+                                          : this.capacity / scale_factor);
+    this.updateCapacity(Math.round(newCapacity));
   }
 
   reset() {
@@ -16,20 +27,32 @@ class PointBuffer {
   }
 
   updateCapacity(capacity) {
-    this.capacity = capacity;
-    this.reset();
-
-    let newValues = new Array(this.capacity);
-    let newTimestamps = new Array(this.capacity);
-
     /* Copy existing values. */
-    for (let i = this.values.length; i < this.capacity; i++) {
-      newValues[i] = this.values[i];
-      newTimestamps[i] = this.timestamps[i];
+    let points = [];
+
+    let count = Math.min(this.elements, capacity, this.capacity);
+    if (count > 0) {
+      let startIdx = this.head;
+
+      /* If the buffer is getting smaller, advance the buffer index forward. */
+      if (count < this.elements) {
+        startIdx += this.elements - count;
+        startIdx = startIdx % this.capacity;
+      }
+
+      for (let i = 0; i < count - 1; i++) {
+        let idx = (startIdx + i) % this.capacity;
+        points.push([ this.values[idx], this.timestamps[idx] ]);
+      }
     }
 
-    this.values = newValues;
-    this.timestamps = newTimestamps;
+    /* Reset state and re-ingest points. */
+    this.reset();
+    this.capacity = capacity;
+    this.values = new Array(this.capacity);
+    this.timestamps = new Array(this.capacity);
+
+    this.ingest(points);
   }
 
   ingest(points) {
@@ -62,15 +85,29 @@ class PointBuffer {
      */
 
     let slope = 2 / (newestTimestamp - oldestTimestamp);
-
-    /* Build array of plot-able timestamp X values. */
     let times = [];
-    let idx = oldestIdx;
-    while (idx != newestIdx) {
+
+    if (slope > 0) {
+      /* Build array of plot-able timestamp X values. */
+      let idx = oldestIdx;
+
+      while (idx != newestIdx) {
+        times.push(((this.timestamps[idx] - oldestTimestamp) * slope) - 1);
+        idx = this.incrIndex(idx);
+      }
       times.push(((this.timestamps[idx] - oldestTimestamp) * slope) - 1);
-      idx = this.incrIndex(idx);
+
+    } else {
+      /* need to root-cause this off-by-one issue */
+      console.log(`${newestIdx}, ${oldestIdx}, ${this.elements}`);
+      console.log(slope);
+
+      let idx = oldestIdx;
+      while (idx != newestIdx) {
+        times.push(oldestTimestamp)
+        idx = this.incrIndex(idx);
+      }
     }
-    times.push(((this.timestamps[idx] - oldestTimestamp) * slope) - 1);
 
     return times;
   }

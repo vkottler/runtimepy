@@ -109,4 +109,15 @@ class PlotDrawer {
 
     this.wglp.viewport(0, 0, this.canvas.width, this.canvas.height);
   }
+
+  updateDepth(wheelDelta) {
+    for (let name in this.channels) {
+      let chan = this.channels[name];
+
+      /* Make configurable at some point? */
+      chan.buffer.bumpCapacity(wheelDelta > 0);
+
+      chan.draw(this.lines[name]);
+    }
+  }
 }
