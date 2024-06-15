@@ -3,7 +3,7 @@ A module implementing a channel-environment tab HTML interface.
 """
 
 # built-in
-from typing import Optional, cast
+from typing import Optional
 
 # third-party
 from svgen.element import Element
@@ -17,19 +17,18 @@ from runtimepy.net.server.app.bootstrap.elements import (
     flex,
     input_box,
     set_tooltip,
-    toggle_button,
 )
-from runtimepy.net.server.app.env.tab.base import ChannelEnvironmentTabBase
+from runtimepy.net.server.app.env.tab.controls import (
+    ChannelEnvironmentTabControls,
+)
 from runtimepy.net.server.app.env.widgets import (
     channel_table_header,
-    enum_dropdown,
     plot_checkbox,
-    value_input_box,
 )
 from runtimepy.net.server.app.placeholder import under_construction
 
 
-class ChannelEnvironmentTabHtml(ChannelEnvironmentTabBase):
+class ChannelEnvironmentTabHtml(ChannelEnvironmentTabControls):
     """A channel-environment tab interface."""
 
     def add_channel(
@@ -41,8 +40,6 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabBase):
         description: str = None,
     ) -> int:
         """Add a channel to the table."""
-
-        env = self.command.env
 
         name_elem = div(tag="td", text=name, parent=parent)
         if chan.commandable:
@@ -58,47 +55,7 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabBase):
             title=f"Current value of '{name}'.",
         )
 
-        # Add boolean/bit toggle button.
-        control = div(tag="td", parent=parent)
-
-        kind_str = str(chan.type)
-
-        # Should handle enums at some point.
-        if enum is not None:
-            enum_name = env.enums.names.name(enum.id)
-            assert enum_name is not None
-            kind_str = enum_name
-
-        chan_type = div(
-            tag="td",
-            text=kind_str,
-            parent=parent,
-            title=f"Underlying primitive type for '{name}'.",
-        )
-
-        control_added = False
-
-        if enum:
-            chan_type.add_class("fw-bold")
-
-            if chan.commandable and not chan.type.is_boolean:
-                enum_dropdown(control, name, enum, cast(int, chan.raw.value))
-                control_added = True
-
-        if chan.type.is_boolean:
-            chan_type.add_class("text-primary-emphasis")
-            if chan.commandable:
-                toggle_button(control, id=name, title=f"Toggle '{name}'.")
-                control_added = True
-
-        elif chan.type.is_float:
-            chan_type.add_class("text-secondary-emphasis")
-        else:
-            chan_type.add_class("text-primary")
-
-        # Input box with send button.
-        if not control_added and chan.commandable:
-            value_input_box(name, control)
+        self._handle_controls(parent, name, chan, enum)
 
         return chan.id
 
@@ -134,14 +91,7 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabBase):
             title=f"Current value of '{name}'.",
         )
 
-        control = div(tag="td", parent=parent)
-        if field.commandable:
-            if is_bit:
-                toggle_button(control, id=name, title=f"Toggle '{name}'.")
-            elif enum:
-                enum_dropdown(control, name, enum, field())
-            else:
-                value_input_box(name, control)
+        self._bit_field_controls(parent, name, is_bit, enum)
 
         div(
             tag="td",

@@ -35,7 +35,7 @@ IDENT.scale = 1
 
 
 class Primitive(_Generic[T]):
-    """A simple class for storing and underlying primitive value."""
+    """A simple class for storing an underlying primitive value."""
 
     # Use network byte-order by default.
     byte_order: _ByteOrder = _DEFAULT_BYTE_ORDER

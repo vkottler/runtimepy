@@ -22,10 +22,18 @@ class TrigMixin:
 
         env.channel("sin", self.sin)
         env.channel("cos", self.cos)
+
         env.channel("steps", self.steps, commandable=True)
+
+        self.sin_phase_angle = _Float()
+        env.channel("sin_phase_angle", self.sin_phase_angle, commandable=True)
+        self.cos_phase_angle = _Float()
+        env.channel("cos_phase_angle", self.cos_phase_angle, commandable=True)
 
     def dispatch_trig(self, step: int) -> None:
         """Dispatch trig channel updates."""
+
         step_angle = (math.tau / self.steps.value) * step
-        self.sin.value = math.sin(step_angle)
-        self.cos.value = math.cos(step_angle)
+
+        self.sin.value = math.sin(step_angle + self.sin_phase_angle.value)
+        self.cos.value = math.cos(step_angle + self.cos_phase_angle.value)
