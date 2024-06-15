@@ -11,10 +11,36 @@ from svgen.element.html import div
 
 # internal
 from runtimepy.channel import AnyChannel
+from runtimepy.channel.environment import ChannelEnvironment
 from runtimepy.enum import RuntimeEnum
 from runtimepy.net.server.app.bootstrap.elements import toggle_button
 from runtimepy.net.server.app.env.tab.base import ChannelEnvironmentTabBase
 from runtimepy.net.server.app.env.widgets import enum_dropdown, value_input_box
+
+
+def get_channel_kind_str(
+    env: ChannelEnvironment, chan: AnyChannel, enum: Optional[RuntimeEnum]
+) -> str:
+    """Get a string for this channel's type for a UI."""
+
+    kind_str = str(chan.type)
+    if enum is not None:
+        enum_name = env.enums.names.name(enum.id)
+        assert enum_name is not None
+        kind_str = enum_name
+
+    return kind_str
+
+
+def phase_angle_control(container: Element) -> None:
+    """Add a control for a phase angle channel."""
+
+    div(
+        text="PHASE ANGLE",
+        parent=container,
+        front=True,
+        class_str="m-auto",
+    )
 
 
 class ChannelEnvironmentTabControls(ChannelEnvironmentTabBase):
@@ -31,18 +57,12 @@ class ChannelEnvironmentTabControls(ChannelEnvironmentTabBase):
 
         env = self.command.env
 
-        kind_str = str(chan.type)
-        if enum is not None:
-            enum_name = env.enums.names.name(enum.id)
-            assert enum_name is not None
-            kind_str = enum_name
-
         # Add boolean/bit toggle button.
         control = div(tag="td", parent=parent)
 
         chan_type = div(
             tag="td",
-            text=kind_str,
+            text=get_channel_kind_str(env, chan, enum),
             parent=parent,
             title=f"Underlying primitive type for '{name}'.",
         )
@@ -69,7 +89,11 @@ class ChannelEnvironmentTabControls(ChannelEnvironmentTabBase):
 
         # Input box with send button.
         if not control_added and chan.commandable:
-            value_input_box(name, control)
+            container = value_input_box(name, control)
+
+            # Controls for specific channels.
+            if name.endswith("phase_angle"):
+                phase_angle_control(container)
 
     def _bit_field_controls(
         self,
