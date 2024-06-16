@@ -68,6 +68,7 @@ class PrimitiveType(_Generic[T]):
     # Sub-classes must set these class attributes.
     name: str
     c_type: type[T]
+    python_type: type[PythonPrimitive]
 
     def __init__(self, struct_format: str, signed: bool = True) -> None:
         """Initialize this primitive type."""
@@ -90,10 +91,20 @@ class PrimitiveType(_Generic[T]):
         # Convenient attributes to determine if this type is which one of
         # Python's primitive types.
         self.is_boolean = self.c_type == _ctypes.c_bool
+        assert not self.is_boolean or self.python_type is bool
+
         self.is_float = any(
             self.c_type == x for x in [_ctypes.c_float, _ctypes.c_double]
         )
+        assert not self.is_float or self.python_type is float
+
         self.is_integer = (not self.is_boolean) and (not self.is_float)
+        assert not self.is_integer or self.python_type is int
+
+    @classmethod
+    def valid_primitive(cls, primitive: PythonPrimitive) -> bool:
+        """Determine if a Python primitive is valid for this class."""
+        return isinstance(primitive, cls.python_type)
 
     def __str__(self) -> str:
         """Get this type as a string."""

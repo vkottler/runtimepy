@@ -1,4 +1,7 @@
 ---
+includes:
+  - channel_controls.yaml
+
 type: object
 required: [id, type]
 additionalProperties: false
@@ -24,10 +27,6 @@ properties:
       - uint16
       - uint32
       - uint64
-
-  commandable:
-    type: boolean
-    default: false
 
   enum:
     oneOf:

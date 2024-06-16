@@ -13,7 +13,7 @@ from svgen.element.html import div
 from runtimepy.channel import AnyChannel
 from runtimepy.channel.environment import ChannelEnvironment
 from runtimepy.enum import RuntimeEnum
-from runtimepy.net.server.app.bootstrap.elements import toggle_button
+from runtimepy.net.server.app.bootstrap.elements import slider, toggle_button
 from runtimepy.net.server.app.env.tab.base import ChannelEnvironmentTabBase
 from runtimepy.net.server.app.env.widgets import enum_dropdown, value_input_box
 
@@ -30,17 +30,6 @@ def get_channel_kind_str(
         kind_str = enum_name
 
     return kind_str
-
-
-def phase_angle_control(container: Element) -> None:
-    """Add a control for a phase angle channel."""
-
-    div(
-        text="PHASE ANGLE",
-        parent=container,
-        front=True,
-        class_str="m-auto",
-    )
 
 
 class ChannelEnvironmentTabControls(ChannelEnvironmentTabBase):
@@ -79,7 +68,10 @@ class ChannelEnvironmentTabControls(ChannelEnvironmentTabBase):
         if chan.type.is_boolean:
             chan_type.add_class("text-primary-emphasis")
             if chan.commandable:
-                toggle_button(control, id=name, title=f"Toggle '{name}'.")
+                button = toggle_button(
+                    control, id=name, title=f"Toggle '{name}'."
+                )
+                button.add_class("toggle-value")
                 control_added = True
 
         elif chan.type.is_float:
@@ -91,9 +83,31 @@ class ChannelEnvironmentTabControls(ChannelEnvironmentTabBase):
         if not control_added and chan.commandable:
             container = value_input_box(name, control)
 
-            # Controls for specific channels.
-            if name.endswith("phase_angle"):
-                phase_angle_control(container)
+            # Reset-to-default button if a default value exists.
+            if chan.default is not None:
+                button = toggle_button(
+                    container,
+                    id=name,
+                    icon="arrow-counterclockwise",
+                    title=f"Reset '{name}' to default value '{chan.default}'.",
+                    value=chan.default,
+                    front=True,
+                )
+                button.add_class("default-button")
+
+            if chan.controls:
+                # Determine if a slider should be created.
+                if "slider" in chan.controls:
+                    elem = chan.controls["slider"]
+
+                    slider(
+                        elem["min"],  # type: ignore
+                        elem["max"],  # type: ignore
+                        int(elem["step"]),  # type: ignore
+                        parent=container,
+                        id=name,
+                        front=True,
+                    )
 
     def _bit_field_controls(
         self,
@@ -109,7 +123,10 @@ class ChannelEnvironmentTabControls(ChannelEnvironmentTabBase):
         field = self.command.env.fields[name]
         if field.commandable:
             if is_bit:
-                toggle_button(control, id=name, title=f"Toggle '{name}'.")
+                button = toggle_button(
+                    control, id=name, title=f"Toggle '{name}'."
+                )
+                button.add_class("toggle-value")
             elif enum:
                 enum_dropdown(control, name, enum, field())
             else:

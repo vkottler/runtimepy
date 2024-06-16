@@ -17,6 +17,7 @@ from runtimepy.net.server.app.bootstrap.elements import (
     flex,
     input_box,
     set_tooltip,
+    toggle_button,
 )
 from runtimepy.net.server.app.env.tab.controls import (
     ChannelEnvironmentTabControls,
@@ -26,6 +27,27 @@ from runtimepy.net.server.app.env.widgets import (
     plot_checkbox,
 )
 from runtimepy.net.server.app.placeholder import under_construction
+
+
+def channel_color_button(parent: Element, name: str) -> Element:
+    """Create a button for changing a channel's plot color."""
+
+    button = toggle_button(
+        parent,
+        id=f"{name}-line-color",
+        icon="activity",
+        title=f"Change line color for '{name}'.",
+        icon_classes=["fs-5"],
+    )
+    button.add_class("d-none", "p-1")
+
+    return button
+
+
+def create_name_td(parent: Element) -> Element:
+    """Create a table data entry for channel names."""
+
+    return div(tag="td", parent=parent, class_str="p-0 text-nowrap")
 
 
 class ChannelEnvironmentTabHtml(ChannelEnvironmentTabControls):
@@ -41,7 +63,11 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabControls):
     ) -> int:
         """Add a channel to the table."""
 
-        name_elem = div(tag="td", text=name, parent=parent)
+        name_td = create_name_td(parent)
+
+        channel_color_button(name_td, name)
+
+        name_elem = div(tag="span", text=name, parent=name_td)
         if chan.commandable:
             name_elem.add_class("text-success")
 
@@ -75,7 +101,11 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabControls):
         is_bit = field.width == 1
         kind_str = f"{'bit' if is_bit else 'bits'} {field.where_str()}"
 
-        name_elem = div(tag="td", text=name, parent=parent)
+        name_td = create_name_td(parent)
+
+        channel_color_button(name_td, name)
+
+        name_elem = div(tag="span", text=name, parent=name_td)
         if field.commandable:
             name_elem.add_class("text-success")
 
@@ -98,7 +128,8 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabControls):
             text=kind_str,
             parent=parent,
             title=f"Field position for '{name}' within underlying primitive.",
-        )["class"] = "text-info-emphasis"
+            class_str="text-info-emphasis text-nowrap",
+        )
 
     def channel_table(self, parent: Element) -> None:
         """Create the channel table."""

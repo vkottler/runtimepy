@@ -12,6 +12,7 @@ class BooleanType(_PrimitiveType[_BoolCtype]):
 
     name = "bool"
     c_type = _BoolCtype
+    python_type = bool
 
     def __init__(self) -> None:
         """Initialize this type."""

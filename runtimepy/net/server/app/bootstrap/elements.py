@@ -71,6 +71,7 @@ def toggle_button(
     parent: Element,
     icon: str = "toggles",
     title: str = "toggle value",
+    icon_classes: list[str] = None,
     **kwargs,
 ) -> Element:
     """Add a boolean-toggle button."""
@@ -78,7 +79,7 @@ def toggle_button(
     return div(
         tag="button",
         type="button",
-        text=icon_str(icon),
+        text=icon_str(icon, classes=icon_classes),
         parent=parent,
         title=title,
         class_str="btn " + BOOTSTRAP_BUTTON,
@@ -113,3 +114,35 @@ def input_box(
         **kwargs,
     )
     box.add_class("form-control", "rounded-0", TEXT)
+
+
+def slider(
+    min_val: int | float, max_val: int | float, steps: int, **kwargs
+) -> Element:
+    """Create a phase-control slider element."""
+
+    elem = div(
+        tag="input",
+        type="range",
+        class_str="m-auto form-range slider",
+        **kwargs,
+    )
+
+    assert min_val < max_val, (min_val, max_val)
+
+    elem["min"] = min_val
+    elem["max"] = max_val
+    elem["step"] = (max_val - min_val) / steps
+
+    # add tick marks - didn't seem to work (browser didn't render anything)
+
+    # list_name = f"{name}-datalist"
+    # elem["list"] = list_name
+    # markers = div(tag="datalist", id=list_name, parent=container, front=True)
+    # start = float(elem["min"])
+    # num_steps = 8
+    # step = (float(elem["max"]) - float(elem["min"])) / num_steps
+    # for idx in range(num_steps):
+    #     div(tag="option", value=start + (idx * step), parent=markers)
+
+    return elem

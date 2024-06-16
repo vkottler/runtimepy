@@ -36,7 +36,6 @@ factories:
   - {name: runtimepy.net.arbiter.info.TrigStruct}
   - {name: runtimepy.net.arbiter.info.SampleStruct}
   - {name: runtimepy.net.server.struct.UiState}
-  - {name: runtimepy.task.dither.DitherStruct}
 
   # Useful subprocess peer interfaces.
   - {name: runtimepy.sample.peer.SamplePeer}

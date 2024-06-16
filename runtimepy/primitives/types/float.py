@@ -15,6 +15,7 @@ class HalfType(_PrimitiveType[_FloatCtype]):
 
     # There's no half-precision floating-point ctypes equivalent.
     c_type = _FloatCtype
+    python_type = float
 
     def __init__(self) -> None:
         """Initialize this type."""
@@ -30,6 +31,7 @@ class FloatType(_PrimitiveType[_FloatCtype]):
 
     name = "float"
     c_type = _FloatCtype
+    python_type = float
 
     def __init__(self) -> None:
         """Initialize this type."""
@@ -45,6 +47,7 @@ class DoubleType(_PrimitiveType[_DoubleCtype]):
 
     name = "double"
     c_type = _DoubleCtype
+    python_type = float
 
     def __init__(self) -> None:
         """Initialize this type."""

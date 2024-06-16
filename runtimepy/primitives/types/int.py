@@ -20,6 +20,7 @@ class Int8Type(_PrimitiveType[_Int8Ctype]):
 
     name = "int8"
     c_type = _Int8Ctype
+    python_type = int
 
     def __init__(self) -> None:
         """Initialize this type."""
@@ -36,6 +37,7 @@ class Int16Type(_PrimitiveType[_Int16Ctype]):
 
     name = "int16"
     c_type = _Int16Ctype
+    python_type = int
 
     def __init__(self) -> None:
         """Initialize this type."""
@@ -52,6 +54,7 @@ class Int32Type(_PrimitiveType[_Int32Ctype]):
 
     name = "int32"
     c_type = _Int32Ctype
+    python_type = int
 
     def __init__(self) -> None:
         """Initialize this type."""
@@ -68,6 +71,7 @@ class Int64Type(_PrimitiveType[_Int64Ctype]):
 
     name = "int64"
     c_type = _Int64Ctype
+    python_type = int
 
     def __init__(self) -> None:
         """Initialize this type."""
@@ -84,6 +88,7 @@ class Uint8Type(_PrimitiveType[_Uint8Ctype]):
 
     name = "uint8"
     c_type = _Uint8Ctype
+    python_type = int
 
     def __init__(self) -> None:
         """Initialize this type."""
@@ -100,6 +105,7 @@ class Uint16Type(_PrimitiveType[_Uint16Ctype]):
 
     name = "uint16"
     c_type = _Uint16Ctype
+    python_type = int
 
     def __init__(self) -> None:
         """Initialize this type."""
@@ -116,6 +122,7 @@ class Uint32Type(_PrimitiveType[_Uint32Ctype]):
 
     name = "uint32"
     c_type = _Uint32Ctype
+    python_type = int
 
     def __init__(self) -> None:
         """Initialize this type."""
@@ -132,6 +139,7 @@ class Uint64Type(_PrimitiveType[_Uint64Ctype]):
 
     name = "uint64"
     c_type = _Uint64Ctype
+    python_type = int
 
     def __init__(self) -> None:
         """Initialize this type."""

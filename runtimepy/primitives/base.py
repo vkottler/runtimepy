@@ -22,6 +22,7 @@ from runtimepy.primitives.byte_order import (
 from runtimepy.primitives.byte_order import ByteOrder as _ByteOrder
 from runtimepy.primitives.scaling import ChannelScaling, Numeric, apply, invert
 from runtimepy.primitives.types import AnyPrimitiveType as _AnyPrimitiveType
+from runtimepy.primitives.types.base import PythonPrimitive as _PythonPrimitive
 from runtimepy.util import Identifier
 
 T = _TypeVar("T", bool, int, float)
@@ -61,6 +62,11 @@ class Primitive(_Generic[T]):
         self.last_updated_ns: int = default_time_ns()
         self.scaling = scaling
         self._hash = IDENT()
+
+    @classmethod
+    def valid_primitive(cls, primitive: _PythonPrimitive) -> bool:
+        """Determine if a Python primitive is valid for this class."""
+        return cls.kind.valid_primitive(primitive)
 
     def age_ns(self, now: int = None) -> int:
         """Get the age of this primitive's value in nanoseconds."""

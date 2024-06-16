@@ -11,6 +11,10 @@ class ChannelTable {
       this.rows[child.id] = child.querySelector(".channel-value");
     }
 
+    /* A mapping of channel names to a possible slider element (populated
+     * externally). */
+    this.sliders = {};
+
     /* Initialize input boxes. */
     this.channelInputs = {};
     for (let input of table.querySelectorAll("input.channel-value-input")) {
@@ -66,6 +70,14 @@ class ChannelTable {
         /* Update input box if one exists. */
         if (key in this.channelInputs) {
           this.channelInputs[key].value = val;
+        }
+
+        /* Update slider if one exists. */
+        if (key in this.sliders) {
+          let elem = this.sliders[key];
+          if (!elem.classList.contains("moving")) {
+            elem.value = val;
+          }
         }
 
         /*

@@ -6,6 +6,16 @@ let webglContextCount = 0;
 /* Warnings start at this amount. */
 const webglContextMax = 4;
 
+function hexToRgb(hex) {
+  var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r : parseInt(result[1], 16),
+    g : parseInt(result[2], 16),
+    b : parseInt(result[3], 16)
+  }
+                : null;
+}
+
 class PlotManager {
   constructor() {
     this.plots = {};
@@ -16,6 +26,7 @@ class PlotManager {
     this.shown = "UNKNOWN";
 
     this.drawers = {};
+    this.colors = {};
     this.channelsToPlot = {};
   }
 
@@ -54,6 +65,25 @@ class PlotManager {
     }
   }
 
+  channelColors(name) {
+    if (!(name in this.colors)) {
+      this.colors[name] = {};
+    }
+    return this.colors[name];
+  }
+
+  setColor(name, data) {
+    let colors = this.channelColors(name);
+    let chan = data["channel"];
+    colors[chan] = hexToRgb(data["color"]);
+
+    if (name in this.drawers) {
+      let drawer = this.drawers[name];
+      drawer.setColor(chan, colors[chan]);
+      drawer.updateAllLines();
+    }
+  }
+
   async handleMessage(data) {
     let name = data["name"];
 
@@ -77,7 +107,7 @@ class PlotManager {
 
     /* Handle channel state changes. */
     if ("channel" in data && "state" in data) {
-      this.handlePlotChannelState(data["name"], data["channel"], data["state"]);
+      this.handlePlotChannelState(name, data["channel"], data["state"]);
     }
 
     /* Handle shown state. */
@@ -89,7 +119,8 @@ class PlotManager {
         let created = name in this.drawers || name in this.contexts;
         if (!created) {
           if (webglContextCount < webglContextMax && name in this.plots) {
-            let drawer = new PlotDrawer(this.plots[name]);
+            let drawer =
+                new PlotDrawer(this.plots[name], this.channelColors(name));
             this.drawers[name] = drawer;
 
             webglContextCount++;
@@ -114,6 +145,11 @@ class PlotManager {
           }
         }
       }
+    }
+
+    /* Update plot line color. */
+    if ("channel" in data && "color" in data) {
+      this.setColor(name, data);
     }
   }
 

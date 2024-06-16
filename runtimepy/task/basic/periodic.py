@@ -29,6 +29,7 @@ from runtimepy.mixins.logging import LoggerMixinLevelControl
 from runtimepy.primitives import Bool as _Bool
 from runtimepy.primitives import Double as _Double
 from runtimepy.primitives import Float as _Float
+from runtimepy.ui.controls import Controlslike
 
 
 class PeriodicTask(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
@@ -43,7 +44,7 @@ class PeriodicTask(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
         metrics: PeriodicTaskMetrics = None,
         period_s: float = 1.0,
         env: ChannelEnvironment = None,
-        dither_channels: bool = False,
+        period_controls: Controlslike = "period",
     ) -> None:
         """Initialize this task."""
 
@@ -51,12 +52,8 @@ class PeriodicTask(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
         LoggerMixinLevelControl.__init__(self, logger=_getLogger(self.name))
         self._task: _Optional[_asyncio.Task[None]] = None
 
-        self.period_s = _Float()
-        self.set_period(period_s=period_s)
-
         # Setup runtime state.
         self._enabled = _Bool()
-        self._paused = _Bool()
 
         if metrics is None:
             metrics = PeriodicTaskMetrics.create()
@@ -68,22 +65,23 @@ class PeriodicTask(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
         self.register_task_metrics(self.metrics)
 
         # State.
+        self._paused = _Bool()
         self.env.channel(
             "paused",
             self._paused,
             commandable=True,
             description="Whether or not this task is paused.",
         )
+
+        self.period_s = _Float()
         self.env.channel(
             "period_s",
             self.period_s,
             commandable=True,
             description="Iteration period for this task.",
+            controls=period_controls,
         )
-
-        self.dither_channels = dither_channels
-        if self.dither_channels:
-            self._setup_dither()
+        self.set_period(period_s=period_s)
 
         self._init_state()
         if self.auto_finalize:
@@ -92,21 +90,22 @@ class PeriodicTask(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
         self._dispatch_rate = _RateTracker(depth=average_depth)
         self._dispatch_time = _MovingAverage(depth=average_depth)
 
-    def _setup_dither(self) -> None:
-        """TODO."""
-
-        # self.env.channel()
-
     def _init_state(self) -> None:
         """Add channels to this instance's channel environment."""
 
-    def set_period(self, period_s: float = None) -> bool:
+    def set_period(
+        self, period_s: float = None, update_default: bool = True
+    ) -> bool:
         """Attempt to set a new period for this task."""
 
         result = False
 
         if period_s is not None and self.period_s != period_s:
             self.period_s.value = period_s
+
+            if update_default:
+                self.env.set_default("period_s", period_s)
+
             self.logger.debug(
                 "Task rate set to %s.", _rate_str(self.period_s.value)
             )
@@ -169,7 +168,7 @@ class PeriodicTask(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
                 try:
                     sleep_time = max(self.period_s.value - iter_time.value, 0)
 
-                    # Check for timing dithering feature.
+                    # Eventually run feedback control.
 
                     await _asyncio.sleep(sleep_time)
                 except _asyncio.CancelledError:

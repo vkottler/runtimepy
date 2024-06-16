@@ -12,9 +12,14 @@ BOOTSTRAP_VERSION = "5.3.3"
 ICONS_VERSION = "1.11.3"
 
 
-def icon_str(icon: str) -> str:
+def icon_str(icon: str, classes: list[str] = None) -> str:
     """Get a boostrap icon string."""
-    return f'<i class="bi bi-{icon}"></i>'
+
+    if classes is None:
+        classes = []
+    classes = ["bi", f"bi-{icon}"] + classes
+
+    return f'<i class="{" ".join(classes)}"></i>'
 
 
 def add_bootstrap_css(element: Element) -> None:
