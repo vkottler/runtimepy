@@ -1,5 +1,5 @@
 class PlotDrawer {
-  constructor(canvas) {
+  constructor(canvas, colors) {
     this.canvas = canvas;
 
     // this.wglp = new WebglPlotBundle.WebglPlot(this.canvas, {debug : true});
@@ -11,6 +11,8 @@ class PlotDrawer {
 
     /* Point managers for individual channels. */
     this.channels = {};
+    this.colors = colors;
+    this.rgbaColors = {};
 
     /* Line objects by channel name. */
     this.lines = {};
@@ -79,11 +81,27 @@ class PlotDrawer {
     }
   }
 
+  setColor(key, rgb) {
+    this.rgbaColors[key] =
+        new WebglPlotBundle.ColorRGBA(rgb.r / 255, rgb.g / 255, rgb.b / 255, 1);
+  }
+
   newLine(key) {
-    /* Random color. */
-    const color = new WebglPlotBundle.ColorRGBA(Math.random(), Math.random(),
-                                                Math.random(), 1);
-    this.lines[key] = new WebglPlotBundle.WebglLine(color, this.canvas.width);
+    /* Get color for line. */
+    if (!(key in this.rgbaColors)) {
+      if (key in this.colors) {
+        this.setColor(key, this.colors[key]);
+      } else {
+        this.setColor(key, {
+          r : Math.random() * 255,
+          g : Math.random() * 255,
+          b : Math.random() * 255
+        });
+      }
+    }
+
+    this.lines[key] =
+        new WebglPlotBundle.WebglLine(this.rgbaColors[key], this.canvas.width);
 
     if (key in this.channels) {
       this.channels[key].draw(this.lines[key]);
@@ -100,13 +118,16 @@ class PlotDrawer {
     }
   }
 
-  updateSize() {
+  updateAllLines() {
     /* Re-add all lines. */
     for (let key in this.lines) {
       this.newLine(key);
     }
     this.updateLines();
+  }
 
+  updateSize() {
+    this.updateAllLines();
     this.wglp.viewport(0, 0, this.canvas.width, this.canvas.height);
   }
 
@@ -115,7 +136,7 @@ class PlotDrawer {
       let chan = this.channels[name];
 
       /* Make configurable at some point? */
-      chan.buffer.bumpCapacity(wheelDelta > 0);
+      chan.buffer.bumpCapacity(wheelDelta < 0);
 
       chan.draw(this.lines[name]);
     }

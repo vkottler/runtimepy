@@ -5,6 +5,7 @@ A sample task interface.
 # built-in
 import asyncio
 from logging import DEBUG
+import math
 
 # internal
 from runtimepy.channel.environment.sample import poll_sample_env, sample_env
@@ -30,6 +31,10 @@ class SampleTask(ArbiterTask, TrigMixin):
         # Use this to implement / test rate-limited logging.
         with self.log_time("dispatch", level=DEBUG):
             poll_sample_env(self.env)
+
+            # Trigger callbacks.
+            self.sin_phase_angle.value += math.pi / 180
+            self.cos_phase_angle.value += -math.pi / 180
 
             # Interact with connections.
             await asyncio.gather(

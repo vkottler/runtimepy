@@ -1,0 +1,25 @@
+---
+properties:
+  commandable:
+    type: boolean
+    default: false
+
+  default: &literal
+    oneOf: [{type: number}, {type: boolean}]
+
+  controls:
+    type: object
+    additionalProperties: false
+    properties:
+      # Allow also specifying 'default' at this layer.
+      default: *literal
+
+      # Describe a slider UI element for this channel.
+      slider:
+        type: object
+        required: [min, max, step]
+        additionalProperties: false
+        properties:
+          min: *literal
+          max: *literal
+          step: *literal

@@ -30,9 +30,16 @@ from runtimepy.primitives.int import Uint64 as _Uint64
 from runtimepy.primitives.types import AnyPrimitiveType as _AnyPrimitiveType
 from runtimepy.registry.item import RegistryItem as _RegistryItem
 
+Literal = int | float | bool
+Default = _Optional[Literal]
+Controls = dict[str, Literal | dict[str, Literal]]
+
 
 class Channel(_RegistryItem, _EnumMixin, _Generic[_T]):
     """An interface for an individual channel."""
+
+    raw: _T
+    default: Default
 
     def __str__(self) -> str:
         """Get this channel as a string."""
@@ -47,6 +54,29 @@ class Channel(_RegistryItem, _EnumMixin, _Generic[_T]):
         """Get the underlying primitive type of this channel."""
         return self.raw.kind
 
+    def update_primitive(self, primitive: _T) -> None:
+        """Use a new underlying primitive for this channel."""
+
+        assert isinstance(primitive, type(self.raw))
+        self.raw = primitive
+
+        # Update other runtime pieces.
+        self.event.primitive = self.raw
+        self.set_default()
+
+    def set_default(self, default: Default = None) -> None:
+        """Set a new default value for this channel."""
+
+        if default is not None:
+            self.default = default
+
+        if self.default is not None:
+            assert self.raw.valid_primitive(self.default), (
+                self.raw,
+                self.default,
+            )
+            self.raw.value = self.default  # type: ignore
+
     def init(self, data: _JsonObject) -> None:
         """Perform implementation-specific initialization."""
 
@@ -54,6 +84,16 @@ class Channel(_RegistryItem, _EnumMixin, _Generic[_T]):
 
         # This is the underlying storage entity for this channel.
         self.raw: _T = _cast(_T, _normalize(_cast(str, data["type"]))())
+
+        _ctl: _Optional[Controls] = data.get("controls")  # type: ignore
+        self.controls: _Optional[Controls] = _ctl
+
+        # Handle a possible default value.
+        backup = None
+        self.default = backup
+        if _ctl:
+            backup = _ctl.get("default")
+        self.set_default(data.get("default", backup))  # type: ignore
 
         # Whether or not this channel should accept commands.
         self.commandable: bool = _cast(bool, data["commandable"])
@@ -78,8 +118,13 @@ class Channel(_RegistryItem, _EnumMixin, _Generic[_T]):
         if self._enum is not None:
             result["enum"] = self._enum
 
+        if self.controls:
+            result["controls"] = self.controls
+
         if self.description:
             result["description"] = self.description
+        if self.default is not None:
+            result["default"] = self.default
 
         return _cast(_JsonObject, result)
 

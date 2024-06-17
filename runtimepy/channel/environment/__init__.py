@@ -6,6 +6,7 @@ A module implementing a channel environment.
 from typing import Iterator as _Iterator
 
 # internal
+from runtimepy.channel import Default as _Default
 from runtimepy.channel.environment.array import (
     ArrayChannelEnvironment as _ArrayChannelEnvironment,
 )
@@ -32,3 +33,9 @@ class ChannelEnvironment(
     def names(self) -> _Iterator[str]:
         """Iterate over registered names in the environment."""
         yield from self.channels.names.names
+
+    def set_default(self, key: str, default: _Default) -> None:
+        """Set a new default value for a channel."""
+
+        chan, _ = self[key]
+        chan.default = default

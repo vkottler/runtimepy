@@ -27,6 +27,8 @@ class TabInterface {
     this.channelsPending = {};
     this.time = 0;
     this.channelTimestamps = {};
+    this.channelColorButtons = {};
+
     let table = this.query("tbody");
     if (table) {
       this.channels = new ChannelTable(this.name, table, this.worker);
@@ -118,13 +120,11 @@ class TabInterface {
 
     /* Initialize enumeration command drop downs. */
     for (let enums of this.queryAll("select")) {
-      enums.onchange =
-          (() => { this.worker.command(`set ${enums.id} ${enums.value}`); })
-              .bind(this);
+      enums.onchange = this.setHandler(enums);
     }
 
     /* Initialize toggle buttons. */
-    for (let toggle of this.queryAll("td>button")) {
+    for (let toggle of this.queryAll("td>button.toggle-value")) {
       toggle.onclick =
           (() => { this.worker.command(`toggle ${toggle.id}`); }).bind(this);
     }
@@ -134,6 +134,29 @@ class TabInterface {
     if (divider) {
       this.setupVerticalDivider(divider);
     }
+
+    /* Initialize sliders. */
+    for (let slider of this.queryAll(".slider")) {
+      setupCursorContext(slider, this.setupSliderEvents.bind(this));
+      if (this.channels) {
+        this.channels.sliders[slider.id] = slider;
+      }
+    }
+
+    /* Initialize return-to-default. */
+    for (let elem of this.queryAll(".default-button")) {
+      elem.onclick = this.setHandler(elem);
+    }
+  }
+
+  setHandler(elem) {
+    let handler =
+        () => { this.worker.command(`set ${elem.id} ${elem.value}`); };
+    return handler.bind(this);
+  }
+
+  setupSliderEvents(elem, down, move, up) {
+    setupCursorMove(elem, down, move, up, this.setHandler(elem));
   }
 
   setupVerticalDividerEvents(elem, down, move, up) {
@@ -153,18 +176,14 @@ class TabInterface {
       document.addEventListener(move, handleMouse);
 
       /* Remove mouse handler on mouse release. */
-      document.addEventListener(up, (event) => {
-        document.removeEventListener(move, handleMouse);
-      }, {once : true});
+      document.addEventListener(
+          up, (event) => { document.removeEventListener(move, handleMouse); },
+          {once : true});
     });
   }
 
   setupVerticalDivider(elem) {
-    /* For mouse. */
-    this.setupVerticalDividerEvents(elem, "mousedown", "mousemove", "mouseup");
-
-    /* For touch. */
-    this.setupVerticalDividerEvents(elem, "touchstart", "touchmove", "touchend");
+    setupCursorContext(elem, this.setupVerticalDividerEvents.bind(this));
   }
 
   initPlot() {
@@ -175,12 +194,40 @@ class TabInterface {
 
       /* Initialize plot-channel buttons. */
       for (let elem of this.queryAll("input.form-check-input")) {
+        let chan = elem.id.split("-")[1];
+
+        /* Store a reference to the plot button. */
+        let lineColorButton =
+            this.query("#" + CSS.escape(chan) + "-line-color");
+        if (lineColorButton) {
+          this.channelColorButtons[chan] = lineColorButton;
+          lineColorButton.onclick = ((event) => {
+                                      let color = randomHexColor();
+                                      lineColorButton.style.color = color;
+                                      this.sendPlotChannelColor(chan, color);
+                                    }).bind(this);
+        }
+
         elem.addEventListener(
             "change", ((event) => {
-                        let chan = elem.id.split("-")[1];
                         let state = elem.checked;
+
                         hash.handlePlotChannelToggle(this.name, chan, state);
                         this.sendPlotChannelState(chan, state);
+
+                        if (chan in this.channelColorButtons) {
+                          let elem = this.channelColorButtons[chan];
+                          if (state) {
+                            /* show button */
+                            elem.classList.remove("d-none");
+
+                            /* Set a color for this line. */
+                            elem.click();
+                          } else {
+                            /* hide button */
+                            elem.classList.add("d-none");
+                          }
+                        }
                       }).bind(this));
       }
 
@@ -188,6 +235,11 @@ class TabInterface {
       this.query("#clear-plotted-channels").onclick =
           (() => { hash.clearPlotChannels(this.name); }).bind(this);
     }
+  }
+
+  sendPlotChannelColor(chan, color) {
+    let msg = {"channel" : chan, "color" : color};
+    this.worker.toWorker({"plot" : msg});
   }
 
   sendPlotChannelState(chan, state) {

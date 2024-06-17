@@ -85,6 +85,7 @@ def sample_env(env: ChannelEnvironment = None) -> ChannelEnvironment:
                         "really_really_long_enum",
                         enum="InsanelyLongEnumNameForTesting",
                         commandable=True,
+                        default=2,
                     )
                     env.bool_channel("bool")
                     env.int_channel("int", commandable=True)

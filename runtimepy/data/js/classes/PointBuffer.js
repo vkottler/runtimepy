@@ -12,7 +12,7 @@ class PointBuffer {
     /*
      * need persistent settings for scroll behavior? (configurable?)
      */
-    let scale_factor = 1.25;
+    let scale_factor = 1.05;
     let newCapacity = Math.max(16, bumpUp ? this.capacity * scale_factor
                                           : this.capacity / scale_factor);
     this.updateCapacity(Math.round(newCapacity));
@@ -99,8 +99,8 @@ class PointBuffer {
 
     } else {
       /* need to root-cause this off-by-one issue */
-      console.log(`${newestIdx}, ${oldestIdx}, ${this.elements}`);
-      console.log(slope);
+      // console.log(`${newestIdx}, ${oldestIdx}, ${this.elements}`);
+      // console.log(slope);
 
       let idx = oldestIdx;
       while (idx != newestIdx) {

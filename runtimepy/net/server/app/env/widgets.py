@@ -22,7 +22,7 @@ from runtimepy.net.server.app.bootstrap.elements import (
 def plot_checkbox(parent: Element, name: str) -> None:
     """Add a checkbox for individual channel plot status."""
 
-    container = div(tag="td", parent=parent)
+    container = div(tag="td", parent=parent, class_str="text-center")
 
     set_tooltip(
         div(
@@ -35,6 +35,7 @@ def plot_checkbox(parent: Element, name: str) -> None:
             class_str="form-check-input",
         ),
         f"Enable plotting channel '{name}'.",
+        placement="left",
     )
 
 

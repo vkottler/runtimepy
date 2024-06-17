@@ -34,3 +34,11 @@ body > :first-child {
 .stale {
   color: var(--bs-warning-text-emphasis) !important;
 }
+
+.slider {
+  min-width: 8em;
+}
+
+.toggle-value {
+  /* placeholder */
+}
