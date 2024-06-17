@@ -87,6 +87,11 @@ class PlotManager {
   async handleMessage(data) {
     let name = data["name"];
 
+    /* Handle clearing points. */
+    if ("clear" in data && name in this.drawers) {
+      this.drawers[name].clearAllPoints();
+    }
+
     /* Handle initial transfer. */
     if ("canvas" in data) {
       this.plots[name] = data["canvas"];

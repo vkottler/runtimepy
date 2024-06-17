@@ -104,7 +104,16 @@ def channel_table_header(parent: Element) -> None:
         description="Channel name filter.",
         id="channel-filter",
     )
-    for _ in range(3):
+
+    # Button for clearing plot points.
+    toggle_button(
+        div(tag="th", parent=ctl_row),
+        icon="trash",
+        title="Clear all plot points.",
+        id="clear-plotted-points",
+    )
+
+    for _ in range(2):
         div(tag="th", parent=ctl_row)
 
 

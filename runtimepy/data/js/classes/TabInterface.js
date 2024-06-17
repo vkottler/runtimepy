@@ -232,14 +232,24 @@ class TabInterface {
       }
 
       /* Initialize plotted-channel clearing interface. */
-      this.query("#clear-plotted-channels").onclick =
-          (() => { hash.clearPlotChannels(this.name); }).bind(this);
+      let elem = this.query("#clear-plotted-channels");
+      if (elem) {
+        elem.onclick =
+            (() => { hash.clearPlotChannels(this.name); }).bind(this);
+      }
+
+      /* Initialize plotted-point clearing interface. */
+      elem = this.query("#clear-plotted-points");
+      if (elem) {
+        elem.onclick =
+            (() => { this.worker.toWorker({"plot" : {"clear" : true}}); })
+                .bind(this);
+      }
     }
   }
 
   sendPlotChannelColor(chan, color) {
-    let msg = {"channel" : chan, "color" : color};
-    this.worker.toWorker({"plot" : msg});
+    this.worker.toWorker({"plot" : {"channel" : chan, "color" : color}});
   }
 
   sendPlotChannelState(chan, state) {
