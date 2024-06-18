@@ -62,6 +62,7 @@ class TabInterface {
 
           if (cmd == "cls" || cmd == "clear") {
             this.clearLog();
+            this.clearPlotPoints();
           } else {
             this.worker.command(cmd);
           }
@@ -144,8 +145,20 @@ class TabInterface {
     }
 
     /* Initialize return-to-default. */
+    let defaultButtons = [];
     for (let elem of this.queryAll(".default-button")) {
       elem.onclick = this.setHandler(elem);
+      defaultButtons.push(elem);
+    }
+
+    /* Initialize a global return-to-default button if one exists. */
+    let elem = this.query("#set-defaults");
+    if (elem) {
+      elem.onclick = () => {
+        for (let button of defaultButtons) {
+          button.click();
+        }
+      };
     }
   }
 
@@ -218,13 +231,11 @@ class TabInterface {
                         if (chan in this.channelColorButtons) {
                           let elem = this.channelColorButtons[chan];
                           if (state) {
-                            /* show button */
+                            /* Show button and set a color for this line. */
                             elem.classList.remove("d-none");
-
-                            /* Set a color for this line. */
                             elem.click();
                           } else {
-                            /* hide button */
+                            /* Hide button. */
                             elem.classList.add("d-none");
                           }
                         }
@@ -232,14 +243,24 @@ class TabInterface {
       }
 
       /* Initialize plotted-channel clearing interface. */
-      this.query("#clear-plotted-channels").onclick =
-          (() => { hash.clearPlotChannels(this.name); }).bind(this);
+      let elem = this.query("#clear-plotted-channels");
+      if (elem) {
+        elem.onclick =
+            (() => { hash.clearPlotChannels(this.name); }).bind(this);
+      }
+
+      /* Initialize plotted-point clearing interface. */
+      elem = this.query("#clear-plotted-points");
+      if (elem) {
+        elem.onclick = this.clearPlotPoints.bind(this);
+      }
     }
   }
 
+  clearPlotPoints() { this.worker.toWorker({"plot" : {"clear" : true}}); }
+
   sendPlotChannelColor(chan, color) {
-    let msg = {"channel" : chan, "color" : color};
-    this.worker.toWorker({"plot" : msg});
+    this.worker.toWorker({"plot" : {"channel" : chan, "color" : color}});
   }
 
   sendPlotChannelState(chan, state) {

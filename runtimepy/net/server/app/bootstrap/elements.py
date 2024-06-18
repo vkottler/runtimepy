@@ -2,6 +2,9 @@
 A module for creating various bootstrap-related elements.
 """
 
+# built-in
+from typing import Optional
+
 # third-party
 from svgen.element import Element
 from svgen.element.html import div
@@ -70,21 +73,28 @@ def collapse_button(
 def toggle_button(
     parent: Element,
     icon: str = "toggles",
-    title: str = "toggle value",
+    title: Optional[str] = "toggle value",
     icon_classes: list[str] = None,
+    tooltip: str = None,
     **kwargs,
 ) -> Element:
     """Add a boolean-toggle button."""
 
-    return div(
+    if title and not tooltip:
+        kwargs["title"] = title
+
+    button = div(
         tag="button",
         type="button",
         text=icon_str(icon, classes=icon_classes),
         parent=parent,
-        title=title,
         class_str="btn " + BOOTSTRAP_BUTTON,
         **kwargs,
     )
+    if tooltip:
+        set_tooltip(button, tooltip)
+
+    return button
 
 
 def input_box(

@@ -20,9 +20,36 @@ class PlotDrawer {
     /* Keep track of x-axis bounds for each channel. */
     this.oldestTimestamps = {};
     this.newestTimestamps = {};
+    this.minTimestamp = null;
+    this.maxTimestamp = null;
   }
 
   update() { this.wglp.update(); }
+
+  clearPoints(name) {
+    if (name in this.oldestTimestamps) {
+      delete this.oldestTimestamps[name];
+    }
+    if (name in this.newestTimestamps) {
+      delete this.newestTimestamps[name];
+    }
+    if (name in this.channels) {
+      this.channels[name].buffer.reset();
+    }
+  }
+
+  clearAllPoints() {
+    for (const key in this.lines) {
+      this.clearPoints(key);
+    }
+    this.updateAllLines();
+  }
+
+  removeLine(name) {
+    if (name in this.lines) {
+      delete this.lines[name];
+    }
+  }
 
   channelState(name, state) {
     this.states[name] = state;
@@ -30,13 +57,39 @@ class PlotDrawer {
     if (state) {
       this.newLine(name);
     } else {
-      delete this.lines[name];
-      delete this.oldestTimestamps[name];
-      delete this.newestTimestamps[name];
-      this.channels[name].buffer.reset();
+      this.clearPoints(name);
+      this.removeLine(name);
     }
 
     this.updateLines();
+  }
+
+  updateTimeBounds() {
+    /* Compute x-axis bounds (min and max timestamps). */
+    this.minTimestamp = null;
+    this.maxTimestamp = null;
+    for (const key in this.oldestTimestamps) {
+      let oldest = this.oldestTimestamps[key];
+      let newest = this.newestTimestamps[key];
+      if (this.minTimestamp == null || oldest < this.minTimestamp) {
+        this.minTimestamp = oldest;
+      }
+      if (this.maxTimestamp == null || newest > this.maxTimestamp) {
+        this.maxTimestamp = newest;
+      }
+    }
+  }
+
+  drawLines() {
+    /* Re-draw all lines. */
+    if (this.minTimestamp != null && this.maxTimestamp != null) {
+      for (const key in this.channels) {
+        if (key in this.lines) {
+          this.channels[key].draw(this.lines[key], this.minTimestamp,
+                                  this.maxTimestamp);
+        }
+      }
+    }
   }
 
   handlePoints(points) {
@@ -57,28 +110,9 @@ class PlotDrawer {
       }
     }
 
-    /* Compute x-axis bounds (min and max timestamps). */
-    let minTimestamp = null;
-    let maxTimestamp = null;
-    for (const key in this.oldestTimestamps) {
-      let oldest = this.oldestTimestamps[key];
-      let newest = this.newestTimestamps[key];
-      if (minTimestamp == null || oldest < minTimestamp) {
-        minTimestamp = oldest;
-      }
-      if (maxTimestamp == null || newest > maxTimestamp) {
-        maxTimestamp = newest;
-      }
-    }
-
-    /* Re-draw all lines. */
-    if (minTimestamp != null && maxTimestamp != null) {
-      for (const key in this.channels) {
-        if (key in this.lines) {
-          this.channels[key].draw(this.lines[key], minTimestamp, maxTimestamp);
-        }
-      }
-    }
+    /* Update UI. */
+    this.updateTimeBounds();
+    this.drawLines();
   }
 
   setColor(key, rgb) {
@@ -102,20 +136,16 @@ class PlotDrawer {
 
     this.lines[key] =
         new WebglPlotBundle.WebglLine(this.rgbaColors[key], this.canvas.width);
-
-    if (key in this.channels) {
-      this.channels[key].draw(this.lines[key]);
-    }
   }
 
   updateLines() {
-    /* Clear lines. */
+    /* Clear and re-add lines. */
     this.wglp.removeAllLines();
-
-    /* Put lines back. */
     for (let key in this.lines) {
       this.wglp.addLine(this.lines[key]);
     }
+
+    this.drawLines();
   }
 
   updateAllLines() {
@@ -127,18 +157,15 @@ class PlotDrawer {
   }
 
   updateSize() {
-    this.updateAllLines();
     this.wglp.viewport(0, 0, this.canvas.width, this.canvas.height);
+    this.updateAllLines();
   }
 
   updateDepth(wheelDelta) {
     for (let name in this.channels) {
-      let chan = this.channels[name];
-
       /* Make configurable at some point? */
-      chan.buffer.bumpCapacity(wheelDelta < 0);
-
-      chan.draw(this.lines[name]);
+      this.channels[name].buffer.bumpCapacity(wheelDelta < 0);
     }
+    this.updateAllLines();
   }
 }
