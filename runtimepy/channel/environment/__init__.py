@@ -39,3 +39,19 @@ class ChannelEnvironment(
 
         chan, _ = self[key]
         chan.default = default
+
+    @property
+    def num_defaults(self) -> int:
+        """
+        Determine the number of channels in this environment configured with
+        a default value.
+        """
+
+        result = 0
+
+        for name in self.names:
+            chan = self.get(name)
+            if chan is not None and chan[0].has_default:
+                result += 1
+
+        return result

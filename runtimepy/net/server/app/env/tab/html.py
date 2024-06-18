@@ -36,8 +36,8 @@ def channel_color_button(parent: Element, name: str) -> Element:
         parent,
         id=f"{name}-line-color",
         icon="activity",
-        title=f"Change line color for '{name}'.",
         icon_classes=["fs-5"],
+        tooltip=f"Change line color for '{name}'.",
     )
     button.add_class("d-none", "p-1")
 
@@ -65,14 +65,14 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabControls):
 
         name_td = create_name_td(parent)
 
-        channel_color_button(name_td, name)
-
         name_elem = div(tag="span", text=name, parent=name_td)
         if chan.commandable:
             name_elem.add_class("text-success")
 
         if description:
             set_tooltip(name_elem, description, placement="left")
+
+        channel_color_button(name_td, name)
 
         div(
             tag="td",
@@ -103,8 +103,6 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabControls):
 
         name_td = create_name_td(parent)
 
-        channel_color_button(name_td, name)
-
         name_elem = div(tag="span", text=name, parent=name_td)
         if field.commandable:
             name_elem.add_class("text-success")
@@ -113,6 +111,8 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabControls):
             description = field.description
         if description:
             set_tooltip(name_elem, description, placement="left")
+
+        channel_color_button(name_td, name)
 
         div(
             tag="td",
@@ -140,10 +140,10 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabControls):
         header = div(tag="thead", parent=table)
         body = div(tag="tbody", parent=table)
 
-        # Add header.
-        channel_table_header(header)
-
         env = self.command.env
+
+        # Add header.
+        channel_table_header(header, env)
 
         # make a table for channel stuff
         for name in env.names:

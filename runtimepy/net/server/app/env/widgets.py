@@ -10,6 +10,7 @@ from svgen.element import Element
 from svgen.element.html import div
 
 # internal
+from runtimepy.channel.environment import ChannelEnvironment
 from runtimepy.enum import RuntimeEnum
 from runtimepy.net.server.app.bootstrap.elements import (
     flex,
@@ -62,7 +63,7 @@ def enum_dropdown(
             opt.booleans.add("selected")
 
 
-def channel_table_header(parent: Element) -> None:
+def channel_table_header(parent: Element, env: ChannelEnvironment) -> None:
     """Add header row to channel table."""
 
     # Add header.
@@ -85,7 +86,7 @@ def channel_table_header(parent: Element) -> None:
                 class_str="text-secondary",
             ),
             desc,
-            placement="bottom",
+            placement="left",
         )
 
     # Add some controls.
@@ -94,7 +95,7 @@ def channel_table_header(parent: Element) -> None:
     # Button for clearing plotted channels.
     toggle_button(
         div(tag="th", parent=ctl_row),
-        title="Clear plotted channels.",
+        tooltip="Clear plotted channels.",
         icon="x-lg",
         id="clear-plotted-channels",
     )
@@ -109,12 +110,25 @@ def channel_table_header(parent: Element) -> None:
     toggle_button(
         div(tag="th", parent=ctl_row),
         icon="trash",
-        title="Clear all plot points.",
+        tooltip="Clear all plot points.",
         id="clear-plotted-points",
     )
 
-    for _ in range(2):
+    # Button for 'reset all defaults' if this tab has more than one channel
+    # with a default value.
+    if env.num_defaults > 1:
+        cell = div(tag="th", parent=ctl_row)
+        toggle_button(
+            cell,
+            id="set-defaults",
+            icon="arrow-counterclockwise",
+            tooltip="Reset all channels to their default values.",
+        )
+    else:
         div(tag="th", parent=ctl_row)
+
+    # Empty for now.
+    div(tag="th", parent=ctl_row)
 
 
 def value_input_box(name: str, parent: Element) -> Element:

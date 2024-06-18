@@ -50,6 +50,11 @@ class Channel(_RegistryItem, _EnumMixin, _Generic[_T]):
         return bool(self.raw)
 
     @property
+    def has_default(self) -> bool:
+        """Determine if this channel has a default value configured."""
+        return self.default is not None
+
+    @property
     def type(self) -> _AnyPrimitiveType:
         """Get the underlying primitive type of this channel."""
         return self.raw.kind

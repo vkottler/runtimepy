@@ -106,6 +106,7 @@ class ChannelEnvironmentTabControls(ChannelEnvironmentTabBase):
                         int(elem["step"]),  # type: ignore
                         parent=container,
                         id=name,
+                        title=f"Value control for '{name}'.",
                         front=True,
                     )
 
