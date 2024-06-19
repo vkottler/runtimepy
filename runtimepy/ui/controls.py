@@ -32,7 +32,7 @@ def make_slider(
 
 CANONICAL: dict[str, Controls] = {
     "phase": make_slider(-math.pi, math.pi, 90, default=0.0),
-    "amplitude": make_slider(0.0, 2.0, 40.0, default=1.0),
+    "amplitude": make_slider(0.0, 2.0, 100.0, default=1.0),
     "period": make_slider(0.0, 0.05, 100.0, default=0.01),
     "steps": make_slider(
         DEFAULT_STEPS / 4,

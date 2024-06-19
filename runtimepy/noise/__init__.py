@@ -12,7 +12,8 @@ from runtimepy.control.source import DoubleSource
 class GaussianSource(DoubleSource):
     """A simple output-source struct."""
 
-    def source(self) -> float:
+    def source(self, index: int) -> float:
         """Provide the next value."""
 
+        del index
         return random.gauss()
