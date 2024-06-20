@@ -26,7 +26,7 @@ def test_arbiter_command_basic():
         == 0
     )
 
-    for entry in ["basic", "http"]:
+    for entry in ["basic", "http", "control"]:
         assert (
             runtimepy_main(
                 base + [str(resource("connection_arbiter", f"{entry}.yaml"))]

@@ -1,0 +1,12 @@
+---
+includes:
+  - package://runtimepy/factories.yaml
+
+structs:
+  - name: clock
+    factory: toggle_stepper
+  - name: noise
+    factory: gaussian_source
+
+app:
+  - tests.control.test_step.controls_test

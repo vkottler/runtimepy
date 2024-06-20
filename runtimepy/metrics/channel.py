@@ -4,6 +4,7 @@ A module implementing a channel-metrics interface.
 
 # third-party
 from vcorelib.math import RateTracker as _RateTracker
+from vcorelib.math import metrics_time_ns as _metrics_time_ns
 
 # internal
 from runtimepy.primitives import Float as _Float
@@ -21,11 +22,15 @@ class ChannelMetrics:
 
         self.messages = _Uint32()
         self.message_rate = _Float()
-        self._message_rate_tracker = _RateTracker(depth=METRICS_DEPTH)
+        self._message_rate_tracker = _RateTracker(
+            depth=METRICS_DEPTH, source=_metrics_time_ns
+        )
 
         self.bytes = _Uint64()
         self.kbps = _Float()
-        self._kbps_tracker = _RateTracker(depth=METRICS_DEPTH)
+        self._kbps_tracker = _RateTracker(
+            depth=METRICS_DEPTH, source=_metrics_time_ns
+        )
 
     def update(self, other: "ChannelMetrics") -> None:
         """Update values in this instance from values in another instance."""

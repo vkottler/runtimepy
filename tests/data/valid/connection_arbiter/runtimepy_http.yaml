@@ -5,6 +5,12 @@ includes_left:
 app:
   - tests.net.stream.runtimepy_http_test
 
+structs:
+  - name: clock
+    factory: toggle_stepper
+  - name: noise
+    factory: gaussian_source
+
 config:
   experimental: true
   foo: bar

@@ -14,6 +14,8 @@ from runtimepy.net.arbiter.task import TaskFactory as _TaskFactory
 from runtimepy.net.manager import ConnectionManager as _ConnectionManager
 from runtimepy.primitives import Bool
 
+TASK_NAME = "housekeeping"
+
 
 class ConnectionMetricsPoller(_ArbiterTask):
     """A class that periodically polls connection metrics."""
@@ -60,6 +62,17 @@ class ConnectionMetricsPoller(_ArbiterTask):
         return True
 
 
+async def init(app: _AppInfo) -> int:
+    """Perform some initialization tasks."""
+
+    for task in app.search_tasks(ConnectionMetricsPoller):
+        task.poll_connection_metrics.value = app.config_param(
+            "poll_connection_metrics", False
+        )
+
+    return 0
+
+
 class ConnectionMetricsLogger(_ArbiterTask):
     """A task for logging metrics."""
 
@@ -94,6 +107,6 @@ def housekeeping(
 ) -> ConnectionMetricsPoller:
     """Create a metrics-polling task."""
 
-    task = ConnectionMetricsPoller("housekeeping", manager, period_s=period_s)
+    task = ConnectionMetricsPoller(TASK_NAME, manager, period_s=period_s)
     task.poll_connection_metrics.value = poll_connection_metrics
     return task

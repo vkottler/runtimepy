@@ -10,6 +10,9 @@ ports:
 structs:
   - {name: ui, factory: ui_state}
 
+init:
+  - runtimepy.net.arbiter.housekeeping.init
+
 servers:
   - factory: runtimepy_http
     kwargs: {port: "$runtimepy_http_server"}
