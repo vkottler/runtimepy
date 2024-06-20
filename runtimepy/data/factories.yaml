@@ -31,6 +31,7 @@ factories:
   - {name: runtimepy.task.trig.Sinusoid}
   - {name: runtimepy.task.sample.Sample}
   - {name: runtimepy.task.sample.SampleApp}
+  - {name: runtimepy.control.step.StepperToggler}
 
   # Useful structs.
   - {name: runtimepy.net.arbiter.info.TrigStruct}

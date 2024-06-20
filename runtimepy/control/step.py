@@ -11,14 +11,17 @@ from vcorelib.math import (
     RateTracker,
     SimulatedTime,
     default_time_ns,
+    from_nanos,
     metrics_time_ns,
     restore_time_source,
     set_simulated_source,
 )
 
 # internal
+from runtimepy.net.arbiter import AppInfo
 from runtimepy.net.arbiter.info import RuntimeStruct
-from runtimepy.primitives import Bool, Double, Uint32, Uint64
+from runtimepy.net.arbiter.task import ArbiterTask, TaskFactory
+from runtimepy.primitives import Bool, Double, Uint32
 
 
 def should_poll(kind: type[RuntimeStruct]) -> bool:
@@ -34,7 +37,7 @@ class ToggleStepper(RuntimeStruct):
     step: Bool
     simulate_time: Bool
 
-    time_ns: Uint64
+    time_s: Double
 
     count: Uint32
     counts: Uint32
@@ -47,7 +50,7 @@ class ToggleStepper(RuntimeStruct):
 
     def _poll_time(self) -> None:
         """Update current time."""
-        self.time_ns.value = default_time_ns()
+        self.time_s.value = from_nanos(default_time_ns())
 
     def init_env(self) -> None:
         """Initialize this toggle stepper environment."""
@@ -55,10 +58,10 @@ class ToggleStepper(RuntimeStruct):
         self.step = Bool()
         self.simulate_time = Bool()
 
-        self.time_ns = Uint64()
+        self.time_s = Double()
         self.env.channel(
-            "time_ns",
-            self.time_ns,
+            "time_s",
+            self.time_s,
             description="Current time (based on default time source).",
         )
         self._poll_time()
@@ -148,3 +151,32 @@ class ToggleStepper(RuntimeStruct):
         self.count_rate.value = self.count_rate_tracker()
 
         self.timer.step()
+
+
+class ToggleStepperTask(ArbiterTask):
+    """A task for automatically stepping a toggle-stepper clock."""
+
+    steppers: list[ToggleStepper]
+
+    async def init(self, app: AppInfo) -> None:
+        """Initialize this task with application information."""
+
+        await super().init(app)
+        self.steppers = list(app.search_structs(ToggleStepper))
+
+        # Start paused.
+        self.paused.value = True
+
+    async def dispatch(self) -> bool:
+        """Dispatch an iteration of this task."""
+
+        for stepper in self.steppers:
+            stepper.step.toggle()
+
+        return True
+
+
+class StepperToggler(TaskFactory[ToggleStepperTask]):
+    """A task factory for toggle stepper tasks."""
+
+    kind = ToggleStepperTask
