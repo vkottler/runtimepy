@@ -28,7 +28,7 @@ from runtimepy.channel.environment.command import (
     env_json_data,
     register_env,
 )
-from runtimepy.net.arbiter.housekeeping import metrics_poller
+from runtimepy.net.arbiter.housekeeping import housekeeping
 from runtimepy.net.arbiter.info import (
     AppInfo,
     ArbiterApps,
@@ -102,8 +102,11 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
         self.task_manager = _ArbiterTaskManager()
 
         # Ensure that connection metrics are polled.
-        if metrics_poller_task:
-            self.task_manager.register(metrics_poller(self.manager))
+        self.task_manager.register(
+            housekeeping(
+                self.manager, poll_connection_metrics=metrics_poller_task
+            )
+        )
 
         if stop_sig is None:
             stop_sig = _asyncio.Event()
