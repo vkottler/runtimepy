@@ -34,6 +34,12 @@ class ChannelEnvironment(
         """Iterate over registered names in the environment."""
         yield from self.channels.names.names
 
+    def search_names(
+        self, pattern: str, exact: bool = False
+    ) -> _Iterator[str]:
+        """Search for names belonging to this environment."""
+        yield from self.channels.names.search(pattern, exact=exact)
+
     def set_default(self, key: str, default: _Default) -> None:
         """Set a new default value for a channel."""
 

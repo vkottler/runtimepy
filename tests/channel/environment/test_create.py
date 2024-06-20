@@ -26,6 +26,8 @@ def test_channel_environment_create_basic():
     )
     assert result
 
+    assert len(list(env.search_names("sample_channel", exact=True))) == 1
+
     env.age_ns("sample_channel")
 
     name = "test_field"
