@@ -142,7 +142,12 @@ def slider(
 
     elem["min"] = min_val
     elem["max"] = max_val
-    elem["step"] = (max_val - min_val) / steps
+
+    step = (max_val - min_val) / steps
+    if isinstance(min_val, int) and isinstance(max_val, int):
+        step = int(step)
+
+    elem["step"] = step
 
     # add tick marks - didn't seem to work (browser didn't render anything)
 

@@ -15,7 +15,7 @@ from subprocess import Popen
 from typing import Optional, cast
 
 # third-party
-from vcorelib.math import default_time_ns
+from vcorelib.math import metrics_time_ns
 
 
 class RuntimepySubprocessProtocol(SubprocessProtocol):
@@ -56,7 +56,7 @@ class RuntimepySubprocessProtocol(SubprocessProtocol):
     def connection_made(self, transport) -> None:
         """Initialize this protocol."""
 
-        self.start_time = default_time_ns()
+        self.start_time = metrics_time_ns()
         self.elapsed_time = -1
 
         self.stdout_queue = None
@@ -105,7 +105,7 @@ class RuntimepySubprocessProtocol(SubprocessProtocol):
     def process_exited(self) -> None:
         """Handle process exit."""
 
-        self.elapsed_time = default_time_ns() - self.start_time
+        self.elapsed_time = metrics_time_ns() - self.start_time
 
         self._flush_stdout()
         self._flush_stderr()

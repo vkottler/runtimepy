@@ -5,7 +5,7 @@ description: A framework for implementing Python services.
 entry: {{entry}}
 
 requirements:
-  - vcorelib>=3.2.6
+  - vcorelib>=3.2.7
   - svgen>=0.6.7
   - websockets
   - psutil

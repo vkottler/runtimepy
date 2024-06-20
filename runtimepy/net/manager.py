@@ -14,7 +14,7 @@ from typing import TypeVar as _TypeVar
 # third-party
 from vcorelib.asyncio import log_exceptions as _log_exceptions
 from vcorelib.logging import LoggerMixin
-from vcorelib.math import default_time_ns as _default_time_ns
+from vcorelib.math import metrics_time_ns as _metrics_time_ns
 
 # internal
 from runtimepy.net.connection import Connection as _Connection
@@ -53,7 +53,7 @@ class ConnectionManager(LoggerMixin):
         """Poll connection metrics."""
 
         if time_ns is None:
-            time_ns = _default_time_ns()
+            time_ns = _metrics_time_ns()
 
         for conn in self._conns:
             conn.metrics.poll(time_ns=time_ns)

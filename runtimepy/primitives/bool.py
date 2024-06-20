@@ -13,9 +13,9 @@ class BooleanPrimitive(_Primitive[bool]):
     kind = _Bool
     value: bool
 
-    def __init__(self, value: bool = False) -> None:
+    def __init__(self, value: bool = False, **kwargs) -> None:
         """Initialize this boolean primitive."""
-        super().__init__(value=value)
+        super().__init__(value=value, **kwargs)
 
     def toggle(self) -> None:
         """Toggle the underlying value."""

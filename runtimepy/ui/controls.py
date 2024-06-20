@@ -40,7 +40,7 @@ CANONICAL: dict[str, Controls] = {
         DEFAULT_STEPS * 2,
         default=DEFAULT_STEPS,
     ),
-    "steps_1_1000": make_slider(1, 1000, 10, default=1),
+    "steps_1_1000": make_slider(1, 1000, 100, default=1),
 }
 
 

@@ -1,0 +1,9 @@
+---
+includes:
+  - default.yaml
+
+structs:
+  - name: clock
+    factory: toggle_stepper
+  - name: noise
+    factory: gaussian_source

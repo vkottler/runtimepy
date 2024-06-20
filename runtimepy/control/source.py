@@ -37,8 +37,8 @@ class PrimitiveSource(RuntimeStruct, Generic[T]):
         self.outputs = []
         self.amplitudes = []
 
-        # load 'count' from config
-        count = 1
+        # Load 'count' from config
+        count: int = self.config.get("count", 1)  # type: ignore
 
         for idx in range(count):
             # Output channel.
