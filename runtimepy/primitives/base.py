@@ -13,7 +13,8 @@ from typing import Iterator as _Iterator
 from typing import TypeVar as _TypeVar
 
 # third-party
-from vcorelib.math.time import default_time_ns, nano_str
+from vcorelib.math import default_time_ns, nano_str
+from vcorelib.math.keeper import TimeSource
 
 # internal
 from runtimepy.primitives.byte_order import (
@@ -49,7 +50,10 @@ class Primitive(_Generic[T]):
         return self._hash
 
     def __init__(
-        self, value: T = None, scaling: ChannelScaling = None
+        self,
+        value: T = None,
+        scaling: ChannelScaling = None,
+        time_source: TimeSource = default_time_ns,
     ) -> None:
         """Initialize this primitive."""
 
@@ -58,8 +62,9 @@ class Primitive(_Generic[T]):
         self.callbacks: dict[int, tuple[PrimitiveChangeCallaback[T], bool]] = (
             {}
         )
+        self.time_source = time_source
         self(value=value)
-        self.last_updated_ns: int = default_time_ns()
+        self.last_updated_ns: int = self.time_source()
         self.scaling = scaling
         self._hash = IDENT()
 
@@ -72,7 +77,7 @@ class Primitive(_Generic[T]):
         """Get the age of this primitive's value in nanoseconds."""
 
         if now is None:
-            now = default_time_ns()
+            now = self.time_source()
 
         return now - self.last_updated_ns
 
@@ -136,7 +141,7 @@ class Primitive(_Generic[T]):
         curr: T = self.raw.value  # type: ignore
 
         self.raw.value = value
-        self.last_updated_ns = default_time_ns()
+        self.last_updated_ns = self.time_source()
 
         # Call callbacks if the value has changed.
         if self.callbacks and curr != value:

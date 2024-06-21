@@ -7,7 +7,8 @@ import math
 
 # internal
 from runtimepy.channel.environment import ChannelEnvironment
-from runtimepy.primitives import Float as _Float
+from runtimepy.control.env import amplitude, phase_angle, steps
+from runtimepy.primitives import Float
 from runtimepy.ui.controls import Controlslike
 
 
@@ -23,45 +24,22 @@ class TrigMixin:
     ) -> None:
         """Initialize this instance."""
 
-        self.sin = _Float()
-        self.cos = _Float()
-        self.steps = _Float()
-
-        self.step_angle = float()
-
+        self.sin = Float()
+        self.cos = Float()
         env.channel("sin", self.sin)
         env.channel("cos", self.cos)
 
-        env.channel(
-            "steps",
-            self.steps,
-            commandable=True,
-            controls=steps_controls,
+        self.step_angle = float()
+
+        self.steps = steps(env, Float, controls=steps_controls)
+
+        self.amplitude = amplitude(env, Float, controls=amplitude_controls)
+
+        self.sin_phase_angle = phase_angle(
+            env, Float, name="sin_phase_angle", controls=phase_angle_controls
         )
-
-        self.amplitude = _Float()
-        env.channel(
-            "amplitude",
-            self.amplitude,
-            commandable=True,
-            controls=amplitude_controls,
-        )
-
-        self.sin_phase_angle = _Float()
-        self.cos_phase_angle = _Float()
-
-        env.channel(
-            "sin_phase_angle",
-            self.sin_phase_angle,
-            commandable=True,
-            controls=phase_angle_controls,
-        )
-
-        env.channel(
-            "cos_phase_angle",
-            self.cos_phase_angle,
-            commandable=True,
-            controls=phase_angle_controls,
+        self.cos_phase_angle = phase_angle(
+            env, Float, name="cos_phase_angle", controls=phase_angle_controls
         )
 
         def update_sin(_: float, __: float) -> None:

@@ -12,7 +12,7 @@ from typing import Optional
 from vcorelib.logging import LoggerType
 
 DEFAULT_PATTERN = _compile("^[\\w\\:.-]+$")
-CHANNEL_PATTERN = _compile("^[a-z0-9_.-]+$")
+CHANNEL_PATTERN = _compile("^[a-zA-Z0-9_.-]+$")
 
 
 class RegexMixin:

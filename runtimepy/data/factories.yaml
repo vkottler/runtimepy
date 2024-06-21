@@ -31,11 +31,14 @@ factories:
   - {name: runtimepy.task.trig.Sinusoid}
   - {name: runtimepy.task.sample.Sample}
   - {name: runtimepy.task.sample.SampleApp}
+  - {name: runtimepy.control.step.StepperToggler}
 
   # Useful structs.
   - {name: runtimepy.net.arbiter.info.TrigStruct}
   - {name: runtimepy.net.arbiter.info.SampleStruct}
   - {name: runtimepy.net.server.struct.UiState}
+  - {name: runtimepy.control.step.ToggleStepper}
+  - {name: runtimepy.noise.GaussianSource}
 
   # Useful subprocess peer interfaces.
   - {name: runtimepy.sample.peer.SamplePeer}

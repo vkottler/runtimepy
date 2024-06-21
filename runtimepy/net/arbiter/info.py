@@ -62,6 +62,9 @@ class RuntimeStruct(RuntimeStructBase, _ABC):
         self.init_env()
 
 
+W = _TypeVar("W", bound=RuntimeStruct)
+
+
 class TrigStruct(RuntimeStruct, TrigMixin):
     """A simple trig struct."""
 
@@ -194,6 +197,17 @@ class AppInfo(_LoggerMixin):
         compiled = _compile(pattern)
 
         for name, task in self.tasks.items():
+            if compiled.search(name) is not None and isinstance(task, kind):
+                yield task
+
+    def search_structs(
+        self, kind: type[W], pattern: str = ".*"
+    ) -> _Iterator[W]:
+        """Search for structs by type or name."""
+
+        compiled = _compile(pattern)
+
+        for name, task in self.structs.items():
             if compiled.search(name) is not None and isinstance(task, kind):
                 yield task
 

@@ -27,27 +27,14 @@ class Encoder(JSONEncoder):
         return o
 
 
-def json_handler(
-    stream: TextIO,
-    request: RequestHeader,
-    response: ResponseHeader,
-    request_data: Optional[bytes],
-    data: JsonObject,
-) -> None:
-    """Create an HTTP response from some JSON object data."""
-
-    del request_data
-
-    response_type = "json"
-    response["Content-Type"] = (
-        f"application/{response_type}; charset={DEFAULT_ENCODING}"
-    )
+def traverse_dict(data: dict[str, Any], *paths: str) -> Any:
+    """Attempt to traverse a dictionary by path names."""
 
     error: dict[str, Any] = {"path": {}}
 
     # Traverse path.
     curr_path = []
-    for part in request.target.path.split("/")[2:]:
+    for part in paths:
         if not part:
             continue
 
@@ -72,10 +59,32 @@ def json_handler(
             data = error
             break
 
-        data = data[part]  # type: ignore
+        data = data[part]
 
     if callable(data):
         data = data()
+
+    return data
+
+
+def json_handler(
+    stream: TextIO,
+    request: RequestHeader,
+    response: ResponseHeader,
+    request_data: Optional[bytes],
+    data: JsonObject,
+) -> None:
+    """Create an HTTP response from some JSON object data."""
+
+    del request_data
+
+    response_type = "json"
+    response["Content-Type"] = (
+        f"application/{response_type}; charset={DEFAULT_ENCODING}"
+    )
+
+    # Traverse path.
+    data = traverse_dict(data, *request.target.path.split("/")[2:])
 
     # Use a convention for indexing data to non-dictionary leaf nodes.
     if not isinstance(data, dict):

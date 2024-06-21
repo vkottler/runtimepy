@@ -16,7 +16,7 @@ from runtimepy.net.stream.json import JsonMessageConnection
 
 
 class SampleTask(ArbiterTask, TrigMixin):
-    """A base TUI application."""
+    """A sample application."""
 
     async def init(self, app: AppInfo) -> None:
         """Initialize this task with application information."""
@@ -52,7 +52,7 @@ class SampleTask(ArbiterTask, TrigMixin):
 
 
 class Sample(TaskFactory[SampleTask]):
-    """A TUI application factory."""
+    """A sample-task application factory."""
 
     kind = SampleTask
 

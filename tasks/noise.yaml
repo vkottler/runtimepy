@@ -1,0 +1,13 @@
+---
+includes:
+  - default.yaml
+
+tasks:
+  - {name: clock_task, factory: stepper_toggler}
+
+structs:
+  - name: clock
+    factory: toggle_stepper
+  - name: noise
+    factory: gaussian_source
+    config: {count: 4}

@@ -25,6 +25,10 @@ class ChannelEnvironmentMixin:
                 env = ChannelEnvironment(**kwargs)
             self.env = env
 
+    def __hash__(self) -> int:
+        """Get a hash for this instance."""
+        return id(self.env)
+
     def register_task_metrics(
         self, metrics: PeriodicTaskMetrics, namespace: str = METRICS_NAME
     ) -> None:

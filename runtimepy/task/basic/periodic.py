@@ -65,10 +65,10 @@ class PeriodicTask(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
         self.register_task_metrics(self.metrics)
 
         # State.
-        self._paused = _Bool()
+        self.paused = _Bool()
         self.env.channel(
             "paused",
-            self._paused,
+            self.paused,
             commandable=True,
             description="Whether or not this task is paused.",
         )
@@ -147,7 +147,7 @@ class PeriodicTask(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
 
         while self._enabled:
             # When paused, don't run the iteration itself.
-            if not self._paused:
+            if not self.paused:
                 with self.metrics.measure(
                     eloop,
                     self._dispatch_rate,

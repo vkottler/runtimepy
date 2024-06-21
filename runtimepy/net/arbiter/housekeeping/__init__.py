@@ -12,6 +12,9 @@ from runtimepy.net.arbiter.info import AppInfo as _AppInfo
 from runtimepy.net.arbiter.task import ArbiterTask as _ArbiterTask
 from runtimepy.net.arbiter.task import TaskFactory as _TaskFactory
 from runtimepy.net.manager import ConnectionManager as _ConnectionManager
+from runtimepy.primitives import Bool
+
+TASK_NAME = "housekeeping"
 
 
 class ConnectionMetricsPoller(_ArbiterTask):
@@ -28,10 +31,23 @@ class ConnectionMetricsPoller(_ArbiterTask):
         super().__init__(name, **kwargs)
         self.manager = manager
 
+    def _init_state(self) -> None:
+        """Add channels to this instance's channel environment."""
+
+        # Channel control for polling connection metrics.
+        self.poll_connection_metrics = Bool()
+        self.env.channel(
+            "poll_connection_metrics",
+            self.poll_connection_metrics,
+            commandable=True,
+            description="Polls application connection metrics when true.",
+        )
+
     async def dispatch(self) -> bool:
         """Dispatch an iteration of this task."""
 
-        self.manager.poll_metrics()
+        if self.poll_connection_metrics:
+            self.manager.poll_metrics()
 
         # Handle any incoming commands.
         processors = []
@@ -44,6 +60,17 @@ class ConnectionMetricsPoller(_ArbiterTask):
             await asyncio.gather(*processors)
 
         return True
+
+
+async def init(app: _AppInfo) -> int:
+    """Perform some initialization tasks."""
+
+    for task in app.search_tasks(ConnectionMetricsPoller):
+        task.poll_connection_metrics.value = app.config_param(
+            "poll_connection_metrics", False
+        )
+
+    return 0
 
 
 class ConnectionMetricsLogger(_ArbiterTask):
@@ -73,11 +100,13 @@ class ConnectionMetricsLoggerFactory(_TaskFactory[ConnectionMetricsLogger]):
     kind = ConnectionMetricsLogger
 
 
-def metrics_poller(
-    manager: _ConnectionManager, period_s: float = 0.1
+def housekeeping(
+    manager: _ConnectionManager,
+    period_s: float = 0.1,
+    poll_connection_metrics: bool = True,
 ) -> ConnectionMetricsPoller:
     """Create a metrics-polling task."""
 
-    return ConnectionMetricsPoller(
-        "connection_metrics_poller", manager, period_s=period_s
-    )
+    task = ConnectionMetricsPoller(TASK_NAME, manager, period_s=period_s)
+    task.poll_connection_metrics.value = poll_connection_metrics
+    return task

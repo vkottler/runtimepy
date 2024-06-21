@@ -13,6 +13,7 @@ from vcorelib.dict.codec import BasicDictCodec
 
 # module under test
 from runtimepy import PKG_NAME
+from runtimepy.control.step import ToggleStepper
 from runtimepy.message import JsonMessage
 from runtimepy.net.arbiter.info import AppInfo
 from runtimepy.net.http.header import RequestHeader
@@ -109,6 +110,11 @@ async def runtimepy_http_test(app: AppInfo) -> int:
     await runtimepy_websocket_client(
         app.single(pattern="client", kind=RuntimepyWebsocketConnection)
     )
+
+    # Find stepper struct, toggle 'simualte_time' twice.
+    for inst in app.search_structs(ToggleStepper):
+        inst.simulate_time.toggle()
+        inst.simulate_time.toggle()
 
     return 0
 
