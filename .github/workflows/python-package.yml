@@ -10,6 +10,7 @@ on:
 env:
   TWINE_PASSWORD: ${{secrets.TWINE_PASSWORD}}
   GITHUB_API_TOKEN: ${{secrets.API_TOKEN}}
+  CODECOV_TOKEN: ${{secrets.CODECOV_TOKEN}}
 
 jobs:
   build:
@@ -60,6 +61,10 @@ jobs:
           PY_TEST_EXTRA_ARGS: --cov-report=xml
 
       - uses: codecov/codecov-action@v3.1.5
+        with:
+          fail_ci_if_error: true
+          verbose: true
+          token: ${{secrets.CODECOV_TOKEN}}
 
       - run: mk pypi-upload-ci
         env:
