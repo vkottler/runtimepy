@@ -5,6 +5,9 @@ A module implementing a simple WebSocket server for the package.
 # built-in
 from collections import defaultdict
 
+# third-party
+from vcorelib.math import RateLimiter, metrics_time_ns, to_nanos
+
 # internal
 from runtimepy.message import JsonMessage
 from runtimepy.net.arbiter.tcp.json import WebsocketJsonMessageConnection
@@ -22,10 +25,7 @@ class RuntimepyWebsocketConnection(WebsocketJsonMessageConnection):
     ui_time: float
     tabs: dict[str, TabState]
 
-    # The first UI client has exclusive access to some functions, like
-    # polling metrics.
-    first_client: bool
-    first_message: bool
+    poll_governor: RateLimiter
 
     def tab_sender(self, name: str) -> TabMessageSender:
         """Get a tab message-sending interface."""
@@ -44,7 +44,7 @@ class RuntimepyWebsocketConnection(WebsocketJsonMessageConnection):
         """Update UI-specific state."""
 
         # Only one connection needs to perform this task.
-        if self.first_client or ui.env.value("num_connections") == 1:
+        if self.poll_governor():
             # Update time.
             ui.env["time_ms"] = time
             ui.env["frame_period_ms"] = time - self.ui_time
@@ -62,15 +62,6 @@ class RuntimepyWebsocketConnection(WebsocketJsonMessageConnection):
 
         async def ui_handler(outbox: JsonMessage, inbox: JsonMessage) -> None:
             """A simple loopback handler."""
-
-            # Add to num_connections.
-            if self.first_message:
-                ui = UiState.singleton()
-                if ui and ui.env.finalized:
-                    self.first_client = (
-                        ui.env.add_int("num_connections", 1) == 1
-                    )
-                self.first_message = False
 
             # Handle frame messages.
             if "time" in inbox:
@@ -109,8 +100,11 @@ class RuntimepyWebsocketConnection(WebsocketJsonMessageConnection):
         self.send_interfaces = {}
         self.ui_time = 0.0
         self.tabs = defaultdict(TabState.create)
-        self.first_client = False
-        self.first_message = True
+
+        # Limit UI metrics update rate to 250 Hz.
+        self.poll_governor = RateLimiter(
+            to_nanos(1.0 / 250.0), source=metrics_time_ns
+        )
 
     def disable_extra(self) -> None:
         """Additional tasks to perform when disabling."""

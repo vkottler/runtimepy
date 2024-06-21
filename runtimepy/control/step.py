@@ -21,6 +21,8 @@ from vcorelib.math import (
 from runtimepy.net.arbiter import AppInfo
 from runtimepy.net.arbiter.info import RuntimeStruct
 from runtimepy.net.arbiter.task import ArbiterTask, TaskFactory
+from runtimepy.net.manager import ConnectionManager
+from runtimepy.net.server.websocket import RuntimepyWebsocketConnection
 from runtimepy.primitives import Bool, Double, Uint32
 
 
@@ -29,6 +31,14 @@ def should_poll(kind: type[RuntimeStruct]) -> bool:
     Determine if a toggle stepper should poll the provided type of struct.
     """
     return kind.__name__ not in {"ToggleStepper", "UiState"}
+
+
+def refresh_all_plots(manager: ConnectionManager) -> None:
+    """Signal to clients to refresh all data."""
+
+    for conn in manager.by_type(RuntimepyWebsocketConnection):
+        for interface in conn.send_interfaces.values():
+            interface({"actions": ["clear_points"]})
 
 
 class ToggleStepper(RuntimeStruct):
@@ -125,6 +135,9 @@ class ToggleStepper(RuntimeStruct):
                 set_simulated_source(self.timer)
             else:
                 restore_time_source()
+
+            # Signal to the UI to clear plot data.
+            refresh_all_plots(self.app.conn_manager)
 
             self._poll_time()
 

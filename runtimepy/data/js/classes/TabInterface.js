@@ -334,6 +334,20 @@ class TabInterface {
       }
     }
 
+    /* Handle actions. */
+    if ("actions" in data) {
+      for (let action of data["actions"]) {
+        switch (action) {
+        case "clear_points":
+          this.clearPlotPoints();
+          break;
+        default:
+          console.log(`Action '${action}' not hangled!`);
+          break;
+        }
+      }
+    }
+
     /* Stage any channel-table re-paints. */
     if (this.channels) {
       for (let key in data) {
