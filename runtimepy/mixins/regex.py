@@ -11,7 +11,7 @@ from typing import Optional
 # third-party
 from vcorelib.logging import LoggerType
 
-DEFAULT_PATTERN = _compile("^[\\w\\:.-]+$")
+DEFAULT_PATTERN = _compile("^[\\w\\:.\\-_\\/]+$")
 CHANNEL_PATTERN = _compile("^[a-zA-Z0-9_.-]+$")
 
 

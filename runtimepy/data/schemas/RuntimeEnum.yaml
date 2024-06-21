@@ -20,7 +20,7 @@ properties:
     additionalProperties: false
 
     patternProperties:
-      "^[\\w\\:_.-]+$":
+      "^[\\w\\:_.\\-\\/]+$":
         oneOf:
           - type: integer
           - type: boolean
