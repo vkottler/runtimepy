@@ -202,7 +202,8 @@ class TabInterface {
   initPlot() {
     let plot = this.query(`#${this.queryName}-plot`);
     if (plot) {
-      this.plot = new Plot(plot, this.worker);
+      this.plot =
+          new Plot(plot, this.worker, this.query(`#${this.queryName}-overlay`));
       this.show_state_handlers.push(this.plot.handle_shown.bind(this.plot));
 
       /* Initialize plot-channel buttons. */

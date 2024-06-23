@@ -4,6 +4,7 @@ A module implementing a simple WebSocket server for the package.
 
 # built-in
 from collections import defaultdict
+from typing import Optional
 
 # third-party
 from vcorelib.math import RateLimiter, metrics_time_ns, to_nanos
@@ -26,6 +27,9 @@ class RuntimepyWebsocketConnection(WebsocketJsonMessageConnection):
     tabs: dict[str, TabState]
 
     poll_governor: RateLimiter
+    poll_connection_metrics: bool
+
+    _ui: Optional[UiState]
 
     def tab_sender(self, name: str) -> TabMessageSender:
         """Get a tab message-sending interface."""
@@ -40,11 +44,37 @@ class RuntimepyWebsocketConnection(WebsocketJsonMessageConnection):
 
         return self.send_interfaces[name]
 
+    def _get_ui(self) -> Optional[UiState]:
+        """Obtain a reference to a possible user interface struct."""
+
+        if self._ui is None:
+            ui = UiState.singleton()
+
+            if ui is not None and ui.env.finalized:
+
+                def check_metrics_poll(_: int, curr: int) -> None:
+                    """
+                    Register change handler on 'num_connections' primitive.
+                    """
+
+                    self.poll_connection_metrics = (
+                        self.poll_connection_metrics or curr == 1
+                    )
+
+                chan, _ = ui.env["num_connections"]
+                chan.raw.register_callback(check_metrics_poll)  # type: ignore
+
+                # Add to num_connections.
+                ui.env.add_int("num_connections", 1)
+                self._ui = ui
+
+        return self._ui
+
     def _poll_ui_state(self, ui: UiState, time: float) -> None:
         """Update UI-specific state."""
 
         # Only one connection needs to perform this task.
-        if self.poll_governor():
+        if self.poll_connection_metrics and self.poll_governor():
             # Update time.
             ui.env["time_ms"] = time
             ui.env["frame_period_ms"] = time - self.ui_time
@@ -66,8 +96,8 @@ class RuntimepyWebsocketConnection(WebsocketJsonMessageConnection):
             # Handle frame messages.
             if "time" in inbox:
                 # Poll UI state.
-                ui = UiState.singleton()
-                if ui and ui.env.finalized:
+                ui = self._get_ui()
+                if ui:
                     self._poll_ui_state(ui, inbox["time"])
 
                 # Allows tabs to respond on a per-frame basis.
@@ -106,6 +136,18 @@ class RuntimepyWebsocketConnection(WebsocketJsonMessageConnection):
             to_nanos(1.0 / 250.0), source=metrics_time_ns
         )
 
+        self.poll_connection_metrics = False
+        self._ui = None
+
+    async def async_init(self) -> bool:
+        """A runtime initialization routine (executes during 'process')."""
+
+        result = await super().async_init()
+
+        self._get_ui()
+
+        return result
+
     def disable_extra(self) -> None:
         """Additional tasks to perform when disabling."""
 
@@ -114,8 +156,9 @@ class RuntimepyWebsocketConnection(WebsocketJsonMessageConnection):
             state.clear_loggers()
 
         # Subtract from num_connections.
-        ui = UiState.singleton()
-        if ui and ui.env.finalized:
+        ui = self._get_ui()
+        if ui:
+            self.poll_connection_metrics = False
             ui.env.add_int("num_connections", -1)
 
 

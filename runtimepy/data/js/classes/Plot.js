@@ -1,13 +1,17 @@
 class Plot {
-  constructor(element, _worker) {
+  constructor(element, _worker, overlay) {
     this.worker = _worker;
     this.canvas = element;
+
+    this.overlay = overlay;
+    let offscreenOverlay = this.overlay.transferControlToOffscreen();
 
     /* Send off-screen canvas to worker. */
     let offscreen = this.canvas.transferControlToOffscreen();
     let msg = this.messageBase();
     msg["canvas"] = offscreen;
-    this.plotMessage(msg, [ offscreen ]);
+    msg["overlay"] = offscreenOverlay;
+    this.plotMessage(msg, [ offscreen, offscreenOverlay ]);
 
     /* Use resize observer to handle resize events. */
     this.resizeObserver = new ResizeObserver(

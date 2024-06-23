@@ -29,6 +29,7 @@ class WebApplication:
         "DataConnection",
         "PointBuffer",
         "PointManager",
+        "OverlayManager",
         "PlotDrawer",
         "PlotManager",
     ]

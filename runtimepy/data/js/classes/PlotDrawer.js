@@ -1,6 +1,8 @@
 class PlotDrawer {
-  constructor(canvas, colors) {
+  constructor(canvas, colors, overlay) {
     this.canvas = canvas;
+
+    this.overlay = new OverlayManager(overlay);
 
     // this.wglp = new WebglPlotBundle.WebglPlot(this.canvas, {debug : true});
     // this.wglp.webgl = WebGLDebugUtils.makeDebugContext(this.wglp.webgl);
@@ -24,7 +26,10 @@ class PlotDrawer {
     this.maxTimestamp = null;
   }
 
-  update() { this.wglp.update(); }
+  update(time) {
+    this.overlay.update(time);
+    this.wglp.update();
+  }
 
   clearPoints(name) {
     if (name in this.oldestTimestamps) {
@@ -157,6 +162,9 @@ class PlotDrawer {
   }
 
   updateSize() {
+    /* Update overlay. */
+    this.overlay.updateSize(this.canvas.width, this.canvas.height);
+
     this.wglp.viewport(0, 0, this.canvas.width, this.canvas.height);
     this.updateAllLines();
   }

@@ -20,14 +20,14 @@ class ChannelMetrics:
     def __init__(self) -> None:
         """Initialize this instance."""
 
-        self.messages = _Uint32()
-        self.message_rate = _Float()
+        self.messages = _Uint32(time_source=_metrics_time_ns)
+        self.message_rate = _Float(time_source=_metrics_time_ns)
         self._message_rate_tracker = _RateTracker(
             depth=METRICS_DEPTH, source=_metrics_time_ns
         )
 
-        self.bytes = _Uint64()
-        self.kbps = _Float()
+        self.bytes = _Uint64(time_source=_metrics_time_ns)
+        self.kbps = _Float(time_source=_metrics_time_ns)
         self._kbps_tracker = _RateTracker(
             depth=METRICS_DEPTH, source=_metrics_time_ns
         )
