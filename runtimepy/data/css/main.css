@@ -42,3 +42,7 @@ body > :first-child {
 .toggle-value {
   /* placeholder */
 }
+
+.window-button {
+  border-right: var(--bs-border-width) var(--bs-border-style) var(--bs-body-color) !important;
+}

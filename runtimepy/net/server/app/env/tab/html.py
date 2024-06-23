@@ -220,7 +220,7 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabControls):
         # table doesn't take up full vertical space, few channels).
         under_construction(
             vert_container,
-            class_str="border-start border-bottom border-end",
+            class_str="border-start border-end",
             note="unused space",
         )
 
