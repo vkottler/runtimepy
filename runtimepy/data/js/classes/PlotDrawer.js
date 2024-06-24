@@ -73,6 +73,7 @@ class PlotDrawer {
     /* Compute x-axis bounds (min and max timestamps). */
     this.minTimestamp = null;
     this.maxTimestamp = null;
+
     for (const key in this.oldestTimestamps) {
       let oldest = this.oldestTimestamps[key];
       let newest = this.newestTimestamps[key];
@@ -83,6 +84,9 @@ class PlotDrawer {
         this.maxTimestamp = newest;
       }
     }
+
+    this.overlay.minTimestamp = this.minTimestamp;
+    this.overlay.maxTimestamp = this.maxTimestamp;
   }
 
   drawLines() {

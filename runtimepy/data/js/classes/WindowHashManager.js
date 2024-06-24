@@ -121,8 +121,8 @@ class WindowHashManager {
         this.tab = currTab;
         this.tabsShown = true;
 
-        window.open(this.loc.origin + this.loc.pathname + "#" + hash,
-                    "mozillaWindow", "popup");
+        window.open(this.loc.origin + this.loc.pathname + "#" + hash, "_blank",
+                    "height=400,width=800,popup");
       }
     };
 

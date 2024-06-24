@@ -29,6 +29,7 @@ class WebApplication:
         "DataConnection",
         "PointBuffer",
         "PointManager",
+        "UnitSystem",
         "OverlayManager",
         "PlotDrawer",
         "PlotManager",
@@ -69,7 +70,7 @@ class WebApplication:
         append_kind(document.body, "worker", worker=True)
 
         # Set up worker.
-        append_kind(document.body, "init")
+        append_kind(document.body, "init", "events")
         append_kind(document.body, *self.ui_classes, subdir="classes")
 
         # Populate applicaton elements.

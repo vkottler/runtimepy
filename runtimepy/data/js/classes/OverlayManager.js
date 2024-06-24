@@ -1,9 +1,38 @@
+const defaultPadTo = "                        ";
+
+function padStringTo(data, padTo = defaultPadTo, front = true) {
+  let delta = padTo.length - data.length;
+
+  /* Should check if the string was too long. */
+  if (delta > 0) {
+    let padding = padTo.slice(0, delta);
+    data = front ? padding + data : data + padding;
+  }
+
+  return data;
+}
+
 class OverlayManager {
   constructor(canvas) {
     this.canvas = canvas;
     this.ctx = this.canvas.getContext("2d");
-    this.bufferDepth = 512;
+
+    /* Runtime state. */
     this.visible = false;
+    this.bufferDepth = 512;
+    this.minTimestamp = null;
+    this.maxTimestamp = null;
+    this.lines = [];
+    this.maxLen = 0;
+
+    /* Make this controllable at some point. */
+    this.fontSize = 14;
+  }
+
+  writeLn(data) {
+    let padded = padStringTo(data);
+    this.maxLen = Math.max(this.maxLen, padded.length);
+    this.lines.push(padded);
   }
 
   update(time) {
@@ -13,27 +42,52 @@ class OverlayManager {
     /* Clear before drawing. */
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    /* Drawing settings. */
+    ctx.font = this.fontSize + "px monospace";
+    ctx.fillStyle = "#cce2e6";
+
+    /* Always display frame time. */
+    this.writeLn(String((time / 1000).toFixed(3)) + " s ( frame time)");
+
     if (this.visible) {
-      ctx.fillStyle = "#495057";
-      let size = 12;
+      /* Corner fiducials. */
+      // ctx.fillStyle = "#495057";
+      // let size = fontSize * 2;
+      // ctx.fillRect(size, size, size, size);
+      // ctx.fillRect(canvas.width - (2 * size), size, size, size);
+      // ctx.fillRect(size, canvas.height - (2 * size), size, size);
+      // ctx.fillRect(canvas.width - (2 * size), canvas.height - (2 * size),
+      // size, size);
 
-      ctx.fillRect(size, size, size, size);
-      ctx.fillRect(canvas.width - (2 * size), size, size, size);
-      ctx.fillRect(size, canvas.height - (2 * size), size, size);
-      ctx.fillRect(canvas.width - (2 * size), canvas.height - (2 * size), size,
-                   size);
+      /* Show amount of time captured. */
+      if (this.minTimestamp && this.maxTimestamp) {
+        let nanos = nanosString(this.maxTimestamp - this.minTimestamp);
+        this.writeLn(nanos[0] + nanos[1] + "s (     y-axis)");
+      }
 
-      ctx.fillStyle = "#cce2e6";
-      let fontSize = 12;
-      ctx.font = fontSize + "px monospace";
-      let y = fontSize;
-      let x = (canvas.width / 3);
+      this.writeLn(String(this.bufferDepth) + "       (max samples)");
 
-      ctx.fillText("bufferDepth=" + this.bufferDepth, x, y);
-      y += fontSize;
-
-      ctx.fillText(time, x, y);
+      /* Height and width. */
+      this.writeLn(String(canvas.width) + "       (      width)");
+      this.writeLn(String(canvas.height) + "       (     height)");
+    } else {
+      this.writeLn("Click plot for overlay.");
     }
+
+    this.writeLines(canvas.width - (this.maxLen * (this.fontSize * 0.6)),
+                    this.fontSize / 2);
+  }
+
+  writeLines(x, y) {
+    /* Draw lines. */
+    for (const line of this.lines) {
+      y += this.fontSize;
+      this.ctx.fillText(line, x, y);
+    }
+
+    /* Reset state. */
+    this.lines = [];
+    this.maxLen = 0;
   }
 
   updateSize(width, height) {
