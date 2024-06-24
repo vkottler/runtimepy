@@ -26,5 +26,8 @@ const kibiUnits = new UnitSystem(
 
 function nanosString(deltaNs) {
   let traversed = siUnits.traverse(deltaNs);
-  return [ `${traversed[0]}.${traversed[1]}`, traversed[2] ];
+
+  return [
+    String((traversed[0] + traversed[1] / 1000).toFixed(3)), traversed[2]
+  ];
 }

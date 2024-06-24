@@ -18,7 +18,7 @@ class OverlayManager {
     this.ctx = this.canvas.getContext("2d");
 
     /* Runtime state. */
-    this.visible = false;
+    this.visible = true;
     this.bufferDepth = 512;
     this.minTimestamp = null;
     this.maxTimestamp = null;
@@ -47,7 +47,7 @@ class OverlayManager {
     ctx.fillStyle = "#cce2e6";
 
     /* Always display frame time. */
-    this.writeLn(String((time / 1000).toFixed(3)) + " s ( frame time)");
+    this.writeLn(String((time / 1000).toFixed(3)) + " s (frame time )");
 
     if (this.visible) {
       /* Corner fiducials. */
@@ -60,18 +60,21 @@ class OverlayManager {
       // size, size);
 
       /* Show amount of time captured. */
-      if (this.minTimestamp && this.maxTimestamp) {
+      if (this.minTimestamp != null && this.maxTimestamp) {
         let nanos = nanosString(this.maxTimestamp - this.minTimestamp);
-        this.writeLn(nanos[0] + nanos[1] + "s (     y-axis)");
+        this.writeLn(nanos[0] + nanos[1] + "s (y-axis     )");
       }
 
       this.writeLn(String(this.bufferDepth) + "       (max samples)");
 
       /* Height and width. */
-      this.writeLn(String(canvas.width) + "       (      width)");
-      this.writeLn(String(canvas.height) + "       (     height)");
+      this.writeLn(String(canvas.width) + "       (width      )");
+      this.writeLn(String(canvas.height) + "       (height     )");
+      this.writeLn("");
+      this.writeLn("Click to hide.");
     } else {
-      this.writeLn("Click plot for overlay.");
+      this.writeLn("");
+      this.writeLn("Click for overlay.");
     }
 
     this.writeLines(canvas.width - (this.maxLen * (this.fontSize * 0.6)),
@@ -82,7 +85,9 @@ class OverlayManager {
     /* Draw lines. */
     for (const line of this.lines) {
       y += this.fontSize;
-      this.ctx.fillText(line, x, y);
+      if (line) {
+        this.ctx.fillText(line, x, y);
+      }
     }
 
     /* Reset state. */
