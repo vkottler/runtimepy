@@ -25,12 +25,20 @@ from runtimepy.net.manager import ConnectionManager
 from runtimepy.net.server.websocket import RuntimepyWebsocketConnection
 from runtimepy.primitives import Bool, Double, Uint32
 
+DONT_POLL_SET = {
+    "ToggleStepper",
+    "UiState",
+    "SampleStruct",
+}
+
 
 def should_poll(kind: type[RuntimeStruct]) -> bool:
     """
     Determine if a toggle stepper should poll the provided type of struct.
     """
-    return kind.__name__ not in {"ToggleStepper", "UiState"}
+    return kind.__name__ not in DONT_POLL_SET and not kind.__name__.startswith(
+        "Rt"
+    )
 
 
 def refresh_all_plots(manager: ConnectionManager) -> None:

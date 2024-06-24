@@ -8,16 +8,6 @@ class PointBuffer {
     this.updateCapacity(capacity);
   }
 
-  bumpCapacity(bumpUp) {
-    /*
-     * need persistent settings for scroll behavior? (configurable?)
-     */
-    let scale_factor = 1.05;
-    let newCapacity = Math.max(16, bumpUp ? this.capacity * scale_factor
-                                          : this.capacity / scale_factor);
-    this.updateCapacity(Math.round(newCapacity));
-  }
-
   reset() {
     this.head = 0;
     this.tail = 0;

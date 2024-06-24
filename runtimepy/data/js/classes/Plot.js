@@ -1,27 +1,48 @@
 class Plot {
-  constructor(element, _worker) {
+  constructor(element, _worker, overlay) {
     this.worker = _worker;
     this.canvas = element;
+
+    this.overlay = overlay;
+    let offscreenOverlay = this.overlay.transferControlToOffscreen();
 
     /* Send off-screen canvas to worker. */
     let offscreen = this.canvas.transferControlToOffscreen();
     let msg = this.messageBase();
     msg["canvas"] = offscreen;
-    this.plotMessage(msg, [ offscreen ]);
+    msg["overlay"] = offscreenOverlay;
+    this.plotMessage(msg, [ offscreen, offscreenOverlay ]);
 
     /* Use resize observer to handle resize events. */
     this.resizeObserver = new ResizeObserver(
         ((entries, observer) => { this.handle_resize(); }).bind(this));
 
-    /* Handle click events. */
-    let plotButton = document.getElementById("runtimepy-plot-button");
-    if (plotButton) {
-      this.canvas.onclick = (event) => { plotButton.click(); };
-      this.canvas.onwheel = this.onWheel.bind(this);
+    /* Handle overlay events. */
+    if (this.overlay) {
+      /* Scroll, click and keyboard. */
+      this.overlay.onwheel = this.createEventSender(scrollEventKeys);
+      this.overlay.onclick = this.createEventSender(pointerEventKeys);
+      let eventHandler = this.createEventSender(keyboardEventKeys);
+      this.overlay.addEventListener("keydown", eventHandler);
+      this.overlay.addEventListener("keyup", eventHandler);
+
+      /* Should there be a keybind that opens this? */
+      // let plotButton = document.getElementById("runtimepy-plot-button");
     }
   }
 
-  onWheel(event) { this.plotMessage({"wheelDelta" : event.wheelDelta}); }
+  createEventSender(keys) {
+    let result = (event) => {
+      let msg = {};
+      for (const key of keys) {
+        if (key in event) {
+          msg[key] = event[key];
+        }
+      }
+      this.plotMessage({"message" : msg});
+    };
+    return result.bind(this);
+  }
 
   plotMessage(data, param) { this.worker.toWorker({"plot" : data}, param); }
 

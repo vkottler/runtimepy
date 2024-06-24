@@ -1,6 +1,8 @@
 class PlotDrawer {
-  constructor(canvas, colors) {
+  constructor(canvas, colors, overlay) {
     this.canvas = canvas;
+
+    this.overlay = new OverlayManager(overlay);
 
     // this.wglp = new WebglPlotBundle.WebglPlot(this.canvas, {debug : true});
     // this.wglp.webgl = WebGLDebugUtils.makeDebugContext(this.wglp.webgl);
@@ -24,7 +26,10 @@ class PlotDrawer {
     this.maxTimestamp = null;
   }
 
-  update() { this.wglp.update(); }
+  update(time) {
+    this.overlay.update(time);
+    this.wglp.update();
+  }
 
   clearPoints(name) {
     if (name in this.oldestTimestamps) {
@@ -68,6 +73,7 @@ class PlotDrawer {
     /* Compute x-axis bounds (min and max timestamps). */
     this.minTimestamp = null;
     this.maxTimestamp = null;
+
     for (const key in this.oldestTimestamps) {
       let oldest = this.oldestTimestamps[key];
       let newest = this.newestTimestamps[key];
@@ -78,6 +84,9 @@ class PlotDrawer {
         this.maxTimestamp = newest;
       }
     }
+
+    this.overlay.minTimestamp = this.minTimestamp;
+    this.overlay.maxTimestamp = this.maxTimestamp;
   }
 
   drawLines() {
@@ -92,13 +101,22 @@ class PlotDrawer {
     }
   }
 
+  handleMessage(data) {
+    /* Handle scroll. */
+    if ("deltaY" in data) {
+      this.updateDepth(data["deltaY"]);
+    } else {
+      this.overlay.handleMessage(data);
+    }
+  }
+
   handlePoints(points) {
     /* Handle ingesting new point data. */
     for (const key in points) {
       if (key in this.states && this.states[key]) {
         /* Add point manager and create line for plotted channel. */
         if (!(key in this.channels)) {
-          this.channels[key] = new PointManager();
+          this.channels[key] = new PointManager(this.overlay.bufferDepth);
         }
         if (key in this.lines) {
           let result = this.channels[key].handlePoints(points[key]);
@@ -157,14 +175,18 @@ class PlotDrawer {
   }
 
   updateSize() {
+    /* Update overlay. */
+    this.overlay.updateSize(this.canvas.width, this.canvas.height);
+
     this.wglp.viewport(0, 0, this.canvas.width, this.canvas.height);
     this.updateAllLines();
   }
 
   updateDepth(wheelDelta) {
+    let capacity = this.overlay.bumpCapacity(wheelDelta > 0);
     for (let name in this.channels) {
       /* Make configurable at some point? */
-      this.channels[name].buffer.bumpCapacity(wheelDelta < 0);
+      this.channels[name].buffer.updateCapacity(capacity);
     }
     this.updateAllLines();
   }

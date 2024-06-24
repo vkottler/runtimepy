@@ -19,6 +19,7 @@ function hexToRgb(hex) {
 class PlotManager {
   constructor() {
     this.plots = {};
+    this.overlays = {};
 
     this.contextType = "2d";
     this.contexts = {};
@@ -59,12 +60,6 @@ class PlotManager {
     }
   }
 
-  updateDepth(name, wheelDelta) {
-    if (name in this.drawers) {
-      this.drawers[name].updateDepth(wheelDelta);
-    }
-  }
-
   channelColors(name) {
     if (!(name in this.colors)) {
       this.colors[name] = {};
@@ -96,10 +91,8 @@ class PlotManager {
     if ("canvas" in data) {
       this.plots[name] = data["canvas"];
     }
-
-    /* Handle scroll events. */
-    if ("wheelDelta" in data) {
-      this.updateDepth(name, data["wheelDelta"]);
+    if ("overlay" in data) {
+      this.overlays[name] = data["overlay"];
     }
 
     /* Handle size updates. */
@@ -125,7 +118,8 @@ class PlotManager {
         if (!created) {
           if (webglContextCount < webglContextMax && name in this.plots) {
             let drawer =
-                new PlotDrawer(this.plots[name], this.channelColors(name));
+                new PlotDrawer(this.plots[name], this.channelColors(name),
+                               this.overlays[name]);
             this.drawers[name] = drawer;
 
             webglContextCount++;
@@ -156,6 +150,11 @@ class PlotManager {
     if ("channel" in data && "color" in data) {
       this.setColor(name, data);
     }
+
+    /* Handle forwarding events. */
+    if ("message" in data && name in this.drawers) {
+      this.drawers[name].handleMessage(data["message"]);
+    }
   }
 
   draw2d(canvas, ctx, time) {
@@ -183,7 +182,7 @@ class PlotManager {
 
   drawPlot(name, time) {
     if (name in this.drawers) {
-      this.drawers[name].update();
+      this.drawers[name].update(time);
     } else if (name in this.contexts) {
       this.draw2d(this.plots[name], this.contexts[name], time);
     }

@@ -105,6 +105,27 @@ class WindowHashManager {
       channelsButton.addEventListener("click", this.channelClick.bind(this));
     }
 
+    /* Click handlers for new window buttons. */
+    for (const button of document.querySelectorAll(".window-button")) {
+      button.onclick = () => {
+        /* Save some state. */
+        let currTab = this.tab;
+
+        /* Update state to prepare for hash-string building. */
+        this.tab = button.id;
+        this.tabsShown = false;
+
+        let hash = this.buildHash();
+
+        /* Restore some state. */
+        this.tab = currTab;
+        this.tabsShown = true;
+
+        window.open(this.loc.origin + this.loc.pathname + "#" + hash, "_blank",
+                    "height=400,width=800,popup");
+      }
+    };
+
     /* Parse status (powers refreshes and link sharing). */
     if (this.original) {
       let boolsChannels = this.original.split("/");
@@ -155,7 +176,7 @@ class WindowHashManager {
     return result;
   }
 
-  update() {
+  buildHash() {
     let hash = this.tab;
 
     if (this.tabFilter) {
@@ -204,8 +225,10 @@ class WindowHashManager {
       }
     }
 
-    window.location.hash = hash;
+    return hash;
   }
+
+  update() { window.location.hash = this.buildHash(); }
 
   setTab(name) {
     this.tab = name;

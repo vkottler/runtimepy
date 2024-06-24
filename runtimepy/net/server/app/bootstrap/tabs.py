@@ -11,6 +11,8 @@ from runtimepy import PKG_NAME
 from runtimepy.net.server.app.bootstrap.elements import (
     BOOTSTRAP_BUTTON,
     collapse_button,
+    flex,
+    toggle_button,
 )
 
 
@@ -125,12 +127,25 @@ class TabbedContent:
     def create(self, name: str) -> tuple[Element, Element]:
         """Only the first tab is active."""
 
+        container = flex(parent=self.tabs)
+
+        # Open in new window button.
+        toggle_button(
+            container,
+            id=name,
+            icon="window-plus",
+            title=f"Open '{name}' in a new window.",
+        ).add_class(
+            "border-start", "border-bottom", "window-button", "btn-link"
+        )
+
+        # Navigate to tab button.
         button = create_nav_button(
-            self.tabs,
+            container,
             self.name,
             name,
             self.active_tab,
-            class_str="border-start border-bottom border-end",
+            class_str="border-bottom border-end flex-grow-1",
         )
 
         # Add content.

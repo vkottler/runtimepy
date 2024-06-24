@@ -4,7 +4,7 @@ A module implementing interfaces for psutil.
 
 # third-party
 import psutil
-from vcorelib.math import WeightedAverage
+from vcorelib.math import WeightedAverage, metrics_time_ns
 
 # internal
 from runtimepy.channel.environment import ChannelEnvironment
@@ -26,8 +26,8 @@ class PsutilMixin:
         # System metrics.
         self.process = psutil.Process()
         self.cpu_average = WeightedAverage(depth=60)
-        self.memory_percent = Float()
-        self.cpu_percent = Float()
+        self.memory_percent = Float(time_source=metrics_time_ns)
+        self.cpu_percent = Float(time_source=metrics_time_ns)
 
         env.float_channel("memory_percent", self.memory_percent)
         env.float_channel("cpu_percent", self.cpu_percent)

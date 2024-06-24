@@ -101,9 +101,7 @@ def channel_environments(app: AppInfo, tabs: TabbedContent) -> None:
 
     # Placeholder for using space at the bottom of the tab list.
     under_construction(
-        tabs.tabs,
-        note="unused space",
-        class_str="border-start border-bottom border-end",
+        tabs.tabs, note="unused space", class_str="border-start border-end"
     )
 
     # Add splash screen element.

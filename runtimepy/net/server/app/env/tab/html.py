@@ -180,6 +180,35 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabControls):
         """Get an HTML id for an element."""
         return f"{self.name}-{data}"
 
+    def _compose_plot(self, parent: Element) -> None:
+        """Compose plot elements."""
+
+        plot_container = div(
+            parent=parent,
+            class_str="w-100 h-100 border-start position-relative",
+        )
+
+        # Plot.
+        div(
+            tag="canvas",
+            id=self.get_id("plot"),
+            parent=plot_container,
+            class_str="w-100 h-100",
+        )
+
+        # Overlay for plot.
+        overlay = div(
+            class_str="position-absolute top-0 left-0 w-100 h-100",
+            parent=plot_container,
+        )
+        div(
+            tag="canvas",
+            id=self.get_id("overlay"),
+            parent=overlay,
+            tabindex=1,
+            class_str="w-100 click-plot",
+        )
+
     def compose(self, parent: Element) -> None:
         """Compose the tab's HTML elements."""
 
@@ -220,7 +249,7 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabControls):
         # table doesn't take up full vertical space, few channels).
         under_construction(
             vert_container,
-            class_str="border-start border-bottom border-end",
+            class_str="border-start border-end",
             note="unused space",
         )
 
@@ -231,10 +260,4 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabControls):
             class_str="vertical-divider border-start",
         )
 
-        # Plot.
-        div(
-            tag="canvas",
-            id=self.get_id("plot"),
-            parent=div(parent=container, class_str="w-100 h-100 border-start"),
-            class_str="w-100 h-100 click-plot",
-        )
+        self._compose_plot(container)
