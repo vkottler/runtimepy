@@ -60,12 +60,6 @@ class PlotManager {
     }
   }
 
-  updateDepth(name, wheelDelta) {
-    if (name in this.drawers) {
-      this.drawers[name].updateDepth(wheelDelta);
-    }
-  }
-
   channelColors(name) {
     if (!(name in this.colors)) {
       this.colors[name] = {};
@@ -99,11 +93,6 @@ class PlotManager {
     }
     if ("overlay" in data) {
       this.overlays[name] = data["overlay"];
-    }
-
-    /* Handle scroll events. */
-    if ("wheelDelta" in data) {
-      this.updateDepth(name, data["wheelDelta"]);
     }
 
     /* Handle size updates. */
@@ -160,6 +149,11 @@ class PlotManager {
     /* Update plot line color. */
     if ("channel" in data && "color" in data) {
       this.setColor(name, data);
+    }
+
+    /* Handle forwarding events. */
+    if ("message" in data && name in this.drawers) {
+      this.drawers[name].handleMessage(data["message"]);
     }
   }
 

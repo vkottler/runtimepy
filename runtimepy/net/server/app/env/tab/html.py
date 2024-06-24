@@ -193,19 +193,20 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabControls):
             tag="canvas",
             id=self.get_id("plot"),
             parent=plot_container,
-            class_str="w-100 h-100 click-plot",
+            class_str="w-100 h-100",
         )
 
         # Overlay for plot.
         overlay = div(
-            class_str="position-absolute top-0 left-0 w-100 h-100 pe-none",
+            class_str="position-absolute top-0 left-0 w-100 h-100",
             parent=plot_container,
         )
         div(
             tag="canvas",
             id=self.get_id("overlay"),
             parent=overlay,
-            class_str="w-100",
+            tabindex=1,
+            class_str="w-100 click-plot",
         )
 
     def compose(self, parent: Element) -> None:

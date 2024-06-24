@@ -97,13 +97,22 @@ class PlotDrawer {
     }
   }
 
+  handleMessage(data) {
+    /* Handle scroll. */
+    if ("deltaY" in data) {
+      this.updateDepth(data["deltaY"]);
+    } else {
+      this.overlay.handleMessage(data);
+    }
+  }
+
   handlePoints(points) {
     /* Handle ingesting new point data. */
     for (const key in points) {
       if (key in this.states && this.states[key]) {
         /* Add point manager and create line for plotted channel. */
         if (!(key in this.channels)) {
-          this.channels[key] = new PointManager();
+          this.channels[key] = new PointManager(this.overlay.bufferDepth);
         }
         if (key in this.lines) {
           let result = this.channels[key].handlePoints(points[key]);
@@ -170,9 +179,10 @@ class PlotDrawer {
   }
 
   updateDepth(wheelDelta) {
+    let capacity = this.overlay.bumpCapacity(wheelDelta > 0);
     for (let name in this.channels) {
       /* Make configurable at some point? */
-      this.channels[name].buffer.bumpCapacity(wheelDelta < 0);
+      this.channels[name].buffer.updateCapacity(capacity);
     }
     this.updateAllLines();
   }
