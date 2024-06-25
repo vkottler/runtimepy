@@ -34,6 +34,7 @@ from runtimepy.net.udp import (
     QueueUdpConnection,
     UdpConnection,
 )
+from runtimepy.net.udp.tftp import TftpConnection
 from runtimepy.net.websocket import (
     EchoWebsocketConnection,
     NullWebsocketConnection,
@@ -98,6 +99,12 @@ class UdpQueue(UdpConnectionFactory[QueueUdpConnection]):
     """UDP queue-connection factory."""
 
     kind = QueueUdpConnection
+
+
+class Tftp(UdpConnectionFactory[TftpConnection]):
+    """UDP tftp-connection factory."""
+
+    kind = TftpConnection
 
 
 class TcpEcho(TcpConnectionFactory[EchoTcpConnection]):

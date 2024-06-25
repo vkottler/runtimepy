@@ -41,6 +41,8 @@ class UdpConnection(_Connection, _TransportMixin):
     # Simplify talkback implementations.
     latest_rx_address: _Optional[tuple[str, int]]
 
+    log_alias = "UDP"
+
     def __init__(
         self, transport: _DatagramTransport, protocol: UdpQueueProtocol
     ) -> None:
@@ -53,7 +55,7 @@ class UdpConnection(_Connection, _TransportMixin):
         # Re-assign with updated type information.
         self._transport: _DatagramTransport = transport
 
-        super().__init__(_getLogger(self.logger_name("UDP ")))
+        super().__init__(_getLogger(self.logger_name(f"{self.log_alias} ")))
         self._set_protocol(protocol)
 
         # Store connection-instantiation arguments.
@@ -74,7 +76,7 @@ class UdpConnection(_Connection, _TransportMixin):
         creation time.
         """
         self.remote_address = addr
-        self.logger = _getLogger(self.logger_name("UDP "))
+        self.logger = _getLogger(self.logger_name(f"{self.log_alias} "))
         self._protocol.logger = self.logger
 
     @_abstractmethod

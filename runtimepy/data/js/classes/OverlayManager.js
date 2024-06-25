@@ -62,7 +62,7 @@ class OverlayManager {
       /* Show amount of time captured. */
       if (this.minTimestamp != null && this.maxTimestamp) {
         let nanos = nanosString(this.maxTimestamp - this.minTimestamp);
-        this.writeLn(nanos[0] + nanos[1] + "s (y-axis     )");
+        this.writeLn(nanos[0] + nanos[1] + "s (x-axis     )");
       }
 
       this.writeLn(String(this.bufferDepth) + "       (max samples)");

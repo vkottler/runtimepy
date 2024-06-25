@@ -3,12 +3,17 @@ A module implementing a periodic-task metrics interface.
 """
 
 # built-in
-from asyncio import AbstractEventLoop
 from contextlib import contextmanager
 from typing import Iterator, NamedTuple
 
 # third-party
-from vcorelib.math import MovingAverage, RateTracker, to_nanos
+from vcorelib.math import (
+    MovingAverage,
+    RateTracker,
+    from_nanos,
+    metrics_time_ns,
+)
+from vcorelib.math.keeper import TimeSource
 
 # internal
 from runtimepy.primitives import Double as _Double
@@ -28,17 +33,23 @@ class PeriodicTaskMetrics(NamedTuple):
     overruns: _Uint16
 
     @staticmethod
-    def create() -> "PeriodicTaskMetrics":
+    def create(
+        time_source: TimeSource = metrics_time_ns,
+    ) -> "PeriodicTaskMetrics":
         """Create a new metrics instance."""
 
         return PeriodicTaskMetrics(
-            _Uint32(), _Float(), _Float(), _Float(), _Float(), _Uint16()
+            _Uint32(time_source=time_source),
+            _Float(time_source=time_source),
+            _Float(time_source=time_source),
+            _Float(time_source=time_source),
+            _Float(time_source=time_source),
+            _Uint16(time_source=time_source),
         )
 
     @contextmanager
     def measure(
         self,
-        eloop: AbstractEventLoop,
         rate: RateTracker,
         dispatch: MovingAverage,
         iter_time: _Double,
@@ -46,12 +57,12 @@ class PeriodicTaskMetrics(NamedTuple):
     ) -> Iterator[None]:
         """Measure the time spent yielding and update data."""
 
-        start = eloop.time()
-        self.rate_hz.value = rate(to_nanos(start))
+        start = metrics_time_ns()
+        self.rate_hz.value = rate(start)
 
         yield
 
-        iter_time.value = eloop.time() - start
+        iter_time.value = from_nanos(metrics_time_ns() - start)
 
         # Update runtime metrics.
         self.dispatches.value += 1

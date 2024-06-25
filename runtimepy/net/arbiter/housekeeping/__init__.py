@@ -5,6 +5,7 @@ runtime.
 
 # built-in
 import asyncio
+from typing import Awaitable
 
 # internal
 from runtimepy.mixins.async_command import AsyncCommandProcessingMixin
@@ -50,11 +51,15 @@ class ConnectionMetricsPoller(_ArbiterTask):
             self.manager.poll_metrics()
 
         # Handle any incoming commands.
-        processors = []
+        processors: list[Awaitable[None]] = []
         for mapping in self.app.connections.values(), self.app.tasks.values():
             for item in mapping:
                 if isinstance(item, AsyncCommandProcessingMixin):
                     processors.append(item.process_command_queue())
+
+        # Service connection tasks. The connection manager should probably do
+        # this on its own at some point.
+        processors += list(self.app.conn_manager.connection_tasks)
 
         if processors:
             await asyncio.gather(*processors)

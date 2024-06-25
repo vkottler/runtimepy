@@ -38,6 +38,12 @@ class ConnectionManager(LoggerMixin):
         """Return the number of managed connections."""
         return len(self._conns)
 
+    @property
+    def connection_tasks(self) -> _Iterator[_asyncio.Task[None]]:
+        """Iterate over connection tasks."""
+        for conn in self._conns:
+            yield from conn.tasks
+
     def by_type(self, kind: type[T]) -> _Iterator[T]:
         """Iterate over connections of a specific type."""
         for conn in self._conns:

@@ -6,6 +6,7 @@ A module implementing a network-connection interface.
 from abc import ABC as _ABC
 import asyncio as _asyncio
 from contextlib import suppress as _suppress
+from typing import Iterator as _Iterator
 from typing import Optional as _Optional
 from typing import Union as _Union
 
@@ -61,7 +62,12 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
         self._binary_messages: _asyncio.Queue[BinaryMessage] = _asyncio.Queue()
         self.tx_binary_hwm: int = 0
 
+        # Tasks common to connection processing.
         self._tasks: list[_asyncio.Task[None]] = []
+
+        # Connection-specific tasks.
+        self._conn_tasks: list[_asyncio.Task[None]] = []
+
         self.initialized = _asyncio.Event()
         self.exited = _asyncio.Event()
 
@@ -190,7 +196,7 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
             self.disable_extra()
 
             # Cancel tasks.
-            for task in self._tasks:
+            for task in self._tasks + list(self.tasks):
                 if not task.done():
                     task.cancel()
 
@@ -348,6 +354,22 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
             if data is not None:
                 await self._send_binay_message(data)
                 queue.task_done()
+
+    @property
+    def tasks(self) -> _Iterator[_asyncio.Task[None]]:
+        """
+        Get active connection tasks. Instance uses this opportunity to release
+        references to any completed tasks.
+        """
+
+        active = []
+
+        for task in self._conn_tasks:
+            if not task.done():
+                active.append(task)
+                yield task
+
+        self._conn_tasks = active
 
 
 class EchoConnection(Connection):

@@ -142,14 +142,12 @@ class PeriodicTask(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
             "Task starting at %s.", _rate_str(self.period_s.value)
         )
 
-        eloop = _asyncio.get_running_loop()
         iter_time = _Double()
 
         while self._enabled:
             # When paused, don't run the iteration itself.
             if not self.paused:
                 with self.metrics.measure(
-                    eloop,
                     self._dispatch_rate,
                     self._dispatch_time,
                     iter_time,
