@@ -11,6 +11,8 @@ from typing import Union
 
 # third-party
 from vcorelib.asyncio.poll import repeat_until
+from vcorelib.paths.context import tempfile
+from vcorelib.paths.hashing import file_md5_hex
 
 # internal
 from runtimepy.net import IpHost
@@ -45,7 +47,7 @@ class TftpConnection(BaseTftpConnection):
         async with AsyncExitStack() as stack:
             # Claim read lock and ignore cancellation.
             stack.enter_context(suppress(asyncio.CancelledError))
-            await stack.enter_async_context(endpoint.read_lock)
+            await stack.enter_async_context(endpoint.lock)
 
             def send_rrq() -> None:
                 """Send request"""
@@ -131,6 +133,7 @@ class TftpConnection(BaseTftpConnection):
         filename: str,
         mode: str = DEFAULT_MODE,
         addr: Union[IpHost, tuple[str, int]] = None,
+        verify: bool = True,
     ) -> bool:
         """Request a tftp write operation."""
 
@@ -140,7 +143,7 @@ class TftpConnection(BaseTftpConnection):
         async with AsyncExitStack() as stack:
             # Claim write lock and ignore cancellation.
             stack.enter_context(suppress(asyncio.CancelledError))
-            await stack.enter_async_context(endpoint.write_lock)
+            await stack.enter_async_context(endpoint.lock)
 
             event = asyncio.Event()
             endpoint.awaiting_acks[0] = event
@@ -158,5 +161,21 @@ class TftpConnection(BaseTftpConnection):
                     return result
 
             result = await endpoint.serve_file(source)
+
+        # Verify by reading back.
+        if verify and result:
+            with self.log_time("Verifying write via read", reminder=True):
+                with tempfile() as tmp:
+                    result = await self.request_read(
+                        tmp, filename, mode=mode, addr=addr
+                    )
+
+                    # Compare hashes.
+                    if result:
+                        result = file_md5_hex(source) == file_md5_hex(tmp)
+                        self.logger.info(
+                            "MD5 sums %s",
+                            "matched." if result else "didn't match!",
+                        )
 
         return result

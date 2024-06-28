@@ -79,7 +79,7 @@ async def tftp_file_read(conn1: TftpConnection, conn2: TftpConnection) -> None:
         assert await conn2.request_read(dst, src_name)
 
         # Wait for the other end of the connection to finish.
-        async with conn1.endpoint().read_lock:
+        async with conn1.endpoint().lock:
             pass
 
         # Compare file results.
@@ -111,7 +111,7 @@ async def tftp_file_write(
 
         # Write and verify.
         assert await conn2.request_write(src, dst_name)
-        async with conn1.endpoint().write_lock:
+        async with conn1.endpoint().lock:
             pass
         assert bytes_md5_hex(msg) == file_md5_hex(dst)
 

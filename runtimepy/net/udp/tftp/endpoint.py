@@ -54,8 +54,7 @@ class TftpEndpoint(LoggerMixin):
         self.error_sender = error_sender
 
         # Avoid concurrency bugs when actively writing or reading.
-        self.write_lock = asyncio.Lock()
-        self.read_lock = asyncio.Lock()
+        self.lock = asyncio.Lock()
 
         # Message receiving.
         self.awaiting_acks: dict[int, asyncio.Event] = {}
@@ -194,7 +193,7 @@ class TftpEndpoint(LoggerMixin):
         async with AsyncExitStack() as stack:
             # Claim write lock and ignore cancellation.
             stack.enter_context(suppress(asyncio.CancelledError))
-            await stack.enter_async_context(self.write_lock)
+            await stack.enter_async_context(self.lock)
 
             path_fd = stack.enter_context(path.open("wb"))
 
@@ -264,7 +263,7 @@ class TftpEndpoint(LoggerMixin):
         async with AsyncExitStack() as stack:
             # Claim read lock and ignore cancellation.
             stack.enter_context(suppress(asyncio.CancelledError))
-            await stack.enter_async_context(self.read_lock)
+            await stack.enter_async_context(self.lock)
 
             success = await self.serve_file(path)
 
