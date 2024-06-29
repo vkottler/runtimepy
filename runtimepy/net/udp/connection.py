@@ -106,7 +106,7 @@ class UdpConnection(_Connection, _TransportMixin):
         self.sendto(data.encode(), addr=self.remote_address)
 
     def send_binary(self, data: _BinaryMessage) -> None:
-        """Enqueue a binary message tos end."""
+        """Enqueue a binary message to send."""
         self.sendto(data, addr=self.remote_address)
 
     async def restart(self) -> bool:
