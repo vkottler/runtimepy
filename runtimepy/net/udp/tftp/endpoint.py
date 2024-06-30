@@ -5,12 +5,15 @@ A module implementing an interface for individual tftp endpoints.
 # built-in
 import asyncio
 from contextlib import AsyncExitStack, suppress
+import logging
 from pathlib import Path
 from typing import BinaryIO, Callable, Optional, Union
 
 # third-party
 from vcorelib.asyncio.poll import repeat_until
 from vcorelib.logging import LoggerMixin, LoggerType
+from vcorelib.math import RateLimiter
+from vcorelib.paths.info import FileInfo
 
 # internal
 from runtimepy.net import IpHost
@@ -67,6 +70,7 @@ class TftpEndpoint(LoggerMixin):
         # Runtime settings.
         self.period: float = 0.25
         self.timeout: float = 1.0
+        self.log_limiter = RateLimiter.from_s(1.0)
 
     def chunk_sender(self, block: int, data: bytes) -> Callable[[], None]:
         """Create a method that sends a specific block of data."""
@@ -116,21 +120,30 @@ class TftpEndpoint(LoggerMixin):
             self.awaiting_acks[block].set()
             del self.awaiting_acks[block]
         else:
-            msg = f"Not expecting any ack (got {block})"
-            self.logger.error("%s.", msg)
+            self.governed_log(
+                self.log_limiter,
+                "Not expecting any ack (got %d).",
+                block,
+                level=logging.ERROR,
+            )
 
             # Sending an error seems to cause more harm than good.
             # self.error_sender(TftpErrorCode.UNKNOWN_ID, msg, self.addr)
 
+    def __str__(self) -> str:
+        """Get this instance as a string."""
+        return f"{self.addr[0]}:{self.addr[1]}"
+
     def handle_error(self, error_code: TftpErrorCode, message: str) -> None:
         """Handle a tftp error message."""
 
-        self.logger.error(
-            "%s:%d '%s' %s.",
-            self.addr[0],
-            self.addr[1],
+        self.governed_log(
+            self.log_limiter,
+            "%s '%s' %s.",
+            self,
             error_code.name,
             message,
+            level=logging.ERROR,
         )
 
     async def ingest_file(self, stream: BinaryIO) -> bool:
@@ -206,7 +219,7 @@ class TftpEndpoint(LoggerMixin):
                 "%s to write (%s) '%s' from %s:%d.",
                 "Succeeded" if success else "Failed",
                 mode,
-                path,
+                FileInfo.from_file(path),
                 self.addr[0],
                 self.addr[1],
             )
@@ -231,7 +244,9 @@ class TftpEndpoint(LoggerMixin):
         success = True
         idx = 1
 
-        with self.log_time("Serving '%s'", path, reminder=True):
+        with self.log_time(
+            "Serving '%s'", FileInfo.from_file(path), reminder=True
+        ):
             for chunk in tftp_chunks(path, self.max_block_size):
                 # Validate index. Remove at some point?
                 assert idx not in self.awaiting_acks, idx
@@ -271,7 +286,7 @@ class TftpEndpoint(LoggerMixin):
                 "%s to serve (%s) '%s' to %s:%d.",
                 "Succeeded" if success else "Failed",
                 mode,
-                path,
+                FileInfo.from_file(path),
                 self.addr[0],
                 self.addr[1],
             )

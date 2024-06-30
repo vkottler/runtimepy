@@ -13,6 +13,7 @@ from typing import Union
 from vcorelib.asyncio.poll import repeat_until
 from vcorelib.paths.context import tempfile
 from vcorelib.paths.hashing import file_md5_hex
+from vcorelib.paths.info import FileInfo
 
 # internal
 from runtimepy.net import IpHost
@@ -37,7 +38,6 @@ class TftpConnection(BaseTftpConnection):
         endpoint = self.endpoint(addr)
         end_of_data = False
         idx = 1
-        bytes_read = 0
 
         def ack_sender() -> None:
             """Send acks."""
@@ -78,10 +78,8 @@ class TftpConnection(BaseTftpConnection):
 
                 # Write block.
                 nonlocal idx
-                nonlocal bytes_read
                 data = endpoint.blocks[idx]
                 path_fd.write(data)
-                bytes_read += len(data)
                 del endpoint.blocks[idx]
 
                 # Compute if this is the end of the stream.
@@ -119,9 +117,10 @@ class TftpConnection(BaseTftpConnection):
             )
 
         # Make a to-string or log method for vcorelib FileInfo?
+        #
         self.logger.info(
-            "Read %d bytes (%s).",
-            bytes_read,
+            "Read %s (%s).",
+            FileInfo.from_file(destination),
             "end of data" if end_of_data else "not end of data",
         )
 

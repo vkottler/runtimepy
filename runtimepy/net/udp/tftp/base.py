@@ -4,6 +4,7 @@ A module implementing a base tftp (RFC 1350) connection interface.
 
 # built-in
 from io import BytesIO
+import logging
 from pathlib import Path
 from typing import BinaryIO, Union
 
@@ -188,6 +189,17 @@ class BaseTftpConnection(UdpConnection):
             stream.write(b"\x00")
 
             self._send_message(TftpOpCode.ERROR, stream.getvalue(), addr=addr)
+
+        # Log errors sent.
+        endpoint = self.endpoint(addr)
+        self.governed_log(
+            endpoint.log_limiter,
+            "Sent error '%s: %s' to %s.",
+            error_code.name,
+            message,
+            endpoint,
+            level=logging.WARNING,
+        )
 
     def _send_message(
         self,

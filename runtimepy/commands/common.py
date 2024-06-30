@@ -5,7 +5,7 @@ A module for package command-line argument interfaces.
 # built-in
 from argparse import ArgumentParser as _ArgumentParser
 from argparse import Namespace as _Namespace
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from typing import Any, Iterator
 
 # third-party
@@ -16,10 +16,9 @@ from vcorelib.paths.context import tempfile
 # internal
 from runtimepy import DEFAULT_EXT, PKG_NAME
 
-try:
-    import curses as _curses
-except ModuleNotFoundError:  # pragma: nocover
-    _curses = {}  # type: ignore
+_curses = {}  # type: ignore
+with suppress(ModuleNotFoundError):
+    import curses as _curses  # type: ignore
 
 FACTORIES = f"package://{PKG_NAME}/factories.{DEFAULT_EXT}"
 
