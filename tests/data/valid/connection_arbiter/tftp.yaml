@@ -1,0 +1,13 @@
+---
+includes:
+  - package://runtimepy/tftp_server.yaml
+
+app:
+  - tests.net.udp.tftp_test
+
+clients:
+  - factory: tftp
+    name: tftp_client
+    defer: true
+    kwargs:
+      remote_addr: [localhost, "$tftp_server"]

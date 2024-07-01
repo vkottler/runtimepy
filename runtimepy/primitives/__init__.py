@@ -6,6 +6,9 @@ A module implementing a primitive-type storage entity.
 from typing import TypeVar as _TypeVar
 from typing import Union as _Union
 
+# third-party
+from vcorelib.python import StrToBool
+
 # internal
 from runtimepy.primitives.base import Primitive
 from runtimepy.primitives.bool import Bool
@@ -23,7 +26,6 @@ from runtimepy.primitives.int import (
     UnsignedInt,
 )
 from runtimepy.primitives.scaling import ChannelScaling, Numeric
-from runtimepy.util import StrToBool
 
 __all__ = [
     "ChannelScaling",

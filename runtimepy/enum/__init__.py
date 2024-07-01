@@ -11,6 +11,7 @@ from typing import cast as _cast
 # third-party
 from vcorelib.io.types import JsonObject as _JsonObject
 from vcorelib.io.types import JsonValue as _JsonValue
+from vcorelib.python import StrToBool
 
 # internal
 from runtimepy.enum.types import EnumType as _EnumType
@@ -19,7 +20,6 @@ from runtimepy.mapping import IntMappingData as _IntMappingData
 from runtimepy.registry.bool import BooleanRegistry as _BooleanRegistry
 from runtimepy.registry.item import RegistryItem as _RegistryItem
 from runtimepy.registry.name import NameRegistry as _NameRegistry
-from runtimepy.util import StrToBool
 
 
 class RuntimeEnum(_RegistryItem):

@@ -1,0 +1,12 @@
+---
+includes:
+  - package://runtimepy/factories.yaml
+
+ports:
+  - {name: tftp_server, type: udp}
+
+clients:
+  - factory: tftp
+    name: tftp_server
+    kwargs:
+      local_addr: [localhost, "$tftp_server"]

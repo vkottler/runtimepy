@@ -173,8 +173,13 @@ class TftpEndpoint(LoggerMixin):
             if keep_going:
                 # Write chunk.
                 data = self.blocks[idx]
-                stream.write(data)
                 curr_size = len(data)
+
+                # If this occurs, it's probably RFC 2348 (using this assertion
+                # to determine practical need for that support).
+                assert curr_size <= self.max_block_size, curr_size
+
+                stream.write(data)
                 written += curr_size
 
                 # We only expect future iterations if data payloads are

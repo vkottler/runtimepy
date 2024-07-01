@@ -1,7 +1,6 @@
 [DESIGN]
 max-args=9
 max-attributes=15
-max-locals=16
 max-parents=13
 max-branches=13
 

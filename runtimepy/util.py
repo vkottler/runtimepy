@@ -5,26 +5,21 @@ A module implementing package utilities.
 # built-in
 import logging
 import re
-from typing import Iterable, Iterator, NamedTuple
+from typing import Iterable, Iterator
 
 # third-party
 from vcorelib.logging import DEFAULT_TIME_FORMAT
+from vcorelib.paths.context import PossiblePath, as_path
 
-
-class StrToBool(NamedTuple):
-    """A container for results when converting strings to boolean."""
-
-    result: bool
-    valid: bool
-
-    @staticmethod
-    def parse(data: str) -> "StrToBool":
-        """Parse a string to boolean."""
-
-        data = data.lower()
-        is_true = data == "true"
-        resolved = is_true or data == "false"
-        return StrToBool(is_true, resolved)
+# Continue exporting some migrated things.
+__all__ = [
+    "ListLogger",
+    "as_path",
+    "import_str_and_item",
+    "name_search",
+    "Identifier",
+    "PossiblePath",
+]
 
 
 class ListLogger(logging.Handler):

@@ -32,12 +32,15 @@ class BaseTftpConnection(UdpConnection):
 
     _path: Path
 
+    default_auto_restart = True
+
     def set_root(self, path: Path) -> None:
         """Set a new root path for this instance."""
 
         self._path = path
         for endpoint in self._endpoints.values():
             endpoint.set_root(self._path)
+        self.logger.info("Set root directory to '%s'.", self._path)
 
     @property
     def path(self) -> Path:
