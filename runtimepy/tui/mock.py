@@ -3,14 +3,14 @@ A module implementing a simple window mock.
 """
 
 # built-in
+from contextlib import suppress
 from os import environ
 from sys import platform
 from typing import Tuple
 
-try:
-    import curses
-except ModuleNotFoundError:  # pragma: nocover
-    curses = {}  # type: ignore
+_curses = {}  # type: ignore
+with suppress(ModuleNotFoundError):
+    import curses as _curses  # type: ignore
 
 
 class WindowMock:
@@ -48,7 +48,7 @@ def stage_char(data: int) -> None:
     """Stage an input character."""
 
     # curses.ungetch(data)
-    getattr(curses, "ungetch")(data)
+    getattr(_curses, "ungetch")(data)
 
 
 def wrapper_mock(*args, **kwargs) -> None:
@@ -60,13 +60,13 @@ def wrapper_mock(*args, **kwargs) -> None:
         environ.setdefault("TERM", "linux")
 
     # Initialize the library (else curses won't work at all).
-    getattr(curses, "initscr")()  # curses.initscr()
-    getattr(curses, "start_color")()  # curses.start_color()
+    getattr(_curses, "initscr")()  # curses.initscr()
+    getattr(_curses, "start_color")()  # curses.start_color()
 
     # Send a re-size event.
-    stage_char(getattr(curses, "KEY_RESIZE"))
+    stage_char(getattr(_curses, "KEY_RESIZE"))
 
     # Create a virtual window for the application to use.
-    window = getattr(curses, "newwin")(24, 80)  # curses.newwin(24, 80)
+    window = getattr(_curses, "newwin")(24, 80)  # curses.newwin(24, 80)
 
     args[0](window, *args[1:], **kwargs)

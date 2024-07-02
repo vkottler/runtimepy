@@ -73,10 +73,10 @@ class ChannelEnvironmentTabMessaging(ChannelEnvironmentTabBase):
         """Handle tab initialization."""
 
         # Initialize logging.
-        if isinstance(self.command.logger, logging.Logger):
-            state.add_logger(self.command.logger)
+        if isinstance(self.logger, logging.Logger):
+            state.add_logger(self.logger)
 
-        self.command.logger.debug("Tab initialized.")
+        self.logger.debug("Tab initialized.")
 
     async def handle_message(
         self, data: dict[str, Any], send: TabMessageSender, state: TabState
@@ -95,11 +95,13 @@ class ChannelEnvironmentTabMessaging(ChannelEnvironmentTabBase):
             cmd = self.command
             result = cmd.command(data["value"])
 
-            cmd.logger.log(
-                logging.INFO if result else logging.ERROR,
+            # Limit log spam.
+            self.governed_log(
+                self.log_limiter,
                 "%s: %s",
                 data["value"],
                 result,
+                level=logging.INFO if result else logging.ERROR,
             )
 
         # Handle tab-event messages.
@@ -111,8 +113,12 @@ class ChannelEnvironmentTabMessaging(ChannelEnvironmentTabBase):
 
         # Log when messages aren't handled.
         else:
-            self.command.logger.warning(
-                "(%s) Message not handled: '%s'.", self.name, data
+            self.governed_log(
+                self.log_limiter,
+                "(%s) Message not handled: '%s'.",
+                self.name,
+                data,
+                level=logging.WARNING,
             )
 
         return response

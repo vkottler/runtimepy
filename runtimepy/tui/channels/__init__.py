@@ -3,12 +3,8 @@ A module implementing a channel-environment user interface.
 """
 
 # built-in
+from contextlib import suppress
 from typing import Optional as _Optional
-
-try:
-    import curses as _curses
-except ModuleNotFoundError:  # pragma: nocover
-    _curses = {}  # type: ignore
 
 # internal
 from runtimepy import PKG_NAME as _PKG_NAME
@@ -19,6 +15,10 @@ from runtimepy.channel.environment import (
 from runtimepy.tui.mixin import CursesWindow, TuiMixin
 
 __all__ = ["ChannelTui", "TuiMixin", "CursesWindow"]
+
+_curses = {}  # type: ignore
+with suppress(ModuleNotFoundError):
+    import curses as _curses  # type: ignore
 
 
 class ChannelTui(TuiMixin):

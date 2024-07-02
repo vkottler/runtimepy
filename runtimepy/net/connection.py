@@ -5,7 +5,9 @@ A module implementing a network-connection interface.
 # built-in
 from abc import ABC as _ABC
 import asyncio as _asyncio
-from contextlib import suppress as _suppress
+from contextlib import asynccontextmanager, suppress
+from typing import AsyncIterator
+from typing import Iterator as _Iterator
 from typing import Optional as _Optional
 from typing import Union as _Union
 
@@ -61,7 +63,12 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
         self._binary_messages: _asyncio.Queue[BinaryMessage] = _asyncio.Queue()
         self.tx_binary_hwm: int = 0
 
+        # Tasks common to connection processing.
         self._tasks: list[_asyncio.Task[None]] = []
+
+        # Connection-specific tasks.
+        self._conn_tasks: list[_asyncio.Task[None]] = []
+
         self.initialized = _asyncio.Event()
         self.exited = _asyncio.Event()
 
@@ -190,7 +197,7 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
             self.disable_extra()
 
             # Cancel tasks.
-            for task in self._tasks:
+            for task in self._tasks + list(self.tasks):
                 if not task.done():
                     task.cancel()
 
@@ -249,6 +256,17 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
 
             self._restart_attempts.raw.value += 1
 
+    @asynccontextmanager
+    async def process_then_disable(self, **kwargs) -> AsyncIterator[None]:
+        """Process this connection, then disable and wait for completion."""
+
+        task = _asyncio.create_task(self.process(**kwargs))
+        try:
+            yield
+        finally:
+            self.disable("nominal")
+            await task
+
     async def process(
         self,
         stop_sig: _asyncio.Event = None,
@@ -304,7 +322,7 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
     async def _process_read(self) -> None:
         """Process incoming messages while this connection is active."""
 
-        with _suppress(KeyboardInterrupt):
+        with suppress(KeyboardInterrupt):
             while self._enabled:
                 # Attempt to get the next message.
                 message = await self._await_message()
@@ -348,6 +366,22 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
             if data is not None:
                 await self._send_binay_message(data)
                 queue.task_done()
+
+    @property
+    def tasks(self) -> _Iterator[_asyncio.Task[None]]:
+        """
+        Get active connection tasks. Instance uses this opportunity to release
+        references to any completed tasks.
+        """
+
+        active = []
+
+        for task in self._conn_tasks:
+            if not task.done():
+                active.append(task)
+                yield task
+
+        self._conn_tasks = active
 
 
 class EchoConnection(Connection):

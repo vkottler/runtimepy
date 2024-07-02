@@ -16,6 +16,9 @@ config:
   foo: bar
   xdg_fragment: "wave1,hide-tabs,hide-channels/wave1:sin,cos"
 
+ports:
+  - {name: tftp_server, type: udp}
+
 clients:
   - factory: runtimepy_http
     name: runtimepy_http_client

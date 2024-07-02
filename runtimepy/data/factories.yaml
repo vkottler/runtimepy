@@ -20,6 +20,7 @@ factories:
     namespaces: [websocket, "null"]
 
   # Useful protocols.
+  - {name: runtimepy.net.factories.Tftp}
   - {name: runtimepy.net.factories.Http}
   - {name: runtimepy.net.factories.RuntimepyHttp}
   - {name: runtimepy.net.factories.RuntimepyWebsocketJson}

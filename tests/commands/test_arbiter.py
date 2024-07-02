@@ -13,7 +13,7 @@ from runtimepy.entry import main as runtimepy_main
 from tests.resources import base_args, resource
 
 
-@mark.timeout(30)
+@mark.timeout(60)
 def test_arbiter_command_basic():
     """Test basic usages of the 'arbiter' command."""
 
@@ -26,7 +26,7 @@ def test_arbiter_command_basic():
         == 0
     )
 
-    for entry in ["basic", "http", "control"]:
+    for entry in ["basic", "http", "control", "tftp"]:
         assert (
             runtimepy_main(
                 base + [str(resource("connection_arbiter", f"{entry}.yaml"))]

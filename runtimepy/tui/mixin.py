@@ -3,17 +3,17 @@ A module for terminal user-interface application mixins.
 """
 
 # built-in
+from contextlib import suppress
 from typing import Optional
-
-try:
-    import curses as _curses
-except ModuleNotFoundError:  # pragma: nocover
-    _curses = {}  # type: ignore
 
 # internal
 from runtimepy.tui.cursor import CursesWindow, Cursor
 
 __all__ = ["CursesWindow", "Cursor", "TuiMixin"]
+
+_curses = {}  # type: ignore
+with suppress(ModuleNotFoundError):
+    import curses as _curses  # type: ignore
 
 
 class TuiMixin:

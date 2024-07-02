@@ -5,6 +5,9 @@ A module implementing a sample peer-program interface.
 # built-in
 import asyncio
 
+# third-party
+from vcorelib.math import RateLimiter
+
 # internal
 from runtimepy.net.arbiter.info import AppInfo
 from runtimepy.subprocess.program import PeerProgram
@@ -23,11 +26,19 @@ class SampleProgram(PeerProgram):
         keep_going = True
         while keep_going:
             try:
-                self.struct.logger.info("Sup, it's %s.", self.struct.name)
+                self.struct.governed_log(
+                    self.log_limiter, "Sup, it's %s.", self.struct.name
+                )
                 did_write.set()
                 await asyncio.sleep(poll_period_s)
             except asyncio.CancelledError:
                 keep_going = False
+
+    def struct_pre_finalize(self) -> None:
+        """Configure struct before finalization."""
+
+        super().struct_pre_finalize()
+        self.log_limiter = RateLimiter.from_s(2.0)
 
     def pre_environment_exchange(self) -> None:
         """Perform early initialization tasks."""

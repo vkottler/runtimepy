@@ -7,11 +7,13 @@ from argparse import Namespace
 import asyncio
 from io import BytesIO
 from json import dumps
+import logging
 from logging import INFO, getLogger
 from typing import Optional
 
 # third-party
 from vcorelib.io.types import JsonObject
+from vcorelib.math import RateLimiter
 
 # internal
 from runtimepy import METRICS_NAME
@@ -55,6 +57,7 @@ class RuntimepyPeerInterface(
 
         # Set these for JsonMessageInterface.
         AsyncCommandProcessingMixin.__init__(self, logger=self.struct.logger)
+        self.log_limiter = RateLimiter.from_s(1.0)
         self.command = self.struct.command
 
         self._setup_async_commands()
@@ -218,7 +221,12 @@ class RuntimepyPeerInterface(
                     for event in self.peer.env.parse_event_stream(stream):
                         self.peer.env.ingest(event)
             else:
-                self.logger.warning("Dropped %d bytes of telemetry.", count)
+                self.governed_log(
+                    self.log_limiter,
+                    "Dropped %d bytes of telemetry.",
+                    count,
+                    level=logging.WARNING,
+                )
 
     async def handle_stdout(self, data: bytes) -> None:
         """Handle messages from stdout."""
