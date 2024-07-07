@@ -6,7 +6,7 @@ entry: {{entry}}
 
 requirements:
   - vcorelib>=3.3.1
-  - svgen>=0.6.7
+  - svgen>=0.6.8
   - websockets
   - psutil
   - "windows-curses; sys_platform == 'win32' and python_version < '3.12'"

@@ -87,7 +87,7 @@ def sample_env(env: ChannelEnvironment = None) -> ChannelEnvironment:
                         commandable=True,
                         default=2,
                     )
-                    env.bool_channel("bool")
+                    env.bool_channel("bool", default=True, commandable=True)
                     env.int_channel("int", commandable=True)
                     env.int_channel(
                         "scaled_int", commandable=True, scaling=[1.0, 2.0]

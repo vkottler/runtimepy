@@ -26,6 +26,8 @@ factories:
   - {name: runtimepy.net.factories.RuntimepyWebsocketJson}
   - {name: runtimepy.net.factories.RuntimepyWebsocketData}
 
+  # Device drivers.
+  - {name: runtimepy.net.factories.Np05b}
   - {name: runtimepy.net.tcp.scpi.ScpiConn}
 
   # Useful tasks.

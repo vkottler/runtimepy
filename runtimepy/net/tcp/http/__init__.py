@@ -77,8 +77,17 @@ class HttpConnection(_TcpConnection):
 
         self.handlers = copy(self.handlers)
         self.handlers[http.HTTPMethod.GET] = self.get_handler
+        self.handlers[http.HTTPMethod.POST] = self.post_handler
 
     async def get_handler(
+        self,
+        response: ResponseHeader,
+        request: RequestHeader,
+        request_data: Optional[bytes],
+    ) -> Optional[bytes]:
+        """Sample handler."""
+
+    async def post_handler(
         self,
         response: ResponseHeader,
         request: RequestHeader,

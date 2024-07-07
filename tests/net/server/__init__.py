@@ -85,5 +85,32 @@ async def runtimepy_http_client_server(
             client.request_json(RequestHeader(target="/json/test/d")),
             client.request_json(RequestHeader(target=env_path)),
             client.request_json(RequestHeader(target=f"{env_path}/values")),
+            # Send commands.
+            client.request_json(RequestHeader(method="POST", target="/")),
+            client.request_json(RequestHeader(method="POST", target="/a")),
+            client.request_json(RequestHeader(method="POST", target="/a/b/c")),
+            client.request_json(
+                RequestHeader(method="POST", target="/app/help")
+            ),
+            client.request_json(
+                RequestHeader(method="POST", target="/app/toggle")
+            ),
+            client.request_json(
+                RequestHeader(method="POST", target="/app/toggle/asdf")
+            ),
+            client.request_json(
+                RequestHeader(method="POST", target="/app/toggle/paused")
+            ),
+            client.request_json(
+                RequestHeader(method="POST", target="/app/toggle/paused")
+            ),
+            client.request_json(
+                RequestHeader(method="POST", target="/sample1/custom/asdf")
+            ),
+            client.request_json(
+                RequestHeader(
+                    method="POST", target="/sample1/custom/test_command"
+                )
+            ),
         )
     )

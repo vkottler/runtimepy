@@ -1,0 +1,10 @@
+---
+includes:
+  - default.yaml
+
+clients:
+  - factory: np05b
+    name: pdu
+    kwargs:
+      host: 192.168.1.8
+      port: 23
