@@ -16,6 +16,10 @@ config:
   foo: bar
   xdg_fragment: "wave1,hide-tabs,hide-channels/wave1:sin,cos"
 
+  # Additional web applications.
+  landing_page:
+    paths: [/landing_page.html]
+
 ports:
   - {name: tftp_server, type: udp}
 

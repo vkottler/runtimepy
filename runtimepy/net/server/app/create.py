@@ -17,7 +17,7 @@ from runtimepy.net.server.app.base import WebApplication
 from runtimepy.net.server.app.bootstrap.tabs import TabbedContent
 from runtimepy.net.server.html import HtmlApp
 
-DOCUMENT = None
+DOCUMENTS: dict[str, Html] = {}
 T = TypeVar("T")
 
 
@@ -28,16 +28,18 @@ def config_param(
     return app.config_param(key, default, strict=strict)
 
 
-def create_app(
-    app: AppInfo, compose: Callable[[AppInfo, TabbedContent], None]
-) -> HtmlApp:
-    """Create a web-application handler."""
+HtmlAppComposer = Callable[
+    [AppInfo, Html, RequestHeader, ResponseHeader, Optional[bytes]], Html
+]
 
-    def _compose(tabs: TabbedContent) -> None:
-        """A simple compose wrapper."""
-        compose(app, tabs)
 
-    async def main(
+def create_cacheable_app(app: AppInfo, compose: HtmlAppComposer) -> HtmlApp:
+    """
+    Create a web application-serving method capable of automatically caching
+    the originally composed document.
+    """
+
+    async def cached_app(
         document: Html,
         request: RequestHeader,
         response: ResponseHeader,
@@ -48,26 +50,49 @@ def create_app(
         with LoggerMixin(logger=app.logger).log_time(
             "Composing HTML document"
         ):
-            # Not currently used.
-            del request
-            del response
-            del request_data
-
             populate = True
+
+            compose_name = compose.__name__
 
             # Use the already-rendered document.
             if config_param(app, "caching", True):
-                global DOCUMENT  # pylint: disable=global-statement
-                if DOCUMENT is not None:
-                    document = DOCUMENT
+                if compose_name in DOCUMENTS:
+                    document = DOCUMENTS[compose_name]
                     populate = False
 
             if populate:
                 # Create the application.
-                WebApplication(app).populate(document, _compose)
-
-            DOCUMENT = document
+                document = compose(
+                    app, document, request, response, request_data
+                )
+                DOCUMENTS[compose_name] = document
 
         return document
 
-    return main
+    return cached_app
+
+
+def create_app(
+    app: AppInfo, compose: Callable[[AppInfo, TabbedContent], None]
+) -> HtmlApp:
+    """Create a web-application handler."""
+
+    def main(
+        app: AppInfo,
+        document: Html,
+        request: RequestHeader,
+        response: ResponseHeader,
+        request_data: Optional[bytes],
+    ) -> Html:
+        """Main package web application."""
+
+        # Not currently used.
+        del request
+        del response
+        del request_data
+
+        WebApplication(app).populate(document, lambda tabs: compose(app, tabs))
+
+        return document
+
+    return create_cacheable_app(app, main)

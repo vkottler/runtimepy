@@ -1,0 +1,7 @@
+---
+port_overrides:
+  runtimepy_http_server: 8000
+config:
+  caching: false
+app:
+  - runtimepy.net.apps.wait_for_stop
