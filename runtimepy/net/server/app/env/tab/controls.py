@@ -15,7 +15,11 @@ from runtimepy.channel.environment import ChannelEnvironment
 from runtimepy.enum import RuntimeEnum
 from runtimepy.net.server.app.bootstrap.elements import slider, toggle_button
 from runtimepy.net.server.app.env.tab.base import ChannelEnvironmentTabBase
-from runtimepy.net.server.app.env.widgets import enum_dropdown, value_input_box
+from runtimepy.net.server.app.env.widgets import (
+    TABLE_BUTTON_CLASSES,
+    enum_dropdown,
+    value_input_box,
+)
 
 
 def get_channel_kind_str(
@@ -30,6 +34,27 @@ def get_channel_kind_str(
         kind_str = enum_name
 
     return kind_str
+
+
+def default_button(
+    parent: Element,
+    name: str,
+    chan: AnyChannel,
+    *classes: str,
+    front: bool = True,
+) -> Element:
+    """Create a default-value button."""
+
+    button = toggle_button(
+        parent,
+        id=name,
+        icon="arrow-counterclockwise",
+        title=f"Reset '{name}' to default value '{chan.default}'.",
+        value=chan.default,
+        front=front,
+    )
+    button.add_class("default-button", *classes)
+    return button
 
 
 class ChannelEnvironmentTabControls(ChannelEnvironmentTabBase):
@@ -47,13 +72,14 @@ class ChannelEnvironmentTabControls(ChannelEnvironmentTabBase):
         env = self.command.env
 
         # Add boolean/bit toggle button.
-        control = div(tag="td", parent=parent)
+        control = div(tag="td", parent=parent, class_str="p-0")
 
         chan_type = div(
             tag="td",
             text=get_channel_kind_str(env, chan, enum),
             parent=parent,
             title=f"Underlying primitive type for '{name}'.",
+            class_str="p-0 ps-1 pe-1",
         )
 
         control_added = False
@@ -71,8 +97,13 @@ class ChannelEnvironmentTabControls(ChannelEnvironmentTabBase):
                 button = toggle_button(
                     control, id=name, title=f"Toggle '{name}'."
                 )
-                button.add_class("toggle-value")
+                button.add_class("toggle-value", *TABLE_BUTTON_CLASSES)
                 control_added = True
+
+                if chan.default is not None:
+                    default_button(
+                        control, name, chan, *TABLE_BUTTON_CLASSES, front=False
+                    )
 
         elif chan.type.is_float:
             chan_type.add_class("text-secondary-emphasis")
@@ -85,15 +116,7 @@ class ChannelEnvironmentTabControls(ChannelEnvironmentTabBase):
 
             # Reset-to-default button if a default value exists.
             if chan.default is not None:
-                button = toggle_button(
-                    container,
-                    id=name,
-                    icon="arrow-counterclockwise",
-                    title=f"Reset '{name}' to default value '{chan.default}'.",
-                    value=chan.default,
-                    front=True,
-                )
-                button.add_class("default-button")
+                default_button(container, name, chan, *TABLE_BUTTON_CLASSES)
 
             if chan.controls:
                 # Determine if a slider should be created.
@@ -119,7 +142,7 @@ class ChannelEnvironmentTabControls(ChannelEnvironmentTabBase):
     ) -> None:
         """Add control elements for bit fields."""
 
-        control = div(tag="td", parent=parent)
+        control = div(tag="td", parent=parent, class_str="p-0")
 
         field = self.command.env.fields[name]
         if field.commandable:
@@ -127,7 +150,7 @@ class ChannelEnvironmentTabControls(ChannelEnvironmentTabBase):
                 button = toggle_button(
                     control, id=name, title=f"Toggle '{name}'."
                 )
-                button.add_class("toggle-value")
+                button.add_class("toggle-value", *TABLE_BUTTON_CLASSES)
             elif enum:
                 enum_dropdown(control, name, enum, field())
             else:

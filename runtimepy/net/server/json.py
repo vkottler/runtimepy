@@ -67,6 +67,21 @@ def traverse_dict(data: dict[str, Any], *paths: str) -> Any:
     return data
 
 
+def encode_json(
+    stream: TextIO,
+    response: ResponseHeader,
+    data: dict[str, Any],
+    response_type: str = "json",
+) -> None:
+    """Encode a JSON message response."""
+
+    response["Content-Type"] = (
+        f"application/{response_type}; charset={DEFAULT_ENCODING}"
+    )
+    ARBITER.encode_stream(response_type, stream, data, cls=Encoder)
+    stream.write("\n")
+
+
 def json_handler(
     stream: TextIO,
     request: RequestHeader,
@@ -78,11 +93,6 @@ def json_handler(
 
     del request_data
 
-    response_type = "json"
-    response["Content-Type"] = (
-        f"application/{response_type}; charset={DEFAULT_ENCODING}"
-    )
-
     # Traverse path.
     data = traverse_dict(data, *request.target.path.split("/")[2:])
 
@@ -90,5 +100,4 @@ def json_handler(
     if not isinstance(data, dict):
         data = {"__raw__": data}
 
-    ARBITER.encode_stream(response_type, stream, data, cls=Encoder)
-    stream.write("\n")
+    encode_json(stream, response, data)

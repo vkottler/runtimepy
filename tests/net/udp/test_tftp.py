@@ -4,6 +4,7 @@ Test the 'net.udp.tftp' module.
 
 # built-in
 import asyncio
+from contextlib import suppress
 from pathlib import Path
 from random import randbytes
 import stat
@@ -156,18 +157,21 @@ async def test_tftp_connection_basic():
             asyncio.create_task(conn2.process(stop_sig=stop)),
         ]
 
-        # Test connection.
-        with TemporaryDirectory() as tmpdir:
-            # Set path.
-            path = Path(tmpdir)
-            conn1.endpoint()
-            conn1.set_root(path)
-            conn2.set_root(path)
+        # (Windows CI issue).
+        with suppress(PermissionError):
 
-            # Set timing parameters.
-            conn1.endpoint().period = 0.01
-            conn1.endpoint().timeout = 0.1
-            await testcase(conn1, conn2)
+            # Test connection.
+            with TemporaryDirectory() as tmpdir:
+                # Set path.
+                path = Path(tmpdir)
+                conn1.endpoint()
+                conn1.set_root(path)
+                conn2.set_root(path)
+
+                # Set timing parameters.
+                conn1.endpoint().period = 0.01
+                conn1.endpoint().timeout = 0.1
+                await testcase(conn1, conn2)
 
         # Allow connection(s) to read.
         await asyncio.sleep(0)

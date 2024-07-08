@@ -7,7 +7,7 @@ from io import StringIO
 import logging
 import mimetypes
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional, TextIO
 
 # third-party
 from vcorelib.io import JsonObject
@@ -15,11 +15,12 @@ from vcorelib.paths import Pathlike, find_file, normalize
 
 # internal
 from runtimepy import DEFAULT_EXT, PKG_NAME
+from runtimepy.channel.environment.command import GLOBAL
 from runtimepy.net.http.header import RequestHeader
 from runtimepy.net.http.request_target import PathMaybeQuery
 from runtimepy.net.http.response import ResponseHeader
 from runtimepy.net.server.html import HtmlApp, HtmlApps, html_handler
-from runtimepy.net.server.json import json_handler
+from runtimepy.net.server.json import encode_json, json_handler
 from runtimepy.net.tcp.http import HttpConnection
 
 MIMETYPES_INIT = False
@@ -119,19 +120,66 @@ class RuntimepyServerConnection(HttpConnection):
 
         return result
 
+    def handle_command(
+        self, stream: TextIO, response: ResponseHeader, args: tuple[str, ...]
+    ) -> None:
+        """Handle a command request."""
+
+        response_data: dict[str, Any] = {"your_command": args}
+
+        response_data["success"] = False
+        response_data["message"] = "No command executed."
+
+        if not args or args[0] not in GLOBAL:
+            response_data["usage"] = (
+                "/<environment (arg0)>/<arg1>[/.../<argN>]"
+            )
+            response_data["environments"] = list(GLOBAL)
+
+        # Run command.
+        else:
+            result = GLOBAL[args[0]].command(" ".join(args[1:]))
+            response_data["success"] = result.success
+            response_data["message"] = str(result)
+
+        # Send response.
+        encode_json(stream, response, response_data)
+
+    async def post_handler(
+        self,
+        response: ResponseHeader,
+        request: RequestHeader,
+        request_data: Optional[bytes],
+    ) -> Optional[bytes]:
+        """Handle POST requests."""
+
+        request.log(self.logger, False, level=logging.INFO)
+
+        result = None
+
+        with StringIO() as stream:
+            # Treat request as a command.
+            if request.target.origin_form:
+                self.handle_command(
+                    stream, response, Path(request.target.path).parts[1:]
+                )
+                result = stream.getvalue().encode()
+
+        return result
+
     async def get_handler(
         self,
         response: ResponseHeader,
         request: RequestHeader,
         request_data: Optional[bytes],
     ) -> Optional[bytes]:
-        """Sample handler."""
+        """Handle GET requests."""
+
+        request.log(self.logger, False, level=logging.INFO)
 
         result = None
 
         with StringIO() as stream:
-            request.log(self.logger, False, level=logging.INFO)
-
             if request.target.origin_form:
                 path = request.target.path
 

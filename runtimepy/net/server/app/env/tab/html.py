@@ -76,7 +76,7 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabControls):
 
         div(
             tag="td",
-            class_str="channel-value",
+            class_str="channel-value p-0",
             parent=parent,
             title=f"Current value of '{name}'.",
         )
@@ -116,7 +116,7 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabControls):
 
         div(
             tag="td",
-            class_str="channel-value",
+            class_str="channel-value p-0",
             parent=parent,
             title=f"Current value of '{name}'.",
         )
@@ -128,7 +128,7 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabControls):
             text=kind_str,
             parent=parent,
             title=f"Field position for '{name}' within underlying primitive.",
-            class_str="text-info-emphasis text-nowrap",
+            class_str="text-info-emphasis text-nowrap p-0 ps-1 pe-1",
         )
 
     def channel_table(self, parent: Element) -> None:
@@ -140,12 +140,11 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabControls):
         header = div(tag="thead", parent=table)
         body = div(tag="tbody", parent=table)
 
-        env = self.command.env
-
         # Add header.
-        channel_table_header(header, env)
+        channel_table_header(header, self.command)
 
-        # make a table for channel stuff
+        # Table for channels.
+        env = self.command.env
         for name in env.names:
             row = div(
                 tag="tr",

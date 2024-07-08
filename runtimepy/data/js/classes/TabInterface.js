@@ -120,7 +120,7 @@ class TabInterface {
     }
 
     /* Initialize enumeration command drop downs. */
-    for (let enums of this.queryAll("select")) {
+    for (let enums of this.queryAll("td>select")) {
       enums.onchange = this.setHandler(enums);
     }
 
@@ -159,6 +159,13 @@ class TabInterface {
           button.click();
         }
       };
+    }
+
+    /* Initialize custom-command sending interfaces. */
+    let selector = this.query("#custom-commands");
+    let send = this.query("#send-custom-commands");
+    if (selector && send) {
+      send.onclick = () => { this.worker.command(`custom ${selector.value}`); };
     }
   }
 

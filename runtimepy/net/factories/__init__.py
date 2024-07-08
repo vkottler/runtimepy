@@ -28,6 +28,7 @@ from runtimepy.net.tcp import (
     TcpConnection,
 )
 from runtimepy.net.tcp.http import HttpConnection
+from runtimepy.net.tcp.telnet.np_05b import Np05bConnection
 from runtimepy.net.udp import (
     EchoUdpConnection,
     NullUdpConnection,
@@ -161,6 +162,12 @@ class Http(TcpConnectionFactory[HttpConnection]):
     """HTTP connection factory."""
 
     kind = HttpConnection
+
+
+class Np05b(TcpConnectionFactory[Np05bConnection]):
+    """A networked-PDU connection factory."""
+
+    kind = Np05bConnection
 
 
 class RuntimepyHttp(TcpConnectionFactory[RuntimepyServerConnection]):

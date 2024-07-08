@@ -4,7 +4,7 @@ A module implementing a channel-command processing interface.
 
 # built-in
 from argparse import Namespace
-from typing import Any, Callable, Optional, cast
+from typing import Any, Awaitable, Callable, Optional, cast
 
 # third-party
 from vcorelib.logging import LoggerType
@@ -23,6 +23,11 @@ from runtimepy.primitives.field import BitField
 
 CommandHook = Callable[[Namespace, Optional[FieldOrChannel]], None]
 
+# Custom commands require async processing (e.g. AsyncCommandProcessingMixin).
+CustomCommand = Callable[
+    [Namespace, Optional[FieldOrChannel]], Awaitable[None]
+]
+
 
 class ChannelCommandProcessor(ChannelEnvironmentMixin):
     """A command processing interface for channel environments."""
@@ -36,11 +41,25 @@ class ChannelCommandProcessor(ChannelEnvironmentMixin):
         self.logger = logger
         self.hooks: list[CommandHook] = []
 
+        self.custom_commands: dict[str, CustomCommand] = {}
+
         self.parser_data: dict[str, Any] = {}
         self.parser = CommandParser(prog="")
         self.parser.data = self.parser_data
 
         self.parser.initialize()
+
+    def register_custom_commands(
+        self, *custom_commands: CustomCommand
+    ) -> None:
+        """Register custom commands."""
+
+        for cmd in custom_commands:
+            name = cmd.__name__
+            assert (
+                name not in self.custom_commands
+            ), f"Duplicate custom command name '{name}'!"
+            self.custom_commands[name] = cmd
 
     def get_suggestion(self, value: str) -> Optional[str]:
         """Get an input suggestion."""
@@ -115,7 +134,7 @@ class ChannelCommandProcessor(ChannelEnvironmentMixin):
 
         # Handle remote commands by processing hooks and returning (hooks
         # implement remote command behavior and capability).
-        if args.remote:
+        if args.remote or args.command == ChannelCommand.CUSTOM:
             for hook in self.hooks:
                 hook(args, None)
             return result
@@ -180,6 +199,20 @@ class ChannelCommandProcessor(ChannelEnvironmentMixin):
             result = self.handle_command(args)
 
         return result
+
+    async def handle_custom_command(
+        self, args: Namespace, channel: Optional[FieldOrChannel]
+    ) -> None:
+        """Handle a custom command."""
+
+        if args.channel in self.custom_commands:
+            await self.custom_commands[args.channel](args, channel)
+        else:
+            self.logger.warning(
+                "Unknown custom command '%s' (try one of: %s).",
+                args.channel,
+                ", ".join(self.custom_commands),
+            )
 
 
 EnvironmentMap = dict[str, ChannelCommandProcessor]

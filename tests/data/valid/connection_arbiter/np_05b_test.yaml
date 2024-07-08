@@ -1,0 +1,24 @@
+---
+ports:
+  - {name: mock_pdu, type: tcp}
+
+app:
+  - tests.net.tcp.test_np_05b.np_05b_test
+
+factories:
+  - {name: runtimepy.net.factories.Np05b, namespaces: [np05b]}
+  - name: "tests.net.tcp.test_np_05b.MockNp05bConn"
+    namespaces: [mock, np05b]
+
+clients:
+  - factory: np05b
+    name: pdu
+    defer: true
+    kwargs:
+      host: localhost
+      port: "$mock_pdu"
+
+servers:
+  - factory: mock_np05b_conn
+    kwargs:
+      port: "$mock_pdu"

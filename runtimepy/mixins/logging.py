@@ -30,6 +30,7 @@ class LoggerMixinLevelControl(LoggerMixin):
         """Handle a change in log level."""
 
         self.logger.setLevel(new_value)
+        self.logger.log(new_value, "Log level updated to %d.", new_value)
 
     def setup_level_channel(
         self,
