@@ -4,6 +4,7 @@ A module implementing various networking utilities.
 
 # built-in
 from contextlib import suppress as _suppress
+import ipaddress
 import socket as _socket
 from typing import Awaitable, NamedTuple, Optional, TypeVar
 from typing import Union as _Union
@@ -18,6 +19,11 @@ class IPv4Host(NamedTuple):
     name: str = ""
     port: int = 0
 
+    @property
+    def address(self) -> ipaddress.IPv4Address:
+        """Get an address object for this hostname."""
+        return ipaddress.IPv4Address(self.name)
+
     def __str__(self) -> str:
         """Get this host as a string."""
         return hostname_port(self.name, self.port)
@@ -30,6 +36,11 @@ class IPv6Host(NamedTuple):
     port: int = 0
     flowinfo: int = 0
     scope_id: int = 0
+
+    @property
+    def address(self) -> ipaddress.IPv6Address:
+        """Get an address object for this hostname."""
+        return ipaddress.IPv6Address(self.name)
 
     def __str__(self) -> str:
         """Get this host as a string."""
