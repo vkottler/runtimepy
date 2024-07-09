@@ -105,25 +105,28 @@ class Serializable(ABC):
         return result
 
     @abstractmethod
-    def update(self, data: bytes) -> int:
+    def update(self, data: bytes, timestamp_ns: int = None) -> int:
         """Update this serializable from a bytes instance."""
 
-    def update_str(self, data: str) -> int:
+    def update_str(self, data: str, timestamp_ns: int = None) -> int:
         """Update this serializable from string data."""
-        return self.update(data.encode(encoding=DEFAULT_ENCODING))
 
-    def _from_stream(self, stream: _BinaryIO) -> int:
+        return self.update(
+            data.encode(encoding=DEFAULT_ENCODING), timestamp_ns=timestamp_ns
+        )
+
+    def _from_stream(self, stream: _BinaryIO, timestamp_ns: int = None) -> int:
         """Update just this instance from a stream."""
 
-        return self.update(stream.read(self.size))
+        return self.update(stream.read(self.size), timestamp_ns=timestamp_ns)
 
-    def from_stream(self, stream: _BinaryIO) -> int:
+    def from_stream(self, stream: _BinaryIO, timestamp_ns: int = None) -> int:
         """Update this serializable from a stream."""
 
-        result = self._from_stream(stream)
+        result = self._from_stream(stream, timestamp_ns=timestamp_ns)
 
         if self.chain is not None:
-            result += self.chain.from_stream(stream)
+            result += self.chain.from_stream(stream, timestamp_ns=timestamp_ns)
 
         return result
 

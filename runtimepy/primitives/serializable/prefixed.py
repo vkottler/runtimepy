@@ -44,10 +44,10 @@ class PrefixedChunk(Serializable):
         """Get this chunk as a string."""
         return str(self.chunk)
 
-    def update(self, data: bytes) -> int:
+    def update(self, data: bytes, timestamp_ns: int = None) -> int:
         """Update this serializable from a bytes instance."""
 
-        size = self.chunk.update(data)
+        size = self.chunk.update(data, timestamp_ns=timestamp_ns)
         self.prefix.value = size
         return self._update_size()
 
@@ -73,13 +73,14 @@ class PrefixedChunk(Serializable):
             self.chunk
         )
 
-    def _from_stream(self, stream: _BinaryIO) -> int:
+    def _from_stream(self, stream: _BinaryIO, timestamp_ns: int = None) -> int:
         """Update just this instance from a stream."""
 
         self.chunk.update(
             stream.read(
                 self.prefix.from_stream(stream, byte_order=self.byte_order)
-            )
+            ),
+            timestamp_ns=timestamp_ns,
         )
         return self._update_size()
 
