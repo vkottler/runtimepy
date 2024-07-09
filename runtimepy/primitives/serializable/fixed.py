@@ -31,8 +31,10 @@ class FixedChunk(Serializable):
         """Get this serializable as a bytes instance."""
         return self.data
 
-    def update(self, data: bytes) -> int:
+    def update(self, data: bytes, timestamp_ns: int = None) -> int:
         """Update this serializable from a bytes instance."""
+
+        del timestamp_ns
 
         self.data = data
         self.size = len(self.data)
