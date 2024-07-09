@@ -10,7 +10,12 @@ from typing import Any
 # internal
 from runtimepy.net.arbiter.info import AppInfo
 from runtimepy.net.server import RuntimepyServerConnection
-from runtimepy.net.server.app.create import config_param, create_app
+from runtimepy.net.server.app.create import (
+    config_param,
+    create_app,
+    create_cacheable_app,
+)
+from runtimepy.net.server.app.landing_page import landing_page
 from runtimepy.subprocess import spawn_exec
 from runtimepy.util import import_str_and_item
 
@@ -44,6 +49,10 @@ async def launch_browser(app: AppInfo) -> None:
                     )
 
 
+# Could add an interface for adding multiple applications.
+APPS = {"landing_page": landing_page}
+
+
 async def setup(app: AppInfo) -> int:
     """Perform server application setup steps."""
 
@@ -55,9 +64,21 @@ async def setup(app: AppInfo) -> int:
             "runtimepy.net.server.app.env.channel_environments",
         )
     )
-    RuntimepyServerConnection.default_app = create_app(
-        app, getattr(_import_module(module), method)
-    )
+
+    # Default application (environment tabs).
+    web_app = create_app(app, getattr(_import_module(module), method))
+    RuntimepyServerConnection.apps["/app.html"] = web_app
+    RuntimepyServerConnection.default_app = web_app
+
+    # Register custom applications.
+    for key, app_method in APPS.items():
+        app_cfg: dict[str, Any] = app.config_param(key, {})
+        paths = app_cfg.get("paths", [])
+        if paths:
+            # Only create a handler if paths are configured to serve the app.
+            created = create_cacheable_app(app, app_method)
+            for path in paths:
+                RuntimepyServerConnection.apps[path] = created
 
     await launch_browser(app)
 

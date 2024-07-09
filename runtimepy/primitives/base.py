@@ -136,12 +136,19 @@ class Primitive(_Generic[T]):
 
     @value.setter
     def value(self, value: T) -> None:
-        """Obtain the underlying value."""
+        """Set a new underlying value."""
+        self.set_value(value)
+
+    def set_value(self, value: T, timestamp_ns: int = None) -> None:
+        """Set a new underlying value."""
+
+        # Set new timestamp.
+        if timestamp_ns is None:
+            timestamp_ns = self.time_source()
+        self.last_updated_ns = timestamp_ns
 
         curr: T = self.raw.value  # type: ignore
-
         self.raw.value = value
-        self.last_updated_ns = self.time_source()
 
         # Call callbacks if the value has changed.
         if self.callbacks and curr != value:

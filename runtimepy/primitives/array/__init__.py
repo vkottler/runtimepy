@@ -230,16 +230,18 @@ class PrimitiveArray(Serializable):
         """Get bytes from a fragment."""
         return bytes(self._fragments[index])
 
-    def update(self, data: bytes) -> int:
+    def update(self, data: bytes, timestamp_ns: int = None) -> int:
         """Update primitive values from a bytes instance."""
 
         for primitive, item in zip(
             self._primitives, _unpack(self._format, data)
         ):
-            primitive.value = item
+            primitive.set_value(item, timestamp_ns=timestamp_ns)
 
         return self.size
 
-    def update_fragment(self, index: int, data: bytes) -> None:
+    def update_fragment(
+        self, index: int, data: bytes, timestamp_ns: int = None
+    ) -> None:
         """Update a fragment by index."""
-        self._fragments[index].update(data)
+        self._fragments[index].update(data, timestamp_ns=timestamp_ns)
