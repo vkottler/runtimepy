@@ -3,6 +3,7 @@ Test the 'channel.environment.create' module.
 """
 
 # built-in
+from contextlib import suppress
 import logging
 
 # module under test
@@ -14,8 +15,8 @@ from runtimepy.primitives import Uint8
 from runtimepy.primitives.field import BitField
 
 
-def test_channel_environment_create_basic():
-    """Test basic channel and enumeration creation scenarios."""
+def sample_env() -> ChannelEnvironment:
+    """Create a sample channel environment."""
 
     env = ChannelEnvironment()
 
@@ -25,6 +26,34 @@ def test_channel_environment_create_basic():
         "sample_channel", "bool", enum=enum, description="A sample channel."
     )
     assert result
+
+    return env
+
+
+def test_channel_environment_finalize_bypass():
+    """
+    Test that we can bypass finalization to add more channels when necessary.
+    """
+
+    env = sample_env()
+    env.finalize()
+    assert env.finalized
+
+    with suppress(AssertionError):
+        env.channel("test", "bool")
+
+        # Should not reach here.
+        assert False
+
+    with env.bypass_finalized():
+        assert not env.finalized
+        env.channel("test", "bool")
+
+
+def test_channel_environment_create_basic():
+    """Test basic channel and enumeration creation scenarios."""
+
+    env = sample_env()
 
     assert len(list(env.search_names("sample_channel", exact=True))) == 1
 
