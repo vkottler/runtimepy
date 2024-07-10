@@ -215,7 +215,8 @@ class TabInterface {
 
       /* Initialize plot-channel buttons. */
       for (let elem of this.queryAll("input.form-check-input")) {
-        let chan = elem.id.split("-")[1];
+        /* Channel name appears after 'plot-'. */
+        let chan = elem.id.substring("plot-".length);
 
         /* Store a reference to the plot button. */
         let lineColorButton =
