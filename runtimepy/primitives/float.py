@@ -7,7 +7,12 @@ from math import isclose
 
 # internal
 from runtimepy.primitives.base import Primitive as _Primitive
-from runtimepy.primitives.evaluation import EvalResult, evaluate
+from runtimepy.primitives.evaluation import (
+    EvalResult,
+    Operator,
+    compare_latest,
+    evaluate,
+)
 from runtimepy.primitives.scaling import ChannelScaling, invert
 from runtimepy.primitives.types.float import Double as _Double
 from runtimepy.primitives.types.float import Float as _Float
@@ -22,6 +27,26 @@ class BaseFloatPrimitive(_Primitive[float]):
     ) -> None:
         """Initialize this floating-point primitive."""
         super().__init__(value=value, scaling=scaling, **kwargs)
+
+    async def wait_for_value(
+        self,
+        value: float,
+        timeout: float,
+        operation: Operator = Operator.EQUAL,
+    ) -> EvalResult:
+        """Wait for this primitive to reach a specified state."""
+
+        # Invert a possible scaling as primitive evaluation does not apply it.
+        # This skips a per-update computation, though scaling 'new' in the
+        # evaluator would allow this to work for more complex scalars.
+        if self.scaling:
+            value = invert(
+                value,
+                scaling=self.scaling,
+                should_round=True,
+            )
+
+        return await compare_latest(self, value, timeout, operation=operation)
 
     async def wait_for_isclose(
         self,

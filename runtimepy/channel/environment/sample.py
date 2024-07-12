@@ -36,6 +36,10 @@ def sample_env(env: ChannelEnvironment = None) -> ChannelEnvironment:
         },
     )
 
+    # Boolean enumeration.
+    env.enum("OnOff", "bool", {"On": True, "Off": False})
+    env.bool_channel("sample_state", commandable=True, enum="OnOff")
+
     env.enum(
         "InsanelyLongEnumNameForTesting",
         "int",
@@ -45,6 +49,9 @@ def sample_env(env: ChannelEnvironment = None) -> ChannelEnvironment:
             "very_long_member_name_2": 2,
             "very_long_member_name_3": 3,
         },
+    )
+    env.int_channel(
+        "sample_enum", commandable=True, enum="InsanelyLongEnumNameForTesting"
     )
 
     for name in ["a", "b", "c"]:

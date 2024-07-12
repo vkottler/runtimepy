@@ -21,7 +21,10 @@ from runtimepy.channel.registry import ChannelRegistry as _ChannelRegistry
 from runtimepy.enum import RuntimeEnum as _RuntimeEnum
 from runtimepy.enum.registry import EnumRegistry as _EnumRegistry
 from runtimepy.mixins.finalize import FinalizeMixin
-from runtimepy.primitives import StrToBool
+from runtimepy.primitives import BaseIntPrimitive, StrToBool
+
+# third-party
+from runtimepy.primitives.evaluation import EvalResult
 from runtimepy.primitives.field import BitField as _BitField
 from runtimepy.primitives.field.fields import BitFields as _BitFields
 from runtimepy.primitives.field.manager import (
@@ -266,6 +269,36 @@ class BaseChannelEnvironment(_NamespaceMixin, FinalizeMixin):
             raise KeyError("Channel '{key}' is not boolean!")
 
         return _cast(_BoolChannel, result[0]), result[1]
+
+    async def wait_for_bool(
+        self, key: _RegistryKey, state: bool, timeout: float
+    ) -> EvalResult:
+        """
+        wait for a boolean state to reach a provided state within a timeout.
+        """
+        return await self.get_bool(key)[0].raw.wait_for_state(state, timeout)
+
+    async def wait_for_enum(
+        self, key: _RegistryKey, value: str, timeout: float
+    ) -> EvalResult:
+        """Wait for an enumeration channel to reach a specific value."""
+
+        chan, enum = self[key]
+        assert enum is not None, f"'{key}' has no enum! ({chan})"
+
+        # Handle boolean enumerations.
+        if enum.is_boolean:
+            _translated = enum.as_bool(value)
+            assert _translated is not None, key
+            return await self.wait_for_bool(key, _translated, timeout)
+
+        # Translate an integer enumeration.
+        translated = enum.as_int(value)
+        assert translated is not None, key
+
+        return await _cast(BaseIntPrimitive, chan.raw).wait_for_value(
+            translated, timeout
+        )
 
     def get_float(self, key: _RegistryKey) -> _FloatChannel:
         """Get a floating-point channel."""

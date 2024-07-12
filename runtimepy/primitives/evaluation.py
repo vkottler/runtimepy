@@ -6,11 +6,35 @@ primitives.
 # built-in
 import asyncio
 from enum import auto
+import operator
 from typing import Callable
 
 # internal
 from runtimepy.enum.registry import RuntimeIntEnum
 from runtimepy.primitives.base import Primitive, T
+
+
+class Operator(RuntimeIntEnum):
+    """https://docs.python.org/3/library/operator.html."""
+
+    LESS_THAN = auto()
+    LESS_THAN_OR_EQUAL = auto()
+
+    EQUAL = auto()
+    NOT_EQUAL = auto()
+
+    GREATER_THAN_OR_EQUAL = auto()
+    GREATER_THAN = auto()
+
+
+OPERATOR_MAP = {
+    Operator.LESS_THAN: operator.lt,
+    Operator.LESS_THAN_OR_EQUAL: operator.le,
+    Operator.EQUAL: operator.eq,
+    Operator.NOT_EQUAL: operator.ne,
+    Operator.GREATER_THAN_OR_EQUAL: operator.ge,
+    Operator.GREATER_THAN: operator.gt,
+}
 
 
 class EvalResult(RuntimeIntEnum):
@@ -61,3 +85,24 @@ async def evaluate(
             pass
 
     return result
+
+
+async def compare_latest(
+    primitive: Primitive[T],
+    lhs: T,
+    timeout: float,
+    operation: Operator = Operator.EQUAL,
+) -> EvalResult:
+    """
+    Perform a canonical comparison of the latest value with a provided value.
+    """
+
+    mapped = OPERATOR_MAP[operation]
+
+    return await evaluate(
+        primitive,
+        lambda _, new: (
+            EvalResult.SUCCESS if mapped(lhs, new) else EvalResult.FAIL
+        ),
+        timeout,
+    )
