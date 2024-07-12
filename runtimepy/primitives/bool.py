@@ -16,18 +16,7 @@ class BooleanPrimitive(_Primitive[bool]):
 
     def __init__(self, value: bool = False, **kwargs) -> None:
         """Initialize this boolean primitive."""
-
         super().__init__(value=value, **kwargs)
-
-        def evaluator(_: bool, __: bool) -> EvalResult:
-            """
-            The only scenario where boolean evaluation defers to an awaiting
-            period is if the current value did not match the desired value
-            when called.
-            """
-            return EvalResult.SUCCESS
-
-        self._evaluator = evaluator
 
     def toggle(self) -> None:
         """Toggle the underlying value."""
@@ -44,10 +33,13 @@ class BooleanPrimitive(_Primitive[bool]):
     async def wait_for_state(self, state: bool, timeout: float) -> EvalResult:
         """Wait for this primitive to reach a specified state."""
 
-        if self.value == state:
-            return EvalResult.SUCCESS
-
-        return await evaluate(self, self._evaluator, timeout)
+        return await evaluate(
+            self,
+            lambda _, new: (
+                EvalResult.SUCCESS if new == state else EvalResult.FAIL
+            ),
+            timeout,
+        )
 
 
 Bool = BooleanPrimitive

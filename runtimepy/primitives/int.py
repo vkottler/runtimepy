@@ -8,7 +8,7 @@ from typing import Union as _Union
 # internal
 from runtimepy.primitives.base import Primitive as _Primitive
 from runtimepy.primitives.evaluation import EvalResult, evaluate
-from runtimepy.primitives.scaling import ChannelScaling
+from runtimepy.primitives.scaling import ChannelScaling, invert
 from runtimepy.primitives.types.int import Int8 as _Int8
 from runtimepy.primitives.types.int import Int16 as _Int16
 from runtimepy.primitives.types.int import Int32 as _Int32
@@ -39,14 +39,22 @@ class BaseIntPrimitive(_Primitive[int]):
     async def wait_for_value(self, value: int, timeout: float) -> EvalResult:
         """Wait for this primitive to reach a specified state."""
 
-        if self.value == value:
-            return EvalResult.SUCCESS
+        # Invert a possible scaling as primitive evaluation does not apply it.
+        # This skips a per-update computation, though scaling 'new' in the
+        # evaluator would allow this to work for more complex scalars.
+        value = invert(  # type: ignore
+            value,
+            scaling=self.scaling,
+            should_round=True,
+        )
 
-        def evaluator(_: int, new: int) -> EvalResult:
-            """Check if the desired value has been reached."""
-            return EvalResult.SUCCESS if new == value else EvalResult.FAIL
-
-        return await evaluate(self, evaluator, timeout)
+        return await evaluate(
+            self,
+            lambda _, new: (
+                EvalResult.SUCCESS if new == value else EvalResult.FAIL
+            ),
+            timeout,
+        )
 
 
 class Int8Primitive(BaseIntPrimitive):

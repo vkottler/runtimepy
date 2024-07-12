@@ -16,6 +16,8 @@ from runtimepy.primitives.base import Primitive, T
 class EvalResult(RuntimeIntEnum):
     """A container for all possible evaluation results."""
 
+    NOT_SET = auto()
+
     TIMEOUT = auto()
     FAIL = auto()
     SUCCESS = auto()
@@ -34,6 +36,10 @@ async def evaluate(
     """
     Evaluate a primitive within a timeout constraint and return the result.
     """
+
+    # Short-circuit path.
+    if evaluator(primitive.value, primitive.value):
+        return EvalResult.SUCCESS
 
     event = asyncio.Event()
     result = EvalResult.TIMEOUT
