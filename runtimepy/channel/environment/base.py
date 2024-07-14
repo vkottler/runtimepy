@@ -3,6 +3,7 @@ A module implementing a base channel environment.
 """
 
 # built-in
+from typing import AsyncIterator as _AsyncIterator
 from typing import Iterable as _Iterable
 from typing import Optional as _Optional
 from typing import Union as _Union
@@ -24,7 +25,7 @@ from runtimepy.mixins.finalize import FinalizeMixin
 from runtimepy.primitives import BaseIntPrimitive, StrToBool
 
 # third-party
-from runtimepy.primitives.evaluation import EvalResult
+from runtimepy.primitives.evaluation import EvalResult, Operator, sample_for
 from runtimepy.primitives.field import BitField as _BitField
 from runtimepy.primitives.field.fields import BitFields as _BitFields
 from runtimepy.primitives.field.manager import (
@@ -278,6 +279,83 @@ class BaseChannelEnvironment(_NamespaceMixin, FinalizeMixin):
         """
         return await self.get_bool(key)[0].raw.wait_for_state(state, timeout)
 
+    async def wait_for_numeric(
+        self,
+        key: _RegistryKey,
+        value: int | float,
+        timeout: float,
+        operation: Operator = Operator.EQUAL,
+    ) -> EvalResult:
+        """Wait for a numeric event."""
+
+        return await _cast(_FloatChannel, self[key][0]).raw.wait_for_value(
+            value, timeout, operation=operation
+        )
+
+    async def wait_for_numeric_isclose(
+        self,
+        key: _RegistryKey,
+        value: float,
+        timeout: float,
+        rel_tol: float = 1e-09,
+        abs_tol: float = 0.0,
+    ) -> EvalResult:
+        """Wait for a numeric event."""
+
+        return await _cast(_FloatChannel, self[key][0]).raw.wait_for_isclose(
+            value, timeout, rel_tol=rel_tol, abs_tol=abs_tol
+        )
+
+    async def sample_int_for(
+        self,
+        key: _RegistryKey,
+        timeout: float,
+        count: int = -1,
+        current: bool = True,
+        scale: bool = True,
+    ) -> _AsyncIterator[tuple[int | float, int]]:
+        """Sample an integer channel."""
+
+        prim = self.get_int(key)[0].raw
+        scale = scale and bool(prim.scaling)
+
+        async for value, timestamp in sample_for(
+            prim, timeout, count=count, current=current
+        ):
+            yield prim.scale(value) if scale else value, timestamp
+
+    async def sample_float_for(
+        self,
+        key: _RegistryKey,
+        timeout: float,
+        count: int = -1,
+        current: bool = True,
+        scale: bool = True,
+    ) -> _AsyncIterator[tuple[float, int]]:
+        """Sample a floating-point channel."""
+
+        prim = self.get_float(key).raw
+        scale = scale and bool(prim.scaling)
+
+        async for value, timestamp in sample_for(
+            prim, timeout, count=count, current=current
+        ):
+            yield prim.scale(value) if scale else value, timestamp
+
+    async def sample_bool_for(
+        self,
+        key: _RegistryKey,
+        timeout: float,
+        count: int = -1,
+        current: bool = True,
+    ) -> _AsyncIterator[tuple[bool, int]]:
+        """Sample a boolean channel."""
+
+        async for sample in sample_for(
+            self.get_bool(key)[0].raw, timeout, count=count, current=current
+        ):
+            yield sample
+
     async def wait_for_enum(
         self, key: _RegistryKey, value: str, timeout: float
     ) -> EvalResult:
@@ -299,6 +377,23 @@ class BaseChannelEnvironment(_NamespaceMixin, FinalizeMixin):
         return await _cast(BaseIntPrimitive, chan.raw).wait_for_value(
             translated, timeout
         )
+
+    async def sample_enum_for(
+        self,
+        key: _RegistryKey,
+        timeout: float,
+        count: int = -1,
+        current: bool = True,
+    ) -> _AsyncIterator[tuple[str, int]]:
+        """Sample an enumeration channel."""
+
+        chan, enum = self[key]
+        assert enum is not None, f"'{key}' has no enum! ({chan})"
+
+        async for sample in sample_for(
+            _cast(_IntChannel, chan).raw, timeout, count=count, current=current
+        ):
+            yield enum.get_str(sample[0]), sample[1]
 
     def get_float(self, key: _RegistryKey) -> _FloatChannel:
         """Get a floating-point channel."""

@@ -6,8 +6,9 @@ primitives.
 # built-in
 import asyncio
 from enum import auto
+from math import isclose
 import operator
-from typing import Callable
+from typing import AsyncIterator, Callable
 
 # internal
 from runtimepy.enum.registry import RuntimeIntEnum
@@ -106,3 +107,82 @@ async def compare_latest(
         ),
         timeout,
     )
+
+
+async def sample_for(
+    primitive: Primitive[T],
+    timeout: float,
+    count: int = -1,
+    current: bool = True,
+) -> AsyncIterator[tuple[T, int]]:
+    """
+    Sample a primitive until timeout or 'count' samples are emitted (if 'count'
+    is set).
+    """
+
+    sample_queue: asyncio.Queue[tuple[T, int]] = asyncio.Queue()
+    keep_sampling = True
+    samples = 0
+
+    def poll_sample_event() -> bool:
+        """Poll sample count."""
+
+        nonlocal samples
+        samples += 1
+
+        result = samples >= count > 0
+        if result:
+            nonlocal keep_sampling
+            keep_sampling = False
+
+        return result
+
+    # Publish current value.
+    if current:
+        sample_queue.put_nowait((primitive.value, primitive.last_updated_ns))
+        poll_sample_event()
+
+    def sample(_: T, new: T) -> None:
+        """Publish to change queue."""
+
+        if keep_sampling:
+            sample_queue.put_nowait((new, primitive.last_updated_ns))
+            poll_sample_event()
+
+    # Service the callback until resolved or this evaluation times out.
+    with primitive.callback(sample):
+        try:
+            async with asyncio.timeout(timeout):
+                while keep_sampling:
+                    yield await sample_queue.get()
+        except asyncio.TimeoutError:
+            pass
+
+    # Drain queue.
+    while not sample_queue.empty():
+        yield sample_queue.get_nowait()
+
+
+class PrimitiveIsCloseMixin(Primitive[T]):
+    """Adds a wait-for-isclose method."""
+
+    async def wait_for_isclose(
+        self,
+        value: float,
+        timeout: float,
+        rel_tol: float = 1e-09,
+        abs_tol: float = 0.0,
+    ) -> EvalResult:
+        """Wait for this primitive to reach a specified state."""
+
+        return await evaluate(
+            self,
+            lambda _, new: (
+                EvalResult.SUCCESS
+                if isclose(
+                    value, self.scale(new), rel_tol=rel_tol, abs_tol=abs_tol
+                )
+                else EvalResult.FAIL
+            ),
+            timeout,
+        )

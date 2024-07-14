@@ -53,6 +53,7 @@ def sample_env(env: ChannelEnvironment = None) -> ChannelEnvironment:
     env.int_channel(
         "sample_enum", commandable=True, enum="InsanelyLongEnumNameForTesting"
     )
+    env.float_channel("sample_float", "double", commandable=True)
 
     for name in ["a", "b", "c"]:
         with env.names_pushed(name):

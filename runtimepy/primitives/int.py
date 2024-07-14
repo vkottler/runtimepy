@@ -6,10 +6,10 @@ A module implementing an integer-primitive interface.
 from typing import Union as _Union
 
 # internal
-from runtimepy.primitives.base import Primitive as _Primitive
 from runtimepy.primitives.evaluation import (
     EvalResult,
     Operator,
+    PrimitiveIsCloseMixin,
     compare_latest,
 )
 from runtimepy.primitives.scaling import ChannelScaling, invert
@@ -23,7 +23,7 @@ from runtimepy.primitives.types.int import Uint32 as _Uint32
 from runtimepy.primitives.types.int import Uint64 as _Uint64
 
 
-class BaseIntPrimitive(_Primitive[int]):
+class BaseIntPrimitive(PrimitiveIsCloseMixin[int]):
     """A simple primitive class for integer primitives."""
 
     def __init__(
@@ -41,21 +41,23 @@ class BaseIntPrimitive(_Primitive[int]):
         return new_val
 
     async def wait_for_value(
-        self, value: int, timeout: float, operation: Operator = Operator.EQUAL
+        self,
+        value: int | float,
+        timeout: float,
+        operation: Operator = Operator.EQUAL,
     ) -> EvalResult:
         """Wait for this primitive to reach a specified state."""
 
-        # Invert a possible scaling as primitive evaluation does not apply it.
-        # This skips a per-update computation, though scaling 'new' in the
-        # evaluator would allow this to work for more complex scalars.
-        if self.scaling:
-            value = invert(  # type: ignore
+        return await compare_latest(  # type: ignore
+            self,
+            invert(
                 value,
                 scaling=self.scaling,
                 should_round=True,
-            )
-
-        return await compare_latest(self, value, timeout, operation=operation)
+            ),
+            timeout,
+            operation=operation,
+        )
 
 
 class Int8Primitive(BaseIntPrimitive):

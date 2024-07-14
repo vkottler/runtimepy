@@ -2,16 +2,12 @@
 A module implementing a floating-point primitive interface.
 """
 
-# built-in
-from math import isclose
-
 # internal
-from runtimepy.primitives.base import Primitive as _Primitive
 from runtimepy.primitives.evaluation import (
     EvalResult,
     Operator,
+    PrimitiveIsCloseMixin,
     compare_latest,
-    evaluate,
 )
 from runtimepy.primitives.scaling import ChannelScaling, invert
 from runtimepy.primitives.types.float import Double as _Double
@@ -19,7 +15,7 @@ from runtimepy.primitives.types.float import Float as _Float
 from runtimepy.primitives.types.float import Half as _Half
 
 
-class BaseFloatPrimitive(_Primitive[float]):
+class BaseFloatPrimitive(PrimitiveIsCloseMixin[float]):
     """A simple primitive class for floating-point numbers."""
 
     def __init__(
@@ -36,39 +32,10 @@ class BaseFloatPrimitive(_Primitive[float]):
     ) -> EvalResult:
         """Wait for this primitive to reach a specified state."""
 
-        # Invert a possible scaling as primitive evaluation does not apply it.
-        # This skips a per-update computation, though scaling 'new' in the
-        # evaluator would allow this to work for more complex scalars.
         if self.scaling:
-            value = invert(
-                value,
-                scaling=self.scaling,
-                should_round=True,
-            )
+            value = invert(value, scaling=self.scaling)
 
         return await compare_latest(self, value, timeout, operation=operation)
-
-    async def wait_for_isclose(
-        self,
-        value: float,
-        timeout: float,
-        rel_tol: float = 1e-09,
-        abs_tol: float = 0.0,
-    ) -> EvalResult:
-        """Wait for this primitive to reach a specified state."""
-
-        # See note in 'BaseIntPrimitive.wait_for_value'.
-        value = invert(value, scaling=self.scaling)
-
-        return await evaluate(
-            self,
-            lambda _, new: (
-                EvalResult.SUCCESS
-                if isclose(value, new, rel_tol=rel_tol, abs_tol=abs_tol)
-                else EvalResult.FAIL
-            ),
-            timeout,
-        )
 
 
 class HalfPrimitive(BaseFloatPrimitive):

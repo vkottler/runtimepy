@@ -25,3 +25,27 @@ async def test_channel_environment_events():
     assert await env.wait_for_enum(
         "sample_enum", "very_long_member_name_1", 0.0
     )
+    assert await env.wait_for_numeric("sample_enum", 1, 0.0)
+    assert await env.wait_for_numeric_isclose("sample_enum", 1, 0.0)
+
+    # Sampling interface.
+    samples = []
+    async for sample in env.sample_bool_for("sample_state", 0.0):
+        samples.append(sample)
+    assert len(samples) == 1
+
+    for chan in ["sample_enum", "sample_state"]:
+        _samples = []
+        async for _sample in env.sample_enum_for(chan, 0.0):
+            _samples.append(_sample)
+        assert len(_samples) == 1
+
+    __samples = []
+    async for __sample in env.sample_int_for("sample_enum", 0.0):
+        __samples.append(__sample)
+    assert len(__samples) == 1
+
+    ___samples = []
+    async for ___sample in env.sample_float_for("sample_float", 0.0):
+        ___samples.append(___sample)
+    assert len(___samples) == 1
