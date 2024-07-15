@@ -165,11 +165,19 @@ class Primitive(_Generic[T]):
     @property
     def scaled(self) -> Numeric:
         """Get this primitive as a scaled value."""
-        return apply(self.value, scaling=self.scaling)
+        return self.scale(self.value)
 
     @scaled.setter
     def scaled(self, value: T) -> None:
         """Set this value but invert scaling information."""
+        self.value = self.invert(value)  # type: ignore
+
+    def scale(self, value: T) -> Numeric:
+        """Scale a value using this primitive's scaling."""
+        return apply(value, scaling=self.scaling)
+
+    def invert(self, value: T) -> Numeric:
+        """Invert a value using this primitive's scaling."""
 
         val = invert(
             value, scaling=self.scaling, should_round=self.kind.is_integer
@@ -178,7 +186,7 @@ class Primitive(_Generic[T]):
         if self.kind.int_bounds is not None:
             val = self.kind.int_bounds.clamp(val)  # type: ignore
 
-        self.value = val  # type: ignore
+        return val
 
     def __call__(self, value: T = None) -> T:
         """

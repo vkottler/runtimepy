@@ -4,6 +4,7 @@ A module implementing a boolean-primitive interface.
 
 # internal
 from runtimepy.primitives.base import Primitive as _Primitive
+from runtimepy.primitives.evaluation import EvalResult, evaluate
 from runtimepy.primitives.types.bool import Bool as _Bool
 
 
@@ -28,6 +29,17 @@ class BooleanPrimitive(_Primitive[bool]):
     def clear(self) -> None:
         """Coerce the underlying value to false."""
         self.value = False
+
+    async def wait_for_state(self, state: bool, timeout: float) -> EvalResult:
+        """Wait for this primitive to reach a specified state."""
+
+        return await evaluate(
+            self,
+            lambda _, new: (
+                EvalResult.SUCCESS if new == state else EvalResult.FAIL
+            ),
+            timeout,
+        )
 
 
 Bool = BooleanPrimitive

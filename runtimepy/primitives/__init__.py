@@ -12,8 +12,9 @@ from vcorelib.python import StrToBool
 # internal
 from runtimepy.primitives.base import Primitive
 from runtimepy.primitives.bool import Bool
-from runtimepy.primitives.float import Double, Float, Half
+from runtimepy.primitives.float import BaseFloatPrimitive, Double, Float, Half
 from runtimepy.primitives.int import (
+    BaseIntPrimitive,
     Int8,
     Int16,
     Int32,
@@ -51,6 +52,8 @@ __all__ = [
     "UnsignedInt",
     "Primitive",
     "StrToBool",
+    "BaseIntPrimitive",
+    "BaseFloatPrimitive",
 ]
 
 AnyPrimitive = _Union[
