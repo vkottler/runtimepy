@@ -55,13 +55,11 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
         # this can set 'uses_text_tx_queue' to False to avoid scheduling a
         # task for it.
         self._text_messages: _asyncio.Queue[str] = _asyncio.Queue()
-        self.tx_text_hwm: int = 0
 
         # A queue for out-going binary messages. Connections that don't use
         # this can set 'uses_binary_tx_queue' to False to avoid scheduling a
         # task for it.
         self._binary_messages: _asyncio.Queue[BinaryMessage] = _asyncio.Queue()
-        self.tx_binary_hwm: int = 0
 
         # Tasks common to connection processing.
         self._tasks: list[_asyncio.Task[None]] = []
@@ -159,17 +157,11 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
 
     def send_text(self, data: str) -> None:
         """Enqueue a text message to send."""
-
         self._text_messages.put_nowait(data)
-        self.tx_text_hwm = max(self.tx_text_hwm, self._text_messages.qsize())
 
     def send_binary(self, data: BinaryMessage) -> None:
         """Enqueue a binary message tos end."""
-
         self._binary_messages.put_nowait(data)
-        self.tx_binary_hwm = max(
-            self.tx_binary_hwm, self._binary_messages.qsize()
-        )
 
     @property
     def disabled(self) -> bool:
@@ -194,6 +186,7 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
 
         if self._enabled:
             self.logger.info("Disabling connection: '%s'.", reason)
+            self.log_metrics(label=reason)
             self.disable_extra()
 
             # Cancel tasks.

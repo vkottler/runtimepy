@@ -33,6 +33,7 @@ renders:
       - commands-help-arbiter
       - commands-help-server
       - commands-help-task
+      - commands-help-tftp
       - commands-help-tui
 
   - name: app.py

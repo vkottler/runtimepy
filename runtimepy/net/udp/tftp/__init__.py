@@ -17,7 +17,11 @@ from vcorelib.paths.info import FileInfo
 
 # internal
 from runtimepy.net import IpHost, normalize_host
-from runtimepy.net.udp.tftp.base import BaseTftpConnection
+from runtimepy.net.udp.tftp.base import (
+    DEFAULT_TIMEOUT_S,
+    REEMIT_PERIOD_S,
+    BaseTftpConnection,
+)
 from runtimepy.net.udp.tftp.enums import DEFAULT_MODE
 from runtimepy.util import PossiblePath, as_path
 
@@ -62,7 +66,10 @@ class TftpConnection(BaseTftpConnection):
             with self.log_time("Awaiting first data block", reminder=True):
                 # Wait for first data block.
                 if not await repeat_until(
-                    send_rrq, event, endpoint.period, endpoint.timeout
+                    send_rrq,
+                    event,
+                    endpoint.period.value,
+                    endpoint.timeout.value,
                 ):
                     endpoint.awaiting_blocks.pop(idx, None)
                     self.logger.error("Didn't receive any data block.")
@@ -97,7 +104,10 @@ class TftpConnection(BaseTftpConnection):
                 endpoint.awaiting_blocks[idx] = event
 
                 success = await repeat_until(
-                    ack_sender, event, endpoint.period, endpoint.timeout
+                    ack_sender,
+                    event,
+                    endpoint.period.value,
+                    endpoint.timeout.value,
                 )
                 if success:
                     write_block()
@@ -109,8 +119,8 @@ class TftpConnection(BaseTftpConnection):
                     repeat_until(  # type: ignore
                         ack_sender,
                         asyncio.Event(),
-                        endpoint.period,
-                        endpoint.timeout,
+                        endpoint.period.value,
+                        endpoint.timeout.value,
                     )
                 )
             )
@@ -154,7 +164,10 @@ class TftpConnection(BaseTftpConnection):
                 # Wait for zeroeth ack.
                 with self.log_time("Awaiting first ack", reminder=True):
                     if not await repeat_until(
-                        send_wrq, event, endpoint.period, endpoint.timeout
+                        send_wrq,
+                        event,
+                        endpoint.period.value,
+                        endpoint.timeout.value,
                     ):
                         endpoint.awaiting_acks.pop(0, None)
                         return result
@@ -185,6 +198,8 @@ async def tftp(
     addr: Union[IpHost, tuple[str, int]],
     process_kwargs: dict[str, Any] = None,
     connection_kwargs: dict[str, Any] = None,
+    timeout_s: float = DEFAULT_TIMEOUT_S,
+    reemit_period_s: float = REEMIT_PERIOD_S,
 ) -> AsyncIterator[TftpConnection]:
     """Use a tftp connection as a managed context."""
 
@@ -200,6 +215,9 @@ async def tftp(
         remote_addr=(addr.name, addr.port), **connection_kwargs
     )
     async with conn.process_then_disable(**process_kwargs):
+        # Set parameters.
+        conn.endpoint_timeout.value = timeout_s
+        conn.endpoint_period.value = reemit_period_s
         yield conn
 
 
@@ -211,6 +229,8 @@ async def tftp_write(
     verify: bool = True,
     process_kwargs: dict[str, Any] = None,
     connection_kwargs: dict[str, Any] = None,
+    timeout_s: float = DEFAULT_TIMEOUT_S,
+    reemit_period_s: float = REEMIT_PERIOD_S,
 ) -> bool:
     """Attempt to perform a tftp write."""
 
@@ -218,8 +238,9 @@ async def tftp_write(
         addr,
         process_kwargs=process_kwargs,
         connection_kwargs=connection_kwargs,
+        timeout_s=timeout_s,
+        reemit_period_s=reemit_period_s,
     ) as conn:
-
         # Perform tftp interaction.
         result = await conn.request_write(
             source, filename, mode=mode, addr=addr, verify=verify
@@ -235,6 +256,8 @@ async def tftp_read(
     mode: str = DEFAULT_MODE,
     process_kwargs: dict[str, Any] = None,
     connection_kwargs: dict[str, Any] = None,
+    timeout_s: float = DEFAULT_TIMEOUT_S,
+    reemit_period_s: float = REEMIT_PERIOD_S,
 ) -> bool:
     """Attempt to perform a tftp read."""
 
@@ -242,8 +265,9 @@ async def tftp_read(
         addr,
         process_kwargs=process_kwargs,
         connection_kwargs=connection_kwargs,
+        timeout_s=timeout_s,
+        reemit_period_s=reemit_period_s,
     ) as conn:
-
         result = await conn.request_read(
             destination, filename, mode=mode, addr=addr
         )

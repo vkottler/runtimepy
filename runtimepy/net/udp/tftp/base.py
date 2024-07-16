@@ -22,7 +22,10 @@ from runtimepy.net.udp.tftp.enums import (
     encode_filename_mode,
     parse_filename_mode,
 )
-from runtimepy.primitives import Uint16
+from runtimepy.primitives import Double, Uint16
+
+REEMIT_PERIOD_S = 0.20
+DEFAULT_TIMEOUT_S = 1.0
 
 
 class BaseTftpConnection(UdpConnection):
@@ -66,6 +69,21 @@ class BaseTftpConnection(UdpConnection):
 
         self.error_code = Uint16(time_source=metrics_time_ns)
         self.env.channel("error_code", self.error_code, enum="TftpErrorCode")
+
+        self.endpoint_period = Double(value=REEMIT_PERIOD_S)
+        self.env.channel(
+            "reemit_period_s",
+            self.endpoint_period,
+            commandable=True,
+            description="Time between packet re-transmissions.",
+        )
+        self.endpoint_timeout = Double(value=DEFAULT_TIMEOUT_S)
+        self.env.channel(
+            "timeout_s",
+            self.endpoint_timeout,
+            commandable=True,
+            description="A timeout used for each step.",
+        )
 
         # Message parsers.
         self.handlers = {
@@ -127,6 +145,8 @@ class BaseTftpConnection(UdpConnection):
                 self.data_sender,
                 self.ack_sender,
                 self.error_sender,
+                self.endpoint_period,
+                self.endpoint_timeout,
             )
 
         return self._endpoints[key]

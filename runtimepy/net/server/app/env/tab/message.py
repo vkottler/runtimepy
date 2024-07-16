@@ -4,7 +4,7 @@ A module implementing a channel-environment tab message-handling interface.
 
 # built-in
 import logging
-from typing import Any, Callable, cast
+from typing import Any, Callable
 
 # internal
 from runtimepy.channel import Channel
@@ -22,6 +22,8 @@ class ChannelEnvironmentTabMessaging(ChannelEnvironmentTabBase):
         """Register a channel's value-change callback."""
 
         chan = self.command.env.field_or_channel(name)
+        assert isinstance(chan, Channel) or chan is not None
+        prim = chan.raw
 
         def callback(_, __) -> None:
             """Emit a change event to the stream."""
@@ -29,14 +31,9 @@ class ChannelEnvironmentTabMessaging(ChannelEnvironmentTabBase):
             # Render enumerations etc. here instead of trying to do it
             # in the UI.
             state.points[name].append(
-                (
-                    self.command.env.value(name),
-                    cast(Channel[Any], chan).raw.last_updated_ns,
-                )
+                (self.command.env.value(name), prim.last_updated_ns)
             )
 
-        assert isinstance(chan, Channel) or chan is not None
-        prim = chan.raw
         state.primitives[name] = prim
         state.callbacks[name] = prim.register_callback(callback)
 

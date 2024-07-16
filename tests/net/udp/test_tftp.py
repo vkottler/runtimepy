@@ -169,8 +169,8 @@ async def test_tftp_connection_basic():
                 conn2.set_root(path)
 
                 # Set timing parameters.
-                conn1.endpoint().period = 0.01
-                conn1.endpoint().timeout = 0.1
+                conn1.endpoint().period.value = 0.01
+                conn1.endpoint().timeout.value = 0.1
                 await testcase(conn1, conn2)
 
         # Allow connection(s) to read.
