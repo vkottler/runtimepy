@@ -2,6 +2,9 @@
 A module implementing a floating-point primitive interface.
 """
 
+# built-in
+import math
+
 # internal
 from runtimepy.primitives.evaluation import (
     EvalResult,
@@ -23,6 +26,13 @@ class BaseFloatPrimitive(PrimitiveIsCloseMixin[float]):
     ) -> None:
         """Initialize this floating-point primitive."""
         super().__init__(value=value, scaling=scaling, **kwargs)
+
+    def _check_callbacks(self, curr: float, new: float) -> None:
+        """Determine if any callbacks should be serviced."""
+
+        # Useless to provide NaN to callbacks.
+        if not math.isnan(new):
+            super()._check_callbacks(curr, new)
 
     async def wait_for_value(
         self,

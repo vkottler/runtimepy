@@ -29,15 +29,12 @@ class UdpQueueProtocol(_DatagramProtocol):
         self.queue: _asyncio.Queue[
             _Tuple[_BinaryMessage, _Tuple[str, int]]
         ] = _asyncio.Queue()
-        self.queue_hwm: int = 0
 
         self.log_limiter = RateLimiter.from_s(1.0)
 
     def datagram_received(self, data: bytes, addr: _Tuple[str, int]) -> None:
         """Handle incoming data."""
-
         self.queue.put_nowait((data, addr))
-        self.queue_hwm = max(self.queue_hwm, self.queue.qsize())
 
     def error_received(self, exc: Exception) -> None:
         """Log any received errors."""

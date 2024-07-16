@@ -139,6 +139,20 @@ class Primitive(_Generic[T]):
         """Set a new underlying value."""
         self.set_value(value)
 
+    def _check_callbacks(self, curr: T, new: T) -> None:
+        """Determine if any callbacks should be serviced."""
+
+        if self.callbacks and curr != new:
+            to_remove = []
+            for ident, (callback, once) in self.callbacks.items():
+                callback(curr, new)
+                if once:
+                    to_remove.append(ident)
+
+            # Remove one-time callbacks.
+            for item in to_remove:
+                self.remove_callback(item)
+
     def set_value(self, value: T, timestamp_ns: int = None) -> None:
         """Set a new underlying value."""
 
@@ -149,18 +163,7 @@ class Primitive(_Generic[T]):
 
         curr: T = self.raw.value  # type: ignore
         self.raw.value = value
-
-        # Call callbacks if the value has changed.
-        if self.callbacks and curr != value:
-            to_remove = []
-            for ident, (callback, once) in self.callbacks.items():
-                callback(curr, value)
-                if once:
-                    to_remove.append(ident)
-
-            # Remove one-time callbacks.
-            for item in to_remove:
-                self.remove_callback(item)
+        self._check_callbacks(curr, value)
 
     @property
     def scaled(self) -> Numeric:

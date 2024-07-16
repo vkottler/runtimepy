@@ -28,9 +28,7 @@ class QueueProtocol(_BinaryMessageQueueMixin, _Protocol):
 
     def data_received(self, data: _BinaryMessage) -> None:
         """Handle incoming data."""
-
         self.queue.put_nowait(data)
-        self.queue_hwm = max(self.queue_hwm, self.queue.qsize())
 
     def connection_made(self, transport: _BaseTransport) -> None:
         """Log the connection establishment."""
