@@ -121,7 +121,7 @@ def can_use_uvloop() -> bool:
     )
 
 
-def base_args(command: str) -> List[str]:
+def base_args(*commands: str) -> List[str]:
     """Get base command-line arguments."""
 
     base = [PKG_NAME]
@@ -130,7 +130,8 @@ def base_args(command: str) -> List[str]:
     if not can_use_uvloop() and not is_windows():
         base.append("--no-uvloop")
 
-    base.append(command)
+    base.extend(commands)
+
     return base
 
 

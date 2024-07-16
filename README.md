@@ -2,7 +2,7 @@
     =====================================
     generator=datazen
     version=3.1.4
-    hash=9bbddc68662c600891b198b5d2f316e6
+    hash=039855eb758d9eb1ea70df0654e31b61
     =====================================
 -->
 
@@ -48,7 +48,7 @@ This package is tested on the following platforms:
 $ ./venv3.12/bin/runtimepy -h
 
 usage: runtimepy [-h] [--version] [-v] [-q] [--curses] [--no-uvloop] [-C DIR]
-                 {arbiter,server,task,tui,noop} ...
+                 {arbiter,server,task,tftp,tui,noop} ...
 
 A framework for implementing Python services.
 
@@ -62,11 +62,12 @@ options:
   -C DIR, --dir DIR     execute from a specific directory
 
 commands:
-  {arbiter,server,task,tui,noop}
+  {arbiter,server,task,tftp,tui,noop}
                         set of available commands
     arbiter             run a connection-arbiter application from a config
     server              run a server for a specific connection factory
     task                run a task from a specific task factory
+    tftp                perform a tftp interaction
     tui                 run a terminal interface for the channel environment
     noop                command stub (does nothing)
 
@@ -145,6 +146,31 @@ options:
                         run last
   --no-poller           don't run a connection-metrics poller task
   -r RATE, --rate RATE  rate (in Hz) that the task should run (default: 10)
+
+```
+
+### `tftp`
+
+```
+$ ./venv3.12/bin/runtimepy tftp -h
+
+usage: runtimepy tftp [-h] [-p PORT] [-m MODE] [-t TIMEOUT] [-r REEMIT]
+                      {read,write} host our_file their_file
+
+positional arguments:
+  {read,write}          action to perform
+  host                  host to message
+  our_file              path to our file
+  their_file            path to their file
+
+options:
+  -h, --help            show this help message and exit
+  -p PORT, --port PORT  port to message (default: 69)
+  -m MODE, --mode MODE  tftp mode to use (default: octet)
+  -t TIMEOUT, --timeout TIMEOUT
+                        timeout for each step
+  -r REEMIT, --reemit REEMIT
+                        transmit period for each step
 
 ```
 

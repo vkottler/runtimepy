@@ -186,6 +186,7 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
 
         if self._enabled:
             self.logger.info("Disabling connection: '%s'.", reason)
+            self.log_metrics(label=reason)
             self.disable_extra()
 
             # Cancel tasks.

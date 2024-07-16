@@ -19,6 +19,7 @@ from vcorelib.paths.info import FileInfo
 from runtimepy.net import IpHost
 from runtimepy.net.udp.tftp.enums import TftpErrorCode
 from runtimepy.net.udp.tftp.io import tftp_chunks
+from runtimepy.primitives import Double
 
 TftpDataSender = Callable[[int, bytes, Union[IpHost, tuple[str, int]]], None]
 TftpAckSender = Callable[[int, Union[IpHost, tuple[str, int]]], None]
@@ -43,6 +44,8 @@ class TftpEndpoint(LoggerMixin):
         data_sender: TftpDataSender,
         ack_sender: TftpAckSender,
         error_sender: TftpErrorSender,
+        period: Double,
+        timeout: Double,
     ) -> None:
         """Initialize instance."""
 
@@ -68,8 +71,8 @@ class TftpEndpoint(LoggerMixin):
         self.max_block_size = TFTP_MAX_BLOCK
 
         # Runtime settings.
-        self.period: float = 0.25
-        self.timeout: float = 1.0
+        self.period = period
+        self.timeout = timeout
         self.log_limiter = RateLimiter.from_s(1.0)
 
     def chunk_sender(self, block: int, data: bytes) -> Callable[[], None]:
@@ -164,8 +167,8 @@ class TftpEndpoint(LoggerMixin):
                     # data.
                     self._ack_sender(idx - 1),
                     event,
-                    self.period,
-                    self.timeout,
+                    self.period.value,
+                    self.timeout.value,
                 )
                 and idx in self.blocks
             )
@@ -264,8 +267,8 @@ class TftpEndpoint(LoggerMixin):
                 if not await repeat_until(
                     self.chunk_sender(idx, chunk),
                     event,
-                    self.period,
-                    self.timeout,
+                    self.period.value,
+                    self.timeout.value,
                 ):
                     success = False
                     self.awaiting_acks.pop(idx, None)

@@ -26,6 +26,8 @@ commands:
     description: "run a server for a specific connection factory"
   - name: task
     description: "run a task from a specific task factory"
+  - name: tftp
+    description: "perform a tftp interaction"
   - name: tui
     description: "run a terminal interface for the channel environment"
 
