@@ -3,6 +3,7 @@ A module implementing a base channel environment.
 """
 
 # built-in
+import math
 from typing import AsyncIterator as _AsyncIterator
 from typing import Iterable as _Iterable
 from typing import Optional as _Optional
@@ -175,10 +176,17 @@ class BaseChannelEnvironment(_NamespaceMixin, FinalizeMixin):
     def values(self, resolve_enum: bool = True) -> ValueMap:
         """Get a new dictionary of current channel values."""
 
-        return {
-            name: self.value(name, resolve_enum=resolve_enum)
-            for name in self.channels.names.names
-        }
+        result: ValueMap = {}
+        for name in self.channels.names.names:
+            value = self.value(name, resolve_enum=resolve_enum)
+
+            # Don't store NaN. Python will allow JSON encoding but e.g.
+            # browsers (and the JSON specification) don't support decoding
+            # NaN.
+            if isinstance(value, str) or not math.isnan(value):
+                result[name] = value
+
+        return result
 
     def value(
         self, key: _RegistryKey, resolve_enum: bool = True, scaled: bool = True
