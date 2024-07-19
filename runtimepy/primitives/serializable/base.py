@@ -134,7 +134,11 @@ class Serializable(ABC):
         """Assign a next serializable."""
 
         assert self.chain is None, self.chain
-        self.chain = chain
+
+        # mypy regression?
+        self.chain = chain  # type: ignore
+        assert self.chain is not None
+
         return self.chain.size
 
     def add_to_end(self, chain: T, array_length: int = None) -> int:
