@@ -40,7 +40,7 @@ class TftpEndpoint(LoggerMixin):
         self,
         root: Path,
         logger: LoggerType,
-        addr: Union[IpHost, tuple[str, int]],
+        addr: IpHost,
         data_sender: TftpDataSender,
         ack_sender: TftpAckSender,
         error_sender: TftpErrorSender,
@@ -74,6 +74,13 @@ class TftpEndpoint(LoggerMixin):
         self.period = period
         self.timeout = timeout
         self.log_limiter = RateLimiter.from_s(1.0)
+
+    def update_from_other(self, other: "TftpEndpoint") -> "TftpEndpoint":
+        """Update this endpoint's attributes with attributes of another's."""
+
+        self.logger.info("Updating address to '%s'.", other.addr)
+        self.addr = other.addr
+        return self
 
     def chunk_sender(self, block: int, data: bytes) -> Callable[[], None]:
         """Create a method that sends a specific block of data."""
@@ -135,7 +142,7 @@ class TftpEndpoint(LoggerMixin):
 
     def __str__(self) -> str:
         """Get this instance as a string."""
-        return f"{self.addr[0]}:{self.addr[1]}"
+        return str(self.addr)
 
     def handle_error(self, error_code: TftpErrorCode, message: str) -> None:
         """Handle a tftp error message."""

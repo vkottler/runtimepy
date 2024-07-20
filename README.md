@@ -2,11 +2,11 @@
     =====================================
     generator=datazen
     version=3.1.4
-    hash=039855eb758d9eb1ea70df0654e31b61
+    hash=4f8a71a6066638ed1a90f375188f0578
     =====================================
 -->
 
-# runtimepy ([5.4.1](https://pypi.org/project/runtimepy/))
+# runtimepy ([5.4.2](https://pypi.org/project/runtimepy/))
 
 [![python](https://img.shields.io/pypi/pyversions/runtimepy.svg)](https://pypi.org/project/runtimepy/)
 ![Build Status](https://github.com/vkottler/runtimepy/workflows/Python%20Package/badge.svg)
@@ -155,7 +155,7 @@ options:
 $ ./venv3.12/bin/runtimepy tftp -h
 
 usage: runtimepy tftp [-h] [-p PORT] [-m MODE] [-t TIMEOUT] [-r REEMIT]
-                      {read,write} host our_file their_file
+                      {read,write} host our_file [their_file]
 
 positional arguments:
   {read,write}          action to perform

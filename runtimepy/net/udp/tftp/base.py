@@ -3,6 +3,8 @@ A module implementing a base tftp (RFC 1350) connection interface.
 """
 
 # built-in
+import asyncio
+from contextlib import AsyncExitStack
 from io import BytesIO
 import logging
 from pathlib import Path
@@ -22,6 +24,7 @@ from runtimepy.net.udp.tftp.enums import (
     encode_filename_mode,
     parse_filename_mode,
 )
+from runtimepy.net.util import normalize_host
 from runtimepy.primitives import Double, Uint16
 
 REEMIT_PERIOD_S = 0.20
@@ -124,8 +127,38 @@ class BaseTftpConnection(UdpConnection):
 
         self.error_sender = error_sender
 
-        self._endpoints: dict[str, TftpEndpoint] = {}
+        self._endpoints: dict[IpHost, TftpEndpoint] = {}
+        self._awaiting_first_ack: dict[str, TftpEndpoint] = {}
+        self._awaiting_first_block: dict[str, TftpEndpoint] = {}
         # self._self = self.endpoint(self.local_address)
+
+    async def _await_first_ack(
+        self,
+        stack: AsyncExitStack,
+        addr: Union[IpHost, tuple[str, int]] = None,
+    ) -> tuple[TftpEndpoint, asyncio.Event]:
+        """Set up an endpoint to wait for an initial ack from a server."""
+
+        endpoint = self.endpoint(addr)
+        await stack.enter_async_context(endpoint.lock)
+        event = asyncio.Event()
+        endpoint.awaiting_acks[0] = event
+        self._awaiting_first_ack[endpoint.addr.hostname] = endpoint
+        return endpoint, event
+
+    async def _await_first_block(
+        self,
+        stack: AsyncExitStack,
+        addr: Union[IpHost, tuple[str, int]] = None,
+    ) -> tuple[TftpEndpoint, asyncio.Event]:
+        """Set up an endpoint to wait for an initial block from a server."""
+
+        endpoint = self.endpoint(addr)
+        await stack.enter_async_context(endpoint.lock)
+        event = asyncio.Event()
+        endpoint.awaiting_blocks[1] = event
+        self._awaiting_first_block[endpoint.addr.hostname] = endpoint
+        return endpoint, event
 
     def endpoint(
         self, addr: Union[IpHost, tuple[str, int]] = None
@@ -136,10 +169,10 @@ class BaseTftpConnection(UdpConnection):
             addr = self.remote_address
 
         assert addr is not None
-        key = f"{addr[0]}:{addr[1]}"
+        addr = normalize_host(*addr)
 
-        if key not in self._endpoints:
-            self._endpoints[key] = TftpEndpoint(
+        if addr not in self._endpoints:
+            self._endpoints[addr] = TftpEndpoint(
                 self._path,
                 self.logger,
                 addr,
@@ -150,7 +183,7 @@ class BaseTftpConnection(UdpConnection):
                 self.endpoint_timeout,
             )
 
-        return self._endpoints[key]
+        return self._endpoints[addr]
 
     def send_rrq(
         self,
@@ -270,15 +303,38 @@ class BaseTftpConnection(UdpConnection):
     ) -> None:
         """Handle a data message."""
 
+        endpoint = self.endpoint(addr)
         block = self._read_block_number(stream)
-        self.endpoint(addr).handle_data(block, stream.read())
+
+        # Check if we're currently waiting for an initial block.
+        hostname = endpoint.addr.hostname
+        if block == 1 and hostname in self._awaiting_first_block:
+            to_update = self._awaiting_first_block[hostname]
+            del self._awaiting_first_block[hostname]
+            self._endpoints[endpoint.addr] = to_update
+            endpoint = to_update.update_from_other(endpoint)
+
+        endpoint.handle_data(block, stream.read())
 
     async def _handle_ack(
         self, stream: BinaryIO, addr: tuple[str, int]
     ) -> None:
         """Handle an acknowledge message."""
 
-        self.endpoint(addr).handle_ack(self._read_block_number(stream))
+        endpoint = self.endpoint(addr)
+        block = self._read_block_number(stream)
+
+        # Check if we're currently waiting for an initial acknowledgement. This
+        # will come from the same host but a different port, so update
+        # references when this is detected.
+        hostname = endpoint.addr.hostname
+        if block == 0 and hostname in self._awaiting_first_ack:
+            to_update = self._awaiting_first_ack[hostname]
+            del self._awaiting_first_ack[hostname]
+            self._endpoints[endpoint.addr] = to_update
+            endpoint = to_update.update_from_other(endpoint)
+
+        endpoint.handle_ack(block)
 
     def _read_block_number(self, stream: BinaryIO) -> int:
         """Read block number from the stream."""
