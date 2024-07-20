@@ -10,4 +10,4 @@ clients:
     name: tftp_client
     defer: true
     kwargs:
-      remote_addr: [localhost, "$tftp_server"]
+      remote_addr: [127.0.0.1, "$tftp_server"]

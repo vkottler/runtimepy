@@ -36,6 +36,7 @@ class BaseTftpConnection(UdpConnection):
     _path: Path
 
     default_auto_restart = True
+    should_connect = False
 
     def set_root(self, path: Path) -> None:
         """Set a new root path for this instance."""
