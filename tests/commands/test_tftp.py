@@ -33,4 +33,4 @@ def test_tftp_command_basic():
             path_fd.write("Hello, world!\n")
 
         runtimepy_main(base + ["write", "localhost", str(ours), str(theirs)])
-        runtimepy_main(base + ["read", "localhost", str(ours), str(theirs)])
+        runtimepy_main(base + ["read", "localhost", str(ours)])

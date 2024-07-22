@@ -20,6 +20,11 @@ class IPv4Host(NamedTuple):
     port: int = 0
 
     @property
+    def hostname(self) -> str:
+        """Get a hostname for this instance."""
+        return hostname(self.name)
+
+    @property
     def address(self) -> ipaddress.IPv4Address:
         """Get an address object for this hostname."""
         return ipaddress.IPv4Address(self.name)
@@ -27,6 +32,10 @@ class IPv4Host(NamedTuple):
     def __str__(self) -> str:
         """Get this host as a string."""
         return hostname_port(self.name, self.port)
+
+    def __hash__(self) -> int:
+        """Get a hash for this instance."""
+        return hash(str(self))
 
 
 class IPv6Host(NamedTuple):
@@ -38,6 +47,11 @@ class IPv6Host(NamedTuple):
     scope_id: int = 0
 
     @property
+    def hostname(self) -> str:
+        """Get a hostname for this instance."""
+        return hostname(self.name)
+
+    @property
     def address(self) -> ipaddress.IPv6Address:
         """Get an address object for this hostname."""
         return ipaddress.IPv6Address(self.name)
@@ -45,6 +59,10 @@ class IPv6Host(NamedTuple):
     def __str__(self) -> str:
         """Get this host as a string."""
         return hostname_port(self.name, self.port)
+
+    def __hash__(self) -> int:
+        """Get a hash for this instance."""
+        return hash(str(self))
 
 
 IpHost = _Union[IPv4Host, IPv6Host]

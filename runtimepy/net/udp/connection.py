@@ -126,13 +126,16 @@ class UdpConnection(_Connection, _TransportMixin):
         )
         return result is not None
 
+    should_connect: bool = True
+
     @classmethod
-    async def create_connection(
-        cls: type[T], connect: bool = True, **kwargs
-    ) -> T:
+    async def create_connection(cls: type[T], **kwargs) -> T:
         """Create a UDP connection."""
 
         LOG.debug("kwargs: %s", kwargs)
+
+        # Allows certain connections to have more sane defaults.
+        connect = kwargs.pop("connect", cls.should_connect)
 
         # If the caller specifies a remote address but doesn't want a connected
         # socket, handle this after initial creation.
@@ -173,8 +176,8 @@ class UdpConnection(_Connection, _TransportMixin):
         sock1.connect(("localhost", sock2.getsockname()[1]))
         sock2.connect(("localhost", sock1.getsockname()[1]))
 
-        conn1 = await cls.create_connection(sock=sock1)
-        conn2 = await cls.create_connection(sock=sock2)
+        conn1 = await cls.create_connection(sock=sock1, connect=True)
+        conn2 = await cls.create_connection(sock=sock2, connect=True)
         assert conn1.remote_address is not None
         assert conn2.remote_address is not None
 

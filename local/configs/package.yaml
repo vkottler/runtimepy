@@ -2,7 +2,9 @@
 name: runtimepy
 version: "{{major}}.{{minor}}.{{patch}}"
 description: A framework for implementing Python services.
+
 entry: {{entry}}
+time_command: true
 
 requirements:
   - vcorelib>=3.3.1

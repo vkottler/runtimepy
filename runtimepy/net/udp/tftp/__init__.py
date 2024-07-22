@@ -38,19 +38,19 @@ class TftpConnection(BaseTftpConnection):
     ) -> bool:
         """Request a tftp read operation."""
 
-        endpoint = self.endpoint(addr)
         end_of_data = False
         idx = 1
-
-        def ack_sender() -> None:
-            """Send acks."""
-            nonlocal idx
-            self.send_ack(block=idx - 1, addr=addr)
 
         async with AsyncExitStack() as stack:
             # Claim read lock and ignore cancellation.
             stack.enter_context(suppress(asyncio.CancelledError))
-            await stack.enter_async_context(endpoint.lock)
+
+            endpoint, event = await self._await_first_block(stack, addr=addr)
+
+            def ack_sender() -> None:
+                """Send acks."""
+                nonlocal idx
+                endpoint.ack_sender(idx - 1, endpoint.addr)
 
             def send_rrq() -> None:
                 """Send request"""
@@ -59,9 +59,6 @@ class TftpConnection(BaseTftpConnection):
                 self.logger.info(
                     "Requesting '%s' (%s) -> %s.", filename, mode, destination
                 )
-
-            event = asyncio.Event()
-            endpoint.awaiting_blocks[idx] = event
 
             with self.log_time("Awaiting first data block", reminder=True):
                 # Wait for first data block.
@@ -112,21 +109,22 @@ class TftpConnection(BaseTftpConnection):
                 if success:
                     write_block()
 
-        # Repeat last ack in the background.
-        if end_of_data:
-            self._conn_tasks.append(
-                asyncio.create_task(
-                    repeat_until(  # type: ignore
-                        ack_sender,
-                        asyncio.Event(),
-                        endpoint.period.value,
-                        endpoint.timeout.value,
+            # Repeat last ack in the background.
+            if end_of_data:
+                self._conn_tasks.append(
+                    asyncio.create_task(
+                        repeat_until(  # type: ignore
+                            ack_sender,
+                            asyncio.Event(),
+                            endpoint.period.value,
+                            endpoint.timeout.value,
+                        )
                     )
                 )
-            )
 
-        # Make a to-string or log method for vcorelib FileInfo?
-        #
+                # Ensure at least one ack sends.
+                await asyncio.sleep(0.01)
+
         self.logger.info(
             "Read %s (%s).",
             FileInfo.from_file(destination),
@@ -146,16 +144,14 @@ class TftpConnection(BaseTftpConnection):
         """Request a tftp write operation."""
 
         result = False
-        endpoint = self.endpoint(addr)
 
         with as_path(source) as src:
             async with AsyncExitStack() as stack:
                 # Claim write lock and ignore cancellation.
                 stack.enter_context(suppress(asyncio.CancelledError))
-                await stack.enter_async_context(endpoint.lock)
 
-                event = asyncio.Event()
-                endpoint.awaiting_acks[0] = event
+                # Set up first-ack handling.
+                endpoint, event = await self._await_first_ack(stack, addr=addr)
 
                 def send_wrq() -> None:
                     """Send request."""
@@ -183,6 +179,11 @@ class TftpConnection(BaseTftpConnection):
                         )
 
                         # Compare hashes.
+                        self.logger.info(
+                            "Reading '%s' %s.",
+                            filename,
+                            "succeeded" if result else "failed",
+                        )
                         if result:
                             result = file_md5_hex(src) == file_md5_hex(tmp)
                             self.logger.info(

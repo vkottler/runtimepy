@@ -6,6 +6,7 @@ An entry-point for the 'tftp' command.
 import argparse
 import asyncio
 from pathlib import Path
+from socket import getaddrinfo
 
 from vcorelib.args import CommandFunction
 
@@ -21,7 +22,8 @@ from runtimepy.net.udp.tftp.enums import DEFAULT_MODE
 def tftp_cmd(args: argparse.Namespace) -> int:
     """Execute the tftp command."""
 
-    addr = (args.host, args.port)
+    # Resolve hostname as early as possible.
+    addr = (getaddrinfo(args.host, None)[0][4][0], args.port)
 
     stop_sig = asyncio.Event()
     kwargs = {
@@ -30,6 +32,9 @@ def tftp_cmd(args: argparse.Namespace) -> int:
         "reemit_period_s": args.reemit,
         "process_kwargs": {"stop_sig": stop_sig},
     }
+
+    if not args.their_file:
+        args.their_file = str(args.our_file)
 
     if args.operation == "read":
         task = tftp_read(addr, args.our_file, args.their_file, **kwargs)
@@ -81,6 +86,6 @@ def add_tftp_cmd(parser: argparse.ArgumentParser) -> CommandFunction:
     parser.add_argument("host", help="host to message")
 
     parser.add_argument("our_file", type=Path, help="path to our file")
-    parser.add_argument("their_file", type=str, help="path to their file")
+    parser.add_argument("their_file", nargs="?", help="path to their file")
 
     return tftp_cmd
