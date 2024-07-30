@@ -194,6 +194,9 @@ class TftpConnection(BaseTftpConnection):
         return result
 
 
+TFTP_PORT = 69
+
+
 @asynccontextmanager
 async def tftp(
     addr: Union[IpHost, tuple[str, int]],

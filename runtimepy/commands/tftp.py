@@ -8,13 +8,12 @@ import asyncio
 from pathlib import Path
 from socket import getaddrinfo
 
-from vcorelib.args import CommandFunction
-
 # third-party
+from vcorelib.args import CommandFunction
 from vcorelib.asyncio import run_handle_stop
 
 # internal
-from runtimepy.net.udp.tftp import tftp_read, tftp_write
+from runtimepy.net.udp.tftp import TFTP_PORT, tftp_read, tftp_write
 from runtimepy.net.udp.tftp.base import DEFAULT_TIMEOUT_S, REEMIT_PERIOD_S
 from runtimepy.net.udp.tftp.enums import DEFAULT_MODE
 
@@ -53,7 +52,7 @@ def add_tftp_cmd(parser: argparse.ArgumentParser) -> CommandFunction:
         "-p",
         "--port",
         type=int,
-        default=69,
+        default=TFTP_PORT,
         help="port to message (default: %(default)s)",
     )
 
