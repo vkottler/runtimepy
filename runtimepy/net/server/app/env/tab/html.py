@@ -134,7 +134,9 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabControls):
     def channel_table(self, parent: Element) -> None:
         """Create the channel table."""
 
-        table = div(tag="table", parent=parent)
+        table = div(
+            tag="table", parent=div(parent=parent, class_str="table-container")
+        )
         table.add_class("table", TEXT)
 
         header = div(tag="thead", parent=table)
@@ -248,7 +250,7 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabControls):
         # table doesn't take up full vertical space, few channels).
         under_construction(
             vert_container,
-            class_str="border-start border-end",
+            class_str="border-start border-top border-end",
             note="unused space",
         )
 
