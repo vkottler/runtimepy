@@ -18,7 +18,18 @@ from vcorelib.platform import is_windows
 
 # module under test
 from runtimepy.net.udp.tftp import TftpConnection
+from runtimepy.net.udp.tftp.enums import TftpErrorCode
 from runtimepy.primitives import Uint16
+
+
+def dummy_error_handler(
+    code: TftpErrorCode, message: str, addr: tuple[str, int]
+) -> None:
+    """A sample TFTP error handler."""
+
+    del code
+    del message
+    del addr
 
 
 async def tftp_test(conn1: TftpConnection, conn2: TftpConnection) -> None:
@@ -151,6 +162,10 @@ async def test_tftp_connection_basic():
     for testcase in [tftp_file_read, tftp_file_write, tftp_test]:
         # Start connections.
         conn1, conn2 = await TftpConnection.create_pair()
+
+        conn1.error_handlers.append(dummy_error_handler)
+        conn2.error_handlers.append(dummy_error_handler)
+
         stop = asyncio.Event()
         tasks = [
             asyncio.create_task(conn1.process(stop_sig=stop)),

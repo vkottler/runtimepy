@@ -21,6 +21,7 @@ from runtimepy.net.udp.tftp.base import (
     DEFAULT_TIMEOUT_S,
     REEMIT_PERIOD_S,
     BaseTftpConnection,
+    TftpErrorHandler,
 )
 from runtimepy.net.udp.tftp.enums import DEFAULT_MODE
 from runtimepy.util import PossiblePath, as_path
@@ -204,6 +205,7 @@ async def tftp(
     connection_kwargs: dict[str, Any] = None,
     timeout_s: float = DEFAULT_TIMEOUT_S,
     reemit_period_s: float = REEMIT_PERIOD_S,
+    error_handler: TftpErrorHandler = None,
 ) -> AsyncIterator[TftpConnection]:
     """Use a tftp connection as a managed context."""
 
@@ -218,6 +220,11 @@ async def tftp(
     conn = await TftpConnection.create_connection(
         remote_addr=(addr.name, addr.port), **connection_kwargs
     )
+
+    # Add error handlers.
+    if error_handler is not None:
+        conn.error_handlers.append(error_handler)
+
     async with conn.process_then_disable(**process_kwargs):
         # Set parameters.
         conn.endpoint_timeout.value = timeout_s
@@ -235,6 +242,7 @@ async def tftp_write(
     connection_kwargs: dict[str, Any] = None,
     timeout_s: float = DEFAULT_TIMEOUT_S,
     reemit_period_s: float = REEMIT_PERIOD_S,
+    error_handler: TftpErrorHandler = None,
 ) -> bool:
     """Attempt to perform a tftp write."""
 
@@ -244,6 +252,7 @@ async def tftp_write(
         connection_kwargs=connection_kwargs,
         timeout_s=timeout_s,
         reemit_period_s=reemit_period_s,
+        error_handler=error_handler,
     ) as conn:
         # Perform tftp interaction.
         result = await conn.request_write(
@@ -262,6 +271,7 @@ async def tftp_read(
     connection_kwargs: dict[str, Any] = None,
     timeout_s: float = DEFAULT_TIMEOUT_S,
     reemit_period_s: float = REEMIT_PERIOD_S,
+    error_handler: TftpErrorHandler = None,
 ) -> bool:
     """Attempt to perform a tftp read."""
 
@@ -271,6 +281,7 @@ async def tftp_read(
         connection_kwargs=connection_kwargs,
         timeout_s=timeout_s,
         reemit_period_s=reemit_period_s,
+        error_handler=error_handler,
     ) as conn:
         result = await conn.request_read(
             destination, filename, mode=mode, addr=addr
