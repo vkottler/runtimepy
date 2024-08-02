@@ -1,5 +1,5 @@
 [DESIGN]
-max-args=9
+max-args=10
 max-attributes=15
 max-parents=13
 max-public-methods=22

@@ -12,9 +12,12 @@ from vcorelib import DEFAULT_ENCODING
 from vcorelib.paths.context import tempfile
 from vcorelib.platform import is_windows
 
-# internal
+# module under test
 from runtimepy.net.arbiter.info import AppInfo
 from runtimepy.net.udp.tftp import TftpConnection, tftp_read, tftp_write
+
+# internal
+from tests.net.udp.test_tftp import dummy_error_handler
 
 
 async def tftp_test(app: AppInfo) -> int:
@@ -39,10 +42,20 @@ async def tftp_test(app: AppInfo) -> int:
             filename = f"{idx}.txt"
 
             # Confirm we can write and then read.
-            assert await tftp_write(server.local_address, msg, filename)
+            assert await tftp_write(
+                server.local_address,
+                msg,
+                filename,
+                error_handler=dummy_error_handler,
+            )
 
             with tempfile() as dst:
-                assert await tftp_read(server.local_address, dst, filename)
+                assert await tftp_read(
+                    server.local_address,
+                    dst,
+                    filename,
+                    error_handler=dummy_error_handler,
+                )
                 with dst.open("r", encoding=DEFAULT_ENCODING) as path_fd:
                     assert path_fd.read() == msg
 

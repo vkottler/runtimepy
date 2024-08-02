@@ -8,7 +8,7 @@ from contextlib import AsyncExitStack
 from io import BytesIO
 import logging
 from pathlib import Path
-from typing import BinaryIO, Union
+from typing import BinaryIO, Callable, Union
 
 # third-party
 from vcorelib.math import metrics_time_ns
@@ -29,6 +29,8 @@ from runtimepy.primitives import Double, Uint16
 
 REEMIT_PERIOD_S = 0.20
 DEFAULT_TIMEOUT_S = 1.0
+
+TftpErrorHandler = Callable[[TftpErrorCode, str, tuple[str, int]], None]
 
 
 class BaseTftpConnection(UdpConnection):
@@ -73,6 +75,7 @@ class BaseTftpConnection(UdpConnection):
 
         self.error_code = Uint16(time_source=metrics_time_ns)
         self.env.channel("error_code", self.error_code, enum="TftpErrorCode")
+        self.error_handlers: list[TftpErrorHandler] = []
 
         self.endpoint_period = Double(value=REEMIT_PERIOD_S)
         self.env.channel(
@@ -346,10 +349,14 @@ class BaseTftpConnection(UdpConnection):
         """Handle an error message."""
 
         # Update underlying primitive.
-        error_code = self.error_code.from_stream(stream)
-        self.endpoint(addr).handle_error(
-            TftpErrorCode(error_code), stream.read().decode()
-        )
+        error_code = TftpErrorCode(self.error_code.from_stream(stream))
+        message = stream.read().decode()
+
+        # Call extra error handlers.
+        for handler in self.error_handlers:
+            handler(error_code, message, addr)
+
+        self.endpoint(addr).handle_error(error_code, message)
 
     async def process_datagram(
         self, data: bytes, addr: tuple[str, int]
