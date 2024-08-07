@@ -31,6 +31,7 @@ from runtimepy.net.arbiter.result import OverallResult, results
 from runtimepy.net.connection import Connection as _Connection
 from runtimepy.net.manager import ConnectionManager
 from runtimepy.primitives import Uint32
+from runtimepy.primitives.array import PrimitiveArray
 from runtimepy.struct import RuntimeStructBase
 from runtimepy.struct import StructMap as _StructMap
 from runtimepy.task import PeriodicTask, PeriodicTaskManager
@@ -51,15 +52,19 @@ class RuntimeStruct(RuntimeStructBase, _ABC):
     """A class implementing a base runtime structure."""
 
     app: "AppInfo"
+    array: PrimitiveArray
 
     def init_env(self) -> None:
         """Initialize this sample environment."""
 
-    async def build(self, app: "AppInfo") -> None:
+    async def build(self, app: "AppInfo", **kwargs) -> None:
         """Build a struct instance's channel environment."""
 
         self.app = app
         self.init_env()
+
+        # Useful for transmitting over a wire.
+        self.array = self.env.array(**kwargs).array
 
 
 W = _TypeVar("W", bound=RuntimeStruct)
