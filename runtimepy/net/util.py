@@ -20,6 +20,11 @@ class IPv4Host(NamedTuple):
     port: int = 0
 
     @property
+    def family(self) -> int:
+        """Address family constant."""
+        return _socket.AF_INET
+
+    @property
     def hostname(self) -> str:
         """Get a hostname for this instance."""
         return hostname(self.name)
@@ -27,7 +32,19 @@ class IPv4Host(NamedTuple):
     @property
     def address(self) -> ipaddress.IPv4Address:
         """Get an address object for this hostname."""
-        return ipaddress.IPv4Address(self.name)
+        return ipaddress.IPv4Address(self.address_str)
+
+    @property
+    def address_str(self) -> str:
+        """Get an address string for this host."""
+        return _socket.getaddrinfo(
+            self.name if self.name else "localhost", None, family=self.family
+        )[0][4][0]
+
+    @property
+    def address_str_tuple(self) -> tuple[str, int]:
+        """Get a string-address tuple for this instance."""
+        return (self.address_str, self.port)
 
     def __str__(self) -> str:
         """Get this host as a string."""
@@ -54,7 +71,24 @@ class IPv6Host(NamedTuple):
     @property
     def address(self) -> ipaddress.IPv6Address:
         """Get an address object for this hostname."""
-        return ipaddress.IPv6Address(self.name)
+        return ipaddress.IPv6Address(self.address_str)
+
+    @property
+    def family(self) -> int:
+        """Address family constant."""
+        return _socket.AF_INET6
+
+    @property
+    def address_str(self) -> str:
+        """Get an address string for this host."""
+        return _socket.getaddrinfo(
+            self.name if self.name else "localhost", None, family=self.family
+        )[0][4][0]
+
+    @property
+    def address_str_tuple(self) -> tuple[str, int, int, int]:
+        """Get a string-address tuple for this instance."""
+        return (self.address_str, self.port, self.flowinfo, self.scope_id)
 
     def __str__(self) -> str:
         """Get this host as a string."""
@@ -67,19 +101,22 @@ class IPv6Host(NamedTuple):
 
 IpHost = _Union[IPv4Host, IPv6Host]
 IpHostlike = _Union[str, int, IpHost, None]
+IpHostTuplelike = _Union[IpHost, tuple[str, int], tuple[str, int, int, int]]
 
 
-def normalize_host(*args: IpHostlike) -> IpHost:
+def normalize_host(
+    *args: IpHostlike, default: type[IpHost] = IPv4Host
+) -> IpHost:
     """Get a host object from caller parameters."""
 
     # Default.
-    if args[0] is None:
-        return IPv4Host()
+    if not args or args[0] is None:
+        return default()
 
     if isinstance(args[0], (IPv4Host, IPv6Host)):
         return args[0]
 
-    if len([*args]) == 2:
+    if len([*args]) <= 2:
         return IPv4Host(*args)  # type: ignore
     return IPv6Host(*args)  # type: ignore
 
@@ -102,8 +139,6 @@ def hostname_port(ip_address: str, port: int) -> str:
 
 def sockname(sock: _socket.SocketType) -> IpHost:
     """Get address information from a socket."""
-
-    assert sock.family == _socket.AF_INET
     return normalize_host(*sock.getsockname())
 
 
@@ -116,10 +151,10 @@ def get_free_socket(
 
     local = normalize_host(local)
 
-    sock = _socket.socket(_socket.AF_INET, kind)
+    sock = _socket.socket(local.family, kind)
     if reuse:
         sock.setsockopt(_socket.SOL_SOCKET, _socket.SO_REUSEADDR, 1)
-    sock.bind((local.name, local.port))
+    sock.bind(local.address_str_tuple)
     return sock
 
 

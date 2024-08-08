@@ -8,7 +8,7 @@ from contextlib import AsyncExitStack
 from io import BytesIO
 import logging
 from pathlib import Path
-from typing import BinaryIO, Callable, Union
+from typing import BinaryIO, Callable
 
 # third-party
 from vcorelib.math import metrics_time_ns
@@ -24,7 +24,7 @@ from runtimepy.net.udp.tftp.enums import (
     encode_filename_mode,
     parse_filename_mode,
 )
-from runtimepy.net.util import normalize_host
+from runtimepy.net.util import IpHostTuplelike, normalize_host
 from runtimepy.primitives import Double, Uint16
 
 REEMIT_PERIOD_S = 0.20
@@ -102,7 +102,7 @@ class BaseTftpConnection(UdpConnection):
         }
 
         def data_sender(
-            block: int, data: bytes, addr: Union[IpHost, tuple[str, int]]
+            block: int, data: bytes, addr: IpHostTuplelike
         ) -> None:
             """Send data via this connection instance."""
 
@@ -110,9 +110,7 @@ class BaseTftpConnection(UdpConnection):
 
         self.data_sender = data_sender
 
-        def ack_sender(
-            block: int, addr: Union[IpHost, tuple[str, int]]
-        ) -> None:
+        def ack_sender(block: int, addr: IpHostTuplelike) -> None:
             """Send an ack via this connection."""
 
             self.send_ack(block=block, addr=addr)
@@ -122,7 +120,7 @@ class BaseTftpConnection(UdpConnection):
         def error_sender(
             error_code: TftpErrorCode,
             message: str,
-            addr: Union[IpHost, tuple[str, int]],
+            addr: IpHostTuplelike,
         ) -> None:
             """Sen an error via this connection."""
 
@@ -138,7 +136,7 @@ class BaseTftpConnection(UdpConnection):
     async def _await_first_ack(
         self,
         stack: AsyncExitStack,
-        addr: Union[IpHost, tuple[str, int]] = None,
+        addr: IpHostTuplelike = None,
     ) -> tuple[TftpEndpoint, asyncio.Event]:
         """Set up an endpoint to wait for an initial ack from a server."""
 
@@ -152,7 +150,7 @@ class BaseTftpConnection(UdpConnection):
     async def _await_first_block(
         self,
         stack: AsyncExitStack,
-        addr: Union[IpHost, tuple[str, int]] = None,
+        addr: IpHostTuplelike = None,
     ) -> tuple[TftpEndpoint, asyncio.Event]:
         """Set up an endpoint to wait for an initial block from a server."""
 
@@ -163,9 +161,7 @@ class BaseTftpConnection(UdpConnection):
         self._awaiting_first_block[endpoint.addr.hostname] = endpoint
         return endpoint, event
 
-    def endpoint(
-        self, addr: Union[IpHost, tuple[str, int]] = None
-    ) -> TftpEndpoint:
+    def endpoint(self, addr: IpHostTuplelike = None) -> TftpEndpoint:
         """Lookup an endpoint instance from an address."""
 
         if addr is None:
@@ -192,7 +188,7 @@ class BaseTftpConnection(UdpConnection):
         self,
         filename: str,
         mode: str = DEFAULT_MODE,
-        addr: Union[IpHost, tuple[str, int]] = None,
+        addr: IpHostTuplelike = None,
     ) -> None:
         """Send a read request."""
 
@@ -204,7 +200,7 @@ class BaseTftpConnection(UdpConnection):
         self,
         filename: str,
         mode: str = DEFAULT_MODE,
-        addr: Union[IpHost, tuple[str, int]] = None,
+        addr: IpHostTuplelike = None,
     ) -> None:
         """Send a write request."""
 
@@ -216,7 +212,7 @@ class BaseTftpConnection(UdpConnection):
         self,
         block: int,
         data: bytes,
-        addr: Union[IpHost, tuple[str, int]] = None,
+        addr: IpHostTuplelike = None,
     ) -> None:
         """Send a data message."""
 
@@ -225,9 +221,7 @@ class BaseTftpConnection(UdpConnection):
             TftpOpCode.DATA, bytes(self.block_number) + data, addr=addr
         )
 
-    def send_ack(
-        self, block: int = 0, addr: Union[IpHost, tuple[str, int]] = None
-    ) -> None:
+    def send_ack(self, block: int = 0, addr: IpHostTuplelike = None) -> None:
         """Send a data message."""
 
         self.block_number.value = block
@@ -237,7 +231,7 @@ class BaseTftpConnection(UdpConnection):
         self,
         error_code: TftpErrorCode,
         message: str,
-        addr: Union[IpHost, tuple[str, int]] = None,
+        addr: IpHostTuplelike = None,
     ) -> None:
         """Send a data message."""
 
@@ -265,7 +259,7 @@ class BaseTftpConnection(UdpConnection):
         self,
         opcode: TftpOpCode,
         data: bytes,
-        addr: Union[IpHost, tuple[str, int]] = None,
+        addr: IpHostTuplelike = None,
     ) -> None:
         """Send a tftp message."""
 
