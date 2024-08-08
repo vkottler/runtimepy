@@ -25,6 +25,11 @@ class IPv4Host(NamedTuple):
         """Address family constant."""
         return _socket.AF_INET
 
+    def zero_port(self) -> "IPv4Host":
+        """Get a zeroed-out port instance."""
+
+        return self if self.port == 0 else IPv4Host(self.name, 0)
+
     @property
     def hostname(self) -> str:
         """Get a hostname for this instance."""
@@ -71,6 +76,15 @@ class IPv6Host(NamedTuple):
     def address(self) -> ipaddress.IPv6Address:
         """Get an address object for this hostname."""
         return ipaddress.IPv6Address(self.address_str)
+
+    def zero_port(self) -> "IPv6Host":
+        """Get a zeroed-out port instance."""
+
+        return (
+            self
+            if self.port == 0
+            else IPv6Host(self.name, 0, self.flowinfo, self.scope_id)
+        )
 
     @property
     def family(self) -> int:
@@ -139,6 +153,7 @@ def address_str(name: str, fallback_host: str = "localhost", **kwargs) -> str:
     )[0][4][0]
 
 
+@cache
 def hostname_port(ip_address: str, port: int) -> str:
     """Get a hostname string with a port appended."""
     return f"{hostname(ip_address)}:{port}"

@@ -6,6 +6,7 @@ sizes.
 # built-in
 from contextlib import suppress
 from enum import IntEnum
+from functools import cache
 import logging
 import socket
 
@@ -29,10 +30,14 @@ class SocketConstants(IntEnum):
 
 
 IP_HEADER_SIZE = 60
-DEFAULT_MTU = 1500 - (IP_HEADER_SIZE + 8)
+UDP_HEADER_SIZE = 8
+ETHERNET_MTU = 1500
+UDP_DEFAULT_MTU = ETHERNET_MTU - (IP_HEADER_SIZE + UDP_HEADER_SIZE)
 
 
-def socket_discover_mtu(sock: socket.SocketType, probe_size: int) -> int:
+def socket_discover_mtu(
+    sock: socket.SocketType, probe_size: int, fallback: int
+) -> int:
     """
     Send a large frame and indicate that we want to perform mtu discovery, and
     not fragment any frames.
@@ -79,13 +84,32 @@ def socket_discover_mtu(sock: socket.SocketType, probe_size: int) -> int:
     with suppress(OSError):
         result = sock.getsockopt(socket.IPPROTO_IP, SocketConstants.IP_MTU)
 
-    return result if result else DEFAULT_MTU
+    return result if result else fallback
+
+
+@cache
+def host_discover_mtu(
+    local: IpHost,
+    destination: IpHost,
+    probe_size: int,
+    fallback: int,
+    kind: int = socket.SOCK_DGRAM,
+) -> int:
+    """Perform MTU discovery given a local and remote host plus probe size."""
+
+    sock = get_free_socket(local=local.zero_port(), kind=kind)
+    sock.connect(destination.address_str_tuple)
+    result = socket_discover_mtu(sock, probe_size, fallback)
+    sock.close()
+    return result
 
 
 def discover_mtu(
     *destination: IpHostlike,
     local: IpHost = None,
-    probe_size: int = DEFAULT_MTU,
+    probe_size: int = UDP_DEFAULT_MTU,
+    fallback: int = UDP_DEFAULT_MTU,
+    kind: int = socket.SOCK_DGRAM,
 ) -> int:
     """
     Determine the maximum transmission unit for an IPv4 payload to a provided
@@ -93,17 +117,8 @@ def discover_mtu(
     """
 
     local = normalize_host(local)
-
-    sock = get_free_socket(local=local, kind=socket.SOCK_DGRAM)
-
     dest = normalize_host(*destination)
-    LOG.info(
-        "Connecting MTU probe (via UDP) to %s (%s).", dest, dest.address_str
-    )
-
-    sock.connect(dest.address_str_tuple)
-
-    result = socket_discover_mtu(sock, probe_size)
+    result = host_discover_mtu(local, dest, probe_size, fallback, kind=kind)
 
     LOG.info(
         "Discovered MTU to (%s -> %s) is %d (probe size: %d).",
@@ -112,7 +127,5 @@ def discover_mtu(
         result,
         probe_size,
     )
-
-    sock.close()
 
     return result
