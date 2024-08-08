@@ -4,6 +4,7 @@ A module implementing various networking utilities.
 
 # built-in
 from contextlib import suppress as _suppress
+from functools import cache
 import ipaddress
 import socket as _socket
 from typing import Awaitable, NamedTuple, Optional, TypeVar
@@ -37,9 +38,7 @@ class IPv4Host(NamedTuple):
     @property
     def address_str(self) -> str:
         """Get an address string for this host."""
-        return _socket.getaddrinfo(
-            self.name if self.name else "localhost", None, family=self.family
-        )[0][4][0]
+        return address_str(self.name, family=self.family)
 
     @property
     def address_str_tuple(self) -> tuple[str, int]:
@@ -81,9 +80,7 @@ class IPv6Host(NamedTuple):
     @property
     def address_str(self) -> str:
         """Get an address string for this host."""
-        return _socket.getaddrinfo(
-            self.name if self.name else "localhost", None, family=self.family
-        )[0][4][0]
+        return address_str(self.name, family=self.family)
 
     @property
     def address_str_tuple(self) -> tuple[str, int, int, int]:
@@ -121,6 +118,7 @@ def normalize_host(
     return IPv6Host(*args)  # type: ignore
 
 
+@cache
 def hostname(ip_address: str) -> str:
     """
     Attempt to get a string hostname for a string IP address argument that
@@ -130,6 +128,15 @@ def hostname(ip_address: str) -> str:
     with _suppress(_socket.herror, OSError):
         result = _socket.gethostbyaddr(ip_address)[0]
     return result
+
+
+@cache
+def address_str(name: str, fallback_host: str = "localhost", **kwargs) -> str:
+    """Get an IP address string for a given name."""
+
+    return _socket.getaddrinfo(
+        name if name else fallback_host, None, **kwargs
+    )[0][4][0]
 
 
 def hostname_port(ip_address: str, port: int) -> str:
