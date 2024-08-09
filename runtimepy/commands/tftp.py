@@ -6,7 +6,6 @@ An entry-point for the 'tftp' command.
 import argparse
 import asyncio
 from pathlib import Path
-from socket import getaddrinfo
 
 # third-party
 from vcorelib.args import CommandFunction
@@ -16,13 +15,16 @@ from vcorelib.asyncio import run_handle_stop
 from runtimepy.net.udp.tftp import TFTP_PORT, tftp_read, tftp_write
 from runtimepy.net.udp.tftp.base import DEFAULT_TIMEOUT_S, REEMIT_PERIOD_S
 from runtimepy.net.udp.tftp.enums import DEFAULT_MODE
+from runtimepy.net.util import normalize_host
 
 
 def tftp_cmd(args: argparse.Namespace) -> int:
     """Execute the tftp command."""
 
+    host = normalize_host(args.host, args.port)
+
     # Resolve hostname as early as possible.
-    addr = (getaddrinfo(args.host, None)[0][4][0], args.port)
+    addr = host.address_str_tuple
 
     stop_sig = asyncio.Event()
     kwargs = {

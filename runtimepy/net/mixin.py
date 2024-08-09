@@ -14,6 +14,7 @@ from typing import cast as _cast
 from runtimepy.net import IpHost as _IpHost
 from runtimepy.net import normalize_host as _normalize_host
 from runtimepy.net.connection import BinaryMessage as _BinaryMessage
+from runtimepy.net.mtu import UDP_DEFAULT_MTU, host_discover_mtu
 
 
 class BinaryMessageQueueMixin:
@@ -47,8 +48,29 @@ class TransportMixin:
 
     def __init__(self, transport: _asyncio.BaseTransport) -> None:
         """Initialize this instance."""
-
         self.set_transport(transport)
+
+    def mtu(
+        self,
+        probe_size: int = UDP_DEFAULT_MTU,
+        fallback: int = UDP_DEFAULT_MTU,
+    ) -> int:
+        """
+        Get a maximum transmission unit for this connection. Underlying sockets
+        must be connected for this to work.
+        """
+
+        assert (
+            self.remote_address is not None
+        ), "Not connected! Can't probe MTU."
+
+        return host_discover_mtu(
+            self.local_address,
+            self.remote_address,
+            probe_size,
+            fallback,
+            kind=self.socket.type,
+        )
 
     @property
     def socket(self) -> _SocketType:

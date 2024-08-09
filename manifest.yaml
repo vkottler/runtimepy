@@ -31,6 +31,7 @@ renders:
       - renders-python_readme_dep_graph.md
       - commands-help
       - commands-help-arbiter
+      - commands-help-mtu
       - commands-help-server
       - commands-help-task
       - commands-help-tftp

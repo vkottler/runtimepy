@@ -11,7 +11,6 @@ import socket as _socket
 from typing import Any as _Any
 from typing import Optional as _Optional
 from typing import TypeVar as _TypeVar
-from typing import Union as _Union
 
 # internal
 from runtimepy.net import IpHost, get_free_socket, normalize_host
@@ -26,6 +25,7 @@ from runtimepy.net.udp.create import (
     udp_transport_protocol_backoff,
 )
 from runtimepy.net.udp.protocol import UdpQueueProtocol
+from runtimepy.net.util import IpHostTuplelike
 
 LOG = _getLogger(__name__)
 T = _TypeVar("T", bound="UdpConnection")
@@ -85,9 +85,7 @@ class UdpConnection(_Connection, _TransportMixin):
     ) -> bool:
         """Process a datagram."""
 
-    def sendto(
-        self, data: bytes, addr: _Union[IpHost, tuple[str, int]] = None
-    ) -> None:
+    def sendto(self, data: bytes, addr: IpHostTuplelike = None) -> None:
         """Send to a specific address."""
 
         try:

@@ -4,6 +4,7 @@ A channel-environment extension for creating arrays of primitives.
 
 # built-in
 from typing import Iterable as _Iterable
+from typing import Iterator as _Iterator
 from typing import NamedTuple
 from typing import Optional as _Optional
 
@@ -23,9 +24,9 @@ class ChannelArray(NamedTuple):
     array: _PrimitiveArray
 
     @staticmethod
-    def create() -> "ChannelArray":
+    def create(**kwargs) -> "ChannelArray":
         """Create a new, empty channel array."""
-        return ChannelArray([], _PrimitiveArray())
+        return ChannelArray([], _PrimitiveArray(**kwargs))
 
 
 class ArrayChannelEnvironment(_BaseChannelEnvironment):
@@ -33,18 +34,28 @@ class ArrayChannelEnvironment(_BaseChannelEnvironment):
     A channel-environment extension for working with arrays of primitives.
     """
 
-    def array(self, keys: _Iterable[_RegistryKey]) -> ChannelArray:
+    @property
+    def names(self) -> _Iterator[str]:
+        """Iterate over registered names in the environment."""
+        yield from self.channels.names.names
+
+    def array(
+        self, keys: _Iterable[_RegistryKey] = None, **kwargs
+    ) -> ChannelArray:
         """
         Create a primitive array from an in-order iterable of registry keys.
         """
 
-        result = ChannelArray.create()
+        result = ChannelArray.create(**kwargs)
 
         curr_fields: _Optional[_BitFields] = None
         invalid_field_names: set[str] = set()
         available_field_names: set[str] = set()
 
         names: set[str] = set()
+
+        if keys is None:
+            keys = self.names
 
         for key in keys:
             # All keys must be registered names.

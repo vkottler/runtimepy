@@ -24,6 +24,8 @@ dev_requirements:
 commands:
   - name: arbiter
     description: "run a connection-arbiter application from a config"
+  - name: mtu
+    description: "probe for MTU size to some endpoint"
   - name: server
     description: "run a server for a specific connection factory"
   - name: task

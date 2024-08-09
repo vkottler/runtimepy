@@ -18,6 +18,9 @@ async def test_udp_queue_basic():
 
     conn1, conn2 = await QueueUdpConnection.create_pair()
 
+    assert conn1.mtu()
+    assert conn2.mtu()
+
     sig = asyncio.Event()
 
     tasks = [
