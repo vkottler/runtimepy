@@ -2,7 +2,7 @@
     =====================================
     generator=datazen
     version=3.1.4
-    hash=e10966718b2a6b0f6afdae41001654b0
+    hash=75472a985efe131b3312ecf46e006599
     =====================================
 -->
 
@@ -48,7 +48,7 @@ This package is tested on the following platforms:
 $ ./venv3.12/bin/runtimepy -h
 
 usage: runtimepy [-h] [--version] [-v] [-q] [--curses] [--no-uvloop] [-C DIR]
-                 {arbiter,server,task,tftp,tui,noop} ...
+                 {arbiter,mtu,server,task,tftp,tui,noop} ...
 
 A framework for implementing Python services.
 
@@ -62,9 +62,10 @@ options:
   -C DIR, --dir DIR     execute from a specific directory
 
 commands:
-  {arbiter,server,task,tftp,tui,noop}
+  {arbiter,mtu,server,task,tftp,tui,noop}
                         set of available commands
     arbiter             run a connection-arbiter application from a config
+    mtu                 probe for MTU size to some endpoint
     server              run a server for a specific connection factory
     task                run a task from a specific task factory
     tftp                perform a tftp interaction
@@ -93,6 +94,18 @@ options:
                         ensure that a 'wait_for_stop' application method is
                         run last
   --no-poller           don't run a connection-metrics poller task
+
+```
+
+### `mtu`
+
+```
+$ ./venv3.12/bin/runtimepy mtu -h
+
+usage: runtimepy mtu [-h]
+
+options:
+  -h, --help  show this help message and exit
 
 ```
 
