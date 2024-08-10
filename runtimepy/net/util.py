@@ -43,7 +43,9 @@ class IPv4Host(NamedTuple):
     @property
     def address_str(self) -> str:
         """Get an address string for this host."""
-        return address_str(self.name, family=self.family)
+        return address_str(
+            self.name, family=self.family, fallback_host="0.0.0.0"
+        )
 
     @property
     def address_str_tuple(self) -> tuple[str, int]:
@@ -94,7 +96,7 @@ class IPv6Host(NamedTuple):
     @property
     def address_str(self) -> str:
         """Get an address string for this host."""
-        return address_str(self.name, family=self.family)
+        return address_str(self.name, family=self.family, fallback_host="::")
 
     @property
     def address_str_tuple(self) -> tuple[str, int, int, int]:
