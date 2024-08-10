@@ -4,6 +4,7 @@ An entry-point for the 'mtu' command.
 
 # built-in
 import argparse
+import socket
 
 # third-party
 from vcorelib.args import CommandFunction
@@ -15,18 +16,13 @@ from runtimepy.net.mtu import UDP_DEFAULT_MTU, discover_mtu
 def mtu_cmd(args: argparse.Namespace) -> int:
     """Execute the mtu command."""
 
-    print(args.probe_size)
-    print(args.fallback)
-
-    print(discover_mtu)
-
-    # def discover_mtu(
-    #     *destination: IpHostlike,
-    #     local: IpHost = None,
-    #     probe_size=args.probe_size,
-    #     fallback=args.fallback,
-    #     kind: int = socket.SOCK_DGRAM,
-    # ) -> int:
+    discover_mtu(
+        args.destination[0],
+        *(int(x) for x in args.destination[1:]),
+        probe_size=args.probe_size,
+        fallback=args.fallback,
+        kind=socket.SOCK_STREAM if args.tcp else socket.SOCK_DGRAM,
+    )
 
     return 0
 
@@ -48,10 +44,14 @@ def add_mtu_cmd(parser: argparse.ArgumentParser) -> CommandFunction:
         "(i.e. not on Linux, default: %(default)d)",
     )
 
-    # udp vs tcp
-    # ip6 flag?
+    parser.add_argument(
+        "-t", "--tcp", action="store_true", help="use TCP instead of UDP"
+    )
 
-    # dest
-    # local params?
+    parser.add_argument(
+        "destination",
+        nargs="+",
+        help="endpoint parameters (host, port[, flowinfo, scope_id])",
+    )
 
     return mtu_cmd

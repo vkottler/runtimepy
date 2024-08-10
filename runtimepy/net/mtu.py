@@ -116,8 +116,8 @@ def discover_mtu(
     host.
     """
 
-    local = normalize_host(local)
     dest = normalize_host(*destination)
+    local = normalize_host(local, default=type(dest))
     result = host_discover_mtu(local, dest, probe_size, fallback, kind=kind)
 
     LOG.info(

@@ -2,7 +2,7 @@
     =====================================
     generator=datazen
     version=3.1.4
-    hash=75472a985efe131b3312ecf46e006599
+    hash=3b287fdc5e1b1691d94597b8f170f111
     =====================================
 -->
 
@@ -102,10 +102,19 @@ options:
 ```
 $ ./venv3.12/bin/runtimepy mtu -h
 
-usage: runtimepy mtu [-h]
+usage: runtimepy mtu [-h] [--probe-size PROBE_SIZE] [--fallback FALLBACK] [-t]
+                     destination [destination ...]
+
+positional arguments:
+  destination           endpoint parameters (host, port[, flowinfo, scope_id])
 
 options:
-  -h, --help  show this help message and exit
+  -h, --help            show this help message and exit
+  --probe-size PROBE_SIZE
+                        data payload size to use for probe (default: 1432)
+  --fallback FALLBACK   fallback MTU value if probing doesn't succeed (i.e.
+                        not on Linux, default: 1432)
+  -t, --tcp             use TCP instead of UDP
 
 ```
 
