@@ -21,6 +21,8 @@ from typing import Union as _Union
 from vcorelib.io.types import JsonObject as _JsonObject
 from vcorelib.logging import LoggerMixin as _LoggerMixin
 from vcorelib.logging import LoggerType as _LoggerType
+from vcorelib.math import default_time_ns
+from vcorelib.math.keeper import TimeSource
 from vcorelib.namespace import Namespace as _Namespace
 
 # internal
@@ -30,7 +32,7 @@ from runtimepy.mixins.trig import TrigMixin
 from runtimepy.net.arbiter.result import OverallResult, results
 from runtimepy.net.connection import Connection as _Connection
 from runtimepy.net.manager import ConnectionManager
-from runtimepy.primitives import Uint32
+from runtimepy.primitives import Uint32, Uint64
 from runtimepy.primitives.array import PrimitiveArray
 from runtimepy.struct import RuntimeStructBase
 from runtimepy.struct import StructMap as _StructMap
@@ -67,10 +69,35 @@ class RuntimeStruct(RuntimeStructBase, _ABC):
         self.array = self.env.array(**kwargs).array
 
 
+class TimestampedStruct(RuntimeStruct):
+    """A bast struct with a timestamp field."""
+
+    time_keeper: TimeSource = default_time_ns
+    timestamp: Uint64
+
+    def init_env(self) -> None:
+        """Initialize this sample environment."""
+
+        self.timestamp = Uint64(value=type(self).time_keeper())
+        self.env.channel(
+            "timestamp",
+            self.timestamp,
+            description=(
+                "The nanosecond timestamp when this struct "
+                "instance was last updated."
+            ),
+        )
+
+    def poll(self) -> None:
+        """Update this instance's timestamp."""
+
+        self.timestamp.value = type(self).time_keeper()
+
+
 W = _TypeVar("W", bound=RuntimeStruct)
 
 
-class TrigStruct(RuntimeStruct, TrigMixin):
+class TrigStruct(TimestampedStruct, TrigMixin):
     """A simple trig struct."""
 
     iterations: Uint32
@@ -78,6 +105,7 @@ class TrigStruct(RuntimeStruct, TrigMixin):
     def init_env(self) -> None:
         """Initialize this sample environment."""
 
+        super().init_env()
         TrigMixin.__init__(self, self.env)
         self.iterations = Uint32()
         self.env.int_channel("iterations", self.iterations, commandable=True)
@@ -91,6 +119,7 @@ class TrigStruct(RuntimeStruct, TrigMixin):
         # Pylint bug?
         self.dispatch_trig(self.iterations.value)  # pylint: disable=no-member
         self.iterations.value += 1  # pylint: disable=no-member
+        super().poll()
 
 
 class SampleStruct(TrigStruct):
@@ -98,9 +127,8 @@ class SampleStruct(TrigStruct):
 
     def init_env(self) -> None:
         """Initialize this sample environment."""
-
-        sample_env(self.env)
         super().init_env()
+        sample_env(self.env)
 
     def poll(self) -> None:
         """
