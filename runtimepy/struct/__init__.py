@@ -19,13 +19,16 @@ from runtimepy.mixins.logging import LoggerMixinLevelControl
 class RuntimeStructBase(LoggerMixinLevelControl, ChannelEnvironmentMixin):
     """A base runtime structure."""
 
+    log_level_channel: bool = True
+
     def __init__(self, name: str, config: _JsonObject) -> None:
         """Initialize this instance."""
 
         self.name = name
         LoggerMixinLevelControl.__init__(self, logger=_getLogger(self.name))
         ChannelEnvironmentMixin.__init__(self)
-        self.setup_level_channel(self.env)
+        if self.log_level_channel:
+            self.setup_level_channel(self.env)
         self.command = ChannelCommandProcessor(self.env, self.logger)
         self.config = config
 
