@@ -7,6 +7,7 @@ from __future__ import annotations
 # built-in
 import asyncio as _asyncio
 from socket import SocketType as _SocketType
+from typing import Callable
 from typing import Optional as _Optional
 from typing import cast as _cast
 
@@ -54,6 +55,7 @@ class TransportMixin:
         self,
         probe_size: int = UDP_DEFAULT_MTU,
         fallback: int = UDP_DEFAULT_MTU,
+        probe_create: Callable[[int], bytes] = bytes,
     ) -> int:
         """
         Get a maximum transmission unit for this connection. Underlying sockets
@@ -70,6 +72,7 @@ class TransportMixin:
             probe_size,
             fallback,
             kind=self.socket.type,
+            probe_create=probe_create,
         )
 
     @property

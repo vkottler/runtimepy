@@ -1,7 +1,6 @@
 ---
-port_overrides:
-  runtimepy_http_server: 8000
-config:
-  caching: false
+includes:
+  - dev_no_wait.yaml
+
 app:
   - runtimepy.net.apps.wait_for_stop

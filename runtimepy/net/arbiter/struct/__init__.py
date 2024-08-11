@@ -4,14 +4,15 @@ A module implementing runtime struct interfaces.
 
 # built-in
 from io import BytesIO
-from typing import Generic, Iterator, TypeVar
+from typing import Generic, Iterator, Optional, TypeVar
 
 # third-party
 from vcorelib.math import default_time_ns
 from vcorelib.math.keeper import TimeSource
 
 # internal
-from runtimepy.net.arbiter.info import RuntimeStruct
+from runtimepy.net.arbiter.info import AppInfo, RuntimeStruct
+from runtimepy.net.mtu import UDP_DEFAULT_MTU
 from runtimepy.net.udp.connection import UdpConnection
 from runtimepy.primitives import Uint16, Uint64
 from runtimepy.primitives.serializable.framer import SerializableFramer
@@ -24,6 +25,7 @@ class TimestampedStruct(RuntimeStruct):
 
     time_keeper: TimeSource = default_time_ns
 
+    # Header.
     timestamp: Uint64
     sequence: Uint16
 
@@ -72,7 +74,7 @@ class TimestampedStruct(RuntimeStruct):
 
         # Quick sanity check.
         data_len = len(data)
-        assert data_len % size == 0
+        assert data_len % size == 0, (data_len, size)
 
         with BytesIO(data) as stream:
             for _ in range(data_len // size):
@@ -88,35 +90,101 @@ class TimestampedStruct(RuntimeStruct):
 T = TypeVar("T", bound=TimestampedStruct)
 
 
-class UdpStructSender(UdpConnection, Generic[T]):
-    """A connection that can send arrays of structs."""
+class UdpStructTransceiver(UdpConnection, Generic[T]):
+    """A connection that can send and receive arrays of structs."""
 
-    # Need to extend the connection factory interface to set these.
-    struct_tx: T
+    # Sub-class should set this.
+    struct_kind: type[T]
 
-    def init(self) -> None:
-        """Initialize this instance."""
+    # A factory implementation must call 'assign_tx' below.
+    struct_tx: Optional[T] = None
+    framer_tx: SerializableFramer
 
-        self.framer_tx = SerializableFramer(self.struct_tx.array, self.mtu())
+    # Make these private + add 'assign' method?
+    struct_rx: Optional[T] = None
+
+    def assign_tx(self, instance: T) -> None:
+        """Assign a struct to this connection."""
+
+        assert isinstance(instance, self.struct_kind), (
+            instance,
+            self.struct_kind,
+        )
+        assert self.struct_tx is None, "Transmit struct already assigned!"
+
+        self.struct_tx = instance
+        self.framer_tx = SerializableFramer(
+            self.struct_tx.array, UDP_DEFAULT_MTU
+        )
+
+        def get_payload(probe_size: int) -> bytes:
+            """Get a data payload suitable for MTU probing."""
+
+            self.framer_tx.set_mtu(probe_size)
+            result = None
+            while result is None:
+                result = self.framer_tx.capture()
+            return result
+
+        # This actually sends data over this connection.
+        self.framer_tx.set_mtu(
+            self.mtu(probe_create=get_payload), logger=self.logger
+        )
+
+    def assign_app_tx(self, pattern: str, app: AppInfo) -> Optional[T]:
+        """Attempt to assign a transmit struct to this instance."""
+
+        result = None
+
+        candidate = list(
+            app.search_structs(pattern=pattern, kind=self.struct_kind)
+        )
+        if len(candidate) == 1:
+            result = candidate[0]
+            self.assign_tx(result)
+
+        return result
+
+    def assign_rx(self, instance: T) -> None:
+        """Assign a receive struct."""
+
+        assert isinstance(instance, self.struct_kind), (
+            instance,
+            self.struct_kind,
+        )
+        assert self.struct_rx is None, "Receive struct already assigned!"
+
+        self.struct_rx = instance
+
+    def assign_app_rx(self, pattern: str, app: AppInfo) -> Optional[T]:
+        """Attempt to assign a receive struct to this instance."""
+
+        result = None
+
+        candidate = list(
+            app.search_structs(pattern=pattern, kind=self.struct_kind)
+        )
+        if len(candidate) == 1:
+            result = candidate[0]
+            self.assign_rx(result)
+
+        return result
 
     def capture(self, sample: bool = True, flush: bool = False) -> None:
         """Sample this struct and possibly send telemetry."""
 
-        if sample:
-            self.struct_tx.poll()
+        # Should we handle the other branch?
+        if self.struct_tx is not None:
+            if sample:
+                self.struct_tx.poll()
 
-        result = self.framer_tx.capture(sample=sample, flush=flush)
-        if result:
-            self.sendto(result)
+            result = self.framer_tx.capture(sample=sample, flush=flush)
+            if result:
+                self.sendto(result)
 
-
-class UdpStructReceiver(UdpConnection, Generic[T]):
-    """A connection that can receive arrays of structs."""
-
-    # Need to extend the connection factory interface to set these.
-    struct_rx: T
-
-    def handle_update(self, timestamp_ns: int, addr: tuple[str, int]) -> None:
+    def handle_update(
+        self, timestamp_ns: int, instance: T, addr: tuple[str, int]
+    ) -> None:
         """Handle individual struct updates."""
 
     async def process_datagram(
@@ -124,7 +192,9 @@ class UdpStructReceiver(UdpConnection, Generic[T]):
     ) -> bool:
         """Process an array of struct instances."""
 
-        for timestamp_ns in self.struct_rx.process_datagram(data):
-            self.handle_update(timestamp_ns, addr)
+        # Should we handle the other branch?
+        if self.struct_rx is not None:
+            for timestamp_ns in self.struct_rx.process_datagram(data):
+                self.handle_update(timestamp_ns, self.struct_rx, addr)
 
         return True

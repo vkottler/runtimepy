@@ -9,6 +9,7 @@ from enum import IntEnum
 from functools import cache
 import logging
 import socket
+from typing import Callable
 
 # internal
 from runtimepy.net.util import (
@@ -36,7 +37,10 @@ UDP_DEFAULT_MTU = ETHERNET_MTU - (IP_HEADER_SIZE + UDP_HEADER_SIZE)
 
 
 def socket_discover_mtu(
-    sock: socket.SocketType, probe_size: int, fallback: int
+    sock: socket.SocketType,
+    probe_size: int,
+    fallback: int,
+    probe_create: Callable[[int], bytes] = bytes,
 ) -> int:
     """
     Send a large frame and indicate that we want to perform mtu discovery, and
@@ -62,7 +66,7 @@ def socket_discover_mtu(
         )
 
     try:
-        count = sock.send(bytes(probe_size))
+        count = sock.send(probe_create(probe_size))
         LOG.info("mtu probe successfully sent %d bytes", count)
     except OSError as exc:
         LOG.exception(
@@ -94,12 +98,15 @@ def host_discover_mtu(
     probe_size: int,
     fallback: int,
     kind: int = socket.SOCK_DGRAM,
+    probe_create: Callable[[int], bytes] = bytes,
 ) -> int:
     """Perform MTU discovery given a local and remote host plus probe size."""
 
     sock = get_free_socket(local=local.zero_port(), kind=kind)
     sock.connect(destination.address_str_tuple)
-    result = socket_discover_mtu(sock, probe_size, fallback)
+    result = socket_discover_mtu(
+        sock, probe_size, fallback, probe_create=probe_create
+    )
     sock.close()
     return result
 
@@ -110,6 +117,7 @@ def discover_mtu(
     probe_size: int = UDP_DEFAULT_MTU,
     fallback: int = UDP_DEFAULT_MTU,
     kind: int = socket.SOCK_DGRAM,
+    probe_create: Callable[[int], bytes] = bytes,
 ) -> int:
     """
     Determine the maximum transmission unit for an IPv4 payload to a provided
@@ -118,7 +126,9 @@ def discover_mtu(
 
     dest = normalize_host(*destination)
     local = normalize_host(local, default=type(dest))
-    result = host_discover_mtu(local, dest, probe_size, fallback, kind=kind)
+    result = host_discover_mtu(
+        local, dest, probe_size, fallback, kind=kind, probe_create=probe_create
+    )
 
     LOG.info(
         "Discovered MTU to (%s -> %s) is %d (probe size: %d).",

@@ -5,9 +5,8 @@ A module for testing application performance.
 # built-in
 import asyncio
 
-from runtimepy.net.arbiter import AppInfo
-
 # internal
+from runtimepy.net.arbiter import AppInfo
 from runtimepy.net.stream.json import JsonMessageConnection
 
 

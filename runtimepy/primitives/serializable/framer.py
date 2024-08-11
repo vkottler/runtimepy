@@ -5,6 +5,9 @@ A module implementing a message framing interface for serializables.
 # built-in
 from typing import Optional
 
+# third-party
+from vcorelib.logging import LoggerType
+
 # internal
 from runtimepy.primitives.serializable.base import Serializable
 
@@ -21,7 +24,7 @@ class SerializableFramer:
         self.instance = instance
         self.set_mtu(mtu)
 
-    def set_mtu(self, mtu: int) -> int:
+    def set_mtu(self, mtu: int, logger: LoggerType = None) -> int:
         """Set a new maximum transmission unit for this framer."""
 
         raw_length = self.instance.length()
@@ -31,6 +34,15 @@ class SerializableFramer:
         assert self.length > 0
 
         self.reset()
+
+        if logger is not None:
+            logger.info(
+                "Set MTU to %d (%d %d-byte elements).",
+                mtu,
+                self.length,
+                raw_length,
+            )
+
         return self.length
 
     def reset(self) -> None:
@@ -52,7 +64,7 @@ class SerializableFramer:
             self.elements += 1
 
         result = None
-        if flush or self.elements == self.length:
+        if self.raw and (flush or self.elements == self.length):
             result = self.raw
             self.reset()
         return result

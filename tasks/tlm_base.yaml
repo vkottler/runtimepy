@@ -1,0 +1,28 @@
+---
+factories:
+  - {name: tasks.tlm.SampleTelemetryStruct}
+  - {name: tasks.tlm.SampleTelemetry}
+
+structs:
+  - name: tx
+    factory: SampleTelemetryStruct
+  - name: rx
+    factory: SampleTelemetryStruct
+
+ports:
+  - {name: udp_sample_telemetry, type: udp}
+
+clients:
+  - factory: SampleTelemetry
+    name: rx_conn
+    kwargs:
+      local_addr: ["0.0.0.0", "$udp_sample_telemetry"]
+
+  - factory: SampleTelemetry
+    name: tx_conn
+    defer: true
+    kwargs:
+      remote_addr: ["127.0.0.1", "$udp_sample_telemetry"]
+
+app:
+  - tasks.tlm.sample_app
