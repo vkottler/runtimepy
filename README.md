@@ -2,7 +2,7 @@
     =====================================
     generator=datazen
     version=3.1.4
-    hash=3b287fdc5e1b1691d94597b8f170f111
+    hash=5c5edaf1332d842e9ca04a018455beba
     =====================================
 -->
 
@@ -113,7 +113,7 @@ options:
   --probe-size PROBE_SIZE
                         data payload size to use for probe (default: 1432)
   --fallback FALLBACK   fallback MTU value if probing doesn't succeed (i.e.
-                        not on Linux, default: 1432)
+                        not on Linux, default: 1500)
   -t, --tcp             use TCP instead of UDP
 
 ```

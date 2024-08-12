@@ -24,23 +24,26 @@ class SerializableFramer:
         self.instance = instance
         self.set_mtu(mtu)
 
-    def set_mtu(self, mtu: int, logger: LoggerType = None) -> int:
+    def set_mtu(
+        self, mtu: int, logger: LoggerType = None, protocol_overhead: int = 0
+    ) -> int:
         """Set a new maximum transmission unit for this framer."""
 
         raw_length = self.instance.length()
         assert raw_length > 0
 
-        self.length = mtu // raw_length
+        self.length = (mtu - protocol_overhead) // raw_length
         assert self.length > 0
 
         self.reset()
 
         if logger is not None:
             logger.info(
-                "Set MTU to %d (%d %d-byte elements).",
-                mtu,
+                "Set MTU to %d (%d %d-byte elements, %d bytes overhead).",
+                mtu - protocol_overhead,
                 self.length,
                 raw_length,
+                protocol_overhead,
             )
 
         return self.length

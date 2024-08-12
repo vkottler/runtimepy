@@ -12,7 +12,7 @@ from vcorelib.math.keeper import TimeSource
 
 # internal
 from runtimepy.net.arbiter.info import AppInfo, RuntimeStruct
-from runtimepy.net.mtu import UDP_DEFAULT_MTU
+from runtimepy.net.mtu import UDP_DEFAULT_MTU, UDP_HEADER_SIZE
 from runtimepy.net.udp.connection import UdpConnection
 from runtimepy.primitives import Uint16, Uint64
 from runtimepy.primitives.serializable.framer import SerializableFramer
@@ -128,7 +128,9 @@ class UdpStructTransceiver(UdpConnection, Generic[T]):
 
         # This actually sends data over this connection.
         self.framer_tx.set_mtu(
-            self.mtu(probe_create=get_payload), logger=self.logger
+            self.mtu(probe_create=get_payload),
+            logger=self.logger,
+            protocol_overhead=UDP_HEADER_SIZE,
         )
 
     def assign_app_tx(self, pattern: str, app: AppInfo) -> Optional[T]:

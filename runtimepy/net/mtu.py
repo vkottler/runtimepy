@@ -30,10 +30,10 @@ class SocketConstants(IntEnum):
     IP_PMTUDISC_DO = 2
 
 
-IP_HEADER_SIZE = 60
-UDP_HEADER_SIZE = 8
 ETHERNET_MTU = 1500
-UDP_DEFAULT_MTU = ETHERNET_MTU - (IP_HEADER_SIZE + UDP_HEADER_SIZE)
+IP_HEADER_SIZE = 60
+UDP_HEADER_SIZE = IP_HEADER_SIZE + 8
+UDP_DEFAULT_MTU = ETHERNET_MTU - UDP_HEADER_SIZE
 
 
 def socket_discover_mtu(
@@ -115,7 +115,7 @@ def discover_mtu(
     *destination: IpHostlike,
     local: IpHost = None,
     probe_size: int = UDP_DEFAULT_MTU,
-    fallback: int = UDP_DEFAULT_MTU,
+    fallback: int = ETHERNET_MTU,
     kind: int = socket.SOCK_DGRAM,
     probe_create: Callable[[int], bytes] = bytes,
 ) -> int:

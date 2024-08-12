@@ -10,7 +10,7 @@ import socket
 from vcorelib.args import CommandFunction
 
 # internal
-from runtimepy.net.mtu import UDP_DEFAULT_MTU, discover_mtu
+from runtimepy.net.mtu import ETHERNET_MTU, UDP_DEFAULT_MTU, discover_mtu
 
 
 def mtu_cmd(args: argparse.Namespace) -> int:
@@ -39,7 +39,7 @@ def add_mtu_cmd(parser: argparse.ArgumentParser) -> CommandFunction:
     parser.add_argument(
         "--fallback",
         type=int,
-        default=UDP_DEFAULT_MTU,
+        default=ETHERNET_MTU,
         help="fallback MTU value if probing doesn't succeed "
         "(i.e. not on Linux, default: %(default)d)",
     )
