@@ -43,6 +43,9 @@ class TabInterface {
         /* Update global reference. */
         shown_tab = this.name;
         hash.setTab(shown_tab);
+
+        /* Audit vertical bar position. */
+        this.correctVerticalBarPosition();
       }
       this.worker.send({kind : msg});
     } ];
@@ -51,6 +54,11 @@ class TabInterface {
     this.initCommand();
     this.initControls();
     this.initButton();
+
+    /* Ensure vertical divider is always visible. */
+    window.addEventListener(
+        "resize",
+        ((event) => { this.correctVerticalBarPosition(); }).bind(this));
   }
 
   initCommand() {
@@ -131,9 +139,9 @@ class TabInterface {
     }
 
     /* Initialize channel table and plot divider. */
-    let divider = this.query(".vertical-divider");
-    if (divider) {
-      this.setupVerticalDivider(divider);
+    this.divider = this.query(".vertical-divider");
+    if (this.divider) {
+      this.setupVerticalDivider(this.divider);
     }
 
     /* Initialize sliders. */
@@ -185,12 +193,22 @@ class TabInterface {
 
       let origX = event.clientX || event.touches[0].clientX;
 
+      let barWidth = 0;
+      if (this.divider) {
+        barWidth = this.divider.clientWidth;
+      }
+
       /* Track mouse movement while the mouse is held down. */
       let handleMouse = (event) => {
         let eventX = event.clientX || event.touches[0].clientX;
 
         let deltaX = origX - eventX;
-        elem.style.width = elem.getBoundingClientRect().width - deltaX + "px";
+
+        let rect = elem.getBoundingClientRect();
+
+        /* No use in allowing dragging out of view. */
+        let minWidth = window.innerWidth - (rect.left + barWidth);
+        elem.style.width = Math.min(minWidth, rect.width - deltaX) + "px";
         origX = eventX;
       };
       document.addEventListener(move, handleMouse);
@@ -204,6 +222,21 @@ class TabInterface {
 
   setupVerticalDivider(elem) {
     setupCursorContext(elem, this.setupVerticalDividerEvents.bind(this));
+  }
+
+  correctVerticalBarPosition(elem) {
+    if (shown_tab == this.name && this.divider) {
+      let margin =
+          window.innerWidth - this.divider.getBoundingClientRect().right;
+
+      if (margin < 0) {
+        let column = this.query(".channel-column");
+        if (column) {
+          column.style.width =
+              column.getBoundingClientRect().width + margin + "px";
+        }
+      }
+    }
   }
 
   initPlot() {
