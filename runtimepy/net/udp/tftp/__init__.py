@@ -7,7 +7,7 @@ import asyncio
 from contextlib import AsyncExitStack, asynccontextmanager, suppress
 from os import fsync
 from pathlib import Path
-from typing import Any, AsyncIterator, Union
+from typing import Any, AsyncIterator
 
 # third-party
 from vcorelib.asyncio.poll import repeat_until
@@ -16,7 +16,7 @@ from vcorelib.paths.hashing import file_md5_hex
 from vcorelib.paths.info import FileInfo
 
 # internal
-from runtimepy.net import IpHost, normalize_host
+from runtimepy.net import normalize_host
 from runtimepy.net.udp.tftp.base import (
     DEFAULT_TIMEOUT_S,
     REEMIT_PERIOD_S,
@@ -24,6 +24,7 @@ from runtimepy.net.udp.tftp.base import (
     TftpErrorHandler,
 )
 from runtimepy.net.udp.tftp.enums import DEFAULT_MODE
+from runtimepy.net.util import IpHostTuplelike
 from runtimepy.util import PossiblePath, as_path
 
 
@@ -35,7 +36,7 @@ class TftpConnection(BaseTftpConnection):
         destination: Path,
         filename: str,
         mode: str = DEFAULT_MODE,
-        addr: Union[IpHost, tuple[str, int]] = None,
+        addr: IpHostTuplelike = None,
     ) -> bool:
         """Request a tftp read operation."""
 
@@ -139,7 +140,7 @@ class TftpConnection(BaseTftpConnection):
         source: PossiblePath,
         filename: str,
         mode: str = DEFAULT_MODE,
-        addr: Union[IpHost, tuple[str, int]] = None,
+        addr: IpHostTuplelike = None,
         verify: bool = True,
     ) -> bool:
         """Request a tftp write operation."""
@@ -200,7 +201,7 @@ TFTP_PORT = 69
 
 @asynccontextmanager
 async def tftp(
-    addr: Union[IpHost, tuple[str, int]],
+    addr: IpHostTuplelike,
     process_kwargs: dict[str, Any] = None,
     connection_kwargs: dict[str, Any] = None,
     timeout_s: float = DEFAULT_TIMEOUT_S,
@@ -233,7 +234,7 @@ async def tftp(
 
 
 async def tftp_write(
-    addr: Union[IpHost, tuple[str, int]],
+    addr: IpHostTuplelike,
     source: PossiblePath,
     filename: str,
     mode: str = DEFAULT_MODE,
@@ -263,7 +264,7 @@ async def tftp_write(
 
 
 async def tftp_read(
-    addr: Union[IpHost, tuple[str, int]],
+    addr: IpHostTuplelike,
     destination: Path,
     filename: str,
     mode: str = DEFAULT_MODE,

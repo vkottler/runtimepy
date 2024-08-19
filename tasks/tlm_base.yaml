@@ -1,0 +1,6 @@
+---
+includes:
+  - package://runtimepy/sample_telemetry.yaml
+
+app:
+  - tasks.tlm.sample_app

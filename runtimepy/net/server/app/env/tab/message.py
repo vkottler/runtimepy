@@ -49,12 +49,21 @@ class ChannelEnvironmentTabMessaging(ChannelEnvironmentTabBase):
         state.shown = shown
         env = self.command.env
 
+        # Always sample current values.
+        latest = env.values()
+
         if state.shown:
-            # Send all values at once when switching tabs, but only the first
-            # time.
-            if not state.shown_ever:
-                send(env.values())  # type: ignore
-                state.shown_ever = True
+            # Send missing or changed values.
+            if latest != state.latest_ui_values:
+                to_send = {}
+                for key, value in latest.items():
+                    if (
+                        key not in state.latest_ui_values
+                        or state.latest_ui_values[key] != value
+                    ):
+                        to_send[key] = value
+
+                send(to_send)  # type: ignore
 
             # Begin observing channel events for this environment.
             for name in env.names:
@@ -63,6 +72,9 @@ class ChannelEnvironmentTabMessaging(ChannelEnvironmentTabBase):
             # Remove callbacks for primitives.
             for name, val in state.callbacks.items():
                 state.primitives[name].remove_callback(val)
+
+        # Save current UI state.
+        state.latest_ui_values.update(latest)
 
         outbox["handle_shown_state"] = shown
 

@@ -24,8 +24,6 @@ from runtimepy.enum import RuntimeEnum as _RuntimeEnum
 from runtimepy.enum.registry import EnumRegistry as _EnumRegistry
 from runtimepy.mixins.finalize import FinalizeMixin
 from runtimepy.primitives import BaseIntPrimitive, StrToBool
-
-# third-party
 from runtimepy.primitives.evaluation import EvalResult, Operator, sample_for
 from runtimepy.primitives.field import BitField as _BitField
 from runtimepy.primitives.field.fields import BitFields as _BitFields

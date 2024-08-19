@@ -2,11 +2,11 @@
     =====================================
     generator=datazen
     version=3.1.4
-    hash=dbac0e58214ea7e4abbe7161a3c64749
+    hash=5c5edaf1332d842e9ca04a018455beba
     =====================================
 -->
 
-# runtimepy ([5.4.4](https://pypi.org/project/runtimepy/))
+# runtimepy ([5.5.0](https://pypi.org/project/runtimepy/))
 
 [![python](https://img.shields.io/pypi/pyversions/runtimepy.svg)](https://pypi.org/project/runtimepy/)
 ![Build Status](https://github.com/vkottler/runtimepy/workflows/Python%20Package/badge.svg)
@@ -48,7 +48,7 @@ This package is tested on the following platforms:
 $ ./venv3.12/bin/runtimepy -h
 
 usage: runtimepy [-h] [--version] [-v] [-q] [--curses] [--no-uvloop] [-C DIR]
-                 {arbiter,server,task,tftp,tui,noop} ...
+                 {arbiter,mtu,server,task,tftp,tui,noop} ...
 
 A framework for implementing Python services.
 
@@ -62,9 +62,10 @@ options:
   -C DIR, --dir DIR     execute from a specific directory
 
 commands:
-  {arbiter,server,task,tftp,tui,noop}
+  {arbiter,mtu,server,task,tftp,tui,noop}
                         set of available commands
     arbiter             run a connection-arbiter application from a config
+    mtu                 probe for MTU size to some endpoint
     server              run a server for a specific connection factory
     task                run a task from a specific task factory
     tftp                perform a tftp interaction
@@ -93,6 +94,27 @@ options:
                         ensure that a 'wait_for_stop' application method is
                         run last
   --no-poller           don't run a connection-metrics poller task
+
+```
+
+### `mtu`
+
+```
+$ ./venv3.12/bin/runtimepy mtu -h
+
+usage: runtimepy mtu [-h] [--probe-size PROBE_SIZE] [--fallback FALLBACK] [-t]
+                     destination [destination ...]
+
+positional arguments:
+  destination           endpoint parameters (host, port[, flowinfo, scope_id])
+
+options:
+  -h, --help            show this help message and exit
+  --probe-size PROBE_SIZE
+                        data payload size to use for probe (default: 1432)
+  --fallback FALLBACK   fallback MTU value if probing doesn't succeed (i.e.
+                        not on Linux, default: 1500)
+  -t, --tcp             use TCP instead of UDP
 
 ```
 

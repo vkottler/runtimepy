@@ -63,6 +63,7 @@ class RuntimepyPeerInterface(
         self._setup_async_commands()
         JsonMessageInterface.__init__(self)
 
+        self.struct.init_env()
         self.struct_pre_finalize()
         self._finalize_struct()
 
@@ -198,7 +199,6 @@ class RuntimepyPeerInterface(
                 "stdin", self.stdin_metrics, "transmitted"
             )
 
-        self.struct.init_env()
         self.struct.env.finalize()
 
     def poll_metrics(self, time_ns: int = None) -> None:

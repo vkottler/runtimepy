@@ -29,11 +29,6 @@ class ChannelEnvironment(
 ):
     """A class integrating channel and enumeration registries."""
 
-    @property
-    def names(self) -> _Iterator[str]:
-        """Iterate over registered names in the environment."""
-        yield from self.channels.names.names
-
     def search_names(
         self, pattern: str, exact: bool = False
     ) -> _Iterator[str]:

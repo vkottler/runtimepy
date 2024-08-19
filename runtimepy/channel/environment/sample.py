@@ -7,19 +7,18 @@ from random import randint, random
 
 # internal
 from runtimepy.channel.environment import ChannelEnvironment
+from runtimepy.enum import RuntimeEnum
 from runtimepy.primitives import Uint8
 from runtimepy.primitives.field import BitField, BitFlag
 
 
-def sample_env(env: ChannelEnvironment = None) -> ChannelEnvironment:
-    """Register sample enumerations and channels to an environment."""
+def sample_int_enum(
+    env: ChannelEnvironment, name: str = "SampleEnum"
+) -> RuntimeEnum:
+    """A sample integer enumeration."""
 
-    if env is None:
-        env = ChannelEnvironment()
-
-    # Register an enum.
-    sample_enum = env.enum(
-        "SampleEnum",
+    return env.enum(
+        name,
         "int",
         items={
             "zero": 0,
@@ -36,12 +35,16 @@ def sample_env(env: ChannelEnvironment = None) -> ChannelEnvironment:
         },
     )
 
-    # Boolean enumeration.
-    env.enum("OnOff", "bool", {"On": True, "Off": False})
-    env.bool_channel("sample_state", commandable=True, enum="OnOff")
 
-    env.enum(
-        "InsanelyLongEnumNameForTesting",
+def long_name_int_enum(
+    env: ChannelEnvironment,
+    name: str = "InsanelyLongEnumNameForTesting",
+    channel: str = "sample_enum",
+) -> RuntimeEnum:
+    """Add an integer enumeration with a long name."""
+
+    result = env.enum(
+        name,
         "int",
         {
             "very_long_member_name_0": 0,
@@ -50,40 +53,101 @@ def sample_env(env: ChannelEnvironment = None) -> ChannelEnvironment:
             "very_long_member_name_3": 3,
         },
     )
-    env.int_channel(
-        "sample_enum", commandable=True, enum="InsanelyLongEnumNameForTesting"
+
+    if channel:
+        env.int_channel(
+            channel,
+            commandable=True,
+            enum="InsanelyLongEnumNameForTesting",
+            description="A sample long-enum-name channel.",
+        )
+
+    return result
+
+
+def sample_bool_enum(
+    env: ChannelEnvironment, name: str = "OnOff", channel: str = "sample_state"
+) -> RuntimeEnum:
+    """A sample boolean enumeration."""
+
+    result = env.enum(name, "bool", {"On": True, "Off": False})
+
+    if channel:
+        env.bool_channel(
+            channel,
+            commandable=True,
+            enum="OnOff",
+            description="A sample on-off state channel.",
+        )
+
+    return result
+
+
+def sample_fields(env: ChannelEnvironment, enum: str = "SampleEnum") -> None:
+    """Add sample bit-fields to an environment."""
+
+    with env.names_pushed("fields"):
+        prim = Uint8()
+        env.int_channel("raw", prim)
+
+        # Add a bit field and flag.
+        env.add_field(BitFlag("flag1", prim, 0))
+        env.add_field(
+            BitFlag(
+                "flag2",
+                prim,
+                1,
+                commandable=True,
+                description="Sample bit flag.",
+            )
+        )
+        env.add_field(
+            BitField(
+                "field1",
+                prim,
+                2,
+                2,
+                enum=enum if enum else None,
+                commandable=True,
+                description="Sample bit field.",
+            )
+        )
+        env.add_field(BitField("field2", prim, 4, 4, commandable=True))
+
+
+def sample_float(
+    env: ChannelEnvironment,
+    channel: str = "sample_float",
+    kind: str = "double",
+) -> None:
+    """Add a sample floating-point channel."""
+
+    env.float_channel(
+        channel,
+        kind,
+        commandable=True,
+        description="A sample floating-point member.",
     )
-    env.float_channel("sample_float", "double", commandable=True)
+
+
+def sample_env(env: ChannelEnvironment = None) -> ChannelEnvironment:
+    """Register sample enumerations and channels to an environment."""
+
+    if env is None:
+        env = ChannelEnvironment()
+
+    # Register an enum.
+    sample_int_enum(env)
+
+    # Boolean enumeration.
+    sample_bool_enum(env)
+
+    long_name_int_enum(env)
+    sample_float(env)
 
     for name in ["a", "b", "c"]:
         with env.names_pushed(name):
-            with env.names_pushed("fields"):
-                prim = Uint8()
-                env.int_channel("raw", prim)
-
-                # Add a bit field and flag.
-                env.add_field(BitFlag("flag1", prim, 0))
-                env.add_field(
-                    BitFlag(
-                        "flag2",
-                        prim,
-                        1,
-                        commandable=True,
-                        description="Sample bit flag.",
-                    )
-                )
-                env.add_field(
-                    BitField(
-                        "field1",
-                        prim,
-                        2,
-                        2,
-                        enum=sample_enum.id,
-                        commandable=True,
-                        description="Sample bit field.",
-                    )
-                )
-                env.add_field(BitField("field2", prim, 4, 4, commandable=True))
+            sample_fields(env)
 
             for i in range(10):
                 with env.names_pushed(str(i)):

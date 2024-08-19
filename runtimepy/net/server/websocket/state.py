@@ -8,6 +8,7 @@ from dataclasses import dataclass
 import logging
 
 # internal
+from runtimepy.channel.environment.base import ValueMap
 from runtimepy.message import JsonMessage
 from runtimepy.primitives import AnyPrimitive
 from runtimepy.util import ListLogger
@@ -21,12 +22,13 @@ class TabState:
     """Stateful information relevant to individual tabs."""
 
     shown: bool
-    shown_ever: bool
     tab_logger: ListLogger
 
     points: dict[str, list[Point]]
     primitives: dict[str, AnyPrimitive]
     callbacks: dict[str, int]
+
+    latest_ui_values: ValueMap
 
     _loggers: list[logging.Logger]
 
@@ -67,5 +69,5 @@ class TabState:
         """Create a new instance."""
 
         return TabState(
-            False, False, ListLogger.create(), defaultdict(list), {}, {}, []
+            False, ListLogger.create(), defaultdict(list), {}, {}, {}, []
         )
