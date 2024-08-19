@@ -1,0 +1,29 @@
+---
+factories:
+  - {name: runtimepy.telemetry.sample.SampleTelemetry}
+  - {name: runtimepy.telemetry.sample.SampleTelemetryStruct}
+  - {name: runtimepy.telemetry.sample.SampleTelemetryPeriodic}
+
+structs:
+  - name: tx
+    factory: SampleTelemetryStruct
+  - name: rx
+    factory: SampleTelemetryStruct
+
+tasks:
+  - {name: tlm_periodic, factory: sample_telemetry_periodic, period_s: 0.01}
+
+ports:
+  - {name: udp_sample_telemetry, type: udp}
+
+clients:
+  - factory: SampleTelemetry
+    name: rx_conn
+    kwargs:
+      local_addr: ["0.0.0.0", "$udp_sample_telemetry"]
+
+  - factory: SampleTelemetry
+    name: tx_conn
+    defer: true
+    kwargs:
+      remote_addr: ["127.0.0.1", "$udp_sample_telemetry"]

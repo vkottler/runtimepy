@@ -32,6 +32,7 @@ from runtimepy.net.connection import Connection as _Connection
 from runtimepy.net.manager import ConnectionManager
 from runtimepy.primitives import Uint32
 from runtimepy.primitives.array import PrimitiveArray
+from runtimepy.primitives.byte_order import DEFAULT_BYTE_ORDER, ByteOrder
 from runtimepy.struct import RuntimeStructBase
 from runtimepy.struct import StructMap as _StructMap
 from runtimepy.task import PeriodicTask, PeriodicTaskManager
@@ -54,6 +55,8 @@ class RuntimeStruct(RuntimeStructBase, _ABC):
     app: "AppInfo"
     array: PrimitiveArray
 
+    byte_order: ByteOrder = DEFAULT_BYTE_ORDER
+
     def init_env(self) -> None:
         """Initialize this sample environment."""
 
@@ -62,9 +65,12 @@ class RuntimeStruct(RuntimeStructBase, _ABC):
 
         self.app = app
         self.init_env()
+        self.update_byte_order(self.byte_order, **kwargs)
 
-        # Useful for transmitting over a wire.
-        self.array = self.env.array(**kwargs).array
+    def update_byte_order(self, byte_order: ByteOrder, **kwargs) -> None:
+        """Update the over-the-wire byte order for this struct."""
+
+        self.array = self.env.array(byte_order=byte_order, **kwargs).array
 
 
 W = _TypeVar("W", bound=RuntimeStruct)
