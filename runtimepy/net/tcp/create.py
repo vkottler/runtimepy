@@ -11,6 +11,7 @@ from typing import Callable, Optional
 
 # internal
 from runtimepy.net.backoff import ExponentialBackoff
+from runtimepy.net.ssl import handle_possible_ssl
 from runtimepy.net.tcp.protocol import QueueProtocol
 from runtimepy.net.util import try_log_connection_error
 
@@ -26,7 +27,7 @@ async def tcp_transport_protocol(**kwargs) -> TcpTransportProtocol:
 
     transport: _Transport
     transport, protocol = await _asyncio.get_event_loop().create_connection(
-        QueueProtocol, **kwargs
+        QueueProtocol, **handle_possible_ssl(**kwargs)
     )
     return transport, protocol
 

@@ -27,6 +27,7 @@ from runtimepy.net.connection import EchoConnection as _EchoConnection
 from runtimepy.net.connection import NullConnection as _NullConnection
 from runtimepy.net.manager import ConnectionManager as _ConnectionManager
 from runtimepy.net.mixin import TransportMixin as _TransportMixin
+from runtimepy.net.ssl import handle_possible_ssl
 from runtimepy.net.tcp.create import (
     TcpTransportProtocol,
     tcp_transport_protocol_backoff,
@@ -69,6 +70,20 @@ class TcpConnection(_Connection, _TransportMixin):
 
         self._protocol = protocol
         self._protocol.conn = self
+
+    @classmethod
+    def get_log_prefix(cls, is_ssl: bool = False) -> str:
+        """Get a logging prefix for this instance."""
+
+        # Default implementation doesn't handle this.
+        del is_ssl
+
+        return cls.log_prefix
+
+    @property
+    def is_ssl(self) -> bool:
+        """Determine if this connection uses SSL."""
+        return self._transport.get_extra_info("sslcontext") is not None
 
     async def _await_message(self) -> _Optional[_Union[_BinaryMessage, str]]:
         """Await the next message. Return None on error or failure."""
@@ -142,8 +157,13 @@ class TcpConnection(_Connection, _TransportMixin):
                     callback(self.conn)
 
         eloop = _get_event_loop()
+
+        server_kwargs = handle_possible_ssl(client=False, **kwargs)
+        is_ssl = "ssl" in server_kwargs
         server = await eloop.create_server(
-            CallbackProtocol, family=_socket.AF_INET, **kwargs
+            CallbackProtocol,
+            family=_socket.AF_INET,
+            **server_kwargs,
         )
         async with server:
             for socket in server.sockets:
@@ -151,9 +171,9 @@ class TcpConnection(_Connection, _TransportMixin):
                 LOG.info(
                     "Started %s server listening on '%s%s' (%s%s:%d).",
                     cls.log_alias,
-                    cls.log_prefix,
+                    cls.get_log_prefix(is_ssl=is_ssl),
                     _sockname(socket),
-                    cls.log_prefix,
+                    cls.get_log_prefix(is_ssl=is_ssl),
                     sockname[0] if sockname[0] != "0.0.0.0" else "localhost",
                     sockname[1],
                 )
@@ -193,7 +213,10 @@ class TcpConnection(_Connection, _TransportMixin):
     @classmethod
     @_asynccontextmanager
     async def create_pair(
-        cls: type[T], peer: type[V] = None
+        cls: type[T],
+        peer: type[V] = None,
+        serve_kwargs: dict[str, _Any] = None,
+        connect_kwargs: dict[str, _Any] = None,
     ) -> _AsyncIterator[tuple[V, T]]:
         """Create a connection pair."""
 
@@ -212,13 +235,20 @@ class TcpConnection(_Connection, _TransportMixin):
                 peer = cls  # type: ignore
             assert peer is not None
 
+            if serve_kwargs is None:
+                serve_kwargs = {}
+
             server = await stack.enter_async_context(
-                peer.serve(callback, port=0, backlog=1)
+                peer.serve(callback, port=0, backlog=1, **serve_kwargs)
             )
 
             host = server.sockets[0].getsockname()
+
+            if connect_kwargs is None:
+                connect_kwargs = {}
+
             client = await cls.create_connection(
-                host="localhost", port=host[1]
+                host="localhost", port=host[1], **connect_kwargs
             )
             await cond.acquire()
 

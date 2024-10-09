@@ -10,6 +10,7 @@ from contextlib import AsyncExitStack as _AsyncExitStack
 from contextlib import asynccontextmanager as _asynccontextmanager
 from contextlib import suppress as _suppress
 from logging import getLogger as _getLogger
+from typing import Any as _Any
 from typing import AsyncIterator as _AsyncIterator
 from typing import Awaitable as _Awaitable
 from typing import Callable as _Callable
@@ -36,6 +37,7 @@ from runtimepy.net.connection import BinaryMessage, Connection
 from runtimepy.net.connection import EchoConnection as _EchoConnection
 from runtimepy.net.connection import NullConnection as _NullConnection
 from runtimepy.net.manager import ConnectionManager as _ConnectionManager
+from runtimepy.net.ssl import handle_possible_ssl
 
 T = _TypeVar("T", bound="WebsocketConnection")
 ConnectionInit = _Callable[[T], _Awaitable[bool]]
@@ -93,7 +95,11 @@ class WebsocketConnection(Connection):
     async def create_connection(cls: type[T], uri: str, **kwargs) -> T:
         """Connect a client to an endpoint."""
 
-        protocol = await getattr(websockets, "connect")(uri, **kwargs)
+        kwargs.setdefault("use_ssl", uri.startswith("wss"))
+
+        protocol = await getattr(websockets, "connect")(
+            uri, **handle_possible_ssl(**kwargs)
+        )
         return cls(protocol)
 
     @classmethod
@@ -101,7 +107,11 @@ class WebsocketConnection(Connection):
     async def client(cls: type[T], uri: str, **kwargs) -> _AsyncIterator[T]:
         """A wrapper for connecting a client."""
 
-        async with getattr(websockets, "connect")(uri, **kwargs) as protocol:
+        kwargs.setdefault("use_ssl", uri.startswith("wss"))
+
+        async with getattr(websockets, "connect")(
+            uri, **handle_possible_ssl(**kwargs)
+        ) as protocol:
             yield cls(protocol)
 
     @classmethod
@@ -154,7 +164,9 @@ class WebsocketConnection(Connection):
 
     @classmethod
     @_asynccontextmanager
-    async def create_pair(cls: type[T]) -> _AsyncIterator[tuple[T, T]]:
+    async def create_pair(
+        cls: type[T], serve_kwargs: dict[str, _Any] = None
+    ) -> _AsyncIterator[tuple[T, T]]:
         """Obtain a connected pair of WebsocketConnection objects."""
 
         server_conn: _Optional[T] = None
@@ -167,15 +179,21 @@ class WebsocketConnection(Connection):
             return True
 
         async with _AsyncExitStack() as stack:
+            if serve_kwargs is None:
+                serve_kwargs = {}
+
+            serve_kwargs = handle_possible_ssl(client=False, **serve_kwargs)
+            is_ssl = "ssl" in serve_kwargs
+
             # Start a server.
             server = await stack.enter_async_context(
-                _serve(server_init, host="0.0.0.0", port=0)
+                _serve(server_init, host="0.0.0.0", port=0, **serve_kwargs)
             )
 
             host = list(server.sockets)[0].getsockname()
 
             client_conn = await stack.enter_async_context(
-                cls.client(f"ws://localhost:{host[1]}")
+                cls.client(f"ws{'s' if is_ssl else ''}://localhost:{host[1]}")
             )
 
             # Connect a client and yield both sides of the connection.
@@ -193,13 +211,17 @@ class WebsocketConnection(Connection):
     ) -> _AsyncIterator[_WebSocketServer]:
         """Serve a WebSocket server."""
 
+        kwargs = handle_possible_ssl(client=False, **kwargs)
+        is_ssl = "ssl" in kwargs
+
         async with _serve(
             cls.server_handler(init=init, stop_sig=stop_sig, manager=manager),
             **kwargs,
         ) as server:
             for socket in server.sockets:
                 LOG.info(
-                    "Started WebSocket server listening on '%s'.",
+                    "Started WebSocket server listening on 'ws%s://%s'.",
+                    "s" if is_ssl else "",
                     _sockname(socket),
                 )
             yield server

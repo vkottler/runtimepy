@@ -27,26 +27,27 @@ async def launch_browser(app: AppInfo) -> None:
     """
 
     # Launch browser based on config option.
-    if config_param(app, "xdg_open_http", False):
+    for prefix in ["http", "https"]:
+        if config_param(app, f"xdg_open_{prefix}", False):
 
-        port: Any
-        for port in app.config["root"]["ports"]:  # type: ignore
-            if "http_server" in port["name"]:
-                # URI parameters.
-                hostname = config_param(app, "xdg_host", "localhost")
+            port: Any
+            for port in app.config["root"]["ports"]:  # type: ignore
+                if f"{prefix}_server" in port["name"]:
+                    # URI parameters.
+                    hostname = config_param(app, "xdg_host", "localhost")
 
-                # Assemble URI.
-                uri = f"http://{hostname}:{port['port']}/"
+                    # Assemble URI.
+                    uri = f"{prefix}://{hostname}:{port['port']}/"
 
-                # Add a fragment if one was specified.
-                fragment = config_param(app, "xdg_fragment", "")
-                if fragment:
-                    uri += "#" + fragment
+                    # Add a fragment if one was specified.
+                    fragment = config_param(app, "xdg_fragment", "")
+                    if fragment:
+                        uri += "#" + fragment
 
-                with suppress(FileNotFoundError):
-                    await app.stack.enter_async_context(
-                        spawn_exec("xdg-open", uri)
-                    )
+                    with suppress(FileNotFoundError):
+                        await app.stack.enter_async_context(
+                            spawn_exec("xdg-open", uri)
+                        )
 
 
 # Could add an interface for adding multiple applications.
