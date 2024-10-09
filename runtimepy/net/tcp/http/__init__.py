@@ -58,7 +58,6 @@ class HttpConnection(_TcpConnection):
     expecting_response: bool
 
     log_alias = "HTTP"
-    log_prefix = "http://"
 
     # Handlers registered at the class level so that instances created at
     # runtime don't need additional initialization.
@@ -78,6 +77,12 @@ class HttpConnection(_TcpConnection):
         self.handlers = copy(self.handlers)
         self.handlers[http.HTTPMethod.GET] = self.get_handler
         self.handlers[http.HTTPMethod.POST] = self.post_handler
+
+    @classmethod
+    def get_log_prefix(cls, is_ssl: bool = False) -> str:
+        """Get a logging prefix for this instance."""
+
+        return f"http{'s' if is_ssl else ''}://"
 
     async def get_handler(
         self,

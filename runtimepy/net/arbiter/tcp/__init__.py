@@ -42,6 +42,7 @@ class TcpConnectionFactory(_ConnectionFactory, _Generic[T]):
         """Create a task that will run a connection server."""
 
         assert not [*args], "Only keyword arguments are used!"
+
         return self.kind.app(
             stop_sig,
             manager=manager,

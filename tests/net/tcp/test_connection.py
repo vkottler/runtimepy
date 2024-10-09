@@ -37,6 +37,9 @@ async def tcp_connection_basic() -> None:
     async with SampleTcpConnection.create_pair() as (_server, client):
         server = cast(SampleTcpConnection, _server)
 
+        assert not server.is_ssl
+        assert not client.is_ssl
+
         server.send_text("Hello!\n")
         client.send_text("Hello!\n")
         for idx in range(10):

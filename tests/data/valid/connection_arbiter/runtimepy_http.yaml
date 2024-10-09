@@ -1,6 +1,8 @@
 ---
 includes_left:
   - package://runtimepy/server.yaml
+includes:
+  - test_ssl.yaml
 
 app:
   - tests.net.stream.runtimepy_http_test

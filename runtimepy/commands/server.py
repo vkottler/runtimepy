@@ -14,6 +14,9 @@ from vcorelib.args import CommandFunction as _CommandFunction
 from runtimepy.commands.arbiter import arbiter_cmd
 from runtimepy.commands.common import FACTORIES, arbiter_args, cmd_with_jit
 
+SSL_PASSTHROUGH = ["cafile", "capath", "cadata", "certfile"]
+PASSTHROUGH = SSL_PASSTHROUGH + ["keyfile"]
+
 
 def port_name(args: _Namespace, port: str = "port") -> str:
     """Get the name for a connection factory's port."""
@@ -25,13 +28,33 @@ def server_data(args: _Namespace) -> dict[str, Any]:
 
     return {
         "factory": args.factory,
-        "kwargs": {"port": f"${port_name(args)}", "host": args.host},
+        "kwargs": get_kwargs(args, port=f"${port_name(args)}", host=args.host),
     }
 
 
 def is_websocket(args: _Namespace) -> bool:
     """Determine if the specified factory uses WebSocket or not."""
     return "websocket" in args.factory.lower()
+
+
+def is_ssl(kwargs: dict[str, Any]) -> bool:
+    """Determine if server arugments indicate SSL use."""
+    return any(x in kwargs for x in SSL_PASSTHROUGH)
+
+
+def get_kwargs(args: _Namespace, **kwargs) -> dict[str, Any]:
+    """Get boilerplate kwargs."""
+
+    new_kwargs: dict[str, Any] = {**kwargs}
+
+    # Pass additional arguments through.
+    print(args)
+    for opt in PASSTHROUGH:
+        value = getattr(args, opt, None)
+        if value is not None:
+            new_kwargs[opt] = value
+
+    return new_kwargs
 
 
 def client_data(args: _Namespace) -> dict[str, Any]:
@@ -43,7 +66,9 @@ def client_data(args: _Namespace) -> dict[str, Any]:
     kwargs: dict[str, Any] = {}
 
     if is_websocket(args):
-        arg_list.append(f"ws://localhost:{port}")
+        arg_list.append(
+            f"ws{'s' if is_ssl(get_kwargs(args)) else ''}://localhost:{port}"
+        )
     elif not args.udp:
         kwargs["host"] = "localhost"
         kwargs["port"] = port
@@ -76,7 +101,9 @@ def config_data(args: _Namespace) -> dict[str, Any]:
             {
                 "name": port_name(args, port="server"),
                 "factory": args.factory,
-                "kwargs": {"local_addr": ["0.0.0.0", f"${port_name(args)}"]},
+                "kwargs": get_kwargs(
+                    args, local_addr=["0.0.0.0", f"${port_name(args)}"]
+                ),
             }
         )
 
@@ -108,6 +135,11 @@ def add_server_cmd(parser: _ArgumentParser) -> _CommandFunction:
     """Add server-command arguments to its parser."""
 
     with arbiter_args(parser, nargs="*"):
+        for optional in PASSTHROUGH:
+            parser.add_argument(
+                f"--{optional}", help="passed directly to instantiation"
+            )
+
         parser.add_argument(
             "--host",
             default="0.0.0.0",
