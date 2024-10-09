@@ -6,7 +6,7 @@ function worker_config(config) {
 
   /* Ensured TLS is handled properly. */
   if (location.protocol.includes("https")) {
-    port_name += "_secure";
+    port_name = "runtimepy_secure_websocket";
     uri_prefix += "s";
   }
 

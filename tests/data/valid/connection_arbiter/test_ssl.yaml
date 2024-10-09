@@ -1,8 +1,8 @@
 ---
 ports:
   - {name: runtimepy_https_server, type: tcp}
-  - {name: runtimepy_websocket_secure_json_server, type: tcp}
-  - {name: runtimepy_websocket_secure_data_server, type: tcp}
+  - {name: runtimepy_secure_websocket_json_server, type: tcp}
+  - {name: runtimepy_secure_websocket_data_server, type: tcp}
 
 servers:
   - factory: runtimepy_http
@@ -14,7 +14,7 @@ servers:
   - factory: runtimepy_websocket_json
     kwargs:
       host: "0.0.0.0"
-      port: "$runtimepy_websocket_secure_json_server"
+      port: "$runtimepy_secure_websocket_json_server"
 
       certfile: tests/data/valid/certs/test.cert
       keyfile: tests/data/valid/certs/test.key
@@ -22,7 +22,7 @@ servers:
   - factory: runtimepy_websocket_data
     kwargs:
       host: "0.0.0.0"
-      port: "$runtimepy_websocket_secure_data_server"
+      port: "$runtimepy_secure_websocket_data_server"
 
       certfile: tests/data/valid/certs/test.cert
       keyfile: tests/data/valid/certs/test.key
