@@ -63,13 +63,15 @@ async function start(config) {
   /* Tell main thread we're ready to go. */
   postMessage(0);
 
+  let messageTxTime = 0.0;
+
   /* Set up the main request-animation-frame loop. */
   function render(time) {
-    /* Render plot. */
-    plots.render(time);
-
     /* Keep the server synchronized with frames. */
-    conns["json"].send_json({"ui" : {"time" : time}});
+    if (messageTxTime + plots.render(time) <= time) {
+      conns["json"].send_json({"ui" : {"time" : time}});
+      messageTxTime = time;
+    }
 
     requestAnimationFrame(render);
   }
