@@ -167,16 +167,12 @@ class TcpConnection(_Connection, _TransportMixin):
         )
         async with server:
             for socket in server.sockets:
-                sockname = socket.getsockname()
                 LOG.info(
-                    "Started %s%s server listening on '%s%s' (%s%s:%d).",
+                    "Started %s%s server listening on '%s%s'.",
                     "secure " if is_ssl else "",
                     cls.log_alias,
                     cls.get_log_prefix(is_ssl=is_ssl),
                     _sockname(socket),
-                    cls.get_log_prefix(is_ssl=is_ssl),
-                    sockname[0] if sockname[0] != "0.0.0.0" else "localhost",
-                    sockname[1],
                 )
             yield server
 
