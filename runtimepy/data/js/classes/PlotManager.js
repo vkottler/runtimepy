@@ -29,6 +29,8 @@ class PlotManager {
     this.drawers = {};
     this.colors = {};
     this.channelsToPlot = {};
+
+    this.minTxPeriods = {};
   }
 
   handlePlotChannelState(name, channel, state) {
@@ -52,6 +54,7 @@ class PlotManager {
     if (this.shown in this.plots) {
       this.drawPlot(this.shown, time);
     }
+    return this.minTxPeriods[this.shown] || 0.0;
   }
 
   updateSize(name) {
@@ -85,6 +88,10 @@ class PlotManager {
     /* Handle clearing points. */
     if ("clear" in data && name in this.drawers) {
       this.drawers[name].clearAllPoints();
+    }
+
+    if ("minTxPeriod" in data) {
+      this.minTxPeriods[name] = data["minTxPeriod"];
     }
 
     /* Handle initial transfer. */
