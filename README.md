@@ -2,11 +2,11 @@
     =====================================
     generator=datazen
     version=3.1.4
-    hash=cd04f0ce079f8c60bc93c7f1d098316b
+    hash=a82bbd8413b0036b345251da16b462c3
     =====================================
 -->
 
-# runtimepy ([5.6.0](https://pypi.org/project/runtimepy/))
+# runtimepy ([5.6.1](https://pypi.org/project/runtimepy/))
 
 [![python](https://img.shields.io/pypi/pyversions/runtimepy.svg)](https://pypi.org/project/runtimepy/)
 ![Build Status](https://github.com/vkottler/runtimepy/workflows/Python%20Package/badge.svg)
@@ -123,8 +123,10 @@ options:
 ```
 $ ./venv3.12/bin/runtimepy server -h
 
-usage: runtimepy server [-h] [-i] [-w] [--no-poller] [--host HOST] [-p PORT]
-                        [-u] [-l]
+usage: runtimepy server [-h] [-i] [-w] [--no-poller] [--cafile CAFILE]
+                        [--capath CAPATH] [--cadata CADATA]
+                        [--certfile CERTFILE] [--keyfile KEYFILE]
+                        [--host HOST] [-p PORT] [-u] [-l]
                         factory [configs ...]
 
 positional arguments:
@@ -139,6 +141,11 @@ options:
                         ensure that a 'wait_for_stop' application method is
                         run last
   --no-poller           don't run a connection-metrics poller task
+  --cafile CAFILE       passed directly to instantiation
+  --capath CAPATH       passed directly to instantiation
+  --cadata CADATA       passed directly to instantiation
+  --certfile CERTFILE   passed directly to instantiation
+  --keyfile KEYFILE     passed directly to instantiation
   --host HOST           host address to listen on (default: '0.0.0.0')
   -p PORT, --port PORT  port to listen on (default: 0)
   -u, --udp             whether or not this is a UDP-based server (otherwise

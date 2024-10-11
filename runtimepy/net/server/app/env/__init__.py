@@ -11,6 +11,7 @@ from runtimepy.net.arbiter.info import AppInfo
 from runtimepy.net.server.app.bootstrap.elements import input_box
 from runtimepy.net.server.app.bootstrap.tabs import TabbedContent
 from runtimepy.net.server.app.env.modal import Modal
+from runtimepy.net.server.app.env.settings import plot_settings
 from runtimepy.net.server.app.env.tab import ChannelEnvironmentTab
 from runtimepy.net.server.app.placeholder import dummy_tabs, under_construction
 from runtimepy.net.server.app.sound import SoundTab
@@ -85,8 +86,7 @@ def channel_environments(app: AppInfo, tabs: TabbedContent) -> None:
     )
 
     # Plot settings modal.
-    plot_settings = Modal(tabs, name="plot", icon="graph-up")
-    under_construction(plot_settings.footer)
+    plot_settings(tabs)
 
     # Experimental features.
     if app.config_param("experimental", False):

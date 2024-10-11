@@ -6,6 +6,8 @@ class PlotModalManager {
     this.body = this.container.querySelector(".modal-body");
     this.footer = this.container.querySelector(".modal-footer");
 
+    this.plotStatus = this.container.querySelector("#plot-status-inner");
+
     this.byEnv = {};
   }
 
@@ -34,7 +36,7 @@ class PlotModalManager {
       }
     }
 
-    this.body.innerHTML = content;
+    this.plotStatus.innerHTML = content;
   }
 }
 

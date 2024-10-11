@@ -9,6 +9,7 @@ class WindowHashManager {
     this.channelsShown = true;
     this.plotChannels = {};
     this.filters = {};
+    this.minTxPeriod = 0.0;
   }
 
   tabClick(event) {
@@ -160,8 +161,13 @@ class WindowHashManager {
       for (let item of split) {
         if (item.includes("=")) {
           let keyVal = item.split("=");
-          if (keyVal.length == 2 && keyVal[0] == "filter" && keyVal[1]) {
-            this.updateTabFilter(keyVal[1]);
+          if (keyVal.length == 2) {
+            if (keyVal[0] == "filter" && keyVal[1]) {
+              this.updateTabFilter(keyVal[1]);
+            }
+            if (keyVal[0] == "min-tx-period-ms") {
+              this.minTxPeriod = Number(keyVal[1]);
+            }
           }
         }
       }
@@ -176,6 +182,11 @@ class WindowHashManager {
     return result;
   }
 
+  setMinTxPeriod(value) {
+    this.minTxPeriod = value;
+    this.update();
+  }
+
   buildHash() {
     let hash = this.tab;
 
@@ -187,6 +198,10 @@ class WindowHashManager {
     }
     if (!this.channelsShown) {
       hash += ",hide-channels"
+    }
+
+    if (this.minTxPeriod != 0.0) {
+      hash += `,min-tx-period-ms=${this.minTxPeriod}`;
     }
 
     for (let tab in tabs) {

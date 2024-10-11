@@ -134,15 +134,24 @@ def normalize_host(
     return IPv6Host(*args)  # type: ignore
 
 
+USE_FQDN = {"::", "0.0.0.0"}
+
+
 @cache
 def hostname(ip_address: str) -> str:
     """
     Attempt to get a string hostname for a string IP address argument that
     'gethostbyaddr' accepts. Otherwise return the original string
     """
+
     result = ip_address
-    with _suppress(_socket.herror, OSError):
-        result = _socket.gethostbyaddr(ip_address)[0]
+
+    if ip_address in USE_FQDN:
+        result = _socket.getfqdn()
+    else:
+        with _suppress(_socket.herror, OSError):
+            result = _socket.gethostbyaddr(ip_address)[0]
+
     return result
 
 
