@@ -152,8 +152,14 @@ class PlotDrawer {
       }
     }
 
+    /* Use underlying buffer capacity if it can be queried. */
+    let lineDepth = this.canvas.width;
+    if (key in this.channels) {
+      lineDepth = this.channels[key].buffer.capacity;
+    }
+
     this.lines[key] =
-        new WebglPlotBundle.WebglLine(this.rgbaColors[key], this.canvas.width);
+        new WebglPlotBundle.WebglLine(this.rgbaColors[key], lineDepth);
   }
 
   updateLines() {
