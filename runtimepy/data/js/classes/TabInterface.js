@@ -296,17 +296,10 @@ class TabInterface {
       if (elem) {
         elem.onclick = this.clearPlotPoints.bind(this);
       }
-
-      /* Initialize "minimum period" controls. */
-      // this.setMinTxPeriod(100);
     }
   }
 
   clearPlotPoints() { this.worker.toWorker({"plot" : {"clear" : true}}); }
-
-  setMinTxPeriod(value) {
-    this.worker.toWorker({"plot" : {"minTxPeriod" : value}});
-  }
 
   sendPlotChannelColor(chan, color) {
     this.worker.toWorker({"plot" : {"channel" : chan, "color" : color}});

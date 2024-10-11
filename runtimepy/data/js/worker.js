@@ -13,11 +13,16 @@ function create_connections(config) {
 
 const plots = new PlotManager();
 
+/* Used to control messaging rate with server. */
+let minTxPeriod = 0.0;
+
 async function message(data) {
   if ("plot" in data) {
     /* Forward the 'name' field. */
     data["plot"]["name"] = data["name"];
     await plots.handleMessage(data["plot"]);
+  } else if ("min-tx-period-ms" in data) {
+    minTxPeriod = data["min-tx-period-ms"];
   } else {
     console.log(`Message for worker:`);
     console.log(data);
@@ -38,9 +43,14 @@ async function start(config) {
   onmessage = async (event) => {
     /* Handle messages meant for this thread. */
     if ("event" in event.data && "worker" in event.data["event"]) {
+      let data = event.data["event"]["worker"];
+
       /* Forward the 'name' field. */
-      event.data["event"]["worker"]["name"] = event.data["name"];
-      await message(event.data["event"]["worker"]);
+      if ("name" in event.data) {
+        data["name"] = event.data["name"];
+      }
+
+      await message(data);
     }
     /* Forward all other messages to the server. */
     else {
@@ -67,8 +77,11 @@ async function start(config) {
 
   /* Set up the main request-animation-frame loop. */
   function render(time) {
+    /* Render plot. */
+    plots.render(time);
+
     /* Keep the server synchronized with frames. */
-    if (messageTxTime + plots.render(time) <= time) {
+    if (messageTxTime + minTxPeriod <= time) {
       conns["json"].send_json({"ui" : {"time" : time}});
       messageTxTime = time;
     }

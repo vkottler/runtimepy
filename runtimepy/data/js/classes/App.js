@@ -53,6 +53,12 @@ class App {
           this.switchTab(hash.tab);
         }
 
+        /* Handle settings controls. */
+        loadSettings();
+
+        /* Handle individual settings. */
+        this.handleInitialMinTxPeriod();
+
         startMainLoop();
       }
     }, {once : true});
@@ -61,6 +67,33 @@ class App {
     this.worker.postMessage(this.config);
 
     bootstrap_init();
+  }
+
+  handleInitialMinTxPeriod() {
+    if ("min-tx-period-ms" in settings) {
+      /* Set up event handle. */
+      setupCursorContext(settings["min-tx-period-ms"], (elem, down, move,
+                                                        up) => {
+        setupCursorMove(
+            elem, down, move, up,
+            (event) => { this.updateMinTxPeriod(Number(event.target.value)); });
+      });
+
+      /* Set slider to correct value. */
+      settings["min-tx-period-ms"].value = hash.minTxPeriod;
+      settings["min-tx-period-ms"].title = hash.minTxPeriod;
+    }
+
+    this.updateMinTxPeriod();
+  }
+
+  updateMinTxPeriod(value) {
+    if (value || value === 0) {
+      hash.setMinTxPeriod(value);
+      settings["min-tx-period-ms"].title = value;
+    }
+    this.worker.postMessage(
+        {"event" : {"worker" : {"min-tx-period-ms" : hash.minTxPeriod}}});
   }
 }
 

@@ -46,3 +46,15 @@ function setupCursorMove(elem, down, move, up, handleMove) {
 function randomHexColor() {
   return "#" + (Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, "0");
 }
+
+/* Load settings control mappings. */
+let settings = {};
+
+function loadSettings() {
+  for (const key of ["min-tx-period-ms"]) {
+    let elem = document.getElementById(`setting-${key}`);
+    if (elem) {
+      settings[key] = elem;
+    }
+  }
+}
