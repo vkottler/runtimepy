@@ -110,3 +110,6 @@ properties:
           minimum: 0
           maximum: 65535
           default: 0
+
+  websocket_hostname:
+    type: string

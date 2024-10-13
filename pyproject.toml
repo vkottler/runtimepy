@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta:__legacy__"
 
 [project]
 name = "runtimepy"
-version = "5.6.2"
+version = "5.6.3"
 description = "A framework for implementing Python services."
 readme = "README.md"
 requires-python = ">=3.11"
