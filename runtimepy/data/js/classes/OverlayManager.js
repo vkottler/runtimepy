@@ -19,7 +19,7 @@ class OverlayManager {
 
     /* Runtime state. */
     this.visible = true;
-    this.bufferDepth = 512;
+    this.bufferDepth = Math.min(512, this.canvas.width);
     this.minTimestamp = null;
     this.maxTimestamp = null;
     this.lines = [];

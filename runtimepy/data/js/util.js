@@ -15,8 +15,9 @@ function worker_config(config) {
   for (let port_idx in ports) {
     let port = ports[port_idx];
 
-    /* Load from configuration data at some point? */
-    let hostname = window.location.hostname;
+    /* Load from configuration data if provided. */
+    let hostname =
+        config["config"]["websocket_hostname"] || window.location.hostname;
 
     /* This business logic could use some work. */
     if (port["name"].includes(port_name)) {

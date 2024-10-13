@@ -80,9 +80,13 @@ WORKER_TYPE = "text/js-worker"
 def handle_worker(writer: IndentedFileWriter) -> bool:
     """Boilerplate contents for worker thread block."""
 
-    return write_found_file(
-        writer, kind_url("js", "webgl-debug", subdir="third-party")
-    )
+    # Not currently used.
+    # return write_found_file(
+    #     writer, kind_url("js", "webgl-debug", subdir="third-party")
+    # )
+    del writer
+
+    return False
 
 
 def append_kind(
