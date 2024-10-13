@@ -77,7 +77,7 @@ def set_text_to_kind(
 WORKER_TYPE = "text/js-worker"
 
 
-def handle_worker(writer: IndentedFileWriter) -> bool:
+def handle_worker(writer: IndentedFileWriter) -> int:
     """Boilerplate contents for worker thread block."""
 
     # Not currently used.
@@ -86,7 +86,7 @@ def handle_worker(writer: IndentedFileWriter) -> bool:
     # )
     del writer
 
-    return False
+    return 0
 
 
 def append_kind(
@@ -111,8 +111,8 @@ def append_kind(
             ):
                 found_count += 1
 
-        if worker and handle_worker(writer):
-            found_count += 1
+        if worker:
+            found_count += handle_worker(writer)
 
         if found_count:
             elem.text = stream.getvalue()
