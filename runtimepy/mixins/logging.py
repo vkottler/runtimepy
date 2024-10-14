@@ -3,10 +3,17 @@ A module implementing a logger-mixin extension.
 """
 
 # built-in
+from contextlib import AsyncExitStack
+import io
 import logging
+import os
+from pathlib import Path
+from typing import Any
 
 # third-party
-from vcorelib.logging import LoggerMixin
+import aiofiles
+from vcorelib.logging import LoggerMixin, LoggerType
+from vcorelib.paths import Pathlike, normalize
 
 # internal
 from runtimepy.channel.environment import ChannelEnvironment
@@ -55,3 +62,53 @@ class LoggerMixinLevelControl(LoggerMixin):
         env.set(name, initial)
 
         del chan
+
+
+SYSLOG = Path(os.sep, "var", "log", "syslog")
+
+
+class LogCaptureMixin:
+    """A simple async file-reading interface."""
+
+    logger: LoggerType
+
+    # Open aiofiles handles.
+    streams: list[Any]
+
+    async def init_log_capture(
+        self, stack: AsyncExitStack, log_paths: list[Pathlike]
+    ) -> None:
+        """Initialize this task with application information."""
+
+        self.streams = [
+            await stack.enter_async_context(aiofiles.open(x, mode="r"))
+            for x in log_paths
+            if normalize(x).is_file()
+        ]
+
+        # Don't handle any kind of backhaul.
+        for stream in self.streams:
+            await stream.seek(0, io.SEEK_END)
+
+    def log_line(self, data: str) -> None:
+        """Log a line for output."""
+        self.logger.info(data, extra={"external": True})
+
+    async def next_lines(self) -> list[str]:
+        """Get the next line from this log stream."""
+
+        result = []
+        for stream in self.streams:
+            line = (await stream.readline()).rstrip()
+            if line:
+                result.append(line)
+        return result
+
+    async def dispatch_log_capture(self) -> None:
+        """Check for new log data."""
+
+        data = await self.next_lines()
+        while data:
+            for item in data:
+                self.log_line(item)
+            data = await self.next_lines()

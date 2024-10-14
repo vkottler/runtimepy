@@ -37,7 +37,15 @@ class ListLogger(logging.Handler):
     def drain_str(self) -> list[str]:
         """Drain formatted messages."""
 
-        return [self.format(x) for x in self.drain()]
+        result = []
+        for record in self.drain():
+            result.append(
+                self.format(record)
+                # Respect 'external' logs that don't warrant full formatting.
+                if not getattr(record, "external", False)
+                else record.getMessage()
+            )
+        return result
 
     def __bool__(self) -> bool:
         """Evaluate this instance as boolean."""

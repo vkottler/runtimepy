@@ -4,6 +4,9 @@ includes:
   - dev_no_wait.yaml
   - ../tests/data/valid/connection_arbiter/test_ssl.yaml
 
+tasks:
+  - {name: root_log, factory: log_capture, period_s: 0.1}
+
 port_overrides:
   runtimepy_https_server: 8443
 

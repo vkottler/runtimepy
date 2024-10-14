@@ -40,5 +40,9 @@ init_local: |
   METRICS_NAME = "metrics"
   DEFAULT_EXT = "yaml"
 
+mypy_local: |
+  [mypy-aiofiles.*]
+  ignore_missing_imports = True
+
 ci_local:
   - "- run: mk python-editable"
