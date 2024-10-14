@@ -1,7 +1,7 @@
 # =====================================
 # generator=datazen
 # version=3.1.4
-# hash=23727a13b6d02be1ea4a841537c013c3
+# hash=183f8b361ba2aa54cf7e87c823ff45fa
 # =====================================
 
 """
@@ -19,7 +19,7 @@ from runtimepy import DESCRIPTION, PKG_NAME, VERSION
 
 author_info = {
     "name": "Vaughn Kottler",
-    "email": "vaughnkottler@gmail.com",
+    "email": "vaughn@libre-embedded.com",
     "username": "vkottler",
 }
 pkg_info = {
