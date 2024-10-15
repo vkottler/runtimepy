@@ -26,13 +26,16 @@ from runtimepy.channel.environment.command.processor import (
 from runtimepy.metrics import PeriodicTaskMetrics
 from runtimepy.mixins.environment import ChannelEnvironmentMixin
 from runtimepy.mixins.logging import LoggerMixinLevelControl
+from runtimepy.mixins.markdown import MarkdownMixin
 from runtimepy.primitives import Bool as _Bool
 from runtimepy.primitives import Double as _Double
 from runtimepy.primitives import Float as _Float
 from runtimepy.ui.controls import Controlslike
 
 
-class PeriodicTask(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
+class PeriodicTask(
+    LoggerMixinLevelControl, ChannelEnvironmentMixin, MarkdownMixin, _ABC
+):
     """A class implementing a simple periodic-task interface."""
 
     auto_finalize = True
@@ -45,10 +48,12 @@ class PeriodicTask(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
         period_s: float = 1.0,
         env: ChannelEnvironment = None,
         period_controls: Controlslike = "period",
+        markdown: str = None,
     ) -> None:
         """Initialize this task."""
 
         self.name = name
+        self.set_markdown(markdown=markdown)
         LoggerMixinLevelControl.__init__(self, logger=_getLogger(self.name))
         self._task: _Optional[_asyncio.Task[None]] = None
 

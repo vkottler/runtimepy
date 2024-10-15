@@ -168,6 +168,7 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
             kwargs = dict_resolve_env_vars(
                 client.get("kwargs", {}), env=config.ports  # type: ignore
             )
+            kwargs.setdefault("markdown", client.get("markdown"))
 
             assert await self.factory_client(
                 factory,
@@ -201,6 +202,7 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
                 name,
                 period_s=task["period_s"],
                 average_depth=task["average_depth"],
+                markdown=task.get("markdown"),
             ), f"Couldn't register task '{name}' ({factory})!"
 
         # Register structs.

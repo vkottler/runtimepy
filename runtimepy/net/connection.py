@@ -23,6 +23,7 @@ from runtimepy.channel.environment.command.processor import (
 from runtimepy.metrics import ConnectionMetrics
 from runtimepy.mixins.environment import ChannelEnvironmentMixin
 from runtimepy.mixins.logging import LoggerMixinLevelControl
+from runtimepy.mixins.markdown import MarkdownMixin
 from runtimepy.net.backoff import ExponentialBackoff
 from runtimepy.primitives import Bool, Uint8
 from runtimepy.primitives.byte_order import DEFAULT_BYTE_ORDER, ByteOrder
@@ -30,7 +31,9 @@ from runtimepy.primitives.byte_order import DEFAULT_BYTE_ORDER, ByteOrder
 BinaryMessage = _Union[bytes, bytearray, memoryview]
 
 
-class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
+class Connection(
+    LoggerMixinLevelControl, ChannelEnvironmentMixin, MarkdownMixin, _ABC
+):
     """A connection interface."""
 
     uses_text_tx_queue = True
@@ -46,9 +49,11 @@ class Connection(LoggerMixinLevelControl, ChannelEnvironmentMixin, _ABC):
         logger: _LoggerType,
         env: ChannelEnvironment = None,
         add_metrics: bool = True,
+        markdown: str = None,
     ) -> None:
         """Initialize this connection."""
 
+        self.set_markdown(markdown=markdown)
         LoggerMixinLevelControl.__init__(self, logger=logger)
 
         # A queue for out-going text messages. Connections that don't use

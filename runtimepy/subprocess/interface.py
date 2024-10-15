@@ -27,6 +27,7 @@ from runtimepy.message import JsonMessage, MessageProcessor
 from runtimepy.message.interface import JsonMessageInterface
 from runtimepy.metrics.channel import ChannelMetrics
 from runtimepy.mixins.async_command import AsyncCommandProcessingMixin
+from runtimepy.mixins.markdown import MarkdownMixin
 from runtimepy.net.arbiter.info import RuntimeStruct, SampleStruct
 
 HOST_SUFFIX = ".host"
@@ -34,7 +35,7 @@ PEER_SUFFIX = ".peer"
 
 
 class RuntimepyPeerInterface(
-    JsonMessageInterface, AsyncCommandProcessingMixin
+    JsonMessageInterface, AsyncCommandProcessingMixin, MarkdownMixin
 ):
     """A class implementing an interface for messaging peer subprocesses."""
 
@@ -42,8 +43,13 @@ class RuntimepyPeerInterface(
 
     struct_type: type[RuntimeStruct] = SampleStruct
 
+    # Unclear why this is/was necessary (mypy bug?)
+    markdown: str
+
     def __init__(self, name: str, config: JsonObject) -> None:
         """Initialize this instance."""
+
+        self.set_markdown(config=config)
 
         self.processor = MessageProcessor()
 

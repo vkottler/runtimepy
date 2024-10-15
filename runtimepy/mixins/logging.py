@@ -6,9 +6,7 @@ A module implementing a logger-mixin extension.
 from contextlib import AsyncExitStack
 import io
 import logging
-import os
-from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
 
 # third-party
 import aiofiles
@@ -28,6 +26,9 @@ class LogLevel(RuntimeIntEnum):
     WARNING = logging.WARNING
     ERROR = logging.ERROR
     CRITICAL = logging.CRITICAL
+
+
+LogLevellike = LogLevel | int | str
 
 
 class LoggerMixinLevelControl(LoggerMixin):
@@ -64,7 +65,7 @@ class LoggerMixinLevelControl(LoggerMixin):
         del chan
 
 
-SYSLOG = Path(os.sep, "var", "log", "syslog")
+LogPaths = Iterable[tuple[LogLevellike, Pathlike]]
 
 
 class LogCaptureMixin:
@@ -73,42 +74,37 @@ class LogCaptureMixin:
     logger: LoggerType
 
     # Open aiofiles handles.
-    streams: list[Any]
+    streams: list[tuple[int, Any]]
+
+    ext_log_extra = {"external": True}
 
     async def init_log_capture(
-        self, stack: AsyncExitStack, log_paths: list[Pathlike]
+        self, stack: AsyncExitStack, log_paths: LogPaths
     ) -> None:
         """Initialize this task with application information."""
 
         self.streams = [
-            await stack.enter_async_context(aiofiles.open(x, mode="r"))
-            for x in log_paths
-            if normalize(x).is_file()
+            (
+                LogLevel.normalize(level),
+                await stack.enter_async_context(aiofiles.open(path, mode="r")),
+            )
+            for level, path in log_paths
+            if normalize(path).is_file()
         ]
 
         # Don't handle any kind of backhaul.
         for stream in self.streams:
-            await stream.seek(0, io.SEEK_END)
+            await stream[1].seek(0, io.SEEK_END)
 
-    def log_line(self, data: str) -> None:
+    def log_line(self, level: int, data: str) -> None:
         """Log a line for output."""
-        self.logger.info(data, extra={"external": True})
-
-    async def next_lines(self) -> list[str]:
-        """Get the next line from this log stream."""
-
-        result = []
-        for stream in self.streams:
-            line = (await stream.readline()).rstrip()
-            if line:
-                result.append(line)
-        return result
+        self.logger.log(level, data, extra=self.ext_log_extra)
 
     async def dispatch_log_capture(self) -> None:
-        """Check for new log data."""
+        """Get the next line from this log stream."""
 
-        data = await self.next_lines()
-        while data:
-            for item in data:
-                self.log_line(item)
-            data = await self.next_lines()
+        for level, stream in self.streams:
+            line = (await stream.readline()).rstrip()
+            while line:
+                self.log_line(level, line)
+                line = (await stream.readline()).rstrip()

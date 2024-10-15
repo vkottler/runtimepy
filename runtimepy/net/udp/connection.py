@@ -44,7 +44,10 @@ class UdpConnection(_Connection, _TransportMixin):
     log_alias = "UDP"
 
     def __init__(
-        self, transport: _DatagramTransport, protocol: UdpQueueProtocol
+        self,
+        transport: _DatagramTransport,
+        protocol: UdpQueueProtocol,
+        **kwargs,
     ) -> None:
         """Initialize this UDP connection."""
 
@@ -55,7 +58,9 @@ class UdpConnection(_Connection, _TransportMixin):
         # Re-assign with updated type information.
         self._transport: _DatagramTransport = transport
 
-        super().__init__(_getLogger(self.logger_name(f"{self.log_alias} ")))
+        super().__init__(
+            _getLogger(self.logger_name(f"{self.log_alias} ")), **kwargs
+        )
         self._set_protocol(protocol)
 
         # Store connection-instantiation arguments.
@@ -127,7 +132,9 @@ class UdpConnection(_Connection, _TransportMixin):
     should_connect: bool = True
 
     @classmethod
-    async def create_connection(cls: type[T], **kwargs) -> T:
+    async def create_connection(
+        cls: type[T], markdown: str = None, **kwargs
+    ) -> T:
         """Create a UDP connection."""
 
         LOG.debug("kwargs: %s", kwargs)
@@ -151,7 +158,7 @@ class UdpConnection(_Connection, _TransportMixin):
 
         # Create the underlying connection.
         transport, protocol = await udp_transport_protocol_backoff(**kwargs)
-        conn = cls(transport, protocol)
+        conn = cls(transport, protocol, markdown=markdown)
         conn._conn_kwargs = {**kwargs}
 
         # Set the remote address manually if necessary.

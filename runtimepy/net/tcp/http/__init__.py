@@ -7,7 +7,7 @@ import asyncio
 from copy import copy
 import http
 from json import loads
-from typing import Any, Awaitable, Callable, Optional, Tuple, Union
+from typing import Any, Awaitable, Callable, Optional, Tuple, Union, cast
 
 # third-party
 from vcorelib import DEFAULT_ENCODING
@@ -174,11 +174,9 @@ class HttpConnection(_TcpConnection):
     async def process_binary(self, data: bytes) -> bool:
         """Process a binary frame."""
 
-        kind = RequestHeader if not self.expecting_response else ResponseHeader
-
-        for header, payload in self.processor.ingest(  # type: ignore
+        for header, payload in self.processor.ingest(
             data,
-            kind,  # type: ignore
+            RequestHeader if not self.expecting_response else ResponseHeader,
         ):
             header.log(self.logger, False)
 
@@ -187,11 +185,15 @@ class HttpConnection(_TcpConnection):
                 response = ResponseHeader()
                 self._send(
                     response,
-                    await self._process_request(response, header, payload),
+                    await self._process_request(
+                        response, cast(RequestHeader, header), payload
+                    ),
                 )
 
             # Process the response to a pending request.
             else:
-                await self.responses.put((header, payload))
+                await self.responses.put(
+                    (cast(ResponseHeader, header), payload)
+                )
 
         return True

@@ -10,12 +10,13 @@ from vcorelib.math import RateLimiter
 from runtimepy.channel.environment.command.processor import (
     ChannelCommandProcessor,
 )
+from runtimepy.mixins.markdown import MarkdownMixin
 from runtimepy.net.arbiter.info import AppInfo
 from runtimepy.net.server.app.bootstrap.tabs import TabbedContent
 from runtimepy.net.server.app.tab import Tab
 
 
-class ChannelEnvironmentTabBase(Tab, LoggerMixin):
+class ChannelEnvironmentTabBase(Tab, LoggerMixin, MarkdownMixin):
     """A channel-environment tab interface."""
 
     def __init__(
@@ -25,10 +26,12 @@ class ChannelEnvironmentTabBase(Tab, LoggerMixin):
         app: AppInfo,
         tabs: TabbedContent,
         icon: str = "alarm",
+        markdown: str = None,
     ) -> None:
         """Initialize this instance."""
 
         self.command = command
+        self.set_markdown(markdown=markdown)
         super().__init__(name, app, tabs, source="env", icon=icon)
 
         # Logging.

@@ -2,11 +2,12 @@
 A module implementing file-related task interfaces.
 """
 
-# third-party
-from vcorelib.paths import Pathlike
+# built-in
+import os
+from pathlib import Path
 
 # internal
-from runtimepy.mixins.logging import SYSLOG, LogCaptureMixin
+from runtimepy.mixins.logging import LogCaptureMixin
 from runtimepy.net.arbiter.info import AppInfo
 from runtimepy.net.arbiter.task import ArbiterTask as _ArbiterTask
 from runtimepy.net.arbiter.task import TaskFactory as _TaskFactory
@@ -19,15 +20,18 @@ class LogCaptureTask(_ArbiterTask, LogCaptureMixin):
 
     auto_finalize = True
 
-    log_paths: list[Pathlike] = [SYSLOG]
-
     async def init(self, app: AppInfo) -> None:
         """Initialize this task with application information."""
 
         await super().init(app)
 
-        # Allow additional paths via configuration?
-        await self.init_log_capture(app.stack, self.log_paths)
+        # See above comment, we can probably keep the mixin class but delete
+        # this one - unless we want a separate "Linux" task to run / handle
+        # this (we might want to increase the housekeeping task rate to reduce
+        # async command latency + connection processing?).
+        await self.init_log_capture(
+            app.stack, [("info", Path(os.sep, "var", "log", "syslog"))]
+        )
 
     async def dispatch(self) -> bool:
         """Dispatch an iteration of this task."""

@@ -14,17 +14,24 @@ from runtimepy.channel.environment.command.processor import (
 )
 from runtimepy.mixins.environment import ChannelEnvironmentMixin
 from runtimepy.mixins.logging import LoggerMixinLevelControl
+from runtimepy.mixins.markdown import MarkdownMixin
 
 
-class RuntimeStructBase(LoggerMixinLevelControl, ChannelEnvironmentMixin):
+class RuntimeStructBase(
+    LoggerMixinLevelControl, ChannelEnvironmentMixin, MarkdownMixin
+):
     """A base runtime structure."""
 
     log_level_channel: bool = True
+
+    # Unclear why this is/was necessary (mypy bug?)
+    markdown: str
 
     def __init__(self, name: str, config: _JsonObject) -> None:
         """Initialize this instance."""
 
         self.name = name
+        self.set_markdown(config=config)
         LoggerMixinLevelControl.__init__(self, logger=_getLogger(self.name))
         ChannelEnvironmentMixin.__init__(self)
         if self.log_level_channel:
