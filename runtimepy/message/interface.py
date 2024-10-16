@@ -11,7 +11,7 @@ from typing import Any, Optional, Union
 
 # third-party
 from vcorelib.dict.codec import JsonCodec
-from vcorelib.logging import LoggerType
+from vcorelib.logging import ListLogger, LoggerType
 from vcorelib.target.resolver import TargetResolver
 
 # internal
@@ -39,7 +39,7 @@ from runtimepy.message.types import (
     T,
     TypedHandler,
 )
-from runtimepy.util import Identifier, ListLogger
+from runtimepy.util import Identifier
 
 
 class JsonMessageInterface:

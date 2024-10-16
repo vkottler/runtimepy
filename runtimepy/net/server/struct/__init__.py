@@ -43,8 +43,7 @@ class UiState(RuntimeStruct, PsutilMixin):
 
         # JSON-messaging interface metrics.
         self.json_metrics = ConnectionMetrics()
-        with self.env.names_pushed("json"):
-            self.register_connection_metrics(self.json_metrics)
+        self.register_connection_metrics(self.json_metrics, "json")
 
         # System metrics.
         self.use_psutil = self.config.get("psutil", True)  # type: ignore

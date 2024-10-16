@@ -3,10 +3,15 @@ A module implementing a logger-mixin extension.
 """
 
 # built-in
+from contextlib import AsyncExitStack
+import io
 import logging
+from typing import Any, Iterable
 
 # third-party
-from vcorelib.logging import LoggerMixin
+import aiofiles
+from vcorelib.logging import LoggerMixin, LoggerType
+from vcorelib.paths import Pathlike, normalize
 
 # internal
 from runtimepy.channel.environment import ChannelEnvironment
@@ -21,6 +26,9 @@ class LogLevel(RuntimeIntEnum):
     WARNING = logging.WARNING
     ERROR = logging.ERROR
     CRITICAL = logging.CRITICAL
+
+
+LogLevellike = LogLevel | int | str
 
 
 class LoggerMixinLevelControl(LoggerMixin):
@@ -55,3 +63,48 @@ class LoggerMixinLevelControl(LoggerMixin):
         env.set(name, initial)
 
         del chan
+
+
+LogPaths = Iterable[tuple[LogLevellike, Pathlike]]
+
+
+class LogCaptureMixin:
+    """A simple async file-reading interface."""
+
+    logger: LoggerType
+
+    # Open aiofiles handles.
+    streams: list[tuple[int, Any]]
+
+    ext_log_extra = {"external": True}
+
+    async def init_log_capture(
+        self, stack: AsyncExitStack, log_paths: LogPaths
+    ) -> None:
+        """Initialize this task with application information."""
+
+        self.streams = [
+            (
+                LogLevel.normalize(level),
+                await stack.enter_async_context(aiofiles.open(path, mode="r")),
+            )
+            for level, path in log_paths
+            if normalize(path).is_file()
+        ]
+
+        # Don't handle any kind of backhaul.
+        for stream in self.streams:
+            await stream[1].seek(0, io.SEEK_END)
+
+    def log_line(self, level: int, data: str) -> None:
+        """Log a line for output."""
+        self.logger.log(level, data, extra=self.ext_log_extra)
+
+    async def dispatch_log_capture(self) -> None:
+        """Get the next line from this log stream."""
+
+        for level, stream in self.streams:
+            line = (await stream.readline()).rstrip()
+            while line:
+                self.log_line(level, line)
+                line = (await stream.readline()).rstrip()

@@ -2,6 +2,7 @@
 includes:
   - has_factory.yaml
   - has_name.yaml
+  - has_markdown.yaml
 
 properties:
   period_s:

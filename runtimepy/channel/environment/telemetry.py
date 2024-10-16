@@ -6,6 +6,9 @@ A module implementing channel-environment telemetry registration.
 from contextlib import ExitStack, contextmanager
 from typing import BinaryIO, Iterator, Optional, cast
 
+# third-party
+from vcorelib.names import name_search
+
 # internal
 from runtimepy.channel.environment.base import (
     BaseChannelEnvironment as _BaseChannelEnvironment,
@@ -14,7 +17,6 @@ from runtimepy.channel.event import PrimitiveEvent
 from runtimepy.channel.registry import ParsedEvent
 from runtimepy.mapping import DEFAULT_PATTERN
 from runtimepy.metrics.channel import ChannelMetrics
-from runtimepy.util import name_search
 
 
 class TelemetryChannelEnvironment(_BaseChannelEnvironment):

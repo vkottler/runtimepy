@@ -11,7 +11,7 @@ from typing import Any, AsyncIterator
 
 # third-party
 from vcorelib.asyncio.poll import repeat_until
-from vcorelib.paths.context import tempfile
+from vcorelib.paths.context import PossiblePath, as_path, tempfile
 from vcorelib.paths.hashing import file_md5_hex
 from vcorelib.paths.info import FileInfo
 
@@ -25,7 +25,6 @@ from runtimepy.net.udp.tftp.base import (
 )
 from runtimepy.net.udp.tftp.enums import DEFAULT_MODE
 from runtimepy.net.util import IpHostTuplelike
-from runtimepy.util import PossiblePath, as_path
 
 
 class TftpConnection(BaseTftpConnection):

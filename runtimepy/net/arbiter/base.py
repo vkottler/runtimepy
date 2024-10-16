@@ -48,7 +48,9 @@ from runtimepy.subprocess.peer import RuntimepyPeer as _RuntimepyPeer
 from runtimepy.tui.mixin import CursesWindow, TuiMixin
 
 ServerTask = _Awaitable[None]
-RuntimeProcessTask = tuple[type[_RuntimepyPeer], str, _JsonObject, str]
+RuntimeProcessTask = tuple[
+    type[_RuntimepyPeer], str, _JsonObject, str, Optional[str]
+]
 
 
 async def init_only(app: AppInfo) -> int:
@@ -226,9 +228,17 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
     async def _start_processes(self, stack: _AsyncExitStack) -> None:
         """Start processes."""
 
-        for name, (peer, name, config, import_str) in self._peers.items():
+        for name, (
+            peer,
+            name,
+            config,
+            import_str,
+            markdown,
+        ) in self._peers.items():
             self._runtime_peers[name] = await stack.enter_async_context(
-                peer.running_program(name, config, import_str)
+                peer.running_program(
+                    name, config, import_str, markdown=markdown
+                )
             )
             self.logger.info("Started process '%s'.", name)
 

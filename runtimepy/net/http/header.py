@@ -55,7 +55,11 @@ class RequestHeader(HeadersMixin):
         HeadersMixin.__init__(self, lines[1:])
 
     def log(
-        self, logger: LoggerType, out: bool, level: int = logging.DEBUG
+        self,
+        logger: LoggerType,
+        out: bool,
+        level: int = logging.DEBUG,
+        **_,
     ) -> None:
         """Log information about this request header."""
 

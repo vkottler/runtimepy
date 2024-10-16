@@ -51,11 +51,12 @@ class WebsocketConnection(Connection):
     def __init__(
         self,
         protocol: _Union[_WebSocketClientProtocol, _WebSocketServerProtocol],
+        **kwargs,
     ) -> None:
         """Initialize this connection."""
 
         self.protocol = protocol
-        super().__init__(self.protocol.logger)
+        super().__init__(self.protocol.logger, **kwargs)
 
     async def _handle_connection_closed(
         self, task: _Awaitable[V]
@@ -92,7 +93,9 @@ class WebsocketConnection(Connection):
         await self.protocol.close()
 
     @classmethod
-    async def create_connection(cls: type[T], uri: str, **kwargs) -> T:
+    async def create_connection(
+        cls: type[T], uri: str, markdown: str = None, **kwargs
+    ) -> T:
         """Connect a client to an endpoint."""
 
         kwargs.setdefault("use_ssl", uri.startswith("wss"))
@@ -100,11 +103,13 @@ class WebsocketConnection(Connection):
         protocol = await getattr(websockets, "connect")(
             uri, **handle_possible_ssl(**kwargs)
         )
-        return cls(protocol)
+        return cls(protocol, markdown=markdown)
 
     @classmethod
     @_asynccontextmanager
-    async def client(cls: type[T], uri: str, **kwargs) -> _AsyncIterator[T]:
+    async def client(
+        cls: type[T], uri: str, markdown: str = None, **kwargs
+    ) -> _AsyncIterator[T]:
         """A wrapper for connecting a client."""
 
         kwargs.setdefault("use_ssl", uri.startswith("wss"))
@@ -112,7 +117,7 @@ class WebsocketConnection(Connection):
         async with getattr(websockets, "connect")(
             uri, **handle_possible_ssl(**kwargs)
         ) as protocol:
-            yield cls(protocol)
+            yield cls(protocol, markdown=markdown)
 
     @classmethod
     def server_handler(

@@ -12,11 +12,12 @@ from logging import INFO, getLogger
 from typing import Optional
 
 # third-party
+from vcorelib.io import MarkdownMixin
 from vcorelib.io.types import JsonObject
 from vcorelib.math import RateLimiter
 
 # internal
-from runtimepy import METRICS_NAME
+from runtimepy import METRICS_NAME, PKG_NAME
 from runtimepy.channel.environment import ChannelEnvironment
 from runtimepy.channel.environment.base import FieldOrChannel
 from runtimepy.channel.environment.command import register_env
@@ -34,7 +35,7 @@ PEER_SUFFIX = ".peer"
 
 
 class RuntimepyPeerInterface(
-    JsonMessageInterface, AsyncCommandProcessingMixin
+    JsonMessageInterface, AsyncCommandProcessingMixin, MarkdownMixin
 ):
     """A class implementing an interface for messaging peer subprocesses."""
 
@@ -42,13 +43,25 @@ class RuntimepyPeerInterface(
 
     struct_type: type[RuntimeStruct] = SampleStruct
 
-    def __init__(self, name: str, config: JsonObject) -> None:
+    # Unclear why this is/was necessary (mypy bug?)
+    markdown: str
+
+    def __init__(
+        self, name: str, config: JsonObject, markdown: str = None
+    ) -> None:
         """Initialize this instance."""
+
+        self.set_markdown(markdown=markdown, package=PKG_NAME)
 
         self.processor = MessageProcessor()
 
         self.basename = name
-        self.struct = self.struct_type(self.basename + HOST_SUFFIX, config)
+
+        self.struct = self.struct_type(
+            self.basename + HOST_SUFFIX,
+            config,
+            markdown=config.get("config", {}).get("markdown"),  # type: ignore
+        )
 
         self.peer: Optional[RemoteCommandProcessor] = None
         self.peer_config: Optional[JsonMessage] = None

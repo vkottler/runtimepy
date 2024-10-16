@@ -17,6 +17,10 @@ body > :first-child {
   height: 100%;
 }
 
+#runtimepy-tabs {
+  width: min-content;
+}
+
 #runtimepy-splash {
   position: fixed;
   top: 0;

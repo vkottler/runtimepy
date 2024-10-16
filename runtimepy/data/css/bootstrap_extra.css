@@ -42,6 +42,7 @@
 
 .table-container {
   overflow-x: scroll;
+  min-height: fit-content;
 }
 
 .channel-column {

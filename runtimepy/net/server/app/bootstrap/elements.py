@@ -3,17 +3,19 @@ A module for creating various bootstrap-related elements.
 """
 
 # built-in
+from io import StringIO
 from typing import Optional
 
 # third-party
 from svgen.element import Element
 from svgen.element.html import div
+from vcorelib.io.file_writer import IndentedFileWriter
 
 # internal
 from runtimepy.net.server.app.bootstrap import icon_str
 
 TEXT = "font-monospace"
-BOOTSTRAP_BUTTON = f"rounded-0 {TEXT} button-bodge"
+BOOTSTRAP_BUTTON = f"rounded-0 {TEXT} button-bodge text-nowrap"
 
 
 def flex(kind: str = "row", **kwargs) -> Element:
@@ -161,3 +163,38 @@ def slider(
     #     div(tag="option", value=start + (idx * step), parent=markers)
 
     return elem
+
+
+def centered_markdown(
+    parent: Element, markdown: str, *container_classes: str
+) -> None:
+    """Add centered markdown."""
+
+    container = div(parent=parent)
+    container.add_class(
+        "flex-grow-1",
+        "d-flex",
+        "flex-column",
+        "justify-content-between",
+        *container_classes,
+    )
+
+    div(parent=container)
+
+    horiz_container = div(parent=container)
+    horiz_container.add_class("d-flex", "flex-row", "justify-content-between")
+
+    div(parent=horiz_container)
+
+    with StringIO() as stream:
+        writer = IndentedFileWriter(stream)
+        writer.write_markdown(markdown)
+        div(
+            text=stream.getvalue(),
+            parent=horiz_container,
+            class_str="text-light p-3 pb-0",
+        )
+
+    div(parent=horiz_container)
+
+    div(parent=container)

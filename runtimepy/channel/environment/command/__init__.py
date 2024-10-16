@@ -15,6 +15,7 @@ from vcorelib import DEFAULT_ENCODING
 from vcorelib.io import ARBITER, JsonObject
 from vcorelib.logging import DEFAULT_TIME_FORMAT, LoggerMixin
 from vcorelib.math import default_time_ns, nano_str
+from vcorelib.names import name_search
 
 # internal
 from runtimepy.channel.environment import ChannelEnvironment
@@ -26,7 +27,6 @@ from runtimepy.channel.environment.command.processor import (
 )
 from runtimepy.channel.registry import ParsedEvent
 from runtimepy.mapping import DEFAULT_PATTERN
-from runtimepy.util import name_search
 
 # Declared so we re-export FieldOrChannel after moving where it's declared.
 __all__ = [

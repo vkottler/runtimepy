@@ -9,7 +9,19 @@ tasks:
   # Sinusoids.
   - {name: wave1, factory: sinusoid, period_s: 0.01}
   - {name: wave2, factory: sinusoid, period_s: 0.02}
-  - {name: wave3, factory: sinusoid, period_s: 0.03}
+  - name: wave3
+    factory: sinusoid
+    period_s: 0.03
+    markdown: |
+      # Markdown for wave3
+
+      * list element 1
+      * list element 2
+      * list element 3
+
+      To be continued.
+
+      `peace`
 
   # Drive interactions with runtime entities that won't otherwise be polled.
   - {name: app, factory: SampleApp, period_s: 0.25}
@@ -21,6 +33,11 @@ clients:
     defer: true
     kwargs:
       remote_addr: [localhost, "$udp_json"]
+    markdown: |
+      # `udp_json_client`
+
+      Connects to `udp_json_server`.
+
   - factory: udp_json
     name: udp_json_server
     kwargs:
@@ -36,8 +53,19 @@ structs:
       b: 2
       c: 3
 
+      markdown: |
+        # Docs for `example.struct1`
+
+        Should be shown for peer process as well?
+
   - name: struct2
     factory: sample_struct
+    config:
+      markdown: |
+        # `struct2`
+
+        One of the structs of all time.
+
   - name: struct3
     factory: sample_struct
 
@@ -45,6 +73,11 @@ structs:
 processes:
   - name: proc1
     factory: sample_peer
+
+    markdown: |
+      # Markdown for `proc1`
+
+      A process that
 
     # The peer itself runs an arbiter process.
     config:

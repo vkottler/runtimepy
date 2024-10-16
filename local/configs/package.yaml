@@ -7,7 +7,8 @@ entry: {{entry}}
 time_command: true
 
 requirements:
-  - vcorelib>=3.3.1
+  - aiofiles
+  - vcorelib>=3.4.2
   - svgen>=0.6.8
   - websockets
   - psutil
@@ -38,6 +39,10 @@ commands:
 init_local: |
   METRICS_NAME = "metrics"
   DEFAULT_EXT = "yaml"
+
+mypy_local: |
+  [mypy-aiofiles.*]
+  ignore_missing_imports = True
 
 ci_local:
   - "- run: mk python-editable"

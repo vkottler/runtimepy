@@ -17,6 +17,7 @@ from vcorelib.dict.env import dict_resolve_env_vars, list_resolve_env_vars
 from vcorelib.io import ARBITER as _ARBITER
 from vcorelib.io.types import JsonObject as _JsonObject
 from vcorelib.logging import LoggerMixin as _LoggerMixin
+from vcorelib.names import import_str_and_item
 from vcorelib.paths import Pathlike as _Pathlike
 from vcorelib.paths import find_file
 from vcorelib.paths import normalize as _normalize
@@ -29,7 +30,6 @@ from runtimepy.net.arbiter.imports import (
     ImportConnectionArbiter as _ImportConnectionArbiter,
 )
 from runtimepy.net.arbiter.imports.util import get_apps
-from runtimepy.util import import_str_and_item
 
 ConfigObject = dict[str, _Any]
 ConfigBuilder = _Callable[[ConfigObject], None]
@@ -168,6 +168,7 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
             kwargs = dict_resolve_env_vars(
                 client.get("kwargs", {}), env=config.ports  # type: ignore
             )
+            kwargs.setdefault("markdown", client.get("markdown"))
 
             assert await self.factory_client(
                 factory,
@@ -201,6 +202,7 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
                 name,
                 period_s=task["period_s"],
                 average_depth=task["average_depth"],
+                markdown=task.get("markdown"),
             ), f"Couldn't register task '{name}' ({factory})!"
 
         # Register structs.
@@ -216,7 +218,9 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
             name = process["name"]
             factory = process["factory"]
             assert self.factory_process(
-                factory, name, process.get("config", {}), process["program"]
+                factory,
+                name,
+                process,
             ), f"Couldn't register process '{name}' ({factory})!"
 
         # Load initialization methods.

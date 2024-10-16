@@ -9,6 +9,7 @@ from typing import Optional, TextIO, Union
 
 # third-party
 from vcorelib import DEFAULT_ENCODING
+from vcorelib.logging import LoggerType
 
 HTTPMethodlike = Union[str, http.HTTPMethod]
 HEADER_LINESEP = "\r\n"
@@ -61,6 +62,10 @@ class HeadersMixin(ABC):
     @abstractmethod
     def from_lines(self, lines: list[str]) -> None:
         """Update this request from line data."""
+
+    @abstractmethod
+    def log(self, logger: LoggerType, out: bool, **kwargs) -> None:
+        """Log information about this response header."""
 
     @abstractmethod
     def __str__(self) -> str:

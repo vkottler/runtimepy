@@ -5,10 +5,12 @@ Utility interfaces for arbiter runtime-import mechanisms.
 # built-in
 from importlib import import_module as _import_module
 
+# third-party
+from vcorelib.names import import_str_and_item
+
 # internal
 from runtimepy.net.arbiter.config.codec import ConfigApps
 from runtimepy.net.arbiter.info import ArbiterApps
-from runtimepy.util import import_str_and_item
 
 
 def get_apps(

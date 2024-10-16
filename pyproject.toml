@@ -4,15 +4,15 @@ build-backend = "setuptools.build_meta:__legacy__"
 
 [project]
 name = "runtimepy"
-version = "5.6.3"
+version = "5.6.4"
 description = "A framework for implementing Python services."
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [
-  {name = "Vaughn Kottler", email = "vaughnkottler@gmail.com"}
+  {name = "Vaughn Kottler", email = "vaughn@libre-embedded.com"}
 ]
 maintainers = [
-  {name = "Vaughn Kottler", email = "vaughnkottler@gmail.com"}
+  {name = "Vaughn Kottler", email = "vaughn@libre-embedded.com"}
 ]
 classifiers = [
   "Programming Language :: Python :: 3.11",

@@ -72,7 +72,7 @@ class ResponseHeader(HeadersMixin):
 
             return stream.getvalue()
 
-    def log(self, logger: LoggerType, out: bool) -> None:
+    def log(self, logger: LoggerType, out: bool, **_) -> None:
         """Log information about this response header."""
 
         level = logging.INFO if (200 <= self.status <= 299) else logging.ERROR

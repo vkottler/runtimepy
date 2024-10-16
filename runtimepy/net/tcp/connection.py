@@ -51,7 +51,12 @@ class TcpConnection(_Connection, _TransportMixin):
     log_alias = "TCP"
     log_prefix = ""
 
-    def __init__(self, transport: _Transport, protocol: QueueProtocol) -> None:
+    def __init__(
+        self,
+        transport: _Transport,
+        protocol: QueueProtocol,
+        **kwargs,
+    ) -> None:
         """Initialize this TCP connection."""
 
         _TransportMixin.__init__(self, transport)
@@ -60,7 +65,9 @@ class TcpConnection(_Connection, _TransportMixin):
         self._transport: _Transport = transport
         self._set_protocol(protocol)
 
-        super().__init__(_getLogger(self.logger_name(f"{self.log_alias} ")))
+        super().__init__(
+            _getLogger(self.logger_name(f"{self.log_alias} ")), **kwargs
+        )
 
         # Store connection-instantiation arguments.
         self._conn_kwargs: dict[str, _Any] = {}
@@ -121,14 +128,17 @@ class TcpConnection(_Connection, _TransportMixin):
 
     @classmethod
     async def create_connection(
-        cls: type[T], backoff: ExponentialBackoff = None, **kwargs
+        cls: type[T],
+        backoff: ExponentialBackoff = None,
+        markdown: str = None,
+        **kwargs,
     ) -> T:
         """Create a TCP connection."""
 
         transport, protocol = await tcp_transport_protocol_backoff(
             backoff=backoff, **kwargs
         )
-        inst = cls(transport, protocol)
+        inst = cls(transport, protocol, markdown=markdown)
 
         # Is there a better way to do this? We can't restart a server's side
         # of a connection (seems okay).

@@ -30,11 +30,14 @@ class ChannelEnvironmentMixin:
         return id(self.env)
 
     def register_task_metrics(
-        self, metrics: PeriodicTaskMetrics, namespace: str = METRICS_NAME
+        self,
+        metrics: PeriodicTaskMetrics,
+        *names: str,
+        namespace: str = METRICS_NAME,
     ) -> None:
         """Register periodic task metrics."""
 
-        with self.env.names_pushed(namespace):
+        with self.env.names_pushed(namespace, *names):
             self.env.channel(
                 "dispatches",
                 metrics.dispatches,
@@ -104,11 +107,14 @@ class ChannelEnvironmentMixin:
             )
 
     def register_connection_metrics(
-        self, metrics: ConnectionMetrics, namespace: str = METRICS_NAME
+        self,
+        metrics: ConnectionMetrics,
+        *names: str,
+        namespace: str = METRICS_NAME,
     ) -> None:
         """Register connection metrics."""
 
-        with self.env.names_pushed(namespace):
+        with self.env.names_pushed(namespace, *names):
             for name, direction, verb in [
                 ("tx", metrics.tx, "transmitted"),
                 ("rx", metrics.rx, "received"),

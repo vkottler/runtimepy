@@ -14,6 +14,7 @@ from runtimepy.channel import AnyChannel
 from runtimepy.enum import RuntimeEnum
 from runtimepy.net.server.app.bootstrap.elements import (
     TEXT,
+    centered_markdown,
     flex,
     input_box,
     set_tooltip,
@@ -26,7 +27,6 @@ from runtimepy.net.server.app.env.widgets import (
     channel_table_header,
     plot_checkbox,
 )
-from runtimepy.net.server.app.placeholder import under_construction
 
 
 def channel_color_button(parent: Element, name: str) -> Element:
@@ -246,12 +246,12 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabControls):
 
         self.channel_table(vert_container)
 
-        # Possible empty space that could eventually be used (scenario: channel
-        # table doesn't take up full vertical space, few channels).
-        under_construction(
+        centered_markdown(
             vert_container,
-            class_str="border-start border-top border-end",
-            note="unused space",
+            self.markdown,
+            "border-start",
+            "border-top",
+            "border-end",
         )
 
         # Divider.
