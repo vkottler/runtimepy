@@ -3,5 +3,16 @@ includes_left:
   - package://runtimepy/server.yaml
   - package://runtimepy/server_dev.yaml
 
+config:
+  top_markdown: |
+    # Top Markdown
+
+    Arbitrary configuration (testing).
+
+  bottom_markdown: |
+    # Bottom Markdown
+
+    Arbitrary configuration (testing).
+
 app:
   - runtimepy.net.apps.wait_for_stop

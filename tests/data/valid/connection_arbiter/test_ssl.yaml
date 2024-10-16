@@ -4,10 +4,6 @@ ports:
   - {name: runtimepy_secure_websocket_json_server, type: tcp}
   - {name: runtimepy_secure_websocket_data_server, type: tcp}
 
-# This should probably be tested somewhere else.
-tasks:
-  - {name: root_log, factory: log_capture, period_s: 0.1}
-
 servers:
   - factory: runtimepy_http
     kwargs:

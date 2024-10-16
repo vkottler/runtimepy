@@ -4,6 +4,8 @@ includes:
   - dev_no_wait.yaml
   - ../tests/data/valid/connection_arbiter/test_ssl.yaml
 
+factories:
+  - {name: tasks.tlm.LogCapture}
 tasks:
   - {name: root_log, factory: log_capture, period_s: 0.1}
 

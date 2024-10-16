@@ -8,12 +8,15 @@ from svgen.element.html import div
 # internal
 from runtimepy import PKG_NAME
 from runtimepy.net.arbiter.info import AppInfo
-from runtimepy.net.server.app.bootstrap.elements import input_box
+from runtimepy.net.server.app.bootstrap.elements import (
+    centered_markdown,
+    input_box,
+)
 from runtimepy.net.server.app.bootstrap.tabs import TabbedContent
 from runtimepy.net.server.app.env.modal import Modal
 from runtimepy.net.server.app.env.settings import plot_settings
 from runtimepy.net.server.app.env.tab import ChannelEnvironmentTab
-from runtimepy.net.server.app.placeholder import dummy_tabs, under_construction
+from runtimepy.net.server.app.placeholder import dummy_tabs
 from runtimepy.net.server.app.sound import SoundTab
 
 
@@ -62,7 +65,7 @@ def populate_tabs(app: AppInfo, tabs: TabbedContent) -> None:
             app,
             tabs,
             icon="cpu-fill",
-            markdown=peer.struct.markdown,
+            markdown=peer.markdown,
         ).entry()
 
         # Remote side.
@@ -73,7 +76,7 @@ def populate_tabs(app: AppInfo, tabs: TabbedContent) -> None:
             app,
             tabs,
             icon="cpu",
-            markdown=peer.markdown,
+            markdown=peer.struct.markdown,
         ).entry()
 
     # If we are a peer program, load environments.
@@ -112,11 +115,12 @@ def channel_environments(app: AppInfo, tabs: TabbedContent) -> None:
     # Tab name filter.
     input_box(tabs.tabs, label="tab", description="Tab name filter.")
 
-    # This helps center the tabs. Make this markdown at some point.
-    under_construction(
+    centered_markdown(
         tabs.tabs,
-        note="unused space",
-        class_str="border-start border-bottom border-end",
+        app.config_param("top_markdown", "configure `top_markdown`"),
+        "border-start",
+        "border-bottom",
+        "border-end",
     )
 
     populate_tabs(app, tabs)
@@ -143,10 +147,11 @@ def channel_environments(app: AppInfo, tabs: TabbedContent) -> None:
         Modal(tabs)
         Modal(tabs, name="diagnostics", icon="activity")
 
-    # Placeholder for using space at the bottom of the tab list.
-    # Make this markdown at some point.
-    under_construction(
-        tabs.tabs, note="unused space", class_str="border-start border-end"
+    centered_markdown(
+        tabs.tabs,
+        app.config_param("bottom_markdown", "configure `bottom_markdown`"),
+        "border-start",
+        "border-end",
     )
 
     # Add splash screen element.

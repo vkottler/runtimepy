@@ -13,12 +13,14 @@ from logging import getLogger as _getLogger
 from typing import Optional as _Optional
 
 # third-party
+from vcorelib.io import MarkdownMixin
 from vcorelib.math import DEFAULT_DEPTH as _DEFAULT_DEPTH
 from vcorelib.math import MovingAverage as _MovingAverage
 from vcorelib.math import RateTracker as _RateTracker
 from vcorelib.math import rate_str as _rate_str
 
 # internal
+from runtimepy import PKG_NAME
 from runtimepy.channel.environment import ChannelEnvironment
 from runtimepy.channel.environment.command.processor import (
     ChannelCommandProcessor,
@@ -26,7 +28,6 @@ from runtimepy.channel.environment.command.processor import (
 from runtimepy.metrics import PeriodicTaskMetrics
 from runtimepy.mixins.environment import ChannelEnvironmentMixin
 from runtimepy.mixins.logging import LoggerMixinLevelControl
-from runtimepy.mixins.markdown import MarkdownMixin
 from runtimepy.primitives import Bool as _Bool
 from runtimepy.primitives import Double as _Double
 from runtimepy.primitives import Float as _Float
@@ -53,7 +54,7 @@ class PeriodicTask(
         """Initialize this task."""
 
         self.name = name
-        self.set_markdown(markdown=markdown)
+        self.set_markdown(markdown=markdown, package=PKG_NAME)
         LoggerMixinLevelControl.__init__(self, logger=_getLogger(self.name))
         self._task: _Optional[_asyncio.Task[None]] = None
 

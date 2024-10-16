@@ -35,7 +35,6 @@ factories:
   - {name: runtimepy.task.sample.Sample}
   - {name: runtimepy.task.sample.SampleApp}
   - {name: runtimepy.control.step.StepperToggler}
-  - {name: runtimepy.task.file.LogCapture}
 
   # Useful structs.
   - {name: runtimepy.net.arbiter.info.TrigStruct}

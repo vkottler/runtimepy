@@ -3,14 +3,15 @@ A module implementing a channel-environment tab HTML interface.
 """
 
 # third-party
+from vcorelib.io import MarkdownMixin
 from vcorelib.logging import LoggerMixin
 from vcorelib.math import RateLimiter
 
 # internal
+from runtimepy import PKG_NAME
 from runtimepy.channel.environment.command.processor import (
     ChannelCommandProcessor,
 )
-from runtimepy.mixins.markdown import MarkdownMixin
 from runtimepy.net.arbiter.info import AppInfo
 from runtimepy.net.server.app.bootstrap.tabs import TabbedContent
 from runtimepy.net.server.app.tab import Tab
@@ -31,7 +32,7 @@ class ChannelEnvironmentTabBase(Tab, LoggerMixin, MarkdownMixin):
         """Initialize this instance."""
 
         self.command = command
-        self.set_markdown(markdown=markdown)
+        self.set_markdown(markdown=markdown, package=PKG_NAME)
         super().__init__(name, app, tabs, source="env", icon=icon)
 
         # Logging.

@@ -19,13 +19,13 @@ from typing import AsyncIterator, Iterator, Type, TypeVar
 from vcorelib.io import ARBITER, DEFAULT_INCLUDES_KEY
 from vcorelib.io.file_writer import IndentedFileWriter
 from vcorelib.io.types import JsonObject
+from vcorelib.names import import_str_and_item
 from vcorelib.paths.context import tempfile
 
 # internal
 from runtimepy.subprocess import spawn_exec, spawn_shell
 from runtimepy.subprocess.interface import RuntimepyPeerInterface
 from runtimepy.subprocess.protocol import RuntimepySubprocessProtocol
-from runtimepy.util import import_str_and_item
 
 T = TypeVar("T", bound="RuntimepyPeer")
 
@@ -38,10 +38,11 @@ class RuntimepyPeer(RuntimepyPeerInterface):
         protocol: RuntimepySubprocessProtocol,
         name: str,
         config: JsonObject,
+        markdown: str = None,
     ) -> None:
         """Initialize this instance."""
 
-        super().__init__(name, config)
+        super().__init__(name, config, markdown=markdown)
         self.protocol = protocol
 
         # Offset message identifiers.
@@ -89,14 +90,20 @@ class RuntimepyPeer(RuntimepyPeerInterface):
     @classmethod
     @asynccontextmanager
     async def shell(
-        cls: Type[T], name: str, config: JsonObject, cmd: str
+        cls: Type[T],
+        name: str,
+        config: JsonObject,
+        cmd: str,
+        markdown: str = None,
     ) -> AsyncIterator[T]:
         """Create an instance from a shell command."""
 
         async with spawn_shell(
             cmd, stdout=asyncio.Queue(), stderr=asyncio.Queue()
         ) as proto:
-            async with cls(proto, name, config)._context() as inst:
+            async with cls(
+                proto, name, config, markdown=markdown
+            )._context() as inst:
                 yield inst
 
     async def main(self) -> None:
@@ -105,14 +112,21 @@ class RuntimepyPeer(RuntimepyPeerInterface):
     @classmethod
     @asynccontextmanager
     async def exec(
-        cls: Type[T], name: str, config: JsonObject, *args, **kwargs
+        cls: Type[T],
+        name: str,
+        config: JsonObject,
+        *args,
+        markdown: str = None,
+        **kwargs,
     ) -> AsyncIterator[T]:
         """Create an instance from comand-line arguments."""
 
         async with spawn_exec(
             *args, stdout=asyncio.Queue(), stderr=asyncio.Queue(), **kwargs
         ) as proto:
-            async with cls(proto, name, config)._context() as inst:
+            async with cls(
+                proto, name, config, markdown=markdown
+            )._context() as inst:
                 yield inst
 
     @classmethod

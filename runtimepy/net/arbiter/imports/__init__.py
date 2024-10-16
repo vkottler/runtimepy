@@ -8,7 +8,7 @@ from importlib import import_module as _import_module
 
 # third-party
 from vcorelib.io.types import JsonObject as _JsonObject
-from vcorelib.names import to_snake
+from vcorelib.names import import_str_and_item, to_snake
 
 # internal
 from runtimepy.net.arbiter.factory import (
@@ -23,7 +23,6 @@ from runtimepy.net.arbiter.factory.task import (
 from runtimepy.net.arbiter.info import RuntimeStruct as _RuntimeStruct
 from runtimepy.net.arbiter.task import TaskFactory as _TaskFactory
 from runtimepy.subprocess.peer import RuntimepyPeer as _RuntimepyPeer
-from runtimepy.util import import_str_and_item
 
 
 class ImportConnectionArbiter(
@@ -111,7 +110,7 @@ class ImportConnectionArbiter(
         return result
 
     def factory_process(
-        self, factory: str, name: str, config: _JsonObject, program: str
+        self, factory: str, name: str, top_level: _JsonObject
     ) -> bool:
         """Register a runtime process."""
 
@@ -121,8 +120,9 @@ class ImportConnectionArbiter(
             self._peers[name] = (
                 self._peer_factories[factory],
                 name,
-                config,
-                program,
+                top_level.get("config", {}),  # type: ignore
+                str(top_level["program"]),
+                top_level.get("markdown"),
             )
             result = True
 

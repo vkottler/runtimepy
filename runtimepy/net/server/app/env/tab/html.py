@@ -3,19 +3,18 @@ A module implementing a channel-environment tab HTML interface.
 """
 
 # built-in
-from io import StringIO
 from typing import Optional
 
 # third-party
 from svgen.element import Element
 from svgen.element.html import div
-from vcorelib.io.file_writer import IndentedFileWriter
 
 # internal
 from runtimepy.channel import AnyChannel
 from runtimepy.enum import RuntimeEnum
 from runtimepy.net.server.app.bootstrap.elements import (
     TEXT,
+    centered_markdown,
     flex,
     input_box,
     set_tooltip,
@@ -211,42 +210,6 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabControls):
             class_str="w-100 click-plot",
         )
 
-    def compose_markdown_area(self, parent: Element) -> None:
-        """Write markdown below this tab's channel table."""
-
-        container = div(parent=parent)
-        container.add_class(
-            "flex-grow-1",
-            "d-flex",
-            "flex-column",
-            "justify-content-between",
-            "border-start",
-            "border-top",
-            "border-end",
-        )
-
-        div(parent=container)
-
-        horiz_container = div(parent=container)
-        horiz_container.add_class(
-            "d-flex", "flex-row", "justify-content-between"
-        )
-
-        div(parent=horiz_container)
-
-        with StringIO() as stream:
-            writer = IndentedFileWriter(stream)
-            writer.write_markdown(self.markdown)
-            div(
-                text=stream.getvalue(),
-                parent=horiz_container,
-                class_str="text-light p-3",
-            )
-
-        div(parent=horiz_container)
-
-        div(parent=container)
-
     def compose(self, parent: Element) -> None:
         """Compose the tab's HTML elements."""
 
@@ -283,7 +246,13 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabControls):
 
         self.channel_table(vert_container)
 
-        self.compose_markdown_area(vert_container)
+        centered_markdown(
+            vert_container,
+            self.markdown,
+            "border-start",
+            "border-top",
+            "border-end",
+        )
 
         # Divider.
         div(

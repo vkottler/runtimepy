@@ -6,15 +6,16 @@ A module implementing a runtime structure base.
 from logging import getLogger as _getLogger
 
 # third-party
+from vcorelib.io import MarkdownMixin
 from vcorelib.io.types import JsonObject as _JsonObject
 
 # internal
+from runtimepy import PKG_NAME
 from runtimepy.channel.environment.command.processor import (
     ChannelCommandProcessor,
 )
 from runtimepy.mixins.environment import ChannelEnvironmentMixin
 from runtimepy.mixins.logging import LoggerMixinLevelControl
-from runtimepy.mixins.markdown import MarkdownMixin
 
 
 class RuntimeStructBase(
@@ -27,11 +28,13 @@ class RuntimeStructBase(
     # Unclear why this is/was necessary (mypy bug?)
     markdown: str
 
-    def __init__(self, name: str, config: _JsonObject) -> None:
+    def __init__(
+        self, name: str, config: _JsonObject, markdown: str = None
+    ) -> None:
         """Initialize this instance."""
 
         self.name = name
-        self.set_markdown(config=config)
+        self.set_markdown(config=config, markdown=markdown, package=PKG_NAME)
         LoggerMixinLevelControl.__init__(self, logger=_getLogger(self.name))
         ChannelEnvironmentMixin.__init__(self)
         if self.log_level_channel:

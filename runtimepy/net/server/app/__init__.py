@@ -7,6 +7,9 @@ from contextlib import suppress
 from importlib import import_module as _import_module
 from typing import Any
 
+# third-party
+from vcorelib.names import import_str_and_item
+
 # internal
 from runtimepy.net.arbiter.info import AppInfo
 from runtimepy.net.server import RuntimepyServerConnection
@@ -17,7 +20,6 @@ from runtimepy.net.server.app.create import (
 )
 from runtimepy.net.server.app.landing_page import landing_page
 from runtimepy.subprocess import spawn_exec
-from runtimepy.util import import_str_and_item
 
 
 async def launch_browser(app: AppInfo) -> None:

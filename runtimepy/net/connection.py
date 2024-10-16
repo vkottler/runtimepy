@@ -13,9 +13,11 @@ from typing import Union as _Union
 
 # third-party
 from vcorelib.asyncio import log_exceptions as _log_exceptions
+from vcorelib.io import MarkdownMixin
 from vcorelib.logging import LoggerType as _LoggerType
 
 # internal
+from runtimepy import PKG_NAME
 from runtimepy.channel.environment import ChannelEnvironment
 from runtimepy.channel.environment.command.processor import (
     ChannelCommandProcessor,
@@ -23,7 +25,6 @@ from runtimepy.channel.environment.command.processor import (
 from runtimepy.metrics import ConnectionMetrics
 from runtimepy.mixins.environment import ChannelEnvironmentMixin
 from runtimepy.mixins.logging import LoggerMixinLevelControl
-from runtimepy.mixins.markdown import MarkdownMixin
 from runtimepy.net.backoff import ExponentialBackoff
 from runtimepy.primitives import Bool, Uint8
 from runtimepy.primitives.byte_order import DEFAULT_BYTE_ORDER, ByteOrder
@@ -53,7 +54,7 @@ class Connection(
     ) -> None:
         """Initialize this connection."""
 
-        self.set_markdown(markdown=markdown)
+        self.set_markdown(markdown=markdown, package=PKG_NAME)
         LoggerMixinLevelControl.__init__(self, logger=logger)
 
         # A queue for out-going text messages. Connections that don't use

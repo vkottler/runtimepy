@@ -13,10 +13,10 @@ from typing import cast as _cast
 
 # third-party
 from vcorelib.logging import LoggerMixin
+from vcorelib.names import name_search
 
 # internal
 from runtimepy.mixins.regex import RegexMixin as _RegexMixin
-from runtimepy.util import name_search
 
 # This determines types that are valid as keys.
 T = _TypeVar("T", int, bool)

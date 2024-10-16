@@ -7,11 +7,13 @@ from collections import defaultdict
 from dataclasses import dataclass
 import logging
 
+# third-party
+from vcorelib.logging import ListLogger
+
 # internal
 from runtimepy.channel.environment.base import ValueMap
 from runtimepy.message import JsonMessage
 from runtimepy.primitives import AnyPrimitive
-from runtimepy.util import ListLogger
 
 # (value, nanosecond timestamp)
 Point = tuple[str | int | float | bool, int]
