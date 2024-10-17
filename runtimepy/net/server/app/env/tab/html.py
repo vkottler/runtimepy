@@ -238,7 +238,7 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabControls):
         logs = div(
             tag="textarea",
             parent=div(parent=vert_container, class_str="form-floating"),
-            class_str=f"form-control rounded-0 {TEXT} text-logs",
+            class_str=(f"form-control rounded-0 {TEXT} text-logs"),
             id=self.get_id("logs"),
             title=f"Text logs for {self.name}.",
         )
@@ -258,7 +258,7 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabControls):
         div(
             id=self.get_id("divider"),
             parent=container,
-            class_str="vertical-divider border-start",
+            class_str="vertical-divider border-start bg-dark-subtle",
         )
 
         self._compose_plot(container)

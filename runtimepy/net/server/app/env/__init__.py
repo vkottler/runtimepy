@@ -155,4 +155,8 @@ def channel_environments(app: AppInfo, tabs: TabbedContent) -> None:
     )
 
     # Add splash screen element.
-    div(id=f"{PKG_NAME}-splash", parent=tabs.container)
+    div(
+        id=f"{PKG_NAME}-splash",
+        parent=tabs.container,
+        class_str="bg-success-subtle bg-gradient",
+    )

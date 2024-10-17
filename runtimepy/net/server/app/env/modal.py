@@ -32,7 +32,7 @@ class Modal:
 
         content = div(
             parent=div(
-                parent=modal, class_str="modal-dialog text-light " + TEXT
+                parent=modal, class_str="modal-dialog text-body " + TEXT
             ),
             class_str="modal-content rounded-0",
         )
