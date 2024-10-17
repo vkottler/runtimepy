@@ -43,7 +43,7 @@ def plot_settings(tabs: TabbedContent) -> None:
     div(
         text="0 ms ('high', run at native refresh rate)",
         parent=container,
-        class_str="text-nowrap text-primary",
+        class_str="text-nowrap text-body-emphasis",
     )
 
     slider(
@@ -53,7 +53,7 @@ def plot_settings(tabs: TabbedContent) -> None:
     div(
         text="100 ms ('low', 10 Hz)",
         parent=container,
-        class_str="text-nowrap text-primary",
+        class_str="text-nowrap text-body-emphasis",
     )
 
     div(tag="hr", parent=modal.body)

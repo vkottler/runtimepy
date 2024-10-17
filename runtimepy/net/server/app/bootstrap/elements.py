@@ -192,7 +192,7 @@ def centered_markdown(
         div(
             text=stream.getvalue(),
             parent=horiz_container,
-            class_str="text-light p-3 pb-0",
+            class_str="text-body p-3 pb-0",
         )
 
     div(parent=horiz_container)

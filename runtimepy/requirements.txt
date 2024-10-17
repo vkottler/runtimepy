@@ -1,5 +1,5 @@
 aiofiles
-vcorelib>=3.4.1
+vcorelib>=3.4.2
 svgen>=0.6.8
 websockets
 psutil

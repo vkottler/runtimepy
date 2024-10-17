@@ -77,19 +77,17 @@ textarea.text-logs {
   padding-bottom: 0 !important;
 
   border-top: 0;
-  background-color: var(--bs-secondary-bg-subtle);
 }
 
 .vertical-divider {
   flex-basis: 0.75em;
   flex-grow: 0;
   flex-shrink: 0;
-  background-color: var(--bs-secondary-bg-subtle);
 }
 
 .vertical-divider:hover {
   cursor: col-resize;
-  background-color: var(--bs-secondary-bg);
+  background-color: var(--bs-highlight-bg) !important;
 }
 
 button:hover {
@@ -98,4 +96,15 @@ button:hover {
 
 .channel-value-input {
   width: 6em;
+}
+
+/*
+ * Should probably build the bootstrap stuff from source and set custom Sass:
+ * https://getbootstrap.com/docs/5.3/customize/sass/
+ */
+
+:root {
+  /* Prefer 'Arial' and 'Consolas' at the highest priority. */
+  --bs-font-sans-serif: Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --bs-font-monospace: Consolas, "Liberation Mono", "Courier New", monospace;
 }

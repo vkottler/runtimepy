@@ -19,7 +19,7 @@ class DummyTab(Tab):
     def compose(self, parent: Element) -> None:
         """Compose the tab's HTML elements."""
 
-        parent.add_class("text-light")
+        parent.add_class("text-body")
 
         for idx in range(10):
             div(parent=parent, text="Hello, world! " + str(idx))

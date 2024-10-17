@@ -7,6 +7,7 @@ class WindowHashManager {
     this.tabFilter = "";
     this.tabsShown = true;
     this.channelsShown = true;
+    this.lightMode = false;
     this.plotChannels = {};
     this.filters = {};
     this.minTxPeriod = 0.0;
@@ -14,6 +15,15 @@ class WindowHashManager {
 
   tabClick(event) {
     this.tabsShown = !this.tabsShown;
+    this.update();
+  }
+
+  lightDarkClick(event) {
+    this.lightMode = !this.lightMode;
+
+    document.getElementById("runtimepy")
+        .setAttribute("data-bs-theme", this.lightMode ? "light" : "dark");
+
     this.update();
   }
 
@@ -106,6 +116,12 @@ class WindowHashManager {
       channelsButton.addEventListener("click", this.channelClick.bind(this));
     }
 
+    /* Click handler for light/dark toggle. */
+    let lightDarkButton = document.getElementById("theme-button");
+    if (lightDarkButton) {
+      lightDarkButton.addEventListener("click", this.lightDarkClick.bind(this));
+    }
+
     /* Click handlers for new window buttons. */
     for (const button of document.querySelectorAll(".window-button")) {
       button.onclick = () => {
@@ -150,13 +166,6 @@ class WindowHashManager {
         }
       }
 
-      if (split.includes("hide-tabs")) {
-        tabButton.click();
-      }
-      if (split.includes("hide-channels")) {
-        channelsButton.click();
-      }
-
       /* Check for tab filter. */
       for (let item of split) {
         if (item.includes("=")) {
@@ -170,6 +179,16 @@ class WindowHashManager {
             }
           }
         }
+      }
+
+      if (split.includes("hide-tabs")) {
+        tabButton.click();
+      }
+      if (split.includes("hide-channels")) {
+        channelsButton.click();
+      }
+      if (split.includes("light-mode")) {
+        lightDarkButton.click();
       }
     }
   }
@@ -198,6 +217,9 @@ class WindowHashManager {
     }
     if (!this.channelsShown) {
       hash += ",hide-channels"
+    }
+    if (this.lightMode) {
+      hash += ",light-mode";
     }
 
     if (this.minTxPeriod != 0.0) {

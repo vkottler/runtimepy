@@ -17,7 +17,7 @@ class SoundTab(Tab):
     def compose(self, parent: Element) -> None:
         """Compose the tab's HTML elements."""
 
-        container = div(parent=parent, class_str="text-light")
+        container = div(parent=parent, class_str="text-body")
 
         div(text="Hello, world! 1", parent=container)
         div(text="Hello, world! 2", parent=container)
