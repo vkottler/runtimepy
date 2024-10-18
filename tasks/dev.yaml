@@ -7,13 +7,51 @@ includes:
 factories:
   - {name: tasks.tlm.LogCapture}
 tasks:
-  - {name: root_log, factory: log_capture, period_s: 0.1}
+  - name: root_log
+    factory: log_capture
+    period_s: 0.1
+    markdown: |
+      *something isn't looking right...*
+
+      **why's it looking like that...**
+
+      ***why's it looking like THAT...***
+
+      `nice mono stuff there`
+
+      *`nice slanted mono yeah`*
+
+      **`nice mono bold type shit there`**
+
+      ***`nice mono bold type slant shit there`***
+
+      ligature type shit \_\_\_|\_\_\_ ligature type shit
 
 port_overrides:
   runtimepy_https_server: 8443
 
 # This works.
 # websocket_hostname: nuc2
+
+config:
+  top_markdown: &sample |
+    # Libre Embedded
+
+    # `Libre Embedded`
+
+    # *Libre Embedded*
+
+    # *`Libre Embedded`*
+
+    # **Libre Embedded**
+
+    # **`Libre Embedded`**
+
+    # ***Libre Embedded***
+
+    # ***`Libre Embedded`***
+
+  bottom_markdown: *sample
 
 app:
   - runtimepy.net.apps.wait_for_stop
