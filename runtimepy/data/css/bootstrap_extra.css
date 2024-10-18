@@ -104,7 +104,6 @@ button:hover {
  */
 
 :root {
-  /* Prefer 'Arial' and 'Consolas' at the highest priority. */
-  --bs-font-sans-serif: Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  --bs-font-monospace: Consolas, "Liberation Mono", "Courier New", monospace;
+  --bs-font-sans-serif: CascadiaCode;
+  --bs-font-monospace: CascadiaMono;
 }

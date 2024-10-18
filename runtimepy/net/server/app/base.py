@@ -52,10 +52,9 @@ class WebApplication:
     def populate(self, document: Html, app: TabPopulater) -> None:
         """Populate the body element with the application."""
 
-        # Third-party dependencies.
+        # CSS.
+        append_kind(document.head, "font", kind="css", tag="style")
         add_bootstrap_css(document.head)
-
-        # Internal CSS.
         append_kind(
             document.head, "main", "bootstrap_extra", kind="css", tag="style"
         )
