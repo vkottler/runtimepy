@@ -50,6 +50,9 @@ def create_name_td(parent: Element) -> Element:
     return div(tag="td", parent=parent, class_str="p-0 text-nowrap")
 
 
+COMMANDABLE = "text-info-emphasis"
+
+
 class ChannelEnvironmentTabHtml(ChannelEnvironmentTabControls):
     """A channel-environment tab interface."""
 
@@ -67,7 +70,7 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabControls):
 
         name_elem = div(tag="span", text=name, parent=name_td)
         if chan.commandable:
-            name_elem.add_class("text-success")
+            name_elem.add_class(COMMANDABLE)
 
         if description:
             set_tooltip(name_elem, description, placement="left")
@@ -105,7 +108,7 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabControls):
 
         name_elem = div(tag="span", text=name, parent=name_td)
         if field.commandable:
-            name_elem.add_class("text-success")
+            name_elem.add_class(COMMANDABLE)
 
         if field.description:
             description = field.description

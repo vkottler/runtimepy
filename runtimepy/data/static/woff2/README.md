@@ -5,3 +5,5 @@ Assets sourced from
 
 See also:
 [LICENSE](https://github.com/microsoft/cascadia-code/blob/main/LICENSE).
+
+**Fonts are used from release as-is.**
