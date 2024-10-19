@@ -241,7 +241,9 @@ class ChannelEnvironmentTabHtml(ChannelEnvironmentTabControls):
         logs = div(
             tag="textarea",
             parent=div(parent=vert_container, class_str="form-floating"),
-            class_str=(f"form-control rounded-0 {TEXT} text-logs"),
+            class_str=(
+                f"form-control rounded-0 {TEXT} text-body-emphasis text-logs"
+            ),
             id=self.get_id("logs"),
             title=f"Text logs for {self.name}.",
         )
