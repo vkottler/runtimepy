@@ -73,6 +73,11 @@ async def setup(app: AppInfo) -> int:
     RuntimepyServerConnection.apps["/app.html"] = web_app
     RuntimepyServerConnection.default_app = web_app
 
+    # Register redirects.
+    redirects: dict[str, str] = app.config_param("http_redirects", {})
+    for key, val in redirects.items():
+        RuntimepyServerConnection.add_redirect_path(val, key)
+
     # Register custom applications.
     for key, app_method in APPS.items():
         app_cfg: dict[str, Any] = app.config_param(key, {})

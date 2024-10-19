@@ -13,6 +13,7 @@ from vcorelib.io import ARBITER, JsonObject
 # internal
 from runtimepy.net.http.header import RequestHeader
 from runtimepy.net.http.response import ResponseHeader
+from runtimepy.util import parse_path_parts
 
 
 class Encoder(JSONEncoder):
@@ -94,7 +95,7 @@ def json_handler(
     del request_data
 
     # Traverse path.
-    data = traverse_dict(data, *request.target.path.split("/")[2:])
+    data = traverse_dict(data, *parse_path_parts(request.target.path))
 
     # Use a convention for indexing data to non-dictionary leaf nodes.
     if not isinstance(data, dict):

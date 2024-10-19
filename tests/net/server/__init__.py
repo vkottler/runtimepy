@@ -69,6 +69,7 @@ async def runtimepy_http_client_server(
             # Application.
             client.request(RequestHeader(target="/")),
             client.request(RequestHeader(target="/index.html")),
+            client.request(RequestHeader(target="/test_json.html")),
             client.request(RequestHeader(target="/landing_page.html")),
             # Files from file-system.
             client.request(RequestHeader(target="/sample.json")),

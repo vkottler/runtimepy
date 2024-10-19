@@ -116,6 +116,9 @@ async def runtimepy_http_test(app: AppInfo) -> int:
         inst.simulate_time.toggle()
         inst.simulate_time.toggle()
 
+    # Ensure periodic tasks get a chance to run.
+    await asyncio.sleep(0.1)
+
     return 0
 
 
