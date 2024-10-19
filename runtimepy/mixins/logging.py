@@ -10,7 +10,7 @@ from typing import Any, Iterable
 
 # third-party
 import aiofiles
-from vcorelib.logging import LoggerMixin, LoggerType
+from vcorelib.logging import ListLogger, LoggerMixin, LoggerType
 from vcorelib.paths import Pathlike, normalize
 
 # internal
@@ -66,6 +66,25 @@ class LoggerMixinLevelControl(LoggerMixin):
 
 
 LogPaths = Iterable[tuple[LogLevellike, Pathlike]]
+EXT_LOG_EXTRA = {"external": True}
+
+
+def handle_safe_log(
+    logger: LoggerType, level: int, data: str, safe_to_log: bool
+) -> None:
+    """handle a log filtering scenario."""
+
+    if safe_to_log:
+        logger.log(level, data, extra=EXT_LOG_EXTRA)
+    else:
+        record = logging.LogRecord(
+            logger.name, level, __file__, -1, data, (), None
+        )
+        record.external = True
+
+        for handler in logger.handlers:  # type: ignore
+            if isinstance(handler, ListLogger):
+                handler.emit(record)
 
 
 class LogCaptureMixin:
@@ -76,7 +95,10 @@ class LogCaptureMixin:
     # Open aiofiles handles.
     streams: list[tuple[int, Any]]
 
-    ext_log_extra = {"external": True}
+    # Set false to only forward to ListLogger handlers. Required for when the
+    # system log / process-management logs are being forwarded (otherwise also
+    # logging would lead to infinite spam).
+    safe_to_log = True
 
     async def init_log_capture(
         self, stack: AsyncExitStack, log_paths: LogPaths
@@ -98,7 +120,8 @@ class LogCaptureMixin:
 
     def log_line(self, level: int, data: str) -> None:
         """Log a line for output."""
-        self.logger.log(level, data, extra=self.ext_log_extra)
+
+        handle_safe_log(self.logger, level, data, self.safe_to_log)
 
     async def dispatch_log_capture(self) -> None:
         """Get the next line from this log stream."""

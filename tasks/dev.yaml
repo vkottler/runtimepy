@@ -4,29 +4,6 @@ includes:
   - dev_no_wait.yaml
   - ../tests/data/valid/connection_arbiter/test_ssl.yaml
 
-factories:
-  - {name: tasks.tlm.LogCapture}
-tasks:
-  - name: root_log
-    factory: log_capture
-    period_s: 0.1
-    markdown: |
-      *something isn't looking right...*
-
-      **why's it looking like that...**
-
-      ***why's it looking like THAT...***
-
-      `nice mono stuff there`
-
-      *`nice slanted mono yeah`*
-
-      **`nice mono bold type shit there`**
-
-      ***`nice mono bold type slant shit there`***
-
-      ligature type shit \_\_\_|\_\_\_ ligature type shit
-
 port_overrides:
   runtimepy_https_server: 8443
 
