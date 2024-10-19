@@ -34,6 +34,10 @@ port_overrides:
 # websocket_hostname: nuc2
 
 config:
+  http_redirects:
+    secret.html: http://vaughnkottler.com
+    secret2.html: https://libre-embedded.com
+
   top_markdown: |
     # Libre Embedded
 

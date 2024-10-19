@@ -3,11 +3,12 @@ A module implementing a server interface for this package.
 """
 
 # built-in
+import http
 from io import StringIO
 import logging
 import mimetypes
 from pathlib import Path
-from typing import Any, Optional, TextIO
+from typing import Any, Optional, TextIO, Union
 
 # third-party
 from vcorelib.io import JsonObject
@@ -22,6 +23,7 @@ from runtimepy.net.http.response import ResponseHeader
 from runtimepy.net.server.html import HtmlApp, HtmlApps, html_handler
 from runtimepy.net.server.json import encode_json, json_handler
 from runtimepy.net.tcp.http import HttpConnection
+from runtimepy.util import normalize_root, path_has_part
 
 MIMETYPES_INIT = False
 
@@ -48,6 +50,7 @@ class RuntimepyServerConnection(HttpConnection):
 
     paths: list[Path]
     class_paths: list[Pathlike] = [Path(), package_data_dir()]
+    class_redirect_paths: dict[Path, Union[str, Path]] = {}
 
     def add_path(self, path: Pathlike, front: bool = False) -> None:
         """Add a path."""
@@ -59,6 +62,19 @@ class RuntimepyServerConnection(HttpConnection):
             self.paths.insert(0, resolved)
 
         self.log_paths()
+
+    @classmethod
+    def add_redirect_path(
+        cls, dest: Union[str, Path], *src_parts: Union[str, Path]
+    ) -> None:
+        """Add a redirect path."""
+
+        source = normalize_root(*src_parts)
+        assert source not in cls.class_redirect_paths, (
+            source,
+            cls.class_redirect_paths,
+        )
+        cls.class_redirect_paths[source] = dest
 
     def log_paths(self) -> None:
         """Log search paths."""
@@ -89,6 +105,23 @@ class RuntimepyServerConnection(HttpConnection):
                 assert favicon is not None
                 with favicon.open("rb") as favicon_fd:
                     type(self).favicon_data = favicon_fd.read()
+
+    def try_redirect(
+        self, path: PathMaybeQuery, response: ResponseHeader
+    ) -> Optional[bytes]:
+        """Try handling any HTTP redirect rules."""
+
+        result = None
+
+        curr = Path(path[0])
+        if curr in self.class_redirect_paths:
+            response["Location"] = str(self.class_redirect_paths[curr])
+            response.status = http.HTTPStatus.TEMPORARY_REDIRECT
+
+            # No data payload, but signal to caller that a response is ready.
+            result = bytes()
+
+        return result
 
     def try_file(
         self, path: PathMaybeQuery, response: ResponseHeader
@@ -188,13 +221,14 @@ class RuntimepyServerConnection(HttpConnection):
                     response["Content-Type"] = "image/x-icon"
                     return self.favicon_data
 
-                # Try serving the path as a file.
-                result = self.try_file(request.target.origin_form, response)
-                if result is not None:
-                    return result
+                # Try serving a file and handling redirects.
+                for handler in [self.try_redirect, self.try_file]:
+                    result = handler(request.target.origin_form, response)
+                    if result is not None:
+                        return result
 
                 # Handle raw data queries.
-                if path.startswith("/json"):
+                if path_has_part(request.target.path):
                     json_handler(
                         stream,
                         request,

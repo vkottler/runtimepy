@@ -26,3 +26,7 @@ servers:
 
       certfile: tests/data/valid/certs/test.cert
       keyfile: tests/data/valid/certs/test.key
+
+config:
+  http_redirects:
+    test_json.html: "json"
