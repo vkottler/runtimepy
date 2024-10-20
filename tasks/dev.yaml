@@ -3,6 +3,7 @@ includes:
   - package://runtimepy/server.yaml
   - dev_no_wait.yaml
   - ../tests/data/valid/connection_arbiter/test_ssl.yaml
+  - ../tests/data/valid/connection_arbiter/landing_page.yaml
 
 port_overrides:
   runtimepy_https_server: 8443
@@ -11,10 +12,6 @@ port_overrides:
 # websocket_hostname: nuc2
 
 config:
-  # Additional web applications.
-  landing_page:
-    paths: [/landing_page.html]
-
   http_redirects:
     secret.html: http://vaughnkottler.com
     secret2.html: https://libre-embedded.com

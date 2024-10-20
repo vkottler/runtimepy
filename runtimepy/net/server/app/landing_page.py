@@ -25,13 +25,15 @@ def landing_page(
     """Create a landing page application"""
 
     # Not currently used.
-    del app
     del request
     del response
     del request_data
 
-    # where do we source this..
-    markdown = "# What is up y'all"
-    full_markdown_page(document, markdown)
+    full_markdown_page(
+        document,
+        app.config_param("landing_page", {}, strict=True).get(  # type: ignore
+            "markdown", "no data"
+        ),
+    )
 
     return document

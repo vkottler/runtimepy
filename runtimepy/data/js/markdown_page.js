@@ -1,4 +1,4 @@
-/* should check uri */
+/* Dark is hard-coded initial state (in HTML). */
 let lightMode = false;
 
 function lightDarkClick(event) {
@@ -7,10 +7,18 @@ function lightDarkClick(event) {
   document.getElementById("runtimepy")
       .setAttribute("data-bs-theme", lightMode ? "light" : "dark");
 
-  /* update uri */
+  window.location.hash = lightMode ? "#light-mode" : "";
 }
 
 let lightDarkButton = document.getElementById("theme-button");
 if (lightDarkButton) {
-  lightDarkButton.addEventListener("click", lightDarkClick.bind(this));
+  lightDarkButton.addEventListener("click", lightDarkClick);
+}
+
+if (window.location.hash) {
+  let parts = window.location.hash.slice(1).split(",");
+
+  if (parts.includes("light-mode")) {
+    lightDarkButton.click();
+  }
 }
