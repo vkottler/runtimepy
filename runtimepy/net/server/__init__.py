@@ -11,16 +11,19 @@ from pathlib import Path
 from typing import Any, Optional, TextIO, Union
 
 # third-party
-from vcorelib.io import JsonObject
+import aiofiles
+from vcorelib import DEFAULT_ENCODING
+from vcorelib.io import IndentedFileWriter, JsonObject
 from vcorelib.paths import Pathlike, find_file, normalize
 
 # internal
 from runtimepy import DEFAULT_EXT, PKG_NAME
 from runtimepy.channel.environment.command import GLOBAL
+from runtimepy.net.html import full_markdown_page
 from runtimepy.net.http.header import RequestHeader
 from runtimepy.net.http.request_target import PathMaybeQuery
 from runtimepy.net.http.response import ResponseHeader
-from runtimepy.net.server.html import HtmlApp, HtmlApps, html_handler
+from runtimepy.net.server.html import HtmlApp, HtmlApps, get_html, html_handler
 from runtimepy.net.server.json import encode_json, json_handler
 from runtimepy.net.tcp.http import HttpConnection
 from runtimepy.util import normalize_root, path_has_part
@@ -106,7 +109,7 @@ class RuntimepyServerConnection(HttpConnection):
                 with favicon.open("rb") as favicon_fd:
                     type(self).favicon_data = favicon_fd.read()
 
-    def try_redirect(
+    async def try_redirect(
         self, path: PathMaybeQuery, response: ResponseHeader
     ) -> Optional[bytes]:
         """Try handling any HTTP redirect rules."""
@@ -123,7 +126,26 @@ class RuntimepyServerConnection(HttpConnection):
 
         return result
 
-    def try_file(
+    async def render_markdown(
+        self, path: Path, response: ResponseHeader, **kwargs
+    ) -> bytes:
+        """Render a markdown file as HTML and return the result."""
+
+        document = get_html()
+
+        async with aiofiles.open(path, mode="r") as path_fd:
+            with IndentedFileWriter.string() as writer:
+                writer.write_markdown(await path_fd.read(), **kwargs)
+                full_markdown_page(
+                    document,
+                    writer.stream.getvalue(),  # type: ignore
+                )
+
+        response["Content-Type"] = f"text/html; charset={DEFAULT_ENCODING}"
+
+        return document.encode_str().encode()
+
+    async def try_file(
         self, path: PathMaybeQuery, response: ResponseHeader
     ) -> Optional[bytes]:
         """Try serving this path as a file directly from the file-system."""
@@ -133,6 +155,12 @@ class RuntimepyServerConnection(HttpConnection):
         # Try serving the path as a file.
         for search in self.paths:
             candidate = search.joinpath(path[0][1:])
+
+            # Handle markdown sources.
+            md_candidate = candidate.with_suffix(".md")
+            if md_candidate.is_file():
+                return await self.render_markdown(md_candidate, response)
+
             if candidate.is_file():
                 mime, encoding = mimetypes.guess_type(candidate, strict=False)
 
@@ -146,8 +174,8 @@ class RuntimepyServerConnection(HttpConnection):
                 self.logger.info("Serving '%s' (MIME: %s)", candidate, mime)
 
                 # Return the file data.
-                with candidate.open("rb") as path_fd:
-                    result = path_fd.read()
+                async with aiofiles.open(candidate, mode="rb") as path_fd:
+                    result = await path_fd.read()
 
                 break
 
@@ -223,7 +251,9 @@ class RuntimepyServerConnection(HttpConnection):
 
                 # Try serving a file and handling redirects.
                 for handler in [self.try_redirect, self.try_file]:
-                    result = handler(request.target.origin_form, response)
+                    result = await handler(
+                        request.target.origin_form, response
+                    )
                     if result is not None:
                         return result
 

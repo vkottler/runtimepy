@@ -1,0 +1,10 @@
+---
+config:
+
+  # Additional web applications.
+  landing_page:
+    paths: [/landing_page.html]
+    markdown: |
+      # Sample Markdown
+
+      Sample content.

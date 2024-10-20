@@ -13,7 +13,7 @@ from runtimepy.channel.environment.command.processor import (
     ChannelCommandProcessor,
 )
 from runtimepy.net.arbiter.info import AppInfo
-from runtimepy.net.server.app.bootstrap.tabs import TabbedContent
+from runtimepy.net.html.bootstrap.tabs import TabbedContent
 from runtimepy.net.server.app.tab import Tab
 
 

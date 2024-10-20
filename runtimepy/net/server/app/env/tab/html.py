@@ -12,7 +12,7 @@ from svgen.element.html import div
 # internal
 from runtimepy.channel import AnyChannel
 from runtimepy.enum import RuntimeEnum
-from runtimepy.net.server.app.bootstrap.elements import (
+from runtimepy.net.html.bootstrap.elements import (
     TEXT,
     centered_markdown,
     flex,

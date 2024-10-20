@@ -12,7 +12,7 @@ from svgen.element.html import div
 from vcorelib.io.file_writer import IndentedFileWriter
 
 # internal
-from runtimepy.net.server.app.bootstrap import icon_str
+from runtimepy.net.html.bootstrap import icon_str
 
 TEXT = "font-monospace"
 BOOTSTRAP_BUTTON = f"rounded-0 {TEXT} button-bodge text-nowrap"
@@ -167,7 +167,7 @@ def slider(
 
 def centered_markdown(
     parent: Element, markdown: str, *container_classes: str
-) -> None:
+) -> Element:
     """Add centered markdown."""
 
     container = div(parent=parent)
@@ -198,3 +198,5 @@ def centered_markdown(
     div(parent=horiz_container)
 
     div(parent=container)
+
+    return container

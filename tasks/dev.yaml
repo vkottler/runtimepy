@@ -3,6 +3,7 @@ includes:
   - package://runtimepy/server.yaml
   - dev_no_wait.yaml
   - ../tests/data/valid/connection_arbiter/test_ssl.yaml
+  - ../tests/data/valid/connection_arbiter/landing_page.yaml
 
 port_overrides:
   runtimepy_https_server: 8443

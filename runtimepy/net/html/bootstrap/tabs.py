@@ -8,10 +8,9 @@ from svgen.element.html import div
 
 # internal
 from runtimepy import PKG_NAME
-from runtimepy.net.server.app.bootstrap import icon_str
-from runtimepy.net.server.app.bootstrap.elements import (
+from runtimepy.net.html import create_app_shell
+from runtimepy.net.html.bootstrap.elements import (
     BOOTSTRAP_BUTTON,
-    bootstrap_button,
     collapse_button,
     flex,
     toggle_button,
@@ -84,27 +83,7 @@ class TabbedContent:
         """Initialize this instance."""
 
         self.name = name
-
-        # Create application container.
-        self.container = div(parent=parent, id=name)
-        self.container.add_class("d-flex", "align-items-start", "bg-body")
-
-        # Dark theme.
-        self.container["data-bs-theme"] = "dark"
-
-        # Buttons.
-        self.button_column = div(parent=self.container)
-        self.button_column.add_class(
-            "d-flex", "flex-column", "h-100", "bg-dark-subtle"
-        )
-
-        # Dark/light theme switch button.
-        bootstrap_button(
-            icon_str("lightbulb"),
-            tooltip=" Toggle light/dark.",
-            id="theme-button",
-            parent=self.button_column,
-        )
+        self.container, self.button_column = create_app_shell(parent, id=name)
 
         # Toggle tabs button.
         self.add_button("Toggle tabs", f"#{PKG_NAME}-tabs", id="tabs-button")

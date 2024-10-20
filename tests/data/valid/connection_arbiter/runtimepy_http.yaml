@@ -3,6 +3,7 @@ includes_left:
   - package://runtimepy/server.yaml
 includes:
   - test_ssl.yaml
+  - landing_page.yaml
 
 app:
   - tests.net.stream.runtimepy_http_test
@@ -17,10 +18,6 @@ config:
   experimental: true
   foo: bar
   xdg_fragment: "wave1,hide-tabs,hide-channels/wave1:sin,cos"
-
-  # Additional web applications.
-  landing_page:
-    paths: [/landing_page.html]
 
 ports:
   - {name: tftp_server, type: udp}

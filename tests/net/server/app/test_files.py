@@ -7,7 +7,8 @@ from svgen.element import Element
 
 # module under test
 from runtimepy import PKG_NAME
-from runtimepy.net.server.app.files import kind_url, set_text_to_file
+from runtimepy.net.html import kind_url
+from runtimepy.net.server.app.files import set_text_to_file
 
 
 def test_set_text_to_file_basic():

@@ -6,8 +6,8 @@ A module implementing an application-settings modal.
 from svgen.element.html import div
 
 # internal
-from runtimepy.net.server.app.bootstrap.elements import flex, slider
-from runtimepy.net.server.app.bootstrap.tabs import TabbedContent
+from runtimepy.net.html.bootstrap.elements import flex, slider
+from runtimepy.net.html.bootstrap.tabs import TabbedContent
 from runtimepy.net.server.app.env.modal import Modal
 from runtimepy.net.server.app.placeholder import under_construction
 
