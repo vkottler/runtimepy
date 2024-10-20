@@ -11,10 +11,10 @@ from vcorelib.logging import LoggerMixin
 
 # internal
 from runtimepy.net.arbiter.info import AppInfo
+from runtimepy.net.html.bootstrap.tabs import TabbedContent
 from runtimepy.net.http.header import RequestHeader
 from runtimepy.net.http.response import ResponseHeader
 from runtimepy.net.server.app.base import WebApplication
-from runtimepy.net.server.app.bootstrap.tabs import TabbedContent
 from runtimepy.net.server.html import HtmlApp
 
 DOCUMENTS: dict[str, Html] = {}

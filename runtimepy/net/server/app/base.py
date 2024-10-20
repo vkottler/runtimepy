@@ -11,10 +11,9 @@ from svgen.element.html import Html
 # internal
 from runtimepy import PKG_NAME
 from runtimepy.net.arbiter.info import AppInfo
-from runtimepy.net.server.app.bootstrap import add_bootstrap_js
-from runtimepy.net.server.app.bootstrap.tabs import TabbedContent
-from runtimepy.net.server.app.css import common_css
-from runtimepy.net.server.app.files import append_kind
+from runtimepy.net.html import append_kind, common_css
+from runtimepy.net.html.bootstrap import add_bootstrap_js
+from runtimepy.net.html.bootstrap.tabs import TabbedContent
 
 TabPopulater = Callable[[TabbedContent], None]
 

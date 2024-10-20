@@ -13,7 +13,7 @@ from svgen.element.html import div
 from runtimepy.channel import AnyChannel
 from runtimepy.channel.environment import ChannelEnvironment
 from runtimepy.enum import RuntimeEnum
-from runtimepy.net.server.app.bootstrap.elements import slider, toggle_button
+from runtimepy.net.html.bootstrap.elements import slider, toggle_button
 from runtimepy.net.server.app.env.tab.base import ChannelEnvironmentTabBase
 from runtimepy.net.server.app.env.widgets import (
     TABLE_BUTTON_CLASSES,

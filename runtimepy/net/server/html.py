@@ -20,6 +20,12 @@ HtmlApp = Callable[
 HtmlApps = dict[str, HtmlApp]
 
 
+def get_html() -> Html:
+    """Get a default HTML document."""
+
+    return Html(HttpConnection.identity)
+
+
 async def html_handler(
     apps: HtmlApps,
     stream: TextIO,
@@ -36,8 +42,4 @@ async def html_handler(
     # Create the application.
     app = apps.get(request.target.path, default_app)
     if app is not None:
-        (
-            await app(
-                Html(HttpConnection.identity), request, response, request_data
-            )
-        ).render(stream)
+        (await app(get_html(), request, response, request_data)).render(stream)

@@ -7,8 +7,8 @@ from svgen.element.html import div
 
 # internal
 from runtimepy import PKG_NAME
-from runtimepy.net.server.app.bootstrap.elements import TEXT
-from runtimepy.net.server.app.bootstrap.tabs import TabbedContent
+from runtimepy.net.html.bootstrap.elements import TEXT
+from runtimepy.net.html.bootstrap.tabs import TabbedContent
 
 
 class Modal:

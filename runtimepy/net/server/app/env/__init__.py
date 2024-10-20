@@ -8,11 +8,8 @@ from svgen.element.html import div
 # internal
 from runtimepy import PKG_NAME
 from runtimepy.net.arbiter.info import AppInfo
-from runtimepy.net.server.app.bootstrap.elements import (
-    centered_markdown,
-    input_box,
-)
-from runtimepy.net.server.app.bootstrap.tabs import TabbedContent
+from runtimepy.net.html.bootstrap.elements import centered_markdown, input_box
+from runtimepy.net.html.bootstrap.tabs import TabbedContent
 from runtimepy.net.server.app.env.modal import Modal
 from runtimepy.net.server.app.env.settings import plot_settings
 from runtimepy.net.server.app.env.tab import ChannelEnvironmentTab

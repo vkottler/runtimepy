@@ -13,8 +13,8 @@ from vcorelib.io.file_writer import IndentedFileWriter
 
 # internal
 from runtimepy.net.arbiter.info import AppInfo
-from runtimepy.net.server.app.bootstrap import icon_str
-from runtimepy.net.server.app.bootstrap.tabs import TabbedContent
+from runtimepy.net.html.bootstrap import icon_str
+from runtimepy.net.html.bootstrap.tabs import TabbedContent
 from runtimepy.net.server.app.files import kind_url, write_found_file
 
 

@@ -8,10 +8,9 @@ from svgen.element.html import div
 
 # internal
 from runtimepy import PKG_NAME
-from runtimepy.net.server.app.bootstrap import icon_str
-from runtimepy.net.server.app.bootstrap.elements import (
+from runtimepy.net.html import create_app_shell
+from runtimepy.net.html.bootstrap.elements import (
     BOOTSTRAP_BUTTON,
-    bootstrap_button,
     collapse_button,
     flex,
     toggle_button,
@@ -64,30 +63,6 @@ def create_nav_container(
         content.add_class("show", "active")
 
     return content
-
-
-def create_app_shell(parent: Element, **kwargs) -> tuple[Element, Element]:
-    """Create a bootstrap-based application shell."""
-
-    container = div(parent=parent, **kwargs)
-    container.add_class("d-flex", "align-items-start", "bg-body")
-
-    # Dark theme.
-    container["data-bs-theme"] = "dark"
-
-    # Buttons.
-    button_column = div(parent=container)
-    button_column.add_class("d-flex", "flex-column", "h-100", "bg-dark-subtle")
-
-    # Dark/light theme switch button.
-    bootstrap_button(
-        icon_str("lightbulb"),
-        tooltip=" Toggle light/dark.",
-        id="theme-button",
-        parent=button_column,
-    )
-
-    return container, button_column
 
 
 class TabbedContent:
