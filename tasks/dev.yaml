@@ -11,6 +11,10 @@ port_overrides:
 # websocket_hostname: nuc2
 
 config:
+  # Additional web applications.
+  landing_page:
+    paths: [/landing_page.html]
+
   http_redirects:
     secret.html: http://vaughnkottler.com
     secret2.html: https://libre-embedded.com

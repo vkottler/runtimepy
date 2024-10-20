@@ -11,11 +11,9 @@ from svgen.element.html import Html
 # internal
 from runtimepy import PKG_NAME
 from runtimepy.net.arbiter.info import AppInfo
-from runtimepy.net.server.app.bootstrap import (
-    add_bootstrap_css,
-    add_bootstrap_js,
-)
+from runtimepy.net.server.app.bootstrap import add_bootstrap_js
 from runtimepy.net.server.app.bootstrap.tabs import TabbedContent
+from runtimepy.net.server.app.css import common_css
 from runtimepy.net.server.app.files import append_kind
 
 TabPopulater = Callable[[TabbedContent], None]
@@ -53,11 +51,7 @@ class WebApplication:
         """Populate the body element with the application."""
 
         # CSS.
-        append_kind(document.head, "font", kind="css", tag="style")
-        add_bootstrap_css(document.head)
-        append_kind(
-            document.head, "main", "bootstrap_extra", kind="css", tag="style"
-        )
+        common_css(document)
 
         # Worker code.
         append_kind(

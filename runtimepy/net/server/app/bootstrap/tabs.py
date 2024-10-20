@@ -66,6 +66,30 @@ def create_nav_container(
     return content
 
 
+def create_app_shell(parent: Element, **kwargs) -> tuple[Element, Element]:
+    """Create a bootstrap-based application shell."""
+
+    container = div(parent=parent, **kwargs)
+    container.add_class("d-flex", "align-items-start", "bg-body")
+
+    # Dark theme.
+    container["data-bs-theme"] = "dark"
+
+    # Buttons.
+    button_column = div(parent=container)
+    button_column.add_class("d-flex", "flex-column", "h-100", "bg-dark-subtle")
+
+    # Dark/light theme switch button.
+    bootstrap_button(
+        icon_str("lightbulb"),
+        tooltip=" Toggle light/dark.",
+        id="theme-button",
+        parent=button_column,
+    )
+
+    return container, button_column
+
+
 class TabbedContent:
     """A tabbed-content container."""
 
@@ -84,27 +108,7 @@ class TabbedContent:
         """Initialize this instance."""
 
         self.name = name
-
-        # Create application container.
-        self.container = div(parent=parent, id=name)
-        self.container.add_class("d-flex", "align-items-start", "bg-body")
-
-        # Dark theme.
-        self.container["data-bs-theme"] = "dark"
-
-        # Buttons.
-        self.button_column = div(parent=self.container)
-        self.button_column.add_class(
-            "d-flex", "flex-column", "h-100", "bg-dark-subtle"
-        )
-
-        # Dark/light theme switch button.
-        bootstrap_button(
-            icon_str("lightbulb"),
-            tooltip=" Toggle light/dark.",
-            id="theme-button",
-            parent=self.button_column,
-        )
+        self.container, self.button_column = create_app_shell(parent, id=name)
 
         # Toggle tabs button.
         self.add_button("Toggle tabs", f"#{PKG_NAME}-tabs", id="tabs-button")
