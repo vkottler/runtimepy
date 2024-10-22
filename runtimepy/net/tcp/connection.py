@@ -10,7 +10,6 @@ from asyncio import get_event_loop as _get_event_loop
 from contextlib import AsyncExitStack as _AsyncExitStack
 from contextlib import asynccontextmanager as _asynccontextmanager
 from logging import getLogger as _getLogger
-import socket as _socket
 from typing import Any as _Any
 from typing import AsyncIterator as _AsyncIterator
 from typing import Callable as _Callable
@@ -170,11 +169,7 @@ class TcpConnection(_Connection, _TransportMixin):
 
         server_kwargs = handle_possible_ssl(client=False, **kwargs)
         is_ssl = "ssl" in server_kwargs
-        server = await eloop.create_server(
-            CallbackProtocol,
-            family=_socket.AF_INET,
-            **server_kwargs,
-        )
+        server = await eloop.create_server(CallbackProtocol, **server_kwargs)
         async with server:
             for socket in server.sockets:
                 LOG.info(
