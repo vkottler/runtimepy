@@ -16,8 +16,11 @@ init:
 config:
   # Default redirects.
   http_redirects:
-    "/": "/app.html"
+    "/": "/index.html"
     "/index.html": "/app.html"
+
+  # Serve these applications by default at these paths.
+  http_app_paths: ["/", "/app.html", "/index.html"]
 
 servers:
   - factory: runtimepy_http

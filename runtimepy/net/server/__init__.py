@@ -272,7 +272,7 @@ class RuntimepyServerConnection(HttpConnection):
                     return self.favicon_data
 
                 # Try serving a file and handling redirects.
-                for handler in [self.try_redirect, self.try_file]:
+                for handler in [self.try_file, self.try_redirect]:
                     result = await handler(
                         request.target.origin_form, response
                     )
