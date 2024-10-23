@@ -33,7 +33,7 @@ async def html_handler(
     response: ResponseHeader,
     request_data: Optional[bytes],
     default_app: HtmlApp = None,
-) -> None:
+) -> bool:
     """Render an HTML document in response to an HTTP request."""
 
     # Set response headers.
@@ -43,3 +43,5 @@ async def html_handler(
     app = apps.get(request.target.path, default_app)
     if app is not None:
         (await app(get_html(), request, response, request_data)).render(stream)
+
+    return app is not None

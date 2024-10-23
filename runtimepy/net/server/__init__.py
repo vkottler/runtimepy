@@ -109,6 +109,18 @@ class RuntimepyServerConnection(HttpConnection):
                 with favicon.open("rb") as favicon_fd:
                     type(self).favicon_data = favicon_fd.read()
 
+    def redirect_to(
+        self,
+        path: str,
+        response: ResponseHeader,
+        status: http.HTTPStatus = http.HTTPStatus.TEMPORARY_REDIRECT,
+    ) -> bytes:
+        """Handle responding with redirection status."""
+
+        response["Location"] = path
+        response.status = status
+        return bytes()
+
     async def try_redirect(
         self, path: PathMaybeQuery, response: ResponseHeader
     ) -> Optional[bytes]:
@@ -118,32 +130,38 @@ class RuntimepyServerConnection(HttpConnection):
 
         curr = Path(path[0])
         if curr in self.class_redirect_paths:
-            response["Location"] = str(self.class_redirect_paths[curr])
-            response.status = http.HTTPStatus.TEMPORARY_REDIRECT
-
-            # No data payload, but signal to caller that a response is ready.
-            result = bytes()
+            result = self.redirect_to(
+                str(self.class_redirect_paths[curr]), response
+            )
 
         return result
 
-    async def render_markdown(
-        self, path: Path, response: ResponseHeader, **kwargs
+    def render_markdown(
+        self, content: str, response: ResponseHeader, **kwargs
     ) -> bytes:
-        """Render a markdown file as HTML and return the result."""
+        """Return rendered markdown content."""
 
         document = get_html()
-
-        async with aiofiles.open(path, mode="r") as path_fd:
-            with IndentedFileWriter.string() as writer:
-                writer.write_markdown(await path_fd.read(), **kwargs)
-                full_markdown_page(
-                    document,
-                    writer.stream.getvalue(),  # type: ignore
-                )
+        with IndentedFileWriter.string() as writer:
+            writer.write_markdown(content, **kwargs)
+            full_markdown_page(
+                document,
+                writer.stream.getvalue(),  # type: ignore
+            )
 
         response["Content-Type"] = f"text/html; charset={DEFAULT_ENCODING}"
 
         return document.encode_str().encode()
+
+    async def render_markdown_file(
+        self, path: Path, response: ResponseHeader, **kwargs
+    ) -> bytes:
+        """Render a markdown file as HTML and return the result."""
+
+        async with aiofiles.open(path, mode="r") as path_fd:
+            return self.render_markdown(
+                await path_fd.read(), response, **kwargs
+            )
 
     async def try_file(
         self, path: PathMaybeQuery, response: ResponseHeader
@@ -157,9 +175,12 @@ class RuntimepyServerConnection(HttpConnection):
             candidate = search.joinpath(path[0][1:])
 
             # Handle markdown sources.
-            md_candidate = candidate.with_suffix(".md")
-            if md_candidate.is_file():
-                return await self.render_markdown(md_candidate, response)
+            if candidate.name:
+                md_candidate = candidate.with_suffix(".md")
+                if md_candidate.is_file():
+                    return await self.render_markdown_file(
+                        md_candidate, response
+                    )
 
             if candidate.is_file():
                 mime, encoding = mimetypes.guess_type(candidate, strict=False)
@@ -239,6 +260,7 @@ class RuntimepyServerConnection(HttpConnection):
         request.log(self.logger, False, level=logging.INFO)
 
         result = None
+        populated = False
 
         with StringIO() as stream:
             if request.target.origin_form:
@@ -250,7 +272,7 @@ class RuntimepyServerConnection(HttpConnection):
                     return self.favicon_data
 
                 # Try serving a file and handling redirects.
-                for handler in [self.try_redirect, self.try_file]:
+                for handler in [self.try_file, self.try_redirect]:
                     result = await handler(
                         request.target.origin_form, response
                     )
@@ -266,10 +288,11 @@ class RuntimepyServerConnection(HttpConnection):
                         request_data,
                         self.json_data,
                     )
+                    populated = True
 
                 # Serve the application.
                 else:
-                    await html_handler(
+                    populated = await html_handler(
                         type(self).apps,
                         stream,
                         request,
@@ -278,6 +301,7 @@ class RuntimepyServerConnection(HttpConnection):
                         default_app=type(self).default_app,
                     )
 
-                result = stream.getvalue().encode()
+                if populated:
+                    result = stream.getvalue().encode()
 
-        return result
+        return result or self.redirect_to("/404.html", response)

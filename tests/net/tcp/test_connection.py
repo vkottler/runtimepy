@@ -218,6 +218,7 @@ async def test_tcp_connection_app():
             sig,
             callback=app,
             serving_callback=serve_cb,
+            host="0.0.0.0",
             port=0,
             manager=manager,
         )

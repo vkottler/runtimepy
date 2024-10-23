@@ -19,6 +19,8 @@ config:
   foo: bar
   xdg_fragment: "wave1,hide-tabs,hide-channels/wave1:sin,cos"
 
+  http_app_prefixes: [rando_app_prefix]
+
 ports:
   - {name: tftp_server, type: udp}
 
