@@ -43,7 +43,7 @@ class ChannelMetrics:
     def __str__(self) -> str:
         """Get metrics as a string."""
 
-        return "\t".join(
+        return " | ".join(
             [
                 f"messages={self.messages.value}",
                 f"message_rate={self.message_rate.value:.2f}",
