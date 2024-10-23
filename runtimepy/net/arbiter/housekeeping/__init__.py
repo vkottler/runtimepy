@@ -52,7 +52,11 @@ class ConnectionMetricsPoller(_ArbiterTask):
 
         # Handle any incoming commands.
         processors: list[Awaitable[None]] = []
-        for mapping in self.app.connections.values(), self.app.tasks.values():
+        for mapping in (
+            self.app.connections.values(),
+            self.app.tasks.values(),
+            self.app.structs.values(),
+        ):
             for item in mapping:
                 if isinstance(item, AsyncCommandProcessingMixin):
                     processors.append(item.process_command_queue())
