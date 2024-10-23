@@ -61,7 +61,9 @@ async def runtimepy_http_query_peer(app: AppInfo) -> None:
 
     # Try to find peer's HTTP server.
     if "proc1" in app.peers:
-        for port in app.peers["proc1"].peer_config["ports"]:  # type: ignore
+        peer = app.peers["proc1"]
+        await peer.peer_config_event.wait()
+        for port in peer.peer_config["ports"]:  # type: ignore
             if port["name"] == "runtimepy_http_server":  # type: ignore
                 port = port["port"]  # type: ignore
                 break
