@@ -20,7 +20,11 @@ config:
     "/index.html": "/app.html"
 
   # Serve these applications by default at these paths.
-  http_app_paths: ["/", "/app.html", "/index.html"]
+  http_app_paths: ["/app.html"]
+
+# Handles config["http_app_prefixes"].
+config_builders:
+  - runtimepy.net.html.arbiter.web_app_paths
 
 servers:
   - factory: runtimepy_http
