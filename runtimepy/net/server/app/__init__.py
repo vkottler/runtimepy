@@ -69,9 +69,9 @@ async def setup(app: AppInfo) -> int:
     )
 
     # Default application (environment tabs).
-    web_app = create_app(app, getattr(_import_module(module), method))
-    RuntimepyServerConnection.apps["/app.html"] = web_app
-    RuntimepyServerConnection.default_app = web_app
+    RuntimepyServerConnection.apps["/app.html"] = create_app(
+        app, getattr(_import_module(module), method)
+    )
 
     # Register redirects.
     redirects: dict[str, str] = app.config_param("http_redirects", {})

@@ -144,9 +144,12 @@ async def test_np_05b_basic():
             # End the test.
             stop_sig.set()
 
-    async with MockNp05b.serve(callback=conn_cb, port=0) as server:
+    async with MockNp05b.serve(
+        callback=conn_cb, host="127.0.0.1", port=0
+    ) as server:
+        host = sockname(server.sockets[0])
         conn = await Np05bConnection.create_connection(
-            host="localhost", port=sockname(server.sockets[0]).port
+            host=host.name, port=host.port
         )
         conn_srv = await queue.get()
 

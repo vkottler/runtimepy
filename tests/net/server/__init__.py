@@ -7,9 +7,11 @@ import asyncio
 from typing import Any
 
 # module under test
+from runtimepy.net.arbiter.info import AppInfo
 from runtimepy.net.http.header import RequestHeader
 from runtimepy.net.server import RuntimepyServerConnection
 from runtimepy.net.server.websocket import RuntimepyWebsocketConnection
+from runtimepy.net.tcp.http import HttpConnection
 
 # internal
 from tests.resources import resource
@@ -52,8 +54,30 @@ async def runtimepy_websocket_client(
         send_ui(client, f"wave{idx}", {"kind": "tab.hidden"})
 
 
+async def runtimepy_http_query_peer(app: AppInfo) -> None:
+    """Test querying a peer program's web application."""
+
+    port: int = 0
+
+    # Try to find peer's HTTP server.
+    if "proc1" in app.peers:
+        for port in app.peers["proc1"].peer_config["ports"]:  # type: ignore
+            if port["name"] == "runtimepy_http_server":  # type: ignore
+                port = port["port"]  # type: ignore
+                break
+
+    if port:
+        conn = await HttpConnection.create_connection(
+            host="localhost", port=port
+        )
+        async with conn.process_then_disable(stop_sig=app.stop):
+            await conn.request(RequestHeader(target="/app.html"))
+
+
 async def runtimepy_http_client_server(
-    client: RuntimepyServerConnection, server: RuntimepyServerConnection
+    app: AppInfo,
+    client: RuntimepyServerConnection,
+    server: RuntimepyServerConnection,
 ) -> None:
     """Test HTTP client and server interactions."""
 
@@ -66,8 +90,11 @@ async def runtimepy_http_client_server(
     # Make requests in parallel.
     await asyncio.gather(
         *(
+            runtimepy_http_query_peer(app),
             # Application.
             client.request(RequestHeader(target="/")),
+            client.request(RequestHeader(target="/app.html")),
+            client.request(RequestHeader(target="/app.html")),
             client.request(RequestHeader(target="/index.html")),
             client.request(RequestHeader(target="/test_json.html")),
             client.request(RequestHeader(target="/landing_page.html")),

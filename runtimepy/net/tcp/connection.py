@@ -219,6 +219,7 @@ class TcpConnection(_Connection, _TransportMixin):
         peer: type[V] = None,
         serve_kwargs: dict[str, _Any] = None,
         connect_kwargs: dict[str, _Any] = None,
+        host: str = "127.0.0.1",
     ) -> _AsyncIterator[tuple[V, T]]:
         """Create a connection pair."""
 
@@ -241,16 +242,22 @@ class TcpConnection(_Connection, _TransportMixin):
                 serve_kwargs = {}
 
             server = await stack.enter_async_context(
-                peer.serve(callback, port=0, backlog=1, **serve_kwargs)
+                peer.serve(
+                    callback,
+                    host=host,
+                    port=0,
+                    backlog=1,
+                    **serve_kwargs,
+                )
             )
-
-            host = server.sockets[0].getsockname()
 
             if connect_kwargs is None:
                 connect_kwargs = {}
 
             client = await cls.create_connection(
-                host="localhost", port=host[1], **connect_kwargs
+                host=host,
+                port=server.sockets[0].getsockname()[1],
+                **connect_kwargs,
             )
             await cond.acquire()
 

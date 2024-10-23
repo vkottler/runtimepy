@@ -64,6 +64,7 @@ async def http_test_loopback(
     )
 
     assert await client.request(RequestHeader(target="/index.html?param=true"))
+    assert await client.request(RequestHeader(target="/app.html"))
 
     result = await client.request(RequestHeader(target="google.com"))
     assert result[0]["Content-Type"]
@@ -105,7 +106,7 @@ async def runtimepy_http_test(app: AppInfo) -> int:
             server = conn
     assert server is not None
 
-    await runtimepy_http_client_server(client, server)
+    await runtimepy_http_client_server(app, client, server)
 
     await runtimepy_websocket_client(
         app.single(pattern="client", kind=RuntimepyWebsocketConnection)
