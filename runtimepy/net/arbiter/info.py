@@ -6,6 +6,7 @@ A module implementing an application information interface.
 from abc import ABC as _ABC
 import asyncio as _asyncio
 from contextlib import AsyncExitStack as _AsyncExitStack
+from contextlib import contextmanager
 from dataclasses import dataclass
 from logging import getLogger as _getLogger
 from re import compile as _compile
@@ -57,13 +58,29 @@ class RuntimeStruct(RuntimeStructBase, _ABC):
 
     byte_order: ByteOrder = DEFAULT_BYTE_ORDER
 
+    # Set this for structs to automatically be polled when the application is
+    # going down.
+    final_poll = False
+
     def init_env(self) -> None:
         """Initialize this sample environment."""
+
+    @contextmanager
+    def _final_poll(self) -> _Iterator[None]:
+        """Poll when the context ends."""
+
+        try:
+            yield
+        finally:
+            self.poll()
 
     async def build(self, app: "AppInfo", **kwargs) -> None:
         """Build a struct instance's channel environment."""
 
         self.app = app
+        if self.final_poll:
+            self.app.stack.enter_context(self._final_poll())
+
         self.init_env()
         self.update_byte_order(self.byte_order, **kwargs)
 
@@ -101,6 +118,9 @@ class TrigStruct(RuntimeStruct, TrigMixin):
 
 class SampleStruct(TrigStruct):
     """A sample runtime structure."""
+
+    # For fun.
+    final_poll = True
 
     def init_env(self) -> None:
         """Initialize this sample environment."""
