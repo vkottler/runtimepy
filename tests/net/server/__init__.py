@@ -140,6 +140,17 @@ async def runtimepy_http_client_server(
                 RequestHeader(method="POST", target="/sample1/custom/asdf")
             ),
             client.request_json(
+                RequestHeader(method="POST", target="/struct2/custom/poll")
+            ),
+            client.request_json(
+                RequestHeader(method="POST", target="/struct2/custom/poll/5")
+            ),
+            client.request_json(
+                RequestHeader(
+                    method="POST", target="/struct2/custom/poll/5/0.01"
+                )
+            ),
+            client.request_json(
                 RequestHeader(
                     method="POST", target="/sample1/custom/test_command"
                 )
