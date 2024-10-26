@@ -3,7 +3,7 @@ author_info:
   name: Vaughn Kottler
   email: vaughn@libre-embedded.com
   username: vkottler
-versions: ["3.11", "3.12"]
+versions: ["3.12", "3.13"]
 
 systems:
   - macos-latest

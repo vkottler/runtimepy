@@ -1,7 +1,7 @@
 # =====================================
 # generator=datazen
 # version=3.1.4
-# hash=183f8b361ba2aa54cf7e87c823ff45fa
+# hash=0f7a29be3d6d2d50603e377499ca435f
 # =====================================
 
 """
@@ -28,8 +28,8 @@ pkg_info = {
     "version": VERSION,
     "description": DESCRIPTION,
     "versions": [
-        "3.11",
         "3.12",
+        "3.13",
     ],
 }
 setup(

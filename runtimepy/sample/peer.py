@@ -49,6 +49,9 @@ class SamplePeer(RuntimepyPeer):
                     )
                     sig = asyncio.Event()
                     task = asyncio.create_task(conn.process(stop_sig=sig))
-                    await conn.request(RequestHeader(target="/index.html"))
+
+                    for endpoint in ["/index.html", "/app.html"]:
+                        await conn.request(RequestHeader(target=endpoint))
+
                     sig.set()
                     await task
