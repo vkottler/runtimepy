@@ -63,6 +63,8 @@ async def run(app: AppInfo) -> int:
 
     prog = SampleProgram.singleton()
 
+    prog.send_poll(2)
+
     await prog.share_config({"config": app.original_config()})
 
     assert prog is not None
