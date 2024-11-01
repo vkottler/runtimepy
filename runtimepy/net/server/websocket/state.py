@@ -58,6 +58,7 @@ class TabState:
 
         for logger in self._loggers:
             logger.removeHandler(self.tab_logger)
+        self.tab_logger.drain_str()
         self._loggers = []
 
     def add_logger(self, logger: logging.Logger) -> None:

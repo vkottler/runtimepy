@@ -8,7 +8,7 @@ time_command: true
 
 requirements:
   - aiofiles
-  - vcorelib>=3.4.3
+  - vcorelib>=3.4.5
   - svgen>=0.6.8
   - websockets
   - psutil

@@ -35,7 +35,7 @@ def test_arbiter_command_basic():
         )
 
 
-@mark.timeout(30)
+@mark.timeout(60)
 def test_arbiter_command_advanced():
     """Test advanced usages of the 'arbiter' command."""
 

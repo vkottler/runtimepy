@@ -50,6 +50,9 @@
   overflow-x: hidden;
   flex-grow: 0;
   flex-shrink: 0;
+
+  /* Don't allow plot area to become too hidden. */
+  max-width: 75%;
 }
 
 .channel-value {
