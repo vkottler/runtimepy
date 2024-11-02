@@ -69,9 +69,7 @@ class ChannelEnvironmentTabMessaging(ChannelEnvironmentTabBase):
             for name in env.names:
                 self._setup_callback(name, state)
         else:
-            # Remove callbacks for primitives.
-            for name, val in state.callbacks.items():
-                state.primitives[name].remove_callback(val)
+            state.clear_telemetry()
 
         # Save current UI state.
         state.latest_ui_values.update(latest)

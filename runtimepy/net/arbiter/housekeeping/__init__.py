@@ -21,6 +21,8 @@ TASK_NAME = "housekeeping"
 class ConnectionMetricsPoller(_ArbiterTask):
     """A class that periodically polls connection metrics."""
 
+    processors: list[Awaitable[None]]
+
     def __init__(
         self,
         name: str,
@@ -31,6 +33,7 @@ class ConnectionMetricsPoller(_ArbiterTask):
 
         super().__init__(name, **kwargs)
         self.manager = manager
+        self.processors = []
 
     def _init_state(self) -> None:
         """Add channels to this instance's channel environment."""
@@ -51,7 +54,6 @@ class ConnectionMetricsPoller(_ArbiterTask):
             self.manager.poll_metrics()
 
         # Handle any incoming commands.
-        processors: list[Awaitable[None]] = []
         for mapping in (
             self.app.connections.values(),
             self.app.tasks.values(),
@@ -59,14 +61,15 @@ class ConnectionMetricsPoller(_ArbiterTask):
         ):
             for item in mapping:
                 if isinstance(item, AsyncCommandProcessingMixin):
-                    processors.append(item.process_command_queue())
+                    self.processors.append(item.process_command_queue())
 
         # Service connection tasks. The connection manager should probably do
         # this on its own at some point.
-        processors += list(self.app.conn_manager.connection_tasks)
+        self.processors += list(self.app.conn_manager.connection_tasks)
 
-        if processors:
-            await asyncio.gather(*processors)
+        if self.processors:
+            await asyncio.gather(*self.processors)
+            self.processors.clear()
 
         return True
 
