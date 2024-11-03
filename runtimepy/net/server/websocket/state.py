@@ -53,19 +53,36 @@ class TabState:
 
         return result
 
+    def clear_telemetry(self) -> None:
+        """Clear all telemetry interactions."""
+
+        # Remove callbacks for primitives.
+        for name, val in self.callbacks.items():
+            self.primitives[name].remove_callback(val)
+        self.callbacks.clear()
+        self.primitives.clear()
+
+        # Clear points.
+        self.points.clear()
+
     def clear_loggers(self) -> None:
         """Clear all logging handlers."""
 
+        # Remove handlers.
         for logger in self._loggers:
             logger.removeHandler(self.tab_logger)
+        self._loggers.clear()
+
         self.tab_logger.drain_str()
-        self._loggers = []
+
+        self.clear_telemetry()
 
     def add_logger(self, logger: logging.Logger) -> None:
         """Add a logger."""
 
-        logger.addHandler(self.tab_logger)
-        self._loggers.append(logger)
+        if logger not in self._loggers:
+            logger.addHandler(self.tab_logger)
+            self._loggers.append(logger)
 
     @staticmethod
     def create() -> "TabState":

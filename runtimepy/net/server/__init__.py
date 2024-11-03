@@ -11,7 +11,6 @@ from pathlib import Path
 from typing import Any, Optional, TextIO, Union
 
 # third-party
-import aiofiles
 from vcorelib import DEFAULT_ENCODING
 from vcorelib.io import IndentedFileWriter, JsonObject
 from vcorelib.paths import Pathlike, find_file, normalize
@@ -26,7 +25,7 @@ from runtimepy.net.http.response import ResponseHeader
 from runtimepy.net.server.html import HtmlApp, HtmlApps, get_html, html_handler
 from runtimepy.net.server.json import encode_json, json_handler
 from runtimepy.net.tcp.http import HttpConnection
-from runtimepy.util import normalize_root, path_has_part
+from runtimepy.util import normalize_root, path_has_part, read_binary
 
 MIMETYPES_INIT = False
 
@@ -158,10 +157,9 @@ class RuntimepyServerConnection(HttpConnection):
     ) -> bytes:
         """Render a markdown file as HTML and return the result."""
 
-        async with aiofiles.open(path, mode="r") as path_fd:
-            return self.render_markdown(
-                await path_fd.read(), response, **kwargs
-            )
+        return self.render_markdown(
+            (await read_binary(path)).decode(), response, **kwargs
+        )
 
     async def try_file(
         self, path: PathMaybeQuery, response: ResponseHeader
@@ -195,8 +193,7 @@ class RuntimepyServerConnection(HttpConnection):
                 self.logger.info("Serving '%s' (MIME: %s)", candidate, mime)
 
                 # Return the file data.
-                async with aiofiles.open(candidate, mode="rb") as path_fd:
-                    result = await path_fd.read()
+                result = await read_binary(candidate)
 
                 break
 

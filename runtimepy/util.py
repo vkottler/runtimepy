@@ -8,9 +8,18 @@ from pathlib import Path
 from typing import Iterator, Union
 
 # third-party
+import aiofiles
 from vcorelib.paths import normalize
 
 ROOT_PATH = Path(sep)
+
+
+async def read_binary(path: Path) -> bytes:
+    """An async wrapper for reading file contents."""
+
+    async with aiofiles.open(path, mode="rb") as path_fd:
+        result = await path_fd.read()
+    return result  # type: ignore
 
 
 def normalize_root(*src_parts: Union[str, Path]) -> Path:
