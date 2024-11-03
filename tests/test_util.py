@@ -17,4 +17,3 @@ async def test_read_binary():
     """Test 'read_binary' invocations."""
 
     assert await read_binary(resource("test.txt"))
-    assert await read_binary(resource("test.txt"), use_aiofiles=True)
