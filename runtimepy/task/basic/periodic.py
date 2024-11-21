@@ -58,6 +58,7 @@ class PeriodicTask(
         self.name = name
 
         self.set_markdown(markdown=markdown, config=config, package=PKG_NAME)
+        self.config: _JsonObject = config or {}
 
         LoggerMixinLevelControl.__init__(self, logger=_getLogger(self.name))
         self._task: _Optional[_asyncio.Task[None]] = None
