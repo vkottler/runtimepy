@@ -203,6 +203,7 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
                 period_s=task["period_s"],
                 average_depth=task["average_depth"],
                 markdown=task.get("markdown"),
+                config=task.get("config"),
             ), f"Couldn't register task '{name}' ({factory})!"
 
         # Register structs.

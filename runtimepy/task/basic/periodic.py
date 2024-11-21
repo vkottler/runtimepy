@@ -13,7 +13,8 @@ from logging import getLogger as _getLogger
 from typing import Optional as _Optional
 
 # third-party
-from vcorelib.io import MarkdownMixin
+from vcorelib.io.markdown import MarkdownMixin
+from vcorelib.io.types import JsonObject as _JsonObject
 from vcorelib.math import DEFAULT_DEPTH as _DEFAULT_DEPTH
 from vcorelib.math import MovingAverage as _MovingAverage
 from vcorelib.math import RateTracker as _RateTracker
@@ -50,11 +51,14 @@ class PeriodicTask(
         env: ChannelEnvironment = None,
         period_controls: Controlslike = "period",
         markdown: str = None,
+        config: _JsonObject = None,
     ) -> None:
         """Initialize this task."""
 
         self.name = name
-        self.set_markdown(markdown=markdown, package=PKG_NAME)
+
+        self.set_markdown(markdown=markdown, config=config, package=PKG_NAME)
+
         LoggerMixinLevelControl.__init__(self, logger=_getLogger(self.name))
         self._task: _Optional[_asyncio.Task[None]] = None
 

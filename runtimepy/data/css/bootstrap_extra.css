@@ -88,6 +88,10 @@ textarea.text-logs {
   flex-shrink: 0;
 }
 
+pre {
+  color: var(--bs-code-color);
+}
+
 .vertical-divider:hover {
   cursor: col-resize;
   background-color: var(--bs-highlight-bg) !important;

@@ -2,7 +2,24 @@
 # Add some sample tasks.
 tasks:
   # Chaos.
-  - {name: sample1, factory: Sample, period_s: 0.9}
+  - name: sample1
+    factory: Sample
+    period_s: 0.9
+    config:
+      a: 1
+      b: 2
+      c: 3
+    markdown: |
+      # This is a Test
+
+      ```
+      todo
+
+      does this work?
+
+      todo
+      ```
+
   - {name: sample2, factory: Sample, period_s: 1.0}
   - {name: sample3, factory: Sample, period_s: 1.1}
 

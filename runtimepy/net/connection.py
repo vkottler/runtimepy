@@ -13,7 +13,7 @@ from typing import Union as _Union
 
 # third-party
 from vcorelib.asyncio import log_exceptions as _log_exceptions
-from vcorelib.io import MarkdownMixin
+from vcorelib.io.markdown import MarkdownMixin
 from vcorelib.logging import LoggerType as _LoggerType
 
 # internal
