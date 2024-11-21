@@ -1,6 +1,6 @@
 aiofiles
-vcorelib>=3.4.5
-svgen>=0.6.8
+vcorelib>=3.4.7
+svgen>=0.7.4
 websockets
 psutil
 windows-curses; sys_platform == 'win32' and python_version < '3.12'

@@ -3,7 +3,7 @@ A module implementing a channel-environment tab HTML interface.
 """
 
 # third-party
-from vcorelib.io import MarkdownMixin
+from vcorelib.io.markdown import MarkdownMixin
 from vcorelib.logging import LoggerMixin
 from vcorelib.math import RateLimiter
 

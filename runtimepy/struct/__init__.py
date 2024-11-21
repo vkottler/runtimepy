@@ -9,7 +9,7 @@ from logging import getLogger as _getLogger
 from typing import Optional
 
 # third-party
-from vcorelib.io import MarkdownMixin
+from vcorelib.io.markdown import MarkdownMixin
 from vcorelib.io.types import JsonObject as _JsonObject
 
 # internal

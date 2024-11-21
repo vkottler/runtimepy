@@ -21,15 +21,11 @@ from typing import Union as _Union
 # third-party
 from vcorelib.asyncio import log_exceptions as _log_exceptions
 import websockets
-from websockets.client import (
-    WebSocketClientProtocol as _WebSocketClientProtocol,
-)
+from websockets.asyncio.client import ClientConnection as _ClientConnection
+from websockets.asyncio.server import Server as _Server
+from websockets.asyncio.server import ServerConnection as _ServerConnection
+from websockets.asyncio.server import serve as _serve
 from websockets.exceptions import ConnectionClosed as _ConnectionClosed
-from websockets.server import (
-    WebSocketServerProtocol as _WebSocketServerProtocol,
-)
-from websockets.server import WebSocketServer as _WebSocketServer
-from websockets.server import serve as _serve
 
 # internal
 from runtimepy.net import sockname as _sockname
@@ -50,7 +46,7 @@ class WebsocketConnection(Connection):
 
     def __init__(
         self,
-        protocol: _Union[_WebSocketClientProtocol, _WebSocketServerProtocol],
+        protocol: _Union[_ClientConnection, _ServerConnection],
         **kwargs,
     ) -> None:
         """Initialize this connection."""
@@ -125,13 +121,13 @@ class WebsocketConnection(Connection):
         init: ConnectionInit[T] = None,
         stop_sig: _asyncio.Event = None,
         manager: _ConnectionManager = None,
-    ) -> _Callable[[_WebSocketServerProtocol], _Awaitable[None]]:
+    ) -> _Callable[[_ServerConnection], _Awaitable[None]]:
         """
         A wrapper for passing in a websocket handler and initializing a
         connection.
         """
 
-        async def _handler(protocol: _WebSocketServerProtocol) -> None:
+        async def _handler(protocol: _ServerConnection) -> None:
             """A handler that runs the callers initialization function."""
 
             conn = cls(protocol)
@@ -176,12 +172,11 @@ class WebsocketConnection(Connection):
 
         server_conn: _Optional[T] = None
 
-        async def server_init(protocol: _WebSocketServerProtocol) -> bool:
+        async def server_init(protocol: _ServerConnection) -> None:
             """Create one side of the connection and update the reference."""
             nonlocal server_conn
             assert server_conn is None
             server_conn = cls(protocol)
-            return True
 
         async with _AsyncExitStack() as stack:
             if serve_kwargs is None:
@@ -213,7 +208,7 @@ class WebsocketConnection(Connection):
         stop_sig: _asyncio.Event = None,
         manager: _ConnectionManager = None,
         **kwargs,
-    ) -> _AsyncIterator[_WebSocketServer]:
+    ) -> _AsyncIterator[_Server]:
         """Serve a WebSocket server."""
 
         kwargs = handle_possible_ssl(client=False, **kwargs)
@@ -237,7 +232,7 @@ class WebsocketConnection(Connection):
         stop_sig: _asyncio.Event,
         init: ConnectionInit[T] = None,
         manager: _ConnectionManager = None,
-        serving_callback: _Callable[[_WebSocketServer], None] = None,
+        serving_callback: _Callable[[_Server], None] = None,
         **kwargs,
     ) -> None:
         """Run a WebSocket-server application."""

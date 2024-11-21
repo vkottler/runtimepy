@@ -9,7 +9,7 @@ from contextlib import AsyncExitStack
 # third-party
 from pytest import mark
 from vcorelib.asyncio import log_exceptions
-from websockets.server import WebSocketServer
+from websockets.asyncio.server import Server
 
 # module under test
 from runtimepy.net import sockname
@@ -73,7 +73,7 @@ async def test_websocket_server_app():
         assert conn
         return True
 
-    def serve_cb(server: WebSocketServer) -> None:
+    def serve_cb(server: Server) -> None:
         """Publish the server host."""
         server_queue.put_nowait(sockname(list(server.sockets)[0]))
 
