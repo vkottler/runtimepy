@@ -142,6 +142,9 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
         self._servers: list[_asyncio.Task[None]] = []
         self._servers_started = _asyncio.Semaphore(0)
 
+        # A copy of named port mappings (loaded via external config).
+        self._ports: dict[str, int] = {}
+
         self._init()
 
     def _init(self) -> None:
@@ -285,6 +288,7 @@ class BaseConnectionArbiter(_NamespaceMixin, _LoggerMixin, TuiMixin):
                 self._namespace,
                 self.stop_sig,
                 config if config is not None else self._config,
+                self._ports,
                 self,
                 tasks,  # type: ignore
                 self.task_manager,

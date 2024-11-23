@@ -139,6 +139,8 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
 
         names = set()
 
+        self._ports = config.ports
+
         # Registier factories.
         for factory in config.factories:
             name = factory["name"]
@@ -151,7 +153,7 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
                     *factory.get("namespaces", []),
                     **dict_resolve_env_vars(
                         factory.get("kwargs", {}),
-                        env=config.ports,  # type: ignore
+                        env=self._ports,  # type: ignore
                     ),
                 ), f"Couldn't register factory '{factory}'!"
                 names.add(name)
@@ -163,17 +165,17 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
 
             # Resolve any port variables that may have been used.
             args = list_resolve_env_vars(
-                client.get("args", []), env=config.ports  # type: ignore
+                client.get("args", []), env=self._ports  # type: ignore
             )
             kwargs = dict_resolve_env_vars(
-                client.get("kwargs", {}), env=config.ports  # type: ignore
+                client.get("kwargs", {}), env=self._ports  # type: ignore
             )
             kwargs.setdefault("markdown", client.get("markdown"))
 
             assert await self.factory_client(
                 factory,
                 name,
-                *fix_args(args, config.ports),
+                *fix_args(args, self._ports),
                 defer=client["defer"],
                 # Perform some known fixes for common keyword arguments.
                 **fix_kwargs(kwargs),
@@ -186,10 +188,10 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
             assert await self.factory_server(
                 factory,
                 *list_resolve_env_vars(
-                    server.get("args", []), env=config.ports  # type: ignore
+                    server.get("args", []), env=self._ports  # type: ignore
                 ),
                 **dict_resolve_env_vars(
-                    server.get("kwargs", {}), env=config.ports  # type: ignore
+                    server.get("kwargs", {}), env=self._ports  # type: ignore
                 ),
             ), f"Couldn't register a '{factory}' server!"
 
