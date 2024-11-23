@@ -160,6 +160,7 @@ class AppInfo(_LoggerMixin):
 
     # Configuration data that may be specified in a configuration file.
     config: _JsonObject
+    ports: dict[str, int]
 
     tui: TuiMixin
 
@@ -186,6 +187,7 @@ class AppInfo(_LoggerMixin):
             self.names,
             self.stop,
             self.config,
+            self.ports,
             self.tui,
             self.tasks,
             self.task_manager,
