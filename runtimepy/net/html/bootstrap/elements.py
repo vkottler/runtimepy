@@ -165,8 +165,14 @@ def slider(
     return elem
 
 
+TABLE_CLASSES = ["table", "table-hover", "table-striped", "table-bordered"]
+
+
 def centered_markdown(
-    parent: Element, markdown: str, *container_classes: str
+    parent: Element,
+    markdown: str,
+    *container_classes: str,
+    table_classes: list[str] = None,
 ) -> Element:
     """Add centered markdown."""
 
@@ -188,7 +194,21 @@ def centered_markdown(
 
     with StringIO() as stream:
         writer = IndentedFileWriter(stream)
-        writer.write_markdown(markdown)
+
+        if table_classes is None:
+            table_classes = TABLE_CLASSES
+
+        def render_hook(data: str) -> str:
+            """Make some adjustments to various element declarations."""
+
+            if table_classes:
+                data = data.replace(
+                    "<table>", f'<table class="{' '.join(table_classes)}">'
+                )
+
+            return data
+
+        writer.write_markdown(markdown, hook=render_hook)
         div(
             text=stream.getvalue(),
             parent=horiz_container,
