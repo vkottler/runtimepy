@@ -40,6 +40,17 @@ class BaseIntPrimitive(PrimitiveIsCloseMixin[int]):
         self.set_value(new_val, timestamp_ns=timestamp_ns)
         return new_val
 
+    async def wait_for_increment(
+        self, timeout: float, count: int = 1
+    ) -> EvalResult:
+        """Wait for this primitive to increment by a certain amount."""
+
+        return await self.wait_for_value(
+            self.raw.value + count,
+            timeout,
+            operation=Operator.LESS_THAN_OR_EQUAL,
+        )
+
     async def wait_for_value(
         self,
         value: int | float,
