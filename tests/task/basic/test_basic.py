@@ -22,8 +22,7 @@ async def test_periodic_task_overrun():
     await task.task(period_s=BASE_PERIOD)
 
     # Allow it to run.
-    while task.metrics.dispatches.value == 0:
-        await asyncio.sleep(BASE_PERIOD)
+    assert await task.wait_iterations(BASE_PERIOD * 10)
 
     await task.stop()
     assert task.metrics.overruns.value > 0
@@ -41,7 +40,7 @@ async def test_periodic_task_basic():
     initial = await task.task(base_period)
 
     # Allow it to run.
-    await asyncio.sleep(base_period * 2)
+    assert await task.wait_iterations(base_period * 10, count=2)
 
     # Create a new instance of the task, causing the first one to be cancelled.
     new_task = await task.task(base_period * 2)
@@ -50,7 +49,7 @@ async def test_periodic_task_basic():
     assert initial.done()
 
     # Ensure the new task gets to run.
-    await asyncio.sleep(base_period * 2)
+    await task.wait_iterations(base_period * 2)
 
     # Cancel the new task and ensure it stops.
     new_task.cancel()

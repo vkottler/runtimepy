@@ -136,6 +136,15 @@ class PeriodicTask(
             self._enabled.clear()
         return result
 
+    async def wait_iterations(self, timeout: float, count: int = 1) -> bool:
+        """Wait for a task to complete a certain number of iterations."""
+
+        return bool(
+            await self.metrics.dispatches.wait_for_increment(
+                timeout, count=count
+            )
+        )
+
     async def run(
         self, period_s: float = None, stop_sig: _asyncio.Event = None
     ) -> None:

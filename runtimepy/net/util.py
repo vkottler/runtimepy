@@ -159,7 +159,7 @@ def hostname(ip_address: str) -> str:
 def address_str(name: str, fallback_host: str = "localhost", **kwargs) -> str:
     """Get an IP address string for a given name."""
 
-    return _socket.getaddrinfo(
+    return _socket.getaddrinfo(  # type: ignore
         name if name else fallback_host, None, **kwargs
     )[0][4][0]
 

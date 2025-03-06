@@ -81,3 +81,8 @@ async def test_int_evaluations():
 
     assert not await prim.wait_for_value(prim.value + 1, 0.0)
     assert await prim.wait_for_value(prim.value, 0.0)
+
+    assert not await prim.wait_for_increment(0.1)
+    task = asyncio.create_task(incrementer())
+    assert await prim.wait_for_increment(0.1)
+    await task
