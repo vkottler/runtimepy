@@ -101,6 +101,7 @@ async def runtimepy_http_client_server(
             client.request(RequestHeader(target="/test_json.html")),
             client.request(RequestHeader(target="/landing_page.html")),
             client.request(RequestHeader(target="/README.md")),
+            client.request(RequestHeader(target="/README.md?print=true")),
             # Files from file-system.
             client.request(RequestHeader(target="/sample.json")),
             client.request(RequestHeader(target="/manifest.yaml")),

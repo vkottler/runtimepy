@@ -10,15 +10,19 @@ function lightDarkClick(event) {
   window.location.hash = lightMode ? "#light-mode" : "";
 }
 
-let lightDarkButton = document.getElementById("theme-button");
-if (lightDarkButton) {
-  lightDarkButton.addEventListener("click", lightDarkClick);
-}
-
-if (window.location.hash) {
-  let parts = window.location.hash.slice(1).split(",");
-
-  if (parts.includes("light-mode")) {
-    lightDarkButton.click();
+window.onload = () => {
+  let lightDarkButton = document.getElementById("theme-button");
+  if (lightDarkButton) {
+    lightDarkButton.addEventListener("click", lightDarkClick);
   }
-}
+
+  if (window.location.hash) {
+    let parts = window.location.hash.slice(1).split(",");
+
+    if (parts.includes("light-mode")) {
+      lightDarkButton.click();
+    }
+  }
+
+  bootstrap_init();
+};
