@@ -136,7 +136,11 @@ class RuntimepyServerConnection(HttpConnection):
         return result
 
     def render_markdown(
-        self, content: str, response: ResponseHeader, **kwargs
+        self,
+        content: str,
+        response: ResponseHeader,
+        query: Optional[str],
+        **kwargs,
     ) -> bytes:
         """Return rendered markdown content."""
 
@@ -146,6 +150,7 @@ class RuntimepyServerConnection(HttpConnection):
             full_markdown_page(
                 document,
                 writer.stream.getvalue(),  # type: ignore
+                uri_query=query,
             )
 
         response["Content-Type"] = f"text/html; charset={DEFAULT_ENCODING}"
@@ -153,12 +158,16 @@ class RuntimepyServerConnection(HttpConnection):
         return document.encode_str().encode()
 
     async def render_markdown_file(
-        self, path: Path, response: ResponseHeader, **kwargs
+        self,
+        path: Path,
+        response: ResponseHeader,
+        query: Optional[str],
+        **kwargs,
     ) -> bytes:
         """Render a markdown file as HTML and return the result."""
 
         return self.render_markdown(
-            (await read_binary(path)).decode(), response, **kwargs
+            (await read_binary(path)).decode(), response, query, **kwargs
         )
 
     async def try_file(
@@ -177,7 +186,7 @@ class RuntimepyServerConnection(HttpConnection):
                 md_candidate = candidate.with_suffix(".md")
                 if md_candidate.is_file():
                     return await self.render_markdown_file(
-                        md_candidate, response
+                        md_candidate, response, path[1]
                     )
 
             if candidate.is_file():
