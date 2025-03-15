@@ -25,6 +25,7 @@ async def test_periodic_task_overrun():
     assert await task.wait_iterations(BASE_PERIOD * 10)
 
     await task.stop()
+    assert await task.wait_for_disable(0)
     assert task.metrics.overruns.value > 0
 
 
