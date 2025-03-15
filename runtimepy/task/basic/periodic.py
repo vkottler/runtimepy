@@ -32,6 +32,7 @@ from runtimepy.mixins.logging import LoggerMixinLevelControl
 from runtimepy.primitives import Bool as _Bool
 from runtimepy.primitives import Double as _Double
 from runtimepy.primitives import Float as _Float
+from runtimepy.primitives.evaluation import EvalResult as _EvalResult
 from runtimepy.ui.controls import Controlslike
 
 
@@ -136,6 +137,12 @@ class PeriodicTask(
             self._enabled.clear()
         return result
 
+    async def wait_for_disable(
+        self, timeout: float, value: bool = False
+    ) -> _EvalResult:
+        """Wait for a task to become disabled."""
+        return await self._enabled.wait_for_state(value, timeout)
+
     async def wait_iterations(self, timeout: float, count: int = 1) -> bool:
         """Wait for a task to complete a certain number of iterations."""
 
@@ -179,7 +186,7 @@ class PeriodicTask(
 
             # Check this synchronously. This may not be suitable for tasks
             # with long periods.
-            if stop_sig is not None:
+            if self._enabled and stop_sig is not None:
                 self._enabled.raw.value = not stop_sig.is_set()
 
             if self._enabled:
