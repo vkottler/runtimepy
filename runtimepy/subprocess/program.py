@@ -150,7 +150,7 @@ class PeerProgram(RuntimepyPeerInterface, PsutilMixin):
         with tempfile(suffix=".json") as config_path:
             arbiter = ConnectionArbiter(stop_sig=self.got_eof)
             ARBITER.encode(config_path, self.struct.config)
-            await arbiter.load_configs([config_path], wait_for_stop=True)
+            await arbiter.load_configs([config_path])
 
         await arbiter.app()
 

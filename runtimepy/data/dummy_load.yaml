@@ -98,10 +98,9 @@ processes:
 
     # The peer itself runs an arbiter process.
     config:
+      config: *cfg
       includes:
         - package://runtimepy/server.yaml
-
       app: runtimepy.sample.program.run
-      config: *cfg
 
     program: runtimepy.sample.program.SampleProgram

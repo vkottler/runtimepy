@@ -93,4 +93,6 @@ async def run(app: AppInfo) -> int:
 
     await prog.wait_json({"a": 1, "b": 2, "c": 3})
 
+    await app.stop.wait()
+
     return 0
