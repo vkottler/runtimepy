@@ -223,7 +223,11 @@ class ConfigConnectionArbiter(_ImportConnectionArbiter):
             assert self.factory_process(
                 factory,
                 name,
-                process,
+                # Allow port information to pass through.
+                dict_resolve_env_vars(
+                    process,
+                    env=self._ports,  # type: ignore
+                ),
             ), f"Couldn't register process '{name}' ({factory})!"
 
         # Load initialization methods.
