@@ -9,12 +9,14 @@ import asyncio
 from vcorelib.math import RateLimiter
 
 # internal
-from runtimepy.net.arbiter.info import AppInfo
+from runtimepy.net.arbiter.info import AppInfo, SampleStruct
 from runtimepy.subprocess.program import PeerProgram
 
 
 class SampleProgram(PeerProgram):
     """A sample peer program."""
+
+    struct_type = SampleStruct
 
     stderr_task: asyncio.Task[None]
 
@@ -90,5 +92,7 @@ async def run(app: AppInfo) -> int:
     prog.struct.poll()
 
     await prog.wait_json({"a": 1, "b": 2, "c": 3})
+
+    await app.stop.wait()
 
     return 0

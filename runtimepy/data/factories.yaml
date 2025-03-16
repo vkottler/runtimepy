@@ -45,6 +45,7 @@ factories:
 
   # Useful subprocess peer interfaces.
   - {name: runtimepy.sample.peer.SamplePeer}
+  - {name: runtimepy.subprocess.peer.RuntimepyPeer}
 
 ports:
   # Reserve ports for JSON listeners.

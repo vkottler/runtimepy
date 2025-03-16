@@ -5,8 +5,7 @@ includes:
   - has_config.yaml
   - has_markdown.yaml
 
-required: [program]
-
 properties:
   program:
     type: string
+    default: runtimepy.subprocess.program.PeerProgram
