@@ -20,7 +20,7 @@ from vcorelib.paths.context import tempfile
 from runtimepy.metrics.channel import ChannelMetrics
 from runtimepy.mixins.psutil import PsutilMixin
 from runtimepy.net.arbiter import ConnectionArbiter
-from runtimepy.net.arbiter.info import RuntimeStruct, SampleStruct
+from runtimepy.net.arbiter.info import RuntimeStruct
 from runtimepy.subprocess.interface import RuntimepyPeerInterface
 
 T = TypeVar("T", bound="PeerProgram")
@@ -34,7 +34,7 @@ class PeerProgram(RuntimepyPeerInterface, PsutilMixin):
     stream_output: BinaryIO
     stream_metrics: ChannelMetrics
 
-    struct_type: Type[RuntimeStruct] = SampleStruct
+    struct_type: Type[RuntimeStruct] = RuntimeStruct
 
     got_eof: asyncio.Event
 
@@ -71,7 +71,7 @@ class PeerProgram(RuntimepyPeerInterface, PsutilMixin):
         prev_poll_time = loop.time()
 
         with suppress(asyncio.CancelledError):
-            while True:
+            while not self.got_eof.is_set():
                 # Perform heartbeat.
                 if self._peer_env_event.is_set():
                     self.stderr_metrics.update(self.stream_metrics)
@@ -90,6 +90,8 @@ class PeerProgram(RuntimepyPeerInterface, PsutilMixin):
     async def io_task(self, buffer: BinaryIO) -> None:
         """Run this peer program's main loop."""
 
+        self.got_eof.clear()
+
         # Allow polling stdin.
         if hasattr(os, "set_blocking"):
             getattr(os, "set_blocking")(buffer.fileno(), False)
@@ -97,7 +99,7 @@ class PeerProgram(RuntimepyPeerInterface, PsutilMixin):
         accumulator = 0
 
         with suppress(asyncio.CancelledError):
-            while True:
+            while not self.got_eof.is_set():
                 data: bytes = buffer.read(1)
                 if data is None:
                     await asyncio.sleep(self.poll_period_s)
@@ -210,9 +212,9 @@ class PeerProgram(RuntimepyPeerInterface, PsutilMixin):
         # Don't respond to keyboard interrupt.
         signal.signal(signal.SIGINT, signal.SIG_IGN)
 
-        async with cls.running(name, config, argv) as (io_task, main_task, _):
-            await main_task
-            await io_task
+        async with cls.running(name, config, argv) as (_, main_task, peer):
+            with peer.log_time("Main task context", reminder=True):
+                await main_task
 
     async def poll_handler(self) -> None:
         """Handle a 'poll' message."""

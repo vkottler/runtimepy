@@ -4,7 +4,7 @@ A module implementing a message-stream processing interface.
 
 # built-in
 from io import BytesIO as _BytesIO
-from json import dumps, loads
+from json import JSONEncoder, dumps, loads
 from typing import Any
 from typing import Iterator as _Iterator
 
@@ -16,6 +16,18 @@ from runtimepy.primitives import Uint32, UnsignedInt
 from runtimepy.primitives.byte_order import DEFAULT_BYTE_ORDER, ByteOrder
 
 JsonMessage = dict[str, Any]
+
+
+class StrFallbackJSONEncoder(JSONEncoder):
+    """Custom JSON encoder."""
+
+    def default(self, o):
+        """Use a string conversion if necessary."""
+
+        try:
+            return super().default(o)
+        except TypeError:
+            return str(o)
 
 
 class MessageProcessor:
@@ -48,7 +60,11 @@ class MessageProcessor:
 
     def encode_json(self, stream: _BytesIO, data: JsonMessage) -> None:
         """Encode a message as JSON."""
-        self.encode(stream, dumps(data, separators=(",", ":")))
+
+        self.encode(
+            stream,
+            dumps(data, cls=StrFallbackJSONEncoder, separators=(",", ":")),
+        )
 
     def messages(self, data: bytes) -> _Iterator[JsonMessage]:
         """Iterate over incoming messages."""

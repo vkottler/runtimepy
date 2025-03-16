@@ -9,12 +9,14 @@ import asyncio
 from vcorelib.math import RateLimiter
 
 # internal
-from runtimepy.net.arbiter.info import AppInfo
+from runtimepy.net.arbiter.info import AppInfo, SampleStruct
 from runtimepy.subprocess.program import PeerProgram
 
 
 class SampleProgram(PeerProgram):
     """A sample peer program."""
+
+    struct_type = SampleStruct
 
     stderr_task: asyncio.Task[None]
 
