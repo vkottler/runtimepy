@@ -24,6 +24,7 @@ from runtimepy.net.http.request_target import PathMaybeQuery
 from runtimepy.net.http.response import ResponseHeader
 from runtimepy.net.server.html import HtmlApp, HtmlApps, get_html, html_handler
 from runtimepy.net.server.json import encode_json, json_handler
+from runtimepy.net.server.markdown import markdown_for_dir
 from runtimepy.net.tcp.http import HttpConnection
 from runtimepy.util import normalize_root, path_has_part, read_binary
 
@@ -177,10 +178,20 @@ class RuntimepyServerConnection(HttpConnection):
 
         result = None
 
-        # Try serving the path as a file.
+        # Keep track of directories encountered.
+        directories: list[Path] = []
+
+        # Build a list of all candidate files to check.
+        candidates: list[Path] = []
         for search in self.paths:
             candidate = search.joinpath(path[0][1:])
+            if candidate.is_dir():
+                directories.append(candidate)
+                candidates.append(candidate.joinpath("index.html"))
+            else:
+                candidates.append(candidate)
 
+        for candidate in candidates:
             # Handle markdown sources.
             if candidate.name:
                 md_candidate = candidate.with_suffix(".md")
@@ -189,6 +200,7 @@ class RuntimepyServerConnection(HttpConnection):
                         md_candidate, response, path[1]
                     )
 
+            # Handle files.
             if candidate.is_file():
                 mime, encoding = mimetypes.guess_type(candidate, strict=False)
 
@@ -203,8 +215,17 @@ class RuntimepyServerConnection(HttpConnection):
 
                 # Return the file data.
                 result = await read_binary(candidate)
-
                 break
+
+        # Handle a directory as a last resort.
+        if not result and directories:
+            result = self.render_markdown(
+                markdown_for_dir(
+                    directories[0], {"applications": self.apps.keys()}
+                ),
+                response,
+                path[1],
+            )
 
         return result
 
@@ -278,7 +299,7 @@ class RuntimepyServerConnection(HttpConnection):
                     return self.favicon_data
 
                 # Try serving a file and handling redirects.
-                for handler in [self.try_file, self.try_redirect]:
+                for handler in [self.try_redirect, self.try_file]:
                     result = await handler(
                         request.target.origin_form, response
                     )

@@ -95,6 +95,7 @@ async def runtimepy_http_client_server(
             runtimepy_http_query_peer(app),
             # Application.
             client.request(RequestHeader(target="/")),
+            client.request(RequestHeader(target="/tests")),
             client.request(RequestHeader(target="/app.html")),
             client.request(RequestHeader(target="/app.html")),
             client.request(RequestHeader(target="/index.html")),
