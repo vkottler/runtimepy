@@ -24,6 +24,7 @@ from runtimepy.net.http.request_target import PathMaybeQuery
 from runtimepy.net.http.response import ResponseHeader
 from runtimepy.net.server.html import HtmlApp, HtmlApps, get_html, html_handler
 from runtimepy.net.server.json import encode_json, json_handler
+from runtimepy.net.server.markdown import markdown_for_dir
 from runtimepy.net.tcp.http import HttpConnection
 from runtimepy.util import normalize_root, path_has_part, read_binary
 
@@ -189,6 +190,7 @@ class RuntimepyServerConnection(HttpConnection):
                         md_candidate, response, path[1]
                     )
 
+            # Handle files.
             if candidate.is_file():
                 mime, encoding = mimetypes.guess_type(candidate, strict=False)
 
@@ -203,7 +205,17 @@ class RuntimepyServerConnection(HttpConnection):
 
                 # Return the file data.
                 result = await read_binary(candidate)
+                break
 
+            # Handle directories.
+            if candidate.is_dir():
+                result = self.render_markdown(
+                    markdown_for_dir(
+                        candidate, {"applications": self.apps.keys()}
+                    ),
+                    response,
+                    path[1],
+                )
                 break
 
         return result
