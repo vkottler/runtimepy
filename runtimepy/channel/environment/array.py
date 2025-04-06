@@ -95,10 +95,10 @@ class ArrayChannelEnvironment(_BaseChannelEnvironment):
 
             # Begin handling a new bit-fields primitive.
             if curr_fields is None:
-                fields = self.fields.get_fields(name)
-                assert fields is not None, f"Unknown bit-field '{name}'!"
-                result.array.add(fields.raw)
-                available_field_names = set(fields.names)
+                curr_fields = self.fields.get_fields(name)
+                assert curr_fields is not None, f"Unknown bit-field '{name}'!"
+                result.array.add(curr_fields.raw)
+                available_field_names = set(curr_fields.names)
 
             # Keep track of field names processed in the current bit-fields
             # primitive.

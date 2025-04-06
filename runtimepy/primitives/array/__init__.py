@@ -180,12 +180,17 @@ class PrimitiveArray(Serializable):
 
     def add_primitive(
         self, kind: _Primitivelike, array_length: int = None
-    ) -> int:
+    ) -> list[_AnyPrimitive]:
         """Add to the array by specifying the type of element to add."""
+
         return self.add(_create(kind), array_length=array_length)
 
-    def add(self, primitive: _AnyPrimitive, array_length: int = None) -> int:
+    def add(
+        self, primitive: _AnyPrimitive, array_length: int = None
+    ) -> list[_AnyPrimitive]:
         """Add another primitive to manage."""
+
+        result = []
 
         end = self.end
         if isinstance(end, PrimitiveArray):
@@ -193,31 +198,32 @@ class PrimitiveArray(Serializable):
                 self._primitives.append(primitive)
                 self._format += primitive.kind.format
                 self.size += primitive.size
+                result.append(primitive)
 
                 # Handle array length.
                 if array_length is not None:
                     for _ in range(array_length - 1):
+                        inst = primitive.copy()
                         self._primitives.append(
-                            primitive.copy(),  # type: ignore
+                            inst,  # type: ignore
                         )
-                        self._format += primitive.kind.format
-                        self.size += primitive.size
+                        self._format += inst.kind.format
+                        self.size += inst.size
+                        result.append(inst)  # type: ignore
 
                 # Add tracking information for the current tail.
                 curr_idx = len(self._primitives)
                 self._bytes_to_index[self.size] = curr_idx
                 self._index_to_bytes[curr_idx] = self.size
-                result = self.size
             else:
-                result = end.add(primitive, array_length=array_length)
+                result.extend(end.add(primitive, array_length=array_length))
 
         # Add a new primitive array to the end of this chain for this
         # primitive.
         else:
             new_array = PrimitiveArray(byte_order=self.byte_order)
             end.assign(new_array)
-
-            result = new_array.add(primitive, array_length=array_length)
+            result.extend(new_array.add(primitive, array_length=array_length))
 
         return result
 

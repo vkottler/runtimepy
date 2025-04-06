@@ -71,7 +71,6 @@ class Serializable(ABC):
         """A method for copying instances without chain references."""
 
         orig = self._copy_impl()
-        assert orig.chain is None
         orig.byte_order = self.byte_order
         return orig
 
@@ -80,7 +79,7 @@ class Serializable(ABC):
 
         result = self.copy_without_chain()
 
-        if self.chain is not None:
+        if self.chain is not None and result.chain is None:
             result.assign(self.chain.copy())
 
         return result
@@ -130,32 +129,26 @@ class Serializable(ABC):
 
         return result
 
-    def assign(self, chain: T) -> int:
+    def assign(self, chain: T) -> None:
         """Assign a next serializable."""
 
         assert self.chain is None, self.chain
-
         # mypy regression?
         self.chain = chain  # type: ignore
-        assert self.chain is not None
 
-        return self.chain.size
-
-    def add_to_end(self, chain: T, array_length: int = None) -> int:
+    def add_to_end(self, chain: T, array_length: int = None) -> list[T]:
         """Add a new serializable to the end of this chain."""
 
-        # Copy the chain element before it becomes part of the current chain
-        # if an array is created.
-        copy_base = None
-        if array_length is not None:
-            copy_base = chain.copy()
+        result = []
 
-        size = self.end.assign(chain)
+        self.end.assign(chain)
+        result.append(chain)
 
         # Add additional array elements as copies.
         if array_length is not None:
-            assert copy_base is not None
             for _ in range(array_length - 1):
-                size += self.end.assign(copy_base.copy())
+                inst = chain.copy()
+                self.end.assign(inst)
+                result.append(inst)
 
-        return size
+        return result

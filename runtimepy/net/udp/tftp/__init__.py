@@ -50,7 +50,6 @@ class TftpConnection(BaseTftpConnection):
 
             def ack_sender() -> None:
                 """Send acks."""
-                nonlocal idx
                 endpoint.ack_sender(idx - 1, endpoint.addr)
 
             def send_rrq() -> None:

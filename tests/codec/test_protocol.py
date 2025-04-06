@@ -56,22 +56,24 @@ def test_protocol_starts_with_serializable():
 
     proto["node_name"] = "Hello, world!"
     assert proto["node_name"] == "Hello, world!"
+    assert proto["a"] == 1000
 
     new_inst = StartsWithChunk.instance()
 
     # Serialize and then de-serialize.
     with BytesIO() as ostream:
-        size = proto.array.to_stream(ostream)
+        size = proto.to_stream(ostream)
         data = ostream.getvalue()
+        assert data
         with BytesIO(data) as istream:
-            assert new_inst.array.from_stream(istream) == size
+            assert new_inst.from_stream(istream) == size
 
     assert new_inst["node_name"] == "Hello, world!"
     assert new_inst["a"] == 1000
     assert new_inst["b"] == 2000
     assert new_inst["c"] == 3000
 
-    assert proto.size == new_inst.size
+    assert proto.length() == new_inst.length()
 
 
 def test_protocol_basic():
@@ -79,8 +81,8 @@ def test_protocol_basic():
 
     assert SampleProtocol.singleton() is SampleProtocol.singleton()
 
-    assert SampleProtocol.instance().size == 1
-    assert SampleProtocol.instance().size == 1
+    assert SampleProtocol.instance().length() == 1
+    assert SampleProtocol.instance().length() == 1
 
     proto = Protocol(
         EnumRegistry.decode(resource("enums", "sample_enum.yaml"))
@@ -132,9 +134,9 @@ def test_protocol_basic():
     assert string.update_str("abc") == 5
 
     # Add the string to the end and confirm the size update.
-    curr = proto.size
+    curr = proto.length()
     proto.add_field("string", serializable=string)
-    assert proto.size == curr + 5
+    assert proto.length() == curr + 5
 
     # Should be the same size.
-    assert copy(proto).size == proto.size
+    assert copy(proto).length() == proto.length()

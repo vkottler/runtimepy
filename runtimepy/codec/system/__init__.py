@@ -146,7 +146,7 @@ class TypeSystem(LoggerMixin):
         if field_type_name in self.custom:
             custom.add_serializable(
                 field_name,
-                self.custom[field_type_name].array.copy(),
+                self.custom[field_type_name].copy(),
                 array_length=array_length,
             )
         else:
@@ -227,8 +227,7 @@ class TypeSystem(LoggerMixin):
         if found in self.primitives:
             return self.primitives[found].size
 
-        result = self.custom[found].size
         if trace:
             self.custom[found].trace_size(self.logger)
 
-        return result
+        return self.custom[found].length()
