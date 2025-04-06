@@ -152,7 +152,7 @@ class UdpConnection(_Connection, _TransportMixin):
             # If only 'remote_addr' was specified, that's normally enough to
             # create the socket. Since we would have popped it, we now need
             # to specify a local address.
-            if "local_addr" not in kwargs:
+            if "local_addr" not in kwargs and "sock" not in kwargs:
                 kwargs["local_addr"] = ("0.0.0.0", 0)
                 kwargs.setdefault("family", _socket.AF_INET)
 

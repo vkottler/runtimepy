@@ -37,15 +37,18 @@ class TransportMixin:
 
         self._transport = transport
 
-        # Get the local address of this connection.
-        self.local_address = _normalize_host(
-            *self._transport.get_extra_info("sockname")
-        )
+        # str indicates unix socket path
+        name = self._transport.get_extra_info("sockname")
+        self.local_address = name
+        self.remote_address = name
+        if not isinstance(name, str):
+            # Get the local address of this connection.
+            self.local_address = _normalize_host(*name)
 
-        # A bug in the Windows implementation causes the 'addr' argument of
-        # sendto to be required. Save a copy of the remote address (may be
-        # None).
-        self.remote_address = self._remote_address()
+            # A bug in the Windows implementation causes the 'addr' argument of
+            # sendto to be required. Save a copy of the remote address (may be
+            # None).
+            self.remote_address = self._remote_address()
 
     def __init__(self, transport: _asyncio.BaseTransport) -> None:
         """Initialize this instance."""
