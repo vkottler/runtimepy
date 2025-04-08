@@ -99,7 +99,7 @@ class TelemetryChannelEnvironment(_BaseChannelEnvironment):
                 cast(int, channels.event_header["timestamp"]),
                 kind.decode(
                     data,
-                    byte_order=channels.event_header.array.byte_order,
+                    byte_order=channels.event_header.byte_order,
                 ),
             )
 
@@ -120,7 +120,7 @@ class TelemetryChannelEnvironment(_BaseChannelEnvironment):
                 cast(int, self.channels.event_header["timestamp"]),
                 kind.decode(
                     data,
-                    byte_order=self.channels.event_header.array.byte_order,
+                    byte_order=self.channels.event_header.byte_order,
                 ),
             )
 
@@ -146,7 +146,7 @@ class TelemetryChannelEnvironment(_BaseChannelEnvironment):
                 read_size = channels.event_header.size
                 data = channels.event_fifo.pop(read_size)
                 if data is not None:
-                    channels.event_header.array.update(data)
+                    channels.event_header.update(data)
 
                     # Update local variables.
                     ident = cast(int, channels.event_header["identifier"])

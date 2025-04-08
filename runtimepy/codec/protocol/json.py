@@ -14,7 +14,11 @@ from vcorelib.io.types import JsonObject as _JsonObject
 from vcorelib.io.types import JsonValue as _JsonValue
 
 # internal
-from runtimepy.codec.protocol.base import FieldSpec, ProtocolBase
+from runtimepy.codec.protocol.base import (
+    FieldSpec,
+    ProtocolBase,
+    ProtocolBuild,
+)
 from runtimepy.primitives.field.manager import (
     ENUMS_KEY,
     NAMES_KEY,
@@ -46,9 +50,11 @@ class JsonProtocol(ProtocolBase):
         """Export this protocol's data to JSON."""
 
         data = self._fields.export_json(resolve_enum=resolve_enum)
+
         data[META_KEY] = {
             "id": self.id,
-            "byte_order": self.array.byte_order.name.lower(),
+            "byte_order": self.byte_order.name.lower(),
+            "alias": self.alias,
         }
 
         # Export regular-field names.
@@ -72,12 +78,12 @@ class JsonProtocol(ProtocolBase):
         )
 
         # Export the build specification.
-        build: list[_Union[int, _JsonObject, str]] = []
+        build: list[_Union[int, _JsonObject, str, tuple[str, int]]] = []
         for item in self._build:
-            if isinstance(item, (int, str)):
-                build.append(item)
-            else:
+            if isinstance(item, FieldSpec):
                 build.append(item.asdict())
+            else:
+                build.append(item)
         data[BUILD_KEY] = _cast(_JsonObject, build)
 
         # Export regular-field values.
@@ -101,18 +107,16 @@ class JsonProtocol(ProtocolBase):
         fields = BitFieldsManager.import_json(data)
 
         # Create the build specification.
-        build: list[_Union[int, FieldSpec, str]] = []
+        build: ProtocolBuild = []
         for item in data[BUILD_KEY]:
-            if isinstance(item, int):
-                build.append(item)
-            else:
+            if isinstance(item, dict):
                 build.append(
                     FieldSpec(
-                        item["name"],  # type: ignore
-                        item["kind"],  # type: ignore
-                        enum=item.get("enum"),  # type: ignore
+                        item["name"], item["kind"], enum=item.get("enum")
                     )
                 )
+            else:
+                build.append(item)  # type: ignore
 
         result = cls(
             fields.enums,
@@ -121,6 +125,7 @@ class JsonProtocol(ProtocolBase):
             build=build,
             identifier=_cast(int, data[META_KEY]["id"]),
             byte_order=_cast(str, data[META_KEY]["byte_order"]),
+            alias=data[META_KEY]["alias"],  # type: ignore
         )
 
         # Set values.

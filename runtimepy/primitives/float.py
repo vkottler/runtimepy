@@ -4,6 +4,7 @@ A module implementing a floating-point primitive interface.
 
 # built-in
 import math
+from random import random
 
 # internal
 from runtimepy.primitives.evaluation import (
@@ -26,6 +27,10 @@ class BaseFloatPrimitive(PrimitiveIsCloseMixin[float]):
     ) -> None:
         """Initialize this floating-point primitive."""
         super().__init__(value=value, scaling=scaling, **kwargs)
+
+    def randomize(self, timestamp_ns: int = None) -> None:
+        """Set this primitive to a random integer."""
+        self.set_value(random(), timestamp_ns=timestamp_ns)
 
     def _check_callbacks(self, curr: float, new: float) -> None:
         """Determine if any callbacks should be serviced."""

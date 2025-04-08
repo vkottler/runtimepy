@@ -90,7 +90,7 @@ class PrimitiveEvent:
             self.header["timestamp"] = curr_ns
 
             # Write header then value.
-            array = self.header.array
+            array = self.header
             written += array.to_stream(stream)
             written += raw.to_stream(stream, byte_order=array.byte_order)
             if flush:

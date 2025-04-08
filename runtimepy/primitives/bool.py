@@ -2,6 +2,9 @@
 A module implementing a boolean-primitive interface.
 """
 
+# built-in
+from random import getrandbits
+
 # internal
 from runtimepy.primitives.base import Primitive as _Primitive
 from runtimepy.primitives.evaluation import EvalResult, evaluate
@@ -18,17 +21,21 @@ class BooleanPrimitive(_Primitive[bool]):
         """Initialize this boolean primitive."""
         super().__init__(value=value, **kwargs)
 
-    def toggle(self) -> None:
+    def randomize(self, timestamp_ns: int = None) -> None:
+        """Set this primitive to a random integer."""
+        self.set_value(bool(getrandbits(1)), timestamp_ns=timestamp_ns)
+
+    def toggle(self, timestamp_ns: int = None) -> None:
         """Toggle the underlying value."""
-        self.value = not self.raw.value
+        self.set_value(not self.raw.value, timestamp_ns=timestamp_ns)
 
-    def set(self) -> None:
+    def set(self, timestamp_ns: int = None) -> None:
         """Coerce the underlying value to true."""
-        self.value = True
+        self.set_value(True, timestamp_ns=timestamp_ns)
 
-    def clear(self) -> None:
+    def clear(self, timestamp_ns: int = None) -> None:
         """Coerce the underlying value to false."""
-        self.value = False
+        self.set_value(False, timestamp_ns=timestamp_ns)
 
     async def wait_for_state(self, state: bool, timeout: float) -> EvalResult:
         """Wait for this primitive to reach a specified state."""

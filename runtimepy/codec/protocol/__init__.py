@@ -4,7 +4,6 @@ A module implementing an interface to build communication protocols.
 
 # built-in
 from abc import ABC, abstractmethod
-from copy import copy
 from typing import Optional
 
 # internal
@@ -40,10 +39,12 @@ class ProtocolFactory(ABC):
 
         # We only need to run the routine that populates the protocol once.
         if not cls.initialized:
+            if not cls.protocol.alias:
+                cls.protocol.alias = cls.__name__
             cls.initialize(cls.protocol)
             cls.initialized = True
 
-        return copy(cls.protocol)
+        return cls.protocol.copy()
 
     @classmethod
     def singleton(cls) -> Protocol:

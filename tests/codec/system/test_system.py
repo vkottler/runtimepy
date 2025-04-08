@@ -25,7 +25,7 @@ def get_test_system() -> TypeSystem:
     system.add("SampleStruct", "enum2", "TestEnum2")
     system.add("SampleStruct", "field", "uint32")
 
-    assert system.size("SampleStruct") == 7
+    assert system.size("SampleStruct", trace=True) == 7
 
     assert system.get_enum("TestEnum2")
 
@@ -37,9 +37,11 @@ def test_type_system_arrays():
 
     system = get_test_system()
 
+    assert system.get_protocol("SampleStruct").copy().length() == 7
+
     system.register("SampleStruct2")
     system.add("SampleStruct2", "array_field1", "SampleStruct", array_length=2)
-    assert system.size("SampleStruct2") == 14
+    assert system.size("SampleStruct2", trace=True) == 14
 
     system.add("SampleStruct2", "array_field2", "uint32", array_length=10)
     assert system.size("SampleStruct2", trace=True) == 54
@@ -83,10 +85,10 @@ def test_type_system_basic():
     assert system.size("SomeStruct") == 0
 
     system.add("SomeStruct", "a", "TestEnum1")
-    assert new_type.array.size == 1
+    assert new_type.length() == 1
 
     system.add("SomeStruct", "b", "TestEnum2")
-    assert new_type.array.size == 3
+    assert new_type.length() == 3
 
     assert system.size("SomeStruct") == 3
 

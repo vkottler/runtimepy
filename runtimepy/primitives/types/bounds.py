@@ -4,6 +4,7 @@ bounds (based on bit width).
 """
 
 # built-in
+from random import randint
 from typing import NamedTuple
 
 
@@ -12,6 +13,10 @@ class IntegerBounds(NamedTuple):
 
     min: int
     max: int
+
+    def random(self) -> int:
+        """Get a random integer."""
+        return randint(self.min, self.max)
 
     def validate(self, val: int) -> bool:
         """Determine if the value is within bounds."""

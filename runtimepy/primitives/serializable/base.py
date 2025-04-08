@@ -5,6 +5,7 @@ A module defining a base interface fore serializable objects.
 # built-in
 from abc import ABC, abstractmethod
 from copy import copy as _copy
+from io import BytesIO as _BytesIO
 from typing import BinaryIO as _BinaryIO
 from typing import TypeVar
 
@@ -46,10 +47,17 @@ class Serializable(ABC):
             result += self.chain.length()
         return result
 
-    def length_trace(self) -> str:
+    def resolve_alias(self, alias: str = None) -> str:
+        """Resolve a possible alias string."""
+
+        if not alias:
+            alias = getattr(self, "alias") or self.__class__.__name__
+        return alias
+
+    def length_trace(self, alias: str = None) -> str:
         """Get a length-tracing string for this instance."""
 
-        current = f"{self.__class__.__name__}({self.size})"
+        current = f"{self.resolve_alias(alias=alias)}({self.size})"
         if self.chain is not None:
             current += " -> " + self.chain.length_trace()
         return current
@@ -71,7 +79,6 @@ class Serializable(ABC):
         """A method for copying instances without chain references."""
 
         orig = self._copy_impl()
-        assert orig.chain is None
         orig.byte_order = self.byte_order
         return orig
 
@@ -80,7 +87,7 @@ class Serializable(ABC):
 
         result = self.copy_without_chain()
 
-        if self.chain is not None:
+        if self.chain is not None and result.chain is None:
             result.assign(self.chain.copy())
 
         return result
@@ -103,6 +110,27 @@ class Serializable(ABC):
             result += self.chain.to_stream(stream)
 
         return result
+
+    def chain_bytes(self) -> bytes:
+        """Get the fully encoded chain."""
+        with _BytesIO() as stream:
+            self.to_stream(stream)
+            return stream.getvalue()
+
+    def __eq__(self, other) -> bool:
+        """Equivalent if full byte chains are equal."""
+
+        result = False
+        if isinstance(other, Serializable):
+            result = self.chain_bytes() == other.chain_bytes()
+        return result
+
+    def update_with(self: T, other: T, timestamp_ns: int = None) -> int:
+        """Update this instance from another of the same type."""
+
+        return self.update_chain(
+            other.chain_bytes(), timestamp_ns=timestamp_ns
+        )
 
     @abstractmethod
     def update(self, data: bytes, timestamp_ns: int = None) -> int:
@@ -130,32 +158,32 @@ class Serializable(ABC):
 
         return result
 
-    def assign(self, chain: T) -> int:
+    def update_chain(self, data: bytes, timestamp_ns: int = None) -> int:
+        """Update this serializable from a bytes instance."""
+
+        with _BytesIO(data) as stream:
+            return self.from_stream(stream, timestamp_ns=timestamp_ns)
+
+    def assign(self, chain: T) -> None:
         """Assign a next serializable."""
 
         assert self.chain is None, self.chain
-
         # mypy regression?
         self.chain = chain  # type: ignore
-        assert self.chain is not None
 
-        return self.chain.size
-
-    def add_to_end(self, chain: T, array_length: int = None) -> int:
+    def add_to_end(self, chain: T, array_length: int = None) -> list[T]:
         """Add a new serializable to the end of this chain."""
 
-        # Copy the chain element before it becomes part of the current chain
-        # if an array is created.
-        copy_base = None
-        if array_length is not None:
-            copy_base = chain.copy()
+        result = []
 
-        size = self.end.assign(chain)
+        self.end.assign(chain)
+        result.append(chain)
 
         # Add additional array elements as copies.
         if array_length is not None:
-            assert copy_base is not None
             for _ in range(array_length - 1):
-                size += self.end.assign(copy_base.copy())
+                inst = chain.copy()
+                self.end.assign(inst)
+                result.append(inst)
 
-        return size
+        return result
