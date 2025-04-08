@@ -251,3 +251,16 @@ class PrimitiveArray(Serializable):
     ) -> None:
         """Update a fragment by index."""
         self._fragments[index].update(data, timestamp_ns=timestamp_ns)
+
+    def randomize(self, timestamp_ns: int = None, chain: bool = True) -> None:
+        """Randomize array contents."""
+
+        for prim in self._primitives:
+            prim.randomize(timestamp_ns=timestamp_ns)
+
+        if (
+            chain
+            and self.chain is not None
+            and isinstance(self.chain, PrimitiveArray)
+        ):
+            self.chain.randomize(timestamp_ns=timestamp_ns, chain=chain)

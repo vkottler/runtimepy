@@ -6,6 +6,7 @@ Test the 'codec.protocol' module.
 from copy import copy
 from io import BytesIO
 from json import load
+from logging import getLogger
 
 # module under test
 from runtimepy.codec.protocol import Protocol, ProtocolFactory
@@ -16,6 +17,8 @@ from runtimepy.primitives.serializable import PrefixedChunk
 
 # internal
 from tests.resources import resource
+
+LOG = getLogger(__name__)
 
 
 class SampleProtocol(ProtocolFactory):
@@ -189,24 +192,37 @@ class SampleC(ProtocolFactory):
         protocol.add_field(
             "b_array", serializable=SampleB.instance(), array_length=2
         )
-        protocol.add_field("d", "uint32")
+        protocol.add_field("d", "bool")
+        protocol.add_field("e", "bool")
+        protocol.add_field("f", "bool")
+        protocol.add_field("g", "bool")
 
 
 def dump_protocol_info(inst: Protocol) -> None:
     """Dump information about a protocol."""
 
-    print("==========")
-    print(inst.resolve_alias())
-    print(inst)
-    print(f"{inst.length()}: {inst.length_trace()}")
-    print("==========")
+    LOG.info(inst.resolve_alias())
+    LOG.info(inst)
+    LOG.info("%d: %s", inst.length(), inst.length_trace())
 
 
 def test_protocol_nested():
     """Test basic interactions with nested protocol objects."""
 
-    dump_protocol_info(SampleA.instance())
-    dump_protocol_info(SampleB.instance())
-    dump_protocol_info(SampleC.instance())
+    assert SampleA.instance().length() == 32
+    assert SampleB.instance().length() == 100
+    assert SampleC.instance().length() == 400
+
+    inst_a = SampleA.instance()
+    inst_a.randomize()
+    dump_protocol_info(inst_a)
+
+    inst_b = SampleB.instance()
+    inst_b.randomize()
+    dump_protocol_info(inst_b)
+
+    inst_c = SampleC.instance()
+    inst_c.randomize()
+    dump_protocol_info(inst_c)
 
     # update values, verify encode/decode correctness
