@@ -209,20 +209,37 @@ def dump_protocol_info(inst: Protocol) -> None:
 def test_protocol_nested():
     """Test basic interactions with nested protocol objects."""
 
-    assert SampleA.instance().length() == 32
-    assert SampleB.instance().length() == 100
-    assert SampleC.instance().length() == 400
-
     inst_a = SampleA.instance()
+    inst_b = SampleB.instance()
+    inst_c = SampleC.instance()
+
+    assert inst_a.length() == 32
+    assert len(inst_a.chain_bytes()) == 32
+    assert inst_b.length() == 100
+    assert len(inst_b.chain_bytes()) == 100
+    assert inst_c.length() == 400
+    assert len(inst_c.chain_bytes()) == 400
+
     inst_a.randomize()
     dump_protocol_info(inst_a)
 
-    inst_b = SampleB.instance()
+    new_inst = SampleA.instance()
+    assert new_inst != inst_a
+    new_inst.update_with(inst_a)
+    assert new_inst == inst_a
+
     inst_b.randomize()
     dump_protocol_info(inst_b)
 
-    inst_c = SampleC.instance()
+    new_inst = SampleB.instance()
+    assert new_inst != inst_b
+    new_inst.update_with(inst_b)
+    assert new_inst == inst_b
+
     inst_c.randomize()
     dump_protocol_info(inst_c)
 
-    # update values, verify encode/decode correctness
+    new_inst = SampleC.instance()
+    assert new_inst != inst_c
+    new_inst.update_with(inst_c)
+    assert new_inst == inst_c

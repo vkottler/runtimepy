@@ -5,6 +5,7 @@ A module defining a base interface fore serializable objects.
 # built-in
 from abc import ABC, abstractmethod
 from copy import copy as _copy
+from io import BytesIO as _BytesIO
 from typing import BinaryIO as _BinaryIO
 from typing import TypeVar
 
@@ -110,6 +111,27 @@ class Serializable(ABC):
 
         return result
 
+    def chain_bytes(self) -> bytes:
+        """Get the fully encoded chain."""
+        with _BytesIO() as stream:
+            self.to_stream(stream)
+            return stream.getvalue()
+
+    def __eq__(self, other) -> bool:
+        """Equivalent if full byte chains are equal."""
+
+        result = False
+        if isinstance(other, Serializable):
+            result = self.chain_bytes() == other.chain_bytes()
+        return result
+
+    def update_with(self: T, other: T, timestamp_ns: int = None) -> int:
+        """Update this instance from another of the same type."""
+
+        return self.update_chain(
+            other.chain_bytes(), timestamp_ns=timestamp_ns
+        )
+
     @abstractmethod
     def update(self, data: bytes, timestamp_ns: int = None) -> int:
         """Update this serializable from a bytes instance."""
@@ -135,6 +157,12 @@ class Serializable(ABC):
             result += self.chain.from_stream(stream, timestamp_ns=timestamp_ns)
 
         return result
+
+    def update_chain(self, data: bytes, timestamp_ns: int = None) -> int:
+        """Update this serializable from a bytes instance."""
+
+        with _BytesIO(data) as stream:
+            return self.from_stream(stream, timestamp_ns=timestamp_ns)
 
     def assign(self, chain: T) -> None:
         """Assign a next serializable."""

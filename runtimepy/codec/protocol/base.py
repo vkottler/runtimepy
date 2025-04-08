@@ -271,8 +271,14 @@ class ProtocolBase(PrimitiveArray):
                     part += f"<{self._regular_fields[name][0].kind}>"
 
                 if count > 1:
-                    part += f"[{count}]"
-                    # could dump individual values
+                    part += f"[{count}] = ["
+                    if name in self._regular_fields:
+                        part += ", ".join(
+                            str(x.value) for x in self._regular_fields[name]
+                        )
+                    else:
+                        part += ", ".join("..." for _ in range(count))
+                    part += "]"
                 else:
                     part += f" = {self[name]}"
 
