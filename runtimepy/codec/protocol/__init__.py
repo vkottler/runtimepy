@@ -39,6 +39,8 @@ class ProtocolFactory(ABC):
 
         # We only need to run the routine that populates the protocol once.
         if not cls.initialized:
+            if not cls.protocol.alias:
+                cls.protocol.alias = cls.__name__
             cls.initialize(cls.protocol)
             cls.initialized = True
 

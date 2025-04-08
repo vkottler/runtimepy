@@ -140,3 +140,73 @@ def test_protocol_basic():
 
     # Should be the same size.
     assert copy(proto).length() == proto.length()
+
+
+class SampleA(ProtocolFactory):
+    """A sample protocol implementation."""
+
+    protocol = Protocol(EnumRegistry())
+
+    @classmethod
+    def initialize(cls, protocol: Protocol) -> None:
+        """Initialize this protocol."""
+
+        protocol.add_field("a", "uint32")
+        protocol.add_field("b", "float")
+        protocol.add_field("c_array", "uint32", array_length=6)
+
+
+class SampleB(ProtocolFactory):
+    """A sample protocol implementation."""
+
+    protocol = Protocol(EnumRegistry())
+
+    @classmethod
+    def initialize(cls, protocol: Protocol) -> None:
+        """Initialize this protocol."""
+
+        protocol.add_field("a_single", serializable=SampleA.instance())
+        protocol.add_field(
+            "a_array", serializable=SampleA.instance(), array_length=2
+        )
+        protocol.add_field("c", "int32")
+
+
+class SampleC(ProtocolFactory):
+    """A sample protocol implementation."""
+
+    protocol = Protocol(EnumRegistry())
+
+    @classmethod
+    def initialize(cls, protocol: Protocol) -> None:
+        """Initialize this protocol."""
+
+        protocol.add_field("a_single", serializable=SampleA.instance())
+        protocol.add_field(
+            "a_array", serializable=SampleA.instance(), array_length=2
+        )
+        protocol.add_field("b_single", serializable=SampleB.instance())
+        protocol.add_field(
+            "b_array", serializable=SampleB.instance(), array_length=2
+        )
+        protocol.add_field("d", "uint32")
+
+
+def dump_protocol_info(inst: Protocol) -> None:
+    """Dump information about a protocol."""
+
+    print("==========")
+    print(inst.resolve_alias())
+    print(inst)
+    print(f"{inst.length()}: {inst.length_trace()}")
+    print("==========")
+
+
+def test_protocol_nested():
+    """Test basic interactions with nested protocol objects."""
+
+    dump_protocol_info(SampleA.instance())
+    dump_protocol_info(SampleB.instance())
+    dump_protocol_info(SampleC.instance())
+
+    # update values, verify encode/decode correctness

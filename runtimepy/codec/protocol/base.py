@@ -5,6 +5,7 @@ A module implementing an interface to build communication protocols.
 # built-in
 from contextlib import contextmanager, suppress
 from copy import copy as _copy
+from io import StringIO
 from typing import Iterator as _Iterator
 from typing import NamedTuple
 from typing import Optional as _Optional
@@ -72,10 +73,12 @@ class ProtocolBase(PrimitiveArray):
         identifier: int = 1,
         byte_order: _Union[_ByteOrder, _RegistryKey] = _DEFAULT_BYTE_ORDER,
         serializables: SerializableMap = None,
+        alias: str = None,
     ) -> None:
         """Initialize this protocol."""
 
         self.id = identifier
+        self.alias = alias
 
         # Register the byte-order enumeration if it's not present.
         self._enum_registry = enum_registry
@@ -146,6 +149,7 @@ class ProtocolBase(PrimitiveArray):
                 key: [val[0].copy_without_chain()]
                 for key, val in self.serializables.items()
             },
+            alias=self.alias,
         )
 
     def register_name(self, name: str) -> int:
@@ -242,18 +246,43 @@ class ProtocolBase(PrimitiveArray):
 
     def trace_size(self, logger: LoggerType) -> None:
         """Log a size trace."""
-        logger.info("%s: %s", self, self.length_trace())
+        logger.info("%s: %s", self, self.length_trace(alias=self.alias))
 
     def __str__(self) -> str:
         """Get this instance as a string."""
 
-        return (
-            self.length_trace()
-            + f" | ({self.length()}) "
-            + " ".join(
-                f"{name}={self[name]}" for name in self.names.registered_order
+        with StringIO() as stream:
+            stream.write(
+                "{"
+                + f"{self.resolve_alias(alias=self.alias)}({self.length()}): "
             )
-        )
+
+            parts = []
+            for name in self.names.registered_order:
+                part = name
+                count = 1
+
+                if name in self.serializables:
+                    count = len(self.serializables[name])
+                    part += f"<{self.serializables[name][0].resolve_alias()}>"
+                elif name in self._regular_fields:
+                    count = len(self._regular_fields[name])
+
+                    part += f"<{self._regular_fields[name][0].kind}>"
+
+                if count > 1:
+                    part += f"[{count}]"
+                    # could dump individual values
+                else:
+                    part += f" = {self[name]}"
+
+                parts.append(part)
+
+            stream.write(", ".join(parts))
+
+            stream.write("}")
+
+            return stream.getvalue()
 
     def __getitem__(self, name: str) -> ProtocolPrimitive:  # type: ignore
         """Get the value of a protocol field."""

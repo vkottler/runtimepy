@@ -46,10 +46,17 @@ class Serializable(ABC):
             result += self.chain.length()
         return result
 
-    def length_trace(self) -> str:
+    def resolve_alias(self, alias: str = None) -> str:
+        """Resolve a possible alias string."""
+
+        if not alias:
+            alias = getattr(self, "alias") or self.__class__.__name__
+        return alias
+
+    def length_trace(self, alias: str = None) -> str:
         """Get a length-tracing string for this instance."""
 
-        current = f"{self.__class__.__name__}({self.size})"
+        current = f"{self.resolve_alias(alias=alias)}({self.size})"
         if self.chain is not None:
             current += " -> " + self.chain.length_trace()
         return current
