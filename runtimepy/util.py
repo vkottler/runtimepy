@@ -34,10 +34,10 @@ def normalize_root(*src_parts: Union[str, Path]) -> Path:
 class Identifier:
     """A simple message indentifier interface."""
 
-    def __init__(self) -> None:
+    def __init__(self, start: int = 1, scale: int = 2) -> None:
         """Initialize this instance."""
-        self.curr_id: int = 1
-        self.scale = 2
+        self.curr_id = start
+        self.scale = scale
 
     def __call__(self) -> int:
         """Get the next identifier."""

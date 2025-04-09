@@ -25,6 +25,7 @@ from runtimepy.primitives.field.manager import (
     VALUES_KEY,
     BitFieldsManager,
 )
+from runtimepy.primitives.serializable import SerializableMap
 
 BUILD_KEY = "build"
 META_KEY = "meta"
@@ -96,7 +97,11 @@ class JsonProtocol(ProtocolBase):
         return data
 
     @classmethod
-    def import_json(cls: type[T], data: dict[str, _JsonObject]) -> T:
+    def import_json(
+        cls: type[T],
+        data: dict[str, _JsonObject],
+        serializables: SerializableMap = None,
+    ) -> T:
         """Create a bit-fields manager from JSON data."""
 
         # Only set values once (at the end).
@@ -126,6 +131,7 @@ class JsonProtocol(ProtocolBase):
             identifier=_cast(int, data[META_KEY]["id"]),
             byte_order=_cast(str, data[META_KEY]["byte_order"]),
             alias=data[META_KEY]["alias"],  # type: ignore
+            serializables=serializables,
         )
 
         # Set values.

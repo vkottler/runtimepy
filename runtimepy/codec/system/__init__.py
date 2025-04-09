@@ -3,7 +3,7 @@ A basic type-system implementation.
 """
 
 # built-in
-from typing import Iterable, Optional
+from typing import Iterable, Optional, Union
 
 # third-party
 from vcorelib.logging import LoggerMixin
@@ -18,8 +18,10 @@ from runtimepy.enum.registry import (
     EnumRegistry,
     RuntimeIntEnum,
 )
-from runtimepy.primitives.byte_order import ByteOrder
+from runtimepy.primitives.byte_order import DEFAULT_BYTE_ORDER, ByteOrder
 from runtimepy.primitives.types import AnyPrimitiveType, PrimitiveTypes
+from runtimepy.registry.name import RegistryKey
+from runtimepy.util import Identifier
 
 
 def resolve_name(matches: Iterable[str]) -> str:
@@ -50,6 +52,8 @@ class TypeSystem(LoggerMixin):
 
         self.primitives: dict[str, AnyPrimitiveType] = {}
         self.custom: dict[str, Protocol] = {}
+        self.custom_ids = Identifier(scale=1)
+
         self._enums = EnumRegistry()
 
         global_namespace = Namespace(delim=CPP_DELIM)
@@ -98,11 +102,21 @@ class TypeSystem(LoggerMixin):
         assert enum is not None
         self._register_primitive(name, enum.primitive)
 
-    def register(self, name: str, *namespace: str) -> Protocol:
+    def register(
+        self,
+        name: str,
+        *namespace: str,
+        byte_order: Union[ByteOrder, RegistryKey] = DEFAULT_BYTE_ORDER,
+    ) -> Protocol:
         """Register a custom type."""
 
         resolved = self._name(name, *namespace, check_available=True)
-        new_type = Protocol(self._enums, alias=resolved)
+        new_type = Protocol(
+            self._enums,
+            alias=resolved,
+            identifier=self.custom_ids(),
+            byte_order=byte_order,
+        )
         self.custom[resolved] = new_type
         return new_type
 
