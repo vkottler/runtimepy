@@ -176,13 +176,20 @@ class Serializable(ABC):
 
         result = []
 
+        # Copy the chain element before it becomes part of the current chain if
+        # an array is created.
+        copy_base = None
+        if array_length is not None:
+            copy_base = chain.copy()
+
         self.end.assign(chain)
         result.append(chain)
 
         # Add additional array elements as copies.
         if array_length is not None:
+            assert copy_base is not None
             for _ in range(array_length - 1):
-                inst = chain.copy()
+                inst = copy_base.copy()
                 self.end.assign(inst)
                 result.append(inst)
 

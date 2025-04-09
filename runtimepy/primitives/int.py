@@ -37,8 +37,9 @@ class BaseIntPrimitive(PrimitiveIsCloseMixin[int]):
         """Set this primitive to a random integer."""
 
         assert self.kind.int_bounds is not None
-        result = self.kind.int_bounds.random()
-        self.set_value(result, timestamp_ns=timestamp_ns)
+        self.set_value(
+            self.kind.int_bounds.random(), timestamp_ns=timestamp_ns
+        )
 
     def increment(self, amount: int = 1, timestamp_ns: int = None) -> int:
         """Increment this primitive by some amount and return the new value."""

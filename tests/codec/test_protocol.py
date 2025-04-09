@@ -2,8 +2,10 @@
 Test the 'codec.protocol' module.
 """
 
-# built-in
 from copy import copy
+
+# built-in
+from enum import auto
 from io import BytesIO
 from json import load
 from logging import getLogger
@@ -11,7 +13,7 @@ from logging import getLogger
 # module under test
 from runtimepy.codec.protocol import Protocol, ProtocolFactory
 from runtimepy.codec.protocol.base import FieldSpec
-from runtimepy.enum.registry import EnumRegistry
+from runtimepy.enum.registry import EnumRegistry, RuntimeIntEnum
 from runtimepy.primitives import Uint32
 from runtimepy.primitives.serializable import PrefixedChunk
 
@@ -243,3 +245,54 @@ def test_protocol_nested():
     assert new_inst != inst_c
     new_inst.update_with(inst_c)
     assert new_inst == inst_c
+
+
+class Enum1(RuntimeIntEnum):
+    """Sample enumeration."""
+
+    A = auto()
+    B = auto()
+    C = 1000
+
+    @classmethod
+    def primitive(cls) -> str:
+        """The underlying primitive type for this runtime enumeration."""
+        return "uint16"
+
+
+ENUMS = EnumRegistry()
+Enum1.register_enum(ENUMS)
+
+
+class Test1(ProtocolFactory):
+    """A sample protocol implementation."""
+
+    protocol = Protocol(ENUMS)
+
+    @classmethod
+    def initialize(cls, protocol: Protocol) -> None:
+        """Initialize this protocol."""
+
+        protocol.add_field("field1", "uint8")
+        protocol.add_field("field2", enum="Enum1")
+        protocol.add_field("field3", "double")
+
+
+class TestArrays(ProtocolFactory):
+    """A sample protocol implementation."""
+
+    protocol = Protocol(ENUMS)
+
+    @classmethod
+    def initialize(cls, protocol: Protocol) -> None:
+        """Initialize this protocol."""
+
+        protocol.add_serializable("array1", Test1.instance(), array_length=4)
+
+
+def test_protocol_ifgen_defect():
+    """Test basic interactions with nested protocol objects."""
+
+    assert Test1.instance().length() == 11
+
+    assert TestArrays.instance().length() == 44
