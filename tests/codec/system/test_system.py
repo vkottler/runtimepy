@@ -79,7 +79,7 @@ def test_type_system_basic():
 
     system = get_test_system()
 
-    assert system.size("runtimepy::ByteOrder") == 1
+    assert system.size("ByteOrder") == 1
 
     new_type = system.register("SomeStruct")
     assert system.size("SomeStruct") == 0

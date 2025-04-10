@@ -10,7 +10,8 @@ from pytest import raises
 from vcorelib.paths.context import tempfile
 
 # module under test
-from runtimepy.enum.registry import EnumRegistry, RuntimeIntEnum, enum_registry
+from runtimepy.enum.registry import EnumRegistry, RuntimeIntEnum
+from runtimepy.primitives.byte_order import enum_registry
 
 # internal
 from tests.resources import resource
@@ -50,10 +51,10 @@ def test_enum_registry_basic():
 
     enums = EnumRegistry.decode(resource("enums", "sample_enum.yaml"))
     assert enums.get("int1") is not None
-    assert enums.get(1) is not None
+    assert enums.get(2) is not None
     assert enums["bool1"].is_boolean
-    assert enums[2].is_boolean
-    assert enums[1].is_integer
+    assert enums[3].is_boolean
+    assert enums[2].is_integer
 
     with raises(KeyError):
         assert enums["bool2"]
@@ -66,7 +67,7 @@ def test_enum_registry_basic():
         is not None
     )
     assert (
-        enums.register_dict("int2", {"id": 1, "type": "int", "items": {}})
+        enums.register_dict("int2", {"id": 2, "type": "int", "items": {}})
         is None
     )
     assert enums.register_dict("!@#$", {}) is None

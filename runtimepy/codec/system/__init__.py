@@ -10,15 +10,14 @@ from vcorelib.logging import LoggerMixin
 from vcorelib.namespace import CPP_DELIM, Namespace
 
 # internal
-from runtimepy import PKG_NAME
 from runtimepy.codec.protocol import Protocol
 from runtimepy.enum import RuntimeEnum
-from runtimepy.enum.registry import (
-    DEFAULT_ENUM_PRIMITIVE,
-    EnumRegistry,
-    RuntimeIntEnum,
+from runtimepy.enum.registry import DEFAULT_ENUM_PRIMITIVE, RuntimeIntEnum
+from runtimepy.primitives.byte_order import (
+    DEFAULT_BYTE_ORDER,
+    ByteOrder,
+    enum_registry,
 )
-from runtimepy.primitives.byte_order import DEFAULT_BYTE_ORDER, ByteOrder
 from runtimepy.primitives.types import AnyPrimitiveType, PrimitiveTypes
 from runtimepy.registry.name import RegistryKey
 from runtimepy.util import Identifier
@@ -54,7 +53,7 @@ class TypeSystem(LoggerMixin):
         self.custom: dict[str, Protocol] = {}
         self.custom_ids = Identifier(scale=1)
 
-        self._enums = EnumRegistry()
+        self._enums = enum_registry(register_byte_order=False)
 
         global_namespace = Namespace(delim=CPP_DELIM)
 
@@ -65,9 +64,8 @@ class TypeSystem(LoggerMixin):
         self.root_namespace = global_namespace
 
         # Register enums.
-        with self.root_namespace.pushed(PKG_NAME):
-            for enum in [ByteOrder]:
-                self.runtime_int_enum(enum)
+        for enum in [ByteOrder]:
+            self.runtime_int_enum(enum)
 
         self.root_namespace = global_namespace.child(*namespace)
 
