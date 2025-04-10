@@ -64,6 +64,11 @@ class RuntimeIntEnum(_IntEnum):
         return data
 
     @classmethod
+    def id(cls) -> _Optional[int]:
+        """Override in sub-class to coerce enum id."""
+        return None
+
+    @classmethod
     def primitive(cls) -> str:
         """The underlying primitive type for this runtime enumeration."""
         return DEFAULT_ENUM_PRIMITIVE
@@ -89,6 +94,20 @@ class RuntimeIntEnum(_IntEnum):
 
         data = _RuntimeEnum.data_from_enum(cls)
         data["primitive"] = cls.primitive()
+
+        ident = cls.id()
+        if ident is not None:
+            data["id"] = ident
+
         result = registry.register_dict(name, data)
         assert result is not None
         return result
+
+
+def enum_registry(*kinds: type[RuntimeIntEnum]) -> EnumRegistry:
+    """Create an enum registry with the provided custom types registered."""
+
+    result = EnumRegistry()
+    for kind in kinds:
+        kind.register_enum(result)
+    return result

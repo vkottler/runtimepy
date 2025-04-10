@@ -145,6 +145,7 @@ class ProtocolBase(PrimitiveArray):
             fields=_copy(self._fields),
             build=self._build,
             byte_order=self.byte_order,
+            identifier=self.id,
             serializables={
                 key: [val[0].copy_without_chain()]
                 for key, val in self.serializables.items()

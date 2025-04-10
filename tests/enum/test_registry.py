@@ -2,12 +2,15 @@
 Test the 'enum.registry' module.
 """
 
+# built-in
+from typing import Optional
+
 # third-party
 from pytest import raises
 from vcorelib.paths.context import tempfile
 
 # module under test
-from runtimepy.enum.registry import EnumRegistry, RuntimeIntEnum
+from runtimepy.enum.registry import EnumRegistry, RuntimeIntEnum, enum_registry
 
 # internal
 from tests.resources import resource
@@ -19,6 +22,18 @@ class SampleEnum(RuntimeIntEnum):
     A = 1
     B = 2
     C = 3
+
+    @classmethod
+    def id(cls) -> Optional[int]:
+        """Override in sub-class to coerce enum id."""
+        return 5
+
+
+def test_runtime_enum_id():
+    """Test enums with hard-coded identifiers."""
+
+    registry = enum_registry(SampleEnum)
+    assert registry[5].get_str(1) == "a"
 
 
 def test_runtime_int_enum_basic():
