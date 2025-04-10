@@ -39,6 +39,14 @@ class ByteOrder(RuntimeIntEnum):
         return 1
 
 
+# https://en.cppreference.com/w/cpp/types/endian
+STD_ENDIAN = {
+    "little": ByteOrder.LITTLE_ENDIAN,
+    "big": ByteOrder.BIG_ENDIAN,
+    "native": ByteOrder.NATIVE,
+}
+
+
 DEFAULT_BYTE_ORDER = ByteOrder.NETWORK
 
 
