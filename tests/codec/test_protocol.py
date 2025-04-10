@@ -15,6 +15,7 @@ from runtimepy.codec.protocol import Protocol, ProtocolFactory
 from runtimepy.codec.protocol.base import FieldSpec
 from runtimepy.enum.registry import EnumRegistry, RuntimeIntEnum
 from runtimepy.primitives import Uint32
+from runtimepy.primitives.byte_order import enum_registry
 from runtimepy.primitives.serializable import PrefixedChunk
 
 # internal
@@ -260,8 +261,7 @@ class Enum1(RuntimeIntEnum):
         return "uint16"
 
 
-ENUMS = EnumRegistry()
-Enum1.register_enum(ENUMS)
+ENUMS = enum_registry(Enum1)
 
 
 class Test1(ProtocolFactory):

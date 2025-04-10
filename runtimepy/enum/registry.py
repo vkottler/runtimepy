@@ -100,14 +100,5 @@ class RuntimeIntEnum(_IntEnum):
             data["id"] = ident
 
         result = registry.register_dict(name, data)
-        assert result is not None
+        assert result is not None, (name, data)
         return result
-
-
-def enum_registry(*kinds: type[RuntimeIntEnum]) -> EnumRegistry:
-    """Create an enum registry with the provided custom types registered."""
-
-    result = EnumRegistry()
-    for kind in kinds:
-        kind.register_enum(result)
-    return result
