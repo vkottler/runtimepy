@@ -79,7 +79,9 @@ class JsonProtocol(ProtocolBase):
         )
 
         # Export the build specification.
-        build: list[_Union[int, _JsonObject, str, tuple[str, int]]] = []
+        build: list[
+            _Union[tuple[int, str], _JsonObject, str, tuple[str, int]]
+        ] = []
         for item in self._build:
             if isinstance(item, FieldSpec):
                 build.append(item.asdict())

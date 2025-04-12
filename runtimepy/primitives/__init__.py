@@ -119,3 +119,13 @@ def normalize(value: Primitivelike) -> type[AnyPrimitive]:
 def create(value: Primitivelike, **kwargs) -> AnyPrimitive:
     """Create an instance of a primitive."""
     return normalize(value)(**kwargs)
+
+
+def normalize_instance(
+    value: Primitivelike | AnyPrimitive, **kwargs
+) -> AnyPrimitive:
+    """Creates a new instance only if necessary."""
+
+    if not isinstance(value, Primitive):
+        value = create(value, **kwargs)
+    return value

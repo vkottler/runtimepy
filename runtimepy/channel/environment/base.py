@@ -440,5 +440,6 @@ class BaseChannelEnvironment(_NamespaceMixin, FinalizeMixin):
 
         for fields in self.to_add:
             self.fields.add(fields)
+        self.to_add = []
 
         super().finalize(strict=strict)

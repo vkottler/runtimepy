@@ -14,8 +14,9 @@ from vcorelib.io.types import JsonObject as _JsonObject
 from vcorelib.io.types import JsonValue as _JsonValue
 
 # internal
+from runtimepy.primitives import AnyPrimitive as _AnyPrimitive
 from runtimepy.primitives import Primitivelike as _Primitivelike
-from runtimepy.primitives import normalize as _normalize
+from runtimepy.primitives import normalize_instance as _normalize_instance
 from runtimepy.primitives.field import BitField as _BitField
 from runtimepy.primitives.field import BitFieldBase as _BitFieldBase
 from runtimepy.primitives.field import BitFlag as _BitFlag
@@ -37,7 +38,7 @@ class BitFields(_RuntimepyDictCodec):
 
         # Create the underlying storage element.
         self.raw: _UnsignedInt = _cast(
-            _UnsignedInt, _normalize(_cast(str, data["type"]))()
+            _UnsignedInt, _normalize_instance(_cast(str, data["type"]))
         )
 
         self.curr_index = 0
@@ -194,6 +195,8 @@ class BitFields(_RuntimepyDictCodec):
     def claim_field(self, field: _BitField) -> _BitField:
         """Claim a bit field."""
 
+        self._claim_bits(field.width, index=field.index)
+
         assert field.name not in self.fields, field.name
         self.fields[field.name] = field
         self.by_index[field.index] = field
@@ -216,7 +219,7 @@ class BitFields(_RuntimepyDictCodec):
             _BitField(
                 name,
                 self.raw,
-                self._claim_bits(width, index=index),
+                index if index is not None else self.curr_index,
                 width,
                 enum=enum,
                 description=description,
@@ -225,7 +228,9 @@ class BitFields(_RuntimepyDictCodec):
         )
 
     @classmethod
-    def new(cls: type[T], value: _Primitivelike = "uint8") -> T:
+    def new(
+        cls: type[T], value: _Primitivelike | _AnyPrimitive = "uint8"
+    ) -> T:
         """Create a new bit-field storage entity."""
 
         return cls.create(
