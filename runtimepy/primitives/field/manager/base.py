@@ -100,6 +100,7 @@ class BitFieldsManagerBase:
         for name, field in fields.fields.items():
             ident = self.registry.register_name(name)
             assert ident is not None, "Couldn't register bit-field '{name}'!"
+            assert name not in self.lookup, name
             self.lookup[name] = index
 
             # Also store the enum mapping.
@@ -220,7 +221,11 @@ class BitFieldsManagerBase:
             new_fields.raw = prim
             self.by_primitive[prim] = new_fields
 
-        self.by_primitive[prim].claim_field(field)
+        fields = self.by_primitive[prim]
+        fields.claim_field(field)
+
+        if not fields.bits_available:
+            del self.by_primitive[prim]
 
         # self.add(new_fields, finalize=False)
         return new_fields

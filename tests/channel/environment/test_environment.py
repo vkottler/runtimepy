@@ -102,7 +102,9 @@ def test_channel_environment_fields():
     env = sample_env()
     env.finalize()
 
-    assert env.fields.get_flag("flag1")
+    assert env.fields.get_flag("a.fields.flag1")
+    assert env.fields.get_flag("b.fields.flag1")
+    assert env.fields.get_flag("c.fields.flag1")
 
     assert env
 

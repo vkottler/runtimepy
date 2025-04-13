@@ -97,7 +97,7 @@ def test_protocol_basic():
     proto.add_field("test1", "uint8")
 
     # Add bit fields.
-    with proto.add_bit_fields() as fields:
+    with proto.add_bit_fields("fields_primitive") as fields:
         fields.flag("flag1", enum="bool1")
         fields.flag("flag2")
 
@@ -296,3 +296,34 @@ def test_protocol_ifgen_defect():
     assert Test1.instance().length() == 11
 
     assert TestArrays.instance().length() == 44
+
+
+class TestBitFields(ProtocolFactory):
+    """A sample protocol that uses bit fields."""
+
+    protocol = Protocol(ENUMS)
+
+    @classmethod
+    def initialize(cls, protocol: Protocol) -> None:
+        """Initialize this protocol."""
+
+        with protocol.add_bit_fields("uint8") as fields:
+            fields.flag("one")
+            fields.flag("two")
+            fields.flag("three")
+            fields.flag("four")
+            fields.field("five", 4)
+
+
+def test_protocol_bit_fields():
+    """Test basic interactions with bit fields in protocols."""
+
+    inst = TestBitFields.instance()
+
+    inst["one"] = 1
+
+    assert inst["uint8"] == 1
+    assert inst["one"] == 1
+
+    inst["five"] = 15
+    assert inst["uint8"] == (15 << 4) + 1

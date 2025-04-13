@@ -20,7 +20,14 @@ def get_test_system() -> TypeSystem:
     system.enum("TestEnum1", {"a": 1, "b": 2, "c": 3})
     system.enum("TestEnum2", {"a": 1, "b": 2, "c": 3}, primitive="uint16")
 
+    assert system.is_enum("TestEnum1")
+    assert system.is_enum("TestEnum2")
+    assert not system.is_enum("TestEnum3")
+
+    assert not system.is_custom("SampleStruct")
     system.register("SampleStruct")
+    assert system.is_custom("SampleStruct")
+
     system.add("SampleStruct", "enum1", "TestEnum1")
     system.add("SampleStruct", "enum2", "TestEnum2")
     system.add("SampleStruct", "field", "uint32")

@@ -91,10 +91,10 @@ def sample_fields(env: ChannelEnvironment, enum: str = "SampleEnum") -> None:
         env.int_channel("raw", prim)
 
         # Add a bit field and flag.
-        env.add_field(BitFlag("flag1", prim, 0))
+        env.add_field(BitFlag(env.namespace(name="flag1"), prim, 0))
         env.add_field(
             BitFlag(
-                "flag2",
+                env.namespace(name="flag2"),
                 prim,
                 1,
                 commandable=True,
@@ -103,7 +103,7 @@ def sample_fields(env: ChannelEnvironment, enum: str = "SampleEnum") -> None:
         )
         env.add_field(
             BitField(
-                "field1",
+                env.namespace(name="field1"),
                 prim,
                 2,
                 2,
@@ -112,7 +112,11 @@ def sample_fields(env: ChannelEnvironment, enum: str = "SampleEnum") -> None:
                 description="Sample bit field.",
             )
         )
-        env.add_field(BitField("field2", prim, 4, 4, commandable=True))
+        env.add_field(
+            BitField(
+                env.namespace(name="field2"), prim, 4, 4, commandable=True
+            )
+        )
 
 
 def sample_float(

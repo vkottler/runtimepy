@@ -21,7 +21,7 @@ from runtimepy.enum import RuntimeEnum as _RuntimeEnum
 from runtimepy.enum.registry import EnumRegistry as _EnumRegistry
 from runtimepy.primitives import AnyPrimitive as _AnyPrimitive
 from runtimepy.primitives import Primitivelike as _Primitivelike
-from runtimepy.primitives import create as _create
+from runtimepy.primitives import normalize_instance as _normalize_instance
 from runtimepy.primitives.array import PrimitiveArray
 from runtimepy.primitives.byte_order import (
     DEFAULT_BYTE_ORDER as _DEFAULT_BYTE_ORDER,
@@ -40,7 +40,7 @@ class FieldSpec(NamedTuple):
     """Information specifying a protocol field."""
 
     name: str
-    kind: _Primitivelike
+    kind: str
     enum: _Optional[_RegistryKey] = None
     array_length: _Optional[int] = None
 
@@ -49,7 +49,7 @@ class FieldSpec(NamedTuple):
 
         result: _JsonObject = {
             "name": self.name,
-            "kind": _create(self.kind).kind.name,
+            "kind": self.kind,
             "array_length": self.array_length,
         }
         if self.enum is not None:
@@ -58,7 +58,7 @@ class FieldSpec(NamedTuple):
 
 
 T = _TypeVar("T", bound="ProtocolBase")
-ProtocolBuild = list[_Union[int, FieldSpec, tuple[str, int]]]
+ProtocolBuild = list[_Union[tuple[int, str], FieldSpec, tuple[str, int]]]
 
 
 class ProtocolBase(PrimitiveArray):
@@ -114,16 +114,15 @@ class ProtocolBase(PrimitiveArray):
         if build is None:
             build = []
         for item in build:
-            if isinstance(item, int):
-                self._add_bit_fields(self._fields.fields[item])
-            elif isinstance(item, FieldSpec):
+            if isinstance(item, FieldSpec):
                 self.add_field(
                     item.name,
                     item.kind,
                     enum=item.enum,
                     array_length=item.array_length,
                 )
-            else:
+
+            elif isinstance(item[0], str):
                 assert serializables, (item, serializables)
                 name = item[0]
                 self.add_serializable(
@@ -132,6 +131,11 @@ class ProtocolBase(PrimitiveArray):
                     array_length=None if item[1] == 1 else item[1],
                 )
                 del serializables[name]
+
+            elif isinstance(item[0], int):
+                self._add_bit_fields(
+                    item[1], self._fields.fields[item[0]], index=item[0]
+                )
 
         # Ensure all serializables were handled via build.
         assert not serializables, serializables
@@ -169,15 +173,18 @@ class ProtocolBase(PrimitiveArray):
 
         instances = self.add_to_end(serializable, array_length=array_length)
         self._build.append((name, len(instances)))
+
+        assert name not in self.serializables, name
         self.serializables[name] = instances
 
     def add_field(
         self,
         name: str,
-        kind: _Primitivelike = None,
+        kind: _Primitivelike | _Optional[_AnyPrimitive] = None,
         enum: _RegistryKey = None,
         serializable: Serializable = None,
         array_length: int = None,
+        track: bool = True,
     ) -> None:
         """Add a new field to the protocol."""
 
@@ -201,30 +208,39 @@ class ProtocolBase(PrimitiveArray):
                 kind = runtime_enum.primitive
 
         assert kind is not None
+        inst = _normalize_instance(kind)
 
-        self._regular_fields[name] = self.add(
-            _create(kind), array_length=array_length
-        )
+        assert name not in self._regular_fields, name
+        self._regular_fields[name] = self.add(inst, array_length=array_length)
 
-        self._build.append(
-            FieldSpec(name, kind, enum, array_length=array_length)
-        )
+        if track:
+            self._build.append(
+                FieldSpec(
+                    name, inst.kind.name, enum, array_length=array_length
+                )
+            )
 
-    def _add_bit_fields(self, fields: _BitFields) -> None:
+    def _add_bit_fields(
+        self, name: str, fields: _BitFields, index: int = None
+    ) -> None:
         """Add a bit-fields instance."""
 
-        self._build.append(self._fields.add(fields))
-        self.add(fields.raw)
+        # If the index is known, these fields are already registered.
+        if index is None:
+            index = self._fields.add(fields)
+
+        self._build.append((index, name))
+        self.add_field(name, kind=fields.raw, track=False)
 
     @contextmanager
     def add_bit_fields(
-        self, kind: _Primitivelike = "uint8"
+        self, name: str, kind: _Primitivelike | _AnyPrimitive = "uint8"
     ) -> _Iterator[_BitFields]:
         """Add a bit-fields primitive to the protocol."""
 
         new = _BitFields.new(value=kind)
         yield new
-        self._add_bit_fields(new)
+        self._add_bit_fields(name, new)
 
     def value(
         self, name: str, resolve_enum: bool = True, index: int = 0
