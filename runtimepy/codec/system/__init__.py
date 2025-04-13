@@ -3,6 +3,7 @@ A basic type-system implementation.
 """
 
 # built-in
+from contextlib import suppress
 from typing import Iterable, Optional, Union
 
 # third-party
@@ -69,6 +70,17 @@ class TypeSystem(LoggerMixin):
 
         self.root_namespace = global_namespace.child(*namespace)
 
+    def is_enum(self, name: str, *namespace: str, exact: bool = True) -> bool:
+        """Determine if the arguments identify a registered enumeration."""
+
+        result = False
+
+        with suppress(KeyError, AssertionError):
+            self.get_enum(name, *namespace, exact=exact)
+            result = True
+
+        return result
+
     def get_enum(
         self, name: str, *namespace: str, exact: bool = True
     ) -> RuntimeEnum:
@@ -117,6 +129,19 @@ class TypeSystem(LoggerMixin):
         )
         self.custom[resolved] = new_type
         return new_type
+
+    def is_custom(
+        self, name: str, *namespace: str, exact: bool = True
+    ) -> bool:
+        """Determine if the parameters identify a custom type."""
+
+        result = False
+
+        with suppress(KeyError, AssertionError):
+            self.get_protocol(name, *namespace, exact=exact)
+            result = True
+
+        return result
 
     def get_protocol(
         self, name: str, *namespace: str, exact: bool = True
