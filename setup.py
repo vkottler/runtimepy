@@ -1,7 +1,7 @@
 # =====================================
 # generator=datazen
-# version=3.1.4
-# hash=0f7a29be3d6d2d50603e377499ca435f
+# version=3.2.0
+# hash=23791ff25e92caf639fdcfe48ce010bf
 # =====================================
 
 """
@@ -18,9 +18,9 @@ except (ImportError, ModuleNotFoundError):
 from runtimepy import DESCRIPTION, PKG_NAME, VERSION
 
 author_info = {
-    "name": "Vaughn Kottler",
+    "name": "Libre Embedded",
     "email": "vaughn@libre-embedded.com",
-    "username": "vkottler",
+    "username": "libre-embedded",
 }
 pkg_info = {
     "name": PKG_NAME,

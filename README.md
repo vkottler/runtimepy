@@ -1,29 +1,22 @@
 <!--
     =====================================
     generator=datazen
-    version=3.1.4
-    hash=0a7881b3e47a699bb3a235518a84f5ab
+    version=3.2.0
+    hash=b043082ee29865c76d3785421e4dbff6
     =====================================
 -->
 
-# runtimepy ([5.11.4](https://pypi.org/project/runtimepy/))
+# runtimepy ([5.11.5](https://pypi.org/project/runtimepy/))
 
 [![python](https://img.shields.io/pypi/pyversions/runtimepy.svg)](https://pypi.org/project/runtimepy/)
-![Build Status](https://github.com/vkottler/runtimepy/workflows/Python%20Package/badge.svg)
-[![codecov](https://codecov.io/gh/vkottler/runtimepy/branch/master/graphs/badge.svg?branch=master)](https://codecov.io/github/vkottler/runtimepy)
+![Build Status](https://github.com/libre-embedded/runtimepy/workflows/Python%20Package/badge.svg)
+[![codecov](https://codecov.io/gh/libre-embedded/runtimepy/branch/master/graphs/badge.svg?branch=master)](https://codecov.io/github/libre-embedded/runtimepy)
 ![PyPI - Status](https://img.shields.io/pypi/status/runtimepy)
 ![Dependents (via libraries.io)](https://img.shields.io/librariesio/dependents/pypi/runtimepy)
 
 *A framework for implementing Python services.*
 
-## Documentation
-
-### Generated
-
-* By [sphinx-apidoc](https://vkottler.github.io/python/sphinx/runtimepy)
-(What's [`sphinx-apidoc`](https://www.sphinx-doc.org/en/master/man/sphinx-apidoc.html)?)
-* By [pydoc](https://vkottler.github.io/python/pydoc/runtimepy.html)
-(What's [`pydoc`](https://docs.python.org/3/library/pydoc.html)?)
+([interface documentation](https://libre-embedded.github.io/python/runtimepy))
 
 ## Python Version Support
 
