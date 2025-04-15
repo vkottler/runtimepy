@@ -46,19 +46,31 @@ AnyPrimitiveType = _Union[
 PrimitiveTypes: dict[str, AnyPrimitiveType] = {
     # Integer types.
     Int8.name: Int8,
+    "int8_t": Int8,
     Int16.name: Int16,
+    "int16_t": Int16,
     Int32.name: Int32,
+    "int32_t": Int32,
     Int64.name: Int64,
+    "int64_t": Int64,
     Uint8.name: Uint8,
+    "uint8_t": Uint8,
     Uint16.name: Uint16,
+    "uint16_t": Uint16,
     Uint32.name: Uint32,
+    "uint32_t": Uint32,
     Uint64.name: Uint64,
+    "uint64_t": Uint64,
     # Floating-point types.
     Half.name: Half,
+    "std::float16_t": Half,
     Float.name: Float,
+    "std::float32_t": Float,
     Double.name: Double,
+    "std::float64_t": Double,
     # Boolean type.
     Bool.name: Bool,
+    "boolean": Bool,
 }
 
 PrimitiveTypelike = _Union[str, AnyPrimitiveType]
