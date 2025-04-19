@@ -1,3 +1,7 @@
+/*
+ * https://cdn.jsdelivr.net/gh/danchitnis/
+ * webgl-plot@master/dist/webglplot.umd.min.js
+ */
 import("https://cdn.jsdelivr.net/gh/danchitnis/" +
        "webgl-plot@master/dist/webglplot.umd.min.js");
 

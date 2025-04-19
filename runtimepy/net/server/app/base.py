@@ -72,4 +72,4 @@ class WebApplication:
         append_kind(document.body, "util", "main")
 
         # Third-party dependencies.
-        add_bootstrap_js(document.body)
+        add_bootstrap_js(document.body, False)

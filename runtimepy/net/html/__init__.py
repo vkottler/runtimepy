@@ -72,18 +72,21 @@ def markdown_page(
     return container, button_column
 
 
-def common_css(document: Html) -> None:
+def common_css(document: Html, online: bool = False) -> None:
     """Add common CSS to an HTML document."""
 
     append_kind(document.head, "font", kind="css", tag="style")
-    add_bootstrap_css(document.head)
+    add_bootstrap_css(document.head, online)
     append_kind(
         document.head, "main", "bootstrap_extra", kind="css", tag="style"
     )
 
 
 def full_markdown_page(
-    document: Html, markdown: str, uri_query: Optional[str] = None
+    document: Html,
+    markdown: str,
+    uri_query: Optional[str] = None,
+    online: bool = False,
 ) -> None:
     """Render a full markdown HTML app."""
 
@@ -114,7 +117,7 @@ def full_markdown_page(
 
     # JavaScript.
     append_kind(document.body, "util", "markdown_page")
-    add_bootstrap_js(document.body)
+    add_bootstrap_js(document.body, online)
 
 
 def handle_worker(writer: IndentedFileWriter) -> int:
